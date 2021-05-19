@@ -1,4 +1,3 @@
-<!-- Deactivation class -->
 <?php
 
 namespace WAWP;
