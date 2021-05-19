@@ -33,5 +33,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+namespace WAWP;
+
+// Activation hook
+register_activation_hook(__FILE__, function() {
+	require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
+	Activator::activate();
+} );
+
 // Add menu
+
+// Deactivation hook
+register_deactivation_hook(__FILE__, function() {
+	require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
+	Deactivator::deactivate();
+} );
+
 ?>
