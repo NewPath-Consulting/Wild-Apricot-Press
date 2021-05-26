@@ -80,9 +80,9 @@ function wawp_settings_page() {
 //placerholder function for the login page
 function wawp_login_page() {
     ?>
-    <div class="waSettings">
-        <h1>Wild Apricot Credentials</h1>
-            <div class="loginInstructions">
+    <h1>Wild Apricot Credentials</h1>
+        <div class="waSettings">
+            <div class="loginChild">
                 <p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account:</p>
                 <ul>
                     <li>API key</li>
@@ -91,11 +91,11 @@ function wawp_login_page() {
                 </ul>
                 <p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
             </div>
-            <div class="loginForm">
+            <div class="loginChild">
                 <h3>Please enter your credentials here:</h3>
 
             </div>
-    </div>
+        </div>
     <?php
 }
 

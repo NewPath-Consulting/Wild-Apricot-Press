@@ -1,0 +1,11 @@
+.waSettings {
+	display: flex;
+}
+
+.loginChild {
+	flex: 1;
+}
+
+.loginChild:first-child {
+	margin-right: 20px;
+}
