@@ -34,8 +34,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-do_action('qm/debug', 'outside!');
-
 // Activation hook
 register_activation_hook(__FILE__, function() {
 	// do_action('qm/debug', 'activation in plugin.php!');
@@ -44,9 +42,14 @@ register_activation_hook(__FILE__, function() {
 	Activator::activate();
 } );
 
+// Enqueue stylesheet
+add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
+function wawp_enqueue_admin_script($hook) {
+    wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
+}
+
 // Add menu
 add_action( 'admin_menu', 'wawp_create_menu' );
-
 function wawp_create_menu() {
 
     //create custom top-level menu
@@ -78,8 +81,20 @@ function wawp_settings_page() {
 function wawp_login_page() {
     ?>
     <div class="waSettings">
-            <h1>Wild Apricot Credentials</h1>
-            <p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account. If you have not done so already, please </p>
+        <h1>Wild Apricot Credentials</h1>
+            <div class="loginInstructions">
+                <p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account:</p>
+                <ul>
+                    <li>API key</li>
+                    <li>Client ID</li>
+                    <li>Client secret</li>
+                </ul>
+                <p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
+            </div>
+            <div class="loginForm">
+                <h3>Please enter your credentials here:</h3>
+
+            </div>
     </div>
     <?php
 }
