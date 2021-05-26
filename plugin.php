@@ -55,8 +55,8 @@ function wawp_create_menu() {
         'dashicons-businesswoman', 6 );
 
     //create submenu items
-    // add_submenu_page( 'pdev-options', 'About The PDEV Plugin', 'About', 'manage_options',
-    //     'pdev-about', 'pdev_about_page' );
+    add_submenu_page( 'wawp-options', 'Wild Apricot Login', 'Login', 'manage_options',
+        'wawp-login', 'wawp_login_page' );
     // add_submenu_page( 'pdev-options', 'Help With The PDEV Plugin', 'Help', 'manage_options',
     //     'pdev-help', 'pdev_help_page' );
     // add_submenu_page( 'pdev-options', 'Uninstall The PDEV Plugin', 'Uninstall', 'manage_options',
@@ -67,13 +67,22 @@ function wawp_create_menu() {
 //placerholder function for the settings page
 function wawp_settings_page() {
 	// Display WA4WP Settings page
-
+    ?>
+    <div class="wrap">
+        <h1>Wild Apricot for WordPress (WA4WP)</h1>
+    </div>
+    <?php
 }
 
-// //placerholder function for the about page
-// function pdev_about_page() {
-
-// }
+//placerholder function for the login page
+function wawp_login_page() {
+    ?>
+    <div class="waSettings">
+            <h1>Wild Apricot Credentials</h1>
+            <p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account. If you have not done so already, please </p>
+    </div>
+    <?php
+}
 
 // //placerholder function for the help page
 // function pdev_help_page() {
