@@ -93,10 +93,69 @@ function wawp_login_page() {
             </div>
             <div class="loginChild">
                 <h3>Please enter your credentials here:</h3>
-
+                <form action="options.php" method="post">
+                    <?php
+                        settings_fields( 'wawp_wal_options' );
+                        do_settings_sections( 'wawp_wal' );
+                        submit_button( 'Save', 'primary' );
+                    ?>
+                </form>
             </div>
         </div>
     <?php
+}
+
+// Register and define settings
+add_action( 'admin_init', 'wawp_wal_admin_init' );
+
+function wawp_wal_admin_init() {
+    // define the setting arguments
+    $args = array(
+        'type' => 'string',
+        'sanitize_callback' => 'wawp_wal_validate_options',
+        'default' => NULL
+    );
+
+    // Register settings
+    register_setting( 'wawp_wal_options', 'wawp_wal_options', $args );
+
+    // Add settings section
+    add_settings_section(
+        'wawp_wal_main',
+        'WAWP WAL Settings',
+        'wawp_wal_section_text',
+        'wawp_wal'
+    );
+
+    // Create settings field for name
+    add_settings_field(
+        'wawp_wal_name',
+        'Your Name',
+        'wawp_wal_setting_name',
+        'wawp_wal',
+        'wawp_wal_main'
+    );
+}
+
+// Draw section header
+function wawp_wal_section_text() {
+    echo '<p>Enter your settings here.</p>';
+}
+
+// Display and fill the Name form field
+function wawp_wal_setting_name() {
+    // get option 'text_string' value from the database
+    $options = get_option( 'wawp_wal_options' );
+    $name = $options['name'];
+    // echo the field
+    echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+}
+
+// Validate user input (text only)
+function wawp_wal_validate_options( $input ) {
+    $valid = array();
+    $valid['name'] = preg_replace('/[^a-zA-Z\s]/', '', $input['name']);
+    return $valid;
 }
 
 // //placerholder function for the help page
