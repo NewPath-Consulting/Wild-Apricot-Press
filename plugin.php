@@ -160,7 +160,14 @@ function wawp_wal_setting_name() {
 function wawp_wal_validate_options( $input ) {
     do_action('qm/debug', 'validate input is ' . $input);
     $valid = array();
-    $valid['name'] = preg_replace('/[^a-zA-Z\s]/', '', $input['name']);
+    // $valid['name'] = preg_replace('/^[\w]+$/', '', $input['name']);
+    $valid_input = preg_match('/^[\w]+$/', $input['name']);
+    if (!$valid_input) { // alert user that they have invalid input!
+        echo "Invalid input!";
+        $valid['name'] = '';
+    } else { // valid input
+        $valid['name'] = $input['name'];
+    }
     return $valid;
 }
 
