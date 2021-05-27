@@ -9,3 +9,7 @@
 .loginChild:first-child {
 	margin-right: 20px;
 }
+
+.errorAlert {
+	color: red;
+}

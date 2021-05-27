@@ -79,9 +79,10 @@ function wawp_settings_page() {
 
 //placerholder function for the login page
 function wawp_login_page() {
+    // echo '<p>Hello and welcome!</p>';
     ?>
     <div class="wrap">
-        <h1>Wild Apricot Credentials</h1>
+        <h1>Connect Wild Apricot with WordPress!</h1>
         <div class="waSettings">
             <div class="loginChild">
                 <p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account:</p>
@@ -93,7 +94,7 @@ function wawp_login_page() {
                 <p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
             </div>
             <div class="loginChild">
-                <h3>Please enter your credentials here:</h3>
+                <!-- <h3>Please enter your credentials here:</h3> -->
                 <form action="options.php" method="post">
                     <?php
                     settings_fields( 'wawp_wal_options' );
@@ -101,6 +102,13 @@ function wawp_login_page() {
                     submit_button( 'Save', 'primary' );
                     ?>
                 </form>
+                <!-- Check if form is valid -->
+                <?php
+                $user_options = get_option( 'wawp_wal_options' );
+                if ($user_options['name'] == '') { // not valid
+                    echo '<p style="color:red">Invalid credentials!</p>';
+                }
+                ?>
             </div>
         </div>
     </div>
@@ -124,7 +132,7 @@ function wawp_wal_admin_init() {
     // Add settings section
     add_settings_section(
         'wawp_wal_main',
-        'WAWP WAL Settings',
+        'Wild Apricot Login',
         'wawp_wal_section_text',
         'wawp_wal'
     );
@@ -141,7 +149,7 @@ function wawp_wal_admin_init() {
 
 // Draw section header
 function wawp_wal_section_text() {
-    echo '<p>Enter your settings here.</p>';
+    echo '<p>Enter your Wild Apricot credentials here.</p>';
 }
 
 // Display and fill the Name form field
@@ -160,10 +168,13 @@ function wawp_wal_setting_name() {
 function wawp_wal_validate_options( $input ) {
     do_action('qm/debug', 'validate input is ' . $input);
     $valid = array();
+    // if (isset($_POST['wawp_wal_options[name]'])) {
+    //     echo '<p>Invalid!</p>';
+    //     do_action('qm/debug', 'invalind input!');
+    // }
     // $valid['name'] = preg_replace('/^[\w]+$/', '', $input['name']);
     $valid_input = preg_match('/^[\w]+$/', $input['name']);
     if (!$valid_input) { // alert user that they have invalid input!
-        echo "Invalid input!";
         $valid['name'] = '';
     } else { // valid input
         $valid['name'] = $input['name'];

@@ -4,7 +4,8 @@
 
 class Deactivator {
   public static function deactivate() {
-    // Deactivation code
+    // Delete entries in wp_options table
+
   }
 }
 ?>
