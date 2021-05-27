@@ -105,8 +105,10 @@ function wawp_login_page() {
                 <!-- Check if form is valid -->
                 <?php
                 $user_options = get_option( 'wawp_wal_options' );
-                if ($user_options['name'] == '') { // not valid
+                if ($user_options['name'] == '' || $user_options['client_ID'] == '' || $user_options['client_secret'] == '') { // not valid
                     echo '<p style="color:red">Invalid credentials!</p>';
+                } else {
+                    echo '<p style="color:green">Success! Credentials saved!</p>';
                 }
                 ?>
             </div>
@@ -137,11 +139,29 @@ function wawp_wal_admin_init() {
         'wawp_wal'
     );
 
-    // Create settings field for name
+    // Create settings field for api-key (originally name)
     add_settings_field(
         'wawp_wal_name',
-        'Your Name',
+        'Your Name:',
         'wawp_wal_setting_name',
+        'wawp_wal',
+        'wawp_wal_main'
+    );
+
+    // Create settings field for client ID
+    add_settings_field(
+        'wawp_wal_client_ID',
+        'Client ID:',
+        'wawp_wal_setting_client_ID',
+        'wawp_wal',
+        'wawp_wal_main'
+    );
+
+    // Create settings field for client secret
+    add_settings_field(
+        'wawp_wal_client_secret',
+        'Client Secret:',
+        'wawp_wal_setting_client_secret',
         'wawp_wal',
         'wawp_wal_main'
     );
@@ -164,6 +184,30 @@ function wawp_wal_setting_name() {
         type='text' value='" . esc_attr( $name ) . "' />";
 }
 
+// Display and fill the Client ID field
+function wawp_wal_setting_client_ID() {
+    // get option 'text_string' value from the database
+    $options = get_option( 'wawp_wal_options' );
+    $client_ID = $options['client_ID'];
+    // do_action( 'qm/debug', $client_ID );
+    // echo the field
+    // echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+    echo "<input id='client_ID' name='wawp_wal_options[client_ID]'
+        type='text' value='" . esc_attr( $client_ID ) . "' />";
+}
+
+// Display and fill the Client Secret field
+function wawp_wal_setting_client_secret() {
+    // get option 'text_string' value from the database
+    $options = get_option( 'wawp_wal_options' );
+    $client_secret = $options['client_secret'];
+    // do_action( 'qm/debug', $client_ID );
+    // echo the field
+    // echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+    echo "<input id='client_secret' name='wawp_wal_options[client_secret]'
+        type='text' value='" . esc_attr( $client_secret ) . "' />";
+}
+
 // Validate user input (text only)
 function wawp_wal_validate_options( $input ) {
     do_action('qm/debug', 'validate input is ' . $input);
@@ -173,12 +217,27 @@ function wawp_wal_validate_options( $input ) {
     //     do_action('qm/debug', 'invalind input!');
     // }
     // $valid['name'] = preg_replace('/^[\w]+$/', '', $input['name']);
-    $valid_input = preg_match('/^[\w]+$/', $input['name']);
-    if (!$valid_input) { // alert user that they have invalid input!
+    $valid_api_key = preg_match('/^[\w]+$/', $input['name']);
+    if (!$valid_api_key) { // alert user that they have invalid input!
         $valid['name'] = '';
     } else { // valid input
         $valid['name'] = $input['name'];
     }
+    // Client ID
+    $valid_client_ID = preg_match('/^[\w]+$/', $input['client_ID']);
+    if (!$valid_client_ID) { // alert user that they have invalid input!
+        $valid['client_ID'] = '';
+    } else { // valid input
+        $valid['client_ID'] = $input['client_ID'];
+    }
+    // Client secret
+    $valid_client_secret = preg_match('/^[\w]+$/', $input['client_secret']);
+    if (!$valid_client_secret) { // alert user that they have invalid input!
+        $valid['client_secret'] = '';
+    } else { // valid input
+        $valid['client_secret'] = $input['client_secret'];
+    }
+
     return $valid;
 }
 
