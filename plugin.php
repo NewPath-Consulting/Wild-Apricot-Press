@@ -59,7 +59,7 @@ function wawp_create_menu() {
 
     //create submenu items
     add_submenu_page( 'wawp-options', 'Wild Apricot Login', 'Login', 'manage_options',
-        'wawp-login', 'wawp_login_page' );
+        'wawp_wal', 'wawp_login_page' );
     // add_submenu_page( 'pdev-options', 'Help With The PDEV Plugin', 'Help', 'manage_options',
     //     'pdev-help', 'pdev_help_page' );
     // add_submenu_page( 'pdev-options', 'Uninstall The PDEV Plugin', 'Uninstall', 'manage_options',
@@ -96,9 +96,9 @@ function wawp_login_page() {
                 <h3>Please enter your credentials here:</h3>
                 <form action="options.php" method="post">
                     <?php
-                        settings_fields( 'wawp_wal_options' );
-                        do_settings_sections( 'wawp_wal' );
-                        submit_button( 'Save', 'primary' );
+                    settings_fields( 'wawp_wal_options' );
+                    do_settings_sections( 'wawp_wal' );
+                    submit_button( 'Save', 'primary' );
                     ?>
                 </form>
             </div>
@@ -108,7 +108,7 @@ function wawp_login_page() {
 }
 
 // Register and define settings
-add_action( 'admin_init', 'wawp_wal_admin_init' );
+add_action('admin_init', 'wawp_wal_admin_init');
 
 function wawp_wal_admin_init() {
     // define the setting arguments
@@ -149,12 +149,16 @@ function wawp_wal_setting_name() {
     // get option 'text_string' value from the database
     $options = get_option( 'wawp_wal_options' );
     $name = $options['name'];
+    do_action( 'qm/debug', $name );
     // echo the field
-    echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+    // echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+    echo "<input id='name' name='wawp_wal_options[name]'
+        type='text' value='" . esc_attr( $name ) . "' />";
 }
 
 // Validate user input (text only)
 function wawp_wal_validate_options( $input ) {
+    do_action('qm/debug', 'validate input is ' . $input);
     $valid = array();
     $valid['name'] = preg_replace('/[^a-zA-Z\s]/', '', $input['name']);
     return $valid;
