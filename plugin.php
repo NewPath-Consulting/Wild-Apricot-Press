@@ -67,7 +67,7 @@ function wawp_create_menu() {
 
 }
 
-//placerholder function for the settings page
+// Settings page
 function wawp_settings_page() {
 	// Display WA4WP Settings page
     ?>
@@ -77,9 +77,8 @@ function wawp_settings_page() {
     <?php
 }
 
-//placerholder function for the login page
+// Login page
 function wawp_login_page() {
-    // echo '<p>Hello and welcome!</p>';
     ?>
     <div class="wrap">
         <h1>Connect Wild Apricot with WordPress!</h1>
@@ -94,7 +93,6 @@ function wawp_login_page() {
                 <p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
             </div>
             <div class="loginChild">
-                <!-- <h3>Please enter your credentials here:</h3> -->
                 <form action="options.php" method="post">
                     <?php
                     settings_fields( 'wawp_wal_options' );
@@ -169,85 +167,74 @@ function wawp_wal_admin_init() {
 
 // Draw section header
 function wawp_wal_section_text() {
-    echo '<p>Enter your Wild Apricot credentials here.</p>';
+    echo '<p>Enter your Wild Apricot credentials here. Your data is encrypted for safety!</p>';
 }
 
 // Display and fill the Name form field
 function wawp_wal_setting_api_key() {
-    // get option 'text_string' value from the database
+    // Get options array from database
     $options = get_option( 'wawp_wal_options' );
-    // Check that api key exists first
-    $api_key = '';
-    if (isset($options['api_key'])) { // api key set or is empty
-        $api_key = $options['api_key'];
-    }
-    // do_action( 'qm/debug', $api_key );
-    // echo the field
-    // echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+    // Echo text field
     echo "<input id='api_key' name='wawp_wal_options[api_key]'
-        type='text' value='" . esc_attr( $api_key ) . "' />";
+        type='text' placeholder='*************' />";
+    // Check if api key has been set; if so, echo that the api key has been set!
+    if (isset($options['api_key']) && $options['api_key'] != '') { // api key set or is empty
+        echo "<p>API Key is set!</p>";
+    }
 }
 
 // Display and fill the Client ID field
 function wawp_wal_setting_client_ID() {
-    // get option 'text_string' value from the database
+    // Get options array from database
     $options = get_option( 'wawp_wal_options' );
-    $client_ID = '';
-    if (isset($options['client_ID'])) {
-        $client_ID = $options['client_ID'];
-    }
-    // do_action( 'qm/debug', $client_ID );
-    // echo the field
-    // echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+    // Echo text field
     echo "<input id='client_ID' name='wawp_wal_options[client_ID]'
-        type='text' value='" . esc_attr( $client_ID ) . "' />";
+        type='text' placeholder='*************' />";
+    // Check if api key has been set; if so, echo that the api key has been set!
+    if (isset($options['client_ID']) && $options['client_ID'] != '') {
+        echo "<p>Client ID is set!</p>";
+    }
 }
 
 // Display and fill the Client Secret field
 function wawp_wal_setting_client_secret() {
-    // get option 'text_string' value from the database
+    // Get options array from database
     $options = get_option( 'wawp_wal_options' );
-    $client_secret = '';
-    if (isset($options['client_secret'])) {
-        $client_secret = $options['client_secret'];
-    }
-    // do_action( 'qm/debug', $client_ID );
-    // echo the field
-    // echo "<input id='name' name='wawp_wal_options['name']' type='text' value='" . esc_attr( $name ) . "'/>";
+    // Echo text field
     echo "<input id='client_secret' name='wawp_wal_options[client_secret]'
-        type='text' value='" . esc_attr( $client_secret ) . "' />";
+        type='text' placeholder='*************' />";
+    // Check if api key has been set; if so, echo that the api key has been set!
+    if (isset($options['client_secret']) && $options['client_secret'] != '') {
+        echo "<p>Client Secret is set!</p>";
+    }
 }
 
-// Validate user input (text only)
+// Validate user input (text and numbers only)
 function wawp_wal_validate_options( $input ) {
-    // do_action('qm/debug', 'validate input is ' . $input);
+    // Create valid array that will hold the valid input
     $valid = array();
-    // if (isset($_POST['wawp_wal_options[name]'])) {
-    //     echo '<p>Invalid!</p>';
-    //     do_action('qm/debug', 'invalind input!');
-    // }
-    // $valid['name'] = preg_replace('/^[\w]+$/', '', $input['name']);
+    // Use regex for text and numbers to detect if input is valid
     $valid_api_key = preg_match('/^[\w]+$/', $input['api_key']);
-    if (!$valid_api_key) { // alert user that they have invalid input!
+    if (!$valid_api_key) { // invalid input; save as ''
         $valid['api_key'] = '';
     } else { // valid input
         $valid['api_key'] = $input['api_key'];
     }
-    // Client ID
+    // Repeat same process for Client ID
     $valid_client_ID = preg_match('/^[\w]+$/', $input['client_ID']);
-    if (!$valid_client_ID) { // alert user that they have invalid input!
+    if (!$valid_client_ID) { // invalid input; save as ''
         $valid['client_ID'] = '';
     } else { // valid input
         $valid['client_ID'] = $input['client_ID'];
     }
-    // Client secret
+    // Repeat same process for Client secret
     $valid_client_secret = preg_match('/^[\w]+$/', $input['client_secret']);
-    if (!$valid_client_secret) { // alert user that they have invalid input!
+    if (!$valid_client_secret) { // invalid input; save as ''
         $valid['client_secret'] = '';
     } else { // valid input
         $valid['client_secret'] = $input['client_secret'];
     }
-
+    // Return array of valid inputs
     return $valid;
 }
 
