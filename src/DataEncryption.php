@@ -19,8 +19,8 @@ class DataEncryption {
 
 		// Define and get encryption parameters
 		$encryption_method = 'aes-256-ctr';
-		$cipher_iv_len = openssl_cipher_iv_length($method);
-		$random_string = openssl_random_pseudo_bytes($ivlen);
+		$cipher_iv_len = openssl_cipher_iv_length($encryption_method);
+		$random_string = openssl_random_pseudo_bytes($cipher_iv_len);
 
 		// Encrypt raw value
 		$raw_value = openssl_encrypt($value . $this->salt, $encryption_method, $this->key, 0, $random_string);
@@ -45,7 +45,7 @@ class DataEncryption {
 
 		// Define and get encryption parameters
 		$encryption_method = 'aes-256-ctr';
-		$cipher_iv_len = openssl_cipher_iv_length($method);
+		$cipher_iv_len = openssl_cipher_iv_length($encryption_method);
 		$random_string = substr($raw_value, 0, $cipher_iv_len);
 
 		// Update raw value

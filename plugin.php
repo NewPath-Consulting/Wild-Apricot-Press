@@ -234,6 +234,15 @@ function wawp_wal_validate_options( $input ) {
     } else { // valid input
         $valid['client_secret'] = $input['client_secret'];
     }
+
+    // Encrypt valid inputs
+    // include plugin_dir_url(__FILE__) . 'src/DataEncryption.php'; // path to DataEncryption.php
+    require_once("src/DataEncryption.php");
+    $dataEncryption = new DataEncryption();
+    $valid['api_key'] = $dataEncryption->encrypt($valid['api_key']);
+    $valid['client_ID'] = $dataEncryption->encrypt($valid['client_ID']);
+    $valid['client_secret'] = $dataEncryption->encrypt($valid['client_secret']);
+
     // Return array of valid inputs
     return $valid;
 }
