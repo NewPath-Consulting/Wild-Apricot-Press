@@ -37,7 +37,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // Activation hook
 register_activation_hook(__FILE__, function() {
 	// do_action('qm/debug', 'activation in plugin.php!');
-	add_option('hello_table', 'hello_table');
 	require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 	Activator::activate();
 } );
@@ -59,14 +58,14 @@ function wawp_create_menu() {
 
     //create custom top-level menu
     add_menu_page( 'WA4WP Settings Page', 'WA4WP',
-        'manage_options', 'wawp-options', 'wawp_settings_page',
+        'manage_options', 'wawp_options', 'wawp_settings_page',
         'dashicons-businesswoman', 6 );
 
     //create submenu items
     //add_submenu_page( 'wawp-options', 'Wild Apricot Login', 'Login', 'manage_options',
         // 'wawp_wal', 'wawp_login_page' );
-    add_submenu_page( 'wawp-options', 'Wild Apricot Login', 'Login', 'manage_options',
-        'wawp_wal', array('WAWPLoginPage', 'wawp_construct_page') );
+    add_submenu_page( 'wawp_options', 'Wild Apricot Login', 'Login', 'manage_options',
+       'wawp_wal', array('WAWPLoginPage', 'wawp_construct_page') );
 
 
 

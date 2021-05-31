@@ -20,8 +20,9 @@ class WAWPLoginPage {
 				<div class="loginChild">
 					<form action="options.php" method="post">
 						<?php
-						settings_fields( 'wawp_wal_options' );
-						do_settings_sections( 'wawp_wal' );
+						do_action('qm/debug', rand());
+						settings_fields( 'wawp_wal_options' ); // not saving here
+						do_settings_sections( 'wawp_wal' ); // displays fields for id
 						submit_button( 'Save', 'primary' );
 						?>
 					</form>
@@ -47,6 +48,8 @@ class WAWPLoginPage {
 			'sanitize_callback' => 'wawp_wal_validate_options',
 			'default' => NULL
 		);
+
+		do_action('qm/debug', 'In the admin init!');
 
 		// Register settings
 		register_setting( 'wawp_wal_options', 'wawp_wal_options', $args );
@@ -85,6 +88,8 @@ class WAWPLoginPage {
 			'wawp_wal',
 			'wawp_wal_main'
 		);
+
+		do_action('qm/debug', 'end of init!');
 	}
 
 	// Draw section header
@@ -121,6 +126,7 @@ class WAWPLoginPage {
 	// Display and fill the Client Secret field
 	static function wawp_wal_setting_client_secret() {
 		// Get options array from database
+		do_action( 'qm/debug', 'client secrets!' );
 		$options = get_option( 'wawp_wal_options' );
 		// Echo text field
 		echo "<input id='client_secret' name='wawp_wal_options[client_secret]'
@@ -134,6 +140,7 @@ class WAWPLoginPage {
 	// Validate user input (text and numbers only)
 	function wawp_wal_validate_options( $input ) {
 		// Create valid array that will hold the valid input
+		do_action( 'qm/debug', 'Validate options!' );
 		$valid = array();
 		// Use regex for text and numbers to detect if input is valid
 		$valid_api_key = preg_match('/^[\w]+$/', $input['api_key']);
