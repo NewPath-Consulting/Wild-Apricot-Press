@@ -51,6 +51,8 @@ function wawp_enqueue_admin_script($hook) {
 // Add menu
 add_action( 'admin_menu', 'wawp_create_menu' );
 function wawp_create_menu() {
+    // Include other classes required for each page
+    require_once("src/WAWPLoginPage.php");
 
     //create custom top-level menu
     add_menu_page( 'WA4WP Settings Page', 'WA4WP',
@@ -58,8 +60,13 @@ function wawp_create_menu() {
         'dashicons-businesswoman', 6 );
 
     //create submenu items
+    //add_submenu_page( 'wawp-options', 'Wild Apricot Login', 'Login', 'manage_options',
+        // 'wawp_wal', 'wawp_login_page' );
     add_submenu_page( 'wawp-options', 'Wild Apricot Login', 'Login', 'manage_options',
-        'wawp_wal', 'wawp_login_page' );
+        'wawp_wal', array('WAWPLoginPage', 'wawp_construct_page') );
+
+
+
     // add_submenu_page( 'pdev-options', 'Help With The PDEV Plugin', 'Help', 'manage_options',
     //     'pdev-help', 'pdev_help_page' );
     // add_submenu_page( 'pdev-options', 'Uninstall The PDEV Plugin', 'Uninstall', 'manage_options',
@@ -73,44 +80,6 @@ function wawp_settings_page() {
     ?>
     <div class="wrap">
         <h1>Wild Apricot for WordPress (WA4WP)</h1>
-    </div>
-    <?php
-}
-
-// Login page
-function wawp_login_page() {
-    ?>
-    <div class="wrap">
-        <h1>Connect Wild Apricot with WordPress!</h1>
-        <div class="waSettings">
-            <div class="loginChild">
-                <p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account:</p>
-                <ul>
-                    <li>API key</li>
-                    <li>Client ID</li>
-                    <li>Client secret</li>
-                </ul>
-                <p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
-            </div>
-            <div class="loginChild">
-                <form action="options.php" method="post">
-                    <?php
-                    settings_fields( 'wawp_wal_options' );
-                    do_settings_sections( 'wawp_wal' );
-                    submit_button( 'Save', 'primary' );
-                    ?>
-                </form>
-                <!-- Check if form is valid -->
-                <?php
-                $user_options = get_option( 'wawp_wal_options' );
-                if (!isset($user_options['api_key']) || !isset($user_options['client_ID']) || !isset($user_options['client_secret']) || $user_options['api_key'] == '' || $user_options['client_ID'] == '' || $user_options['client_secret'] == '') { // not valid
-                    echo '<p style="color:red">Invalid credentials!</p>';
-                } else {
-                    echo '<p style="color:green">Success! Credentials saved!</p>';
-                }
-                ?>
-            </div>
-        </div>
     </div>
     <?php
 }
