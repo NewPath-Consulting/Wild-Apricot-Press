@@ -49,6 +49,8 @@ function wawp_enqueue_admin_script($hook) {
 
 // Include other classes required for each page
 include 'src/WAWPLoginPage.php';
+// $wawp_login_obj = new WAWPLoginPage();
+// $wawp_login_obj->wawp_wal_init();
 
 // Add menu
 add_action( 'admin_menu', 'wawp_create_menu' );
@@ -65,8 +67,7 @@ function wawp_create_menu() {
     //add_submenu_page( 'wawp-options', 'Wild Apricot Login', 'Login', 'manage_options',
         // 'wawp_wal', 'wawp_login_page' );
     add_submenu_page( 'wawp_options', 'Wild Apricot Login', 'Login', 'manage_options',
-       'wawp_wal', array('WAWPLoginPage', 'wawp_construct_page') );
-
+       'wawp_wal', ['WAWPLoginPage', 'wawp_construct_page'] );
 
 
     // add_submenu_page( 'pdev-options', 'Help With The PDEV Plugin', 'Help', 'manage_options',
@@ -87,8 +88,7 @@ function wawp_settings_page() {
 }
 
 // Register and define settings
-
-add_action('admin_init', array('WAWPLoginPage', 'wawp_wal_admin_init'));
+add_action('admin_init', ['WAWPLoginPage', 'wawp_wal_admin_init']);
 
 // //placerholder function for the help page
 // function pdev_help_page() {

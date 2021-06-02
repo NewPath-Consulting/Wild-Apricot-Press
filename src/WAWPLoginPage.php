@@ -1,5 +1,20 @@
 <?php
 class WAWPLoginPage {
+	function __construct() {
+		do_action('qm/debug', 'in constructor!' . rand());
+	}
+
+	function wawp_wal_init() {
+		// add_action( 'admin_menu', array($this, 'wawp_wal_create_menu'));
+		do_action('qm/debug', 'in the init!');
+		// add_action('admin_init', [$this, 'wawp_wal_admin_init']);
+	}
+
+	// function wawp_wal_create_menu() {
+	// 	add_submenu_page( 'wawp_options', 'Wild Apricot Login', 'Login', 'manage_options',
+    //    'wawp_wal', array($this, 'wawp_construct_page') );
+	// }
+
 	static function wawp_construct_page() {
 		?>
 		<div class="wrap">
@@ -20,7 +35,7 @@ class WAWPLoginPage {
 				<div class="loginChild">
 					<form action="options.php" method="post">
 						<?php
-						do_action('qm/debug', rand());
+						do_action('qm/debug', 'making form ' . rand());
 						settings_fields( 'wawp_wal_options' ); // not saving here
 						do_settings_sections( 'wawp_wal' ); // displays fields for id
 						submit_button( 'Save', 'primary' );
@@ -58,7 +73,7 @@ class WAWPLoginPage {
 		add_settings_section(
 			'wawp_wal_main',
 			'Wild Apricot Login',
-			array('WAWPLoginPage', 'wawp_wal_section_text'),
+			['WAWPLoginPage', 'wawp_wal_section_text'],
 			'wawp_wal'
 		);
 
@@ -66,7 +81,7 @@ class WAWPLoginPage {
 		add_settings_field(
 			'wawp_wal_api_key',
 			'API Key:',
-			array('WAWPLoginPage', 'wawp_wal_setting_api_key'),
+			['WAWPLoginPage', 'wawp_wal_setting_api_key'],
 			'wawp_wal',
 			'wawp_wal_main'
 		);
@@ -75,7 +90,7 @@ class WAWPLoginPage {
 		add_settings_field(
 			'wawp_wal_client_ID',
 			'Client ID:',
-			array('WAWPLoginPage', 'wawp_wal_setting_client_ID'),
+			['WAWPLoginPage', 'wawp_wal_setting_client_ID'],
 			'wawp_wal',
 			'wawp_wal_main'
 		);
@@ -84,7 +99,7 @@ class WAWPLoginPage {
 		add_settings_field(
 			'wawp_wal_client_secret',
 			'Client Secret:',
-			array('WAWPLoginPage', 'wawp_wal_setting_client_secret'),
+			['WAWPLoginPage', 'wawp_wal_setting_client_secret'],
 			'wawp_wal',
 			'wawp_wal_main'
 		);
@@ -138,7 +153,7 @@ class WAWPLoginPage {
 	}
 
 	// Validate user input (text and numbers only)
-	function wawp_wal_validate_options( $input ) {
+	static function wawp_wal_validate_options( $input ) {
 		// Create valid array that will hold the valid input
 		do_action( 'qm/debug', 'Validate options!' );
 		$valid = array();
@@ -166,7 +181,7 @@ class WAWPLoginPage {
 
 		// Encrypt valid inputs
 		// include plugin_dir_url(__FILE__) . 'src/DataEncryption.php'; // path to DataEncryption.php
-		require_once("src/DataEncryption.php");
+		require_once('DataEncryption.php');
 		$dataEncryption = new DataEncryption();
 		$valid['api_key'] = $dataEncryption->encrypt($valid['api_key']);
 		$valid['client_ID'] = $dataEncryption->encrypt($valid['client_ID']);
