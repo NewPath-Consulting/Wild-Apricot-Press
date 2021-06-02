@@ -5,5 +5,5 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 // Delete entries in wp_options table
-delete_option('wawp_wal_options');
+delete_option('wawp_wal_name');
 ?>
