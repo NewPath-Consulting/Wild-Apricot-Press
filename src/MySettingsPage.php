@@ -85,11 +85,6 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
-						// $user_options = get_option( 'wawp_wal_name' );
-						// echo count($this->options);
-						// print_r($this->options);
-						// echo $this->options['wawp_wal_client_id'];
-						// echo $this->options['wawp_wal_client_secret'];
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Invalid credentials!</p>';
 						} else {
@@ -170,7 +165,7 @@ class MySettingsPage
         // return $new_input;
 
 		// Create valid array that will hold the valid input
-		// do_action( 'qm/debug', 'Validate options!' );
+		do_action( 'qm/debug', 'Validate options!' );
 		$valid = array();
 		// Use regex for text and numbers to detect if input is valid
 		$valid_api_key = preg_match('/^[\w]+$/', $input['wawp_wal_api_key']);

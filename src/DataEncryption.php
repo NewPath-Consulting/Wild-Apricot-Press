@@ -30,7 +30,7 @@ class DataEncryption {
 		}
 
 		// Return encoded data
-		return base64_encode($andom_string . $raw_value);
+		return base64_encode($random_string . $raw_value);
 	}
 
 	// Decrypts value
