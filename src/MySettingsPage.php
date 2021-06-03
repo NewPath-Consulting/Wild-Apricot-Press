@@ -26,26 +26,12 @@ class MySettingsPage
         }
     }
 
-    // For debugging
-    function my_log_file( $msg, $name = '' )
-    {
-        // Print the name of the calling function if $name is left empty
-        $trace=debug_backtrace();
-        $name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-        $error_dir = '/Applications/MAMP/logs/php_error.log';
-        $msg = print_r( $msg, true );
-        $log = $name . "  |  " . $msg . "\n";
-        error_log( $log, 3, $error_dir );
-    }
-
     /**
      * Add options page
      */
     public function add_settings_page()
     {
         // Create WA4WP admin page
-        // This page will be under "Settings"
         add_menu_page(
             'WA4WP Settings',
             'WA4WP',
@@ -185,55 +171,47 @@ class MySettingsPage
      */
     public function wal_sanitize( $input )
     {
-        // $new_input = array();
-        // if( isset( $input['wawp_wal_api_key'] ) )
-        //     $new_input['wawp_wal_api_key'] = sanitize_text_field( $input['wawp_wal_api_key'] );
-
-        // if( isset( $input['wawp_wal_client_id'] ) )
-        //     $new_input['wawp_wal_client_id'] = sanitize_text_field( $input['wawp_wal_client_id'] );
-
-		// if( isset( $input['wawp_wal_client_secret'] ) )
-        //     $new_input['wawp_wal_client_secret'] = sanitize_text_field( $input['wawp_wal_client_secret'] );
-
-        // return $new_input;
-
 		// Create valid array that will hold the valid input
-		// do_action( 'qm/debug', 'Validate options!' );
-        $this->my_log_file('we are validating in real plugin!');
-        // Debugging input
-        foreach ($input as $i) {
-            $this->my_log_file('qm/debug', $i);
-        }
 		$valid = array();
-		// Use regex for text and numbers to detect if input is valid
-		$valid_api_key = preg_match('/^[\w]+$/', $input['wawp_wal_api_key']);
-		if (!$valid_api_key) { // invalid input; save as ''
-			$valid['wawp_wal_api_key'] = '';
-		} else { // valid input
-			$valid['wawp_wal_api_key'] = $input['wawp_wal_api_key'];
-		}
-		// Repeat same process for Client ID
-		$valid_client_ID = preg_match('/^[\w]+$/', $input['wawp_wal_client_id']);
-		if (!$valid_client_ID) { // invalid input; save as ''
-			$valid['wawp_wal_client_id'] = '';
-		} else { // valid input
-			$valid['wawp_wal_client_id'] = $input['wawp_wal_client_id'];
-		}
-		// Repeat same process for Client secret
-		$valid_client_secret = preg_match('/^[\w]+$/', $input['wawp_wal_client_secret']);
-		if (!$valid_client_secret) { // invalid input; save as ''
-			$valid['wawp_wal_client_secret'] = '';
-		} else { // valid input
-			$valid['wawp_wal_client_secret'] = $input['wawp_wal_client_secret'];
-		}
 
-		// Encrypt valid inputs
-		// include plugin_dir_url(__FILE__) . 'src/DataEncryption.php'; // path to DataEncryption.php
-		require_once('DataEncryption.php');
+        // Get valid api key
+        $valid['wawp_wal_api_key'] = preg_replace(
+            '/[^A-Za-z0-9]+/', // match only letters and numbers
+            '',
+            $input['wawp_wal_api_key']
+        );
+        // Get valid client id
+        $valid['wawp_wal_client_id'] = preg_replace(
+            '/[^A-Za-z0-9]+/', // match only letters and numbers
+            '',
+            $input['wawp_wal_client_id']
+        );
+        // Get valid client secret
+        $valid['wawp_wal_client_secret'] = preg_replace(
+            '/[^A-Za-z0-9]+/', // match only letters and numbers
+            '',
+            $input['wawp_wal_client_secret']
+        );
+
+        // Encrypt values if they are valid
+        require_once('DataEncryption.php');
 		$dataEncryption = new DataEncryption();
-		$valid['wawp_wal_api_key'] = $dataEncryption->encrypt($valid['wawp_wal_api_key']);
-		$valid['wawp_wal_client_id'] = $dataEncryption->encrypt($valid['wawp_wal_client_id']);
-		$valid['wawp_wal_client_secret'] = $dataEncryption->encrypt($valid['wawp_wal_client_secret']);
+        // Check if inputs are valid
+        if ($valid['wawp_wal_api_key'] !== $input['wawp_wal_api_key']) { // incorrect api key
+            $valid['wawp_wal_api_key'] = '';
+        } else { // valid
+            $valid['wawp_wal_api_key'] = $dataEncryption->encrypt($valid['wawp_wal_api_key']);
+        }
+        if ($valid['wawp_wal_client_id'] !== $input['wawp_wal_client_id']) { // incorrect client ID
+            $valid['wawp_wal_client_id'] = '';
+        } else {
+            $valid['wawp_wal_client_id'] = $dataEncryption->encrypt($valid['wawp_wal_client_id']);
+        }
+        if ($valid['wawp_wal_client_secret'] !== $input['wawp_wal_client_secret']) { // incorrect client secret
+            $valid['wawp_wal_client_secret'] = '';
+        } else {
+            $valid['wawp_wal_client_secret'] = $dataEncryption->encrypt($valid['wawp_wal_client_secret']);
+        }
 
 		// Return array of valid inputs
 		return $valid;
@@ -252,11 +230,7 @@ class MySettingsPage
      */
     public function api_key_callback()
     {
-        // printf(
-        //     '<input type="text" id="wawp_wal_api_key" name="wawp_wal_name[wawp_wal_api_key]" value="%s" />',
-        //     isset( $this->options['wawp_wal_api_key'] ) ? esc_attr( $this->options['wawp_wal_api_key']) : ''
-        // );
-
+        // Display the text field for api key
 		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
 			type='text' placeholder='*************' />";
 		// Check if api key has been set; if so, echo that the client secret has been set!
@@ -270,14 +244,10 @@ class MySettingsPage
      */
     public function client_id_callback()
     {
-        // printf(
-        //     '<input type="text" id="wawp_wal_client_id" name="wawp_wal_name[wawp_wal_client_id]" value="%s" />',
-        //     isset( $this->options['wawp_wal_client_id'] ) ? esc_attr( $this->options['wawp_wal_client_id']) : ''
-        // );
-
+        // Display text field for client id
 		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
 			type='text' placeholder='*************' />";
-		// Check if api key has been set; if so, echo that the client secret has been set!
+		// Check if client id has been set; if so, echo that the client secret has been set!
 		if (isset($this->options['wawp_wal_client_id']) && $this->options['wawp_wal_client_id'] != '') {
 			echo "<p>Client ID is set!</p>";
 		}
@@ -288,16 +258,10 @@ class MySettingsPage
      */
     public function client_secret_callback()
     {
-        // printf(
-        //     '<input type="text" id="wawp_wal_client_secret" name="wawp_wal_name[wawp_wal_client_secret]" value="%s" />',
-        //     isset( $this->options['wawp_wal_client_secret'] ) ? esc_attr( $this->options['wawp_wal_client_secret']) : ''
-        // );
-
-		// $options = get_option( 'wawp_wal_options' );
-		// Echo text field
+		// Display text field for client secret
 		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
 			type='text' placeholder='*************' />";
-		// Check if api key has been set; if so, echo that the client secret has been set!
+		// Check if client secret has been set; if so, echo that the client secret has been set!
 		if (isset($this->options['wawp_wal_client_secret']) && $this->options['wawp_wal_client_secret'] != '') {
 			echo "<p>Client Secret is set!</p>";
 		}
