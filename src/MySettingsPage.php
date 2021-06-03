@@ -15,6 +15,15 @@ class MySettingsPage
     {
         add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
         add_action( 'admin_init', array( $this, 'page_init' ) );
+
+        // Activate option in table if it does not exist yet
+        // Currently, there is a WordPress bug that calls the 'sanitize' function twice if the option is not already in the database
+        // See: https://core.trac.wordpress.org/ticket/21989
+        if (!get_option('wawp_wal_name')) { // does not exist
+            do_action('qm/debug', 'option does not exist!');
+            // Create option
+            add_option('wawp_wal_name');
+        }
     }
 
     // For debugging
@@ -189,9 +198,12 @@ class MySettingsPage
         // return $new_input;
 
 		// Create valid array that will hold the valid input
-		do_action( 'qm/debug', 'Validate options!' );
+		// do_action( 'qm/debug', 'Validate options!' );
         $this->my_log_file('we are validating in real plugin!');
-        print_r($input);
+        // Debugging input
+        foreach ($input as $i) {
+            $this->my_log_file('qm/debug', $i);
+        }
 		$valid = array();
 		// Use regex for text and numbers to detect if input is valid
 		$valid_api_key = preg_match('/^[\w]+$/', $input['wawp_wal_api_key']);
