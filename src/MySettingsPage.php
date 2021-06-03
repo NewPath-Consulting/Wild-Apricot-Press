@@ -13,8 +13,8 @@ class MySettingsPage
      */
     public function __construct()
     {
-        add_action( 'admin_menu', array( $this, 'wawp_add_settings_page' ) );
-        add_action( 'admin_init', array( $this, 'wawp_page_init' ) );
+        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+        add_action( 'admin_init', array( $this, 'page_init' ) );
     }
 
     // For debugging
@@ -33,7 +33,7 @@ class MySettingsPage
     /**
      * Add options page
      */
-    public function wawp_add_settings_page()
+    public function add_settings_page()
     {
         // Create WA4WP admin page
         // This page will be under "Settings"
@@ -42,7 +42,7 @@ class MySettingsPage
             'WA4WP',
             'manage_options',
             'wawp-wal-admin',
-            array( $this, 'wawp_create_admin_page' ),
+            array( $this, 'create_admin_page' ),
 			'dashicons-businesswoman',
 			6
         );
@@ -54,7 +54,7 @@ class MySettingsPage
 			'Login',
 			'manage_options',
 			'wawp-login',
-			array($this, 'wawp_create_login_page')
+			array($this, 'create_login_page')
 		);
 
         // Add new submenu here
@@ -63,7 +63,7 @@ class MySettingsPage
     /**
      * Settings page callback
      */
-    public function wawp_create_admin_page()
+    public function create_admin_page()
     {
         // Set class property
         $this->options = get_option( 'wawp_wal_name' );
@@ -72,7 +72,7 @@ class MySettingsPage
 	/**
 	 * Login page callback
 	 */
-	public function wawp_create_login_page() {
+	public function create_login_page() {
 		$this->options = get_option( 'wawp_wal_name' );
 		?>
         <div class="wrap">
@@ -116,13 +116,13 @@ class MySettingsPage
     /**
      * Register and add settings
      */
-    public function wawp_page_init()
+    public function page_init()
     {
         do_action('qm/debug', 'in wawp init!');
 
         $register_args = array(
             'type' => 'string',
-            'sanitize_callback' => array( $this, 'wawp_wal_sanitize'),
+            'sanitize_callback' => array( $this, 'wal_sanitize'),
             'default' => NULL
         );
 
@@ -137,7 +137,7 @@ class MySettingsPage
         add_settings_section(
             'wawp_wal_id', // ID
             'Wild Apricot Login', // Title
-            array( $this, 'wawp_wal_print_section_info' ), // Callback
+            array( $this, 'wal_print_section_info' ), // Callback
             'wawp-wal-admin' // Page
         );
 
@@ -145,7 +145,7 @@ class MySettingsPage
         add_settings_field(
             'wawp_wal_api_key', // ID
             'API Key:', // Title
-            array( $this, 'wawp_api_key_callback' ), // Callback
+            array( $this, 'api_key_callback' ), // Callback
             'wawp-wal-admin', // Page
             'wawp_wal_id' // Section
         );
@@ -154,7 +154,7 @@ class MySettingsPage
         add_settings_field(
             'wawp_wal_client_id', // ID
             'Client ID:', // Title
-            array( $this, 'wawp_client_id_callback' ), // Callback
+            array( $this, 'client_id_callback' ), // Callback
             'wawp-wal-admin', // Page
             'wawp_wal_id' // Section
         );
@@ -163,7 +163,7 @@ class MySettingsPage
 		add_settings_field(
             'wawp_wal_client_secret', // ID
             'Client Secret:', // Title
-            array( $this, 'wawp_client_secret_callback' ), // Callback
+            array( $this, 'client_secret_callback' ), // Callback
             'wawp-wal-admin', // Page
             'wawp_wal_id' // Section
         );
@@ -174,7 +174,7 @@ class MySettingsPage
      *
      * @param array $input Contains all settings fields as array keys
      */
-    public function wawp_wal_sanitize( $input )
+    public function wal_sanitize( $input )
     {
         // $new_input = array();
         // if( isset( $input['wawp_wal_api_key'] ) )
@@ -230,7 +230,7 @@ class MySettingsPage
     /**
      * Print the Section text
      */
-    public function wawp_wal_print_section_info()
+    public function wal_print_section_info()
     {
         print 'Enter your Wild Apricot credentials here. Your data is encrypted for your safety!';
     }
@@ -238,7 +238,7 @@ class MySettingsPage
     /**
      * Get the api key
      */
-    public function wawp_api_key_callback()
+    public function api_key_callback()
     {
         // printf(
         //     '<input type="text" id="wawp_wal_api_key" name="wawp_wal_name[wawp_wal_api_key]" value="%s" />',
@@ -256,7 +256,7 @@ class MySettingsPage
     /**
      * Get the client id
      */
-    public function wawp_client_id_callback()
+    public function client_id_callback()
     {
         // printf(
         //     '<input type="text" id="wawp_wal_client_id" name="wawp_wal_name[wawp_wal_client_id]" value="%s" />',
@@ -274,7 +274,7 @@ class MySettingsPage
 	/**
      * Get the client secret
      */
-    public function wawp_client_secret_callback()
+    public function client_secret_callback()
     {
         // printf(
         //     '<input type="text" id="wawp_wal_client_secret" name="wawp_wal_name[wawp_wal_client_secret]" value="%s" />',
