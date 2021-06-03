@@ -16,6 +16,19 @@ class MySettingsPage
         add_action( 'admin_init', array( $this, 'wawp_page_init' ) );
     }
 
+    // For debugging
+    function my_log_file( $msg, $name = '' )
+    {
+        // Print the name of the calling function if $name is left empty
+        $trace=debug_backtrace();
+        $name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+        $error_dir = '/Applications/MAMP/logs/php_error.log';
+        $msg = print_r( $msg, true );
+        $log = $name . "  |  " . $msg . "\n";
+        error_log( $log, 3, $error_dir );
+    }
+
     /**
      * Add options page
      */
@@ -42,6 +55,8 @@ class MySettingsPage
 			'wawp-login',
 			array($this, 'wawp_create_login_page')
 		);
+
+        // Add new submenu here
     }
 
     /**
@@ -102,11 +117,19 @@ class MySettingsPage
      */
     public function wawp_page_init()
     {
+        do_action('qm/debug', 'in wawp init!');
+
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'wawp_wal_sanitize'),
+            'default' => NULL
+        );
+
 		// Register setting
         register_setting(
             'wawp_wal_group', // Option group
             'wawp_wal_name', // Option name
-            array( $this, 'wawp_wal_sanitize' ) // Sanitize
+            $register_args // Sanitize
         );
 
 		// Create settings section
@@ -166,6 +189,7 @@ class MySettingsPage
 
 		// Create valid array that will hold the valid input
 		do_action( 'qm/debug', 'Validate options!' );
+        $this->my_log_file('we are validating in real plugin!');
 		$valid = array();
 		// Use regex for text and numbers to detect if input is valid
 		$valid_api_key = preg_match('/^[\w]+$/', $input['wawp_wal_api_key']);
