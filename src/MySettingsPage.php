@@ -1,4 +1,5 @@
 <?php
+namespace WAWP;
 
 class MySettingsPage
 {
@@ -190,6 +191,7 @@ class MySettingsPage
 		// Create valid array that will hold the valid input
 		do_action( 'qm/debug', 'Validate options!' );
         $this->my_log_file('we are validating in real plugin!');
+        print_r($input);
 		$valid = array();
 		// Use regex for text and numbers to detect if input is valid
 		$valid_api_key = preg_match('/^[\w]+$/', $input['wawp_wal_api_key']);

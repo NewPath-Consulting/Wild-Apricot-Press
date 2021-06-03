@@ -1,6 +1,6 @@
 <?php
 
-// namespace WAWP;
+namespace WAWP;
 
 class Activator {
 

@@ -38,7 +38,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 register_activation_hook(__FILE__, function() {
 	// do_action('qm/debug', 'activation in plugin.php!');
 	require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
-	Activator::activate();
+	WAWP\Activator::activate();
 } );
 
 // Enqueue stylesheet
@@ -49,12 +49,12 @@ function wawp_enqueue_admin_script($hook) {
 
 // Create settings page
 include 'src/MySettingsPage.php';
-$my_settings_page = new MySettingsPage();
+$my_settings_page = new WAWP\MySettingsPage();
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
 	require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
-	Deactivator::deactivate();
+	WAWP\Deactivator::deactivate();
 } );
 
 ?>

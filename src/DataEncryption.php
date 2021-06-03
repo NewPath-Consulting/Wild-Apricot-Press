@@ -1,4 +1,5 @@
 <?php
+namespace WAWP;
 class DataEncryption {
 	// Holds key and salt values
 	private $key;
