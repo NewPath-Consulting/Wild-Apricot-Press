@@ -1,6 +1,12 @@
 <?php
 namespace WAWP;
 
+require_once __DIR__ . '/Addon.php';
+
+use WAWP\Addon;
+
+use function PHPSTORM_META\map;
+
 class MySettingsPage
 {
     /**
@@ -51,6 +57,16 @@ class MySettingsPage
 			'wawp-login',
 			array($this, 'create_login_page')
 		);
+
+        // Create submenu for license key forms
+        add_submenu_page(
+            'wawp-wal-admin',
+            'Licensing',
+            'Licensing',
+            'manage_options',
+            'wawp-licensing',
+            array($this, 'wawp_licensing_page')
+        );
 
         // Add new submenu here
     }
@@ -108,6 +124,20 @@ class MySettingsPage
         <?php
 	}
 
+    // Create license form page
+    public function wawp_licensing_page() {
+        ?>
+        <div class="wrap">
+            <form method="post" action="options.php">
+            <?php 
+            settings_fields('wawp_license_keys');
+            do_settings_sections('wawp_licensing');
+            submit_button('Save', 'primary');
+            ?> </form>
+        </div>
+        <?php
+    }
+
     /**
      * Register and add settings
      */
@@ -162,6 +192,51 @@ class MySettingsPage
             'wawp-wal-admin', // Page
             'wawp_wal_id' // Section
         );
+
+        // Registering and adding settings for the license key forms
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'validate_license_form'),
+            'default' => NULL
+        );
+
+        register_setting(
+            'wawp_license_keys',
+            'wawp_license_keys',
+            $register_args
+        );
+
+        add_settings_section(
+            'wawp_license',
+            'License',
+            array($this, 'license_print_info'),
+            'wawp_licensing' // page
+        );
+
+        // Render the WAWP license form
+        add_settings_field(
+            'wawp_license_form', // ID
+            'Wild Apricot for Wordpress', // title
+            array($this, 'license_key_input'), // callback
+            'wawp_licensing', // page
+            'wawp_license', // section
+            array('slug' => 'wawp', 'title' => 'Wild Apricot for Wordpress') // args for callback
+        );
+
+        // For each addon installed, render a license key form
+        $addons = Addon::instance()::get_addons();
+        foreach ($addons as $addon) {
+            $slug = array_key_first($addon);
+            $title = $addon[$slug];
+            add_settings_field(
+                'wawp_license_form_' . $slug, // ID
+                $title, // title
+                array($this, 'license_key_input'), // callback
+                'wawp_licensing', // page
+                'wawp_license', // section
+                array('slug' => $slug, 'title', $title) // args for callback
+            );
+        }
     }
 
     /**
@@ -226,6 +301,13 @@ class MySettingsPage
     }
 
     /**
+     * Print the licensing settings section text
+     */
+    public function license_print_info() {
+        print 'Enter your license key(s) here.';
+    }
+
+    /**
      * Get the api key
      */
     public function api_key_callback()
@@ -265,5 +347,39 @@ class MySettingsPage
 		if (isset($this->options['wawp_wal_client_secret']) && $this->options['wawp_wal_client_secret'] != '') {
 			echo "<p>Client Secret is set!</p>";
 		}
+    }
+
+    /**
+     * Create the license key input box for the form
+     * @param array $args contains arguments with (slug, title) as keys.
+     */
+    public function license_key_input(array $args) {
+        $slug = $args['slug'];
+        $license = Addon::instance()::get_licenses();
+        echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $license[$slug] . "'  />" ;
+    }
+
+    /**
+     * License form callback.
+     * For each license submitted, check if the license is valid.
+     * If it is valid, it gets added to the array of valid license keys.
+     * Otherwise, the user receives an error.
+     * @param array $input settings form input array mapping addon slugs to license keys
+     */
+    public function validate_license_form($input) {
+        $slug = array_key_first($input);
+        $license = $input[$slug];
+        $valid = array();
+
+        foreach($input as $slug => $license) {
+            $key = Addon::instance()::validate_license_key($license, $slug);
+            if (is_null($key)) {
+                $msg = 'Invalid license for ' . $slug . '.';
+                add_settings_error('wawp_license', 'wawp_invalid_license', $msg);
+            } else {
+                $valid[$slug] = $key;
+            }
+        }
+        return $valid;
     }
 }
