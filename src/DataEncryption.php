@@ -11,6 +11,19 @@ class DataEncryption {
 		$this->salt = $this->get_default_salt();
 	}
 
+	// Debugging
+	function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
+
 	// Encrypts value
 	public function encrypt( $value ) {
 		// Check that openssl library exists
@@ -43,6 +56,8 @@ class DataEncryption {
 
 		// Decode raw value
 		$raw_value = base64_decode($raw_value, true);
+		$this->my_log_file($raw_value);
+		do_action('qm/debug', $raw_value);
 
 		// Define and get encryption parameters
 		$encryption_method = 'aes-256-ctr';
@@ -51,6 +66,7 @@ class DataEncryption {
 
 		// Update raw value
 		$raw_value = substr($raw_value, $cipher_iv_len);
+		do_action('qm/debug', 'raw value 2: ' . $raw_value);
 
 		// Decrypt raw value to value
 		$value = openssl_encrypt($raw_value, $encryption_method, $this->key, 0, $random_string);
