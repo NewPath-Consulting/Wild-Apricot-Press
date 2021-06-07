@@ -51,6 +51,10 @@ function wawp_enqueue_admin_script($hook) {
 include 'src/MySettingsPage.php';
 $my_settings_page = new WAWP\MySettingsPage();
 
+// Create Wild Apricot Integration
+include 'src/WAIntegration.php';
+$wa_integration = new WAWP\WAIntegration();
+
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
 	require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
