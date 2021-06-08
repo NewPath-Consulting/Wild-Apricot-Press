@@ -6,12 +6,14 @@ class WAIntegration {
 
 	public function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
-		add_action( 'wawp_wal_credentials_obtained', array( $this, 'load_user_credentials') );
+		add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
+		// Filter for adding the Wild Apricot login to navigation menu
+		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Include any required files
 		require_once('DataEncryption.php');
 	}
 
-	public function load_user_credentials() {
+	private function load_user_credentials() {
 		// Load encrypted credentials from database
 		$this->credentials = get_option('wawp_wal_name');
 		// print_r($this->credentials);
@@ -42,6 +44,21 @@ class WAIntegration {
 		);
 		$api_response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $api_args);
 		do_action('qm/debug', $api_response);
+
+		// Add navigation menu
+	}
+
+	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
+	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
+	private function create_wa_login_logout($items, $args) {
+		do_action('qm/debug', 'Adding login in menu!');
+		// Check if user is logged in or logged out
+		if (is_user_logged_in() && $args->theme_location == 'primary') {
+			$items .= '<li><a href="'. wp_logout_url() .'">Log Out</a></li>';
+		} elseif (!is_user_logged_in() && $args->theme_location == 'primary') {
+			$items .= '<li><a href="'. site_url('wp-login.php') .'">Log In</a></li>';
+		}
+		return $items;
 	}
 }
 ?>
