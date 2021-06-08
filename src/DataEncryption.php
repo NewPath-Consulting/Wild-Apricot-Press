@@ -25,57 +25,93 @@ class DataEncryption {
 	}
 
 	// Encrypts value
+	// public function encrypt( $value ) {
+	// 	// Check that openssl library exists
+	// 	if (!extension_loaded('openssl')) {
+	// 		return $value;
+	// 	}
+
+	// 	// Define and get encryption parameters
+	// 	$encryption_method = 'aes-256-ctr';
+	// 	$cipher_iv_len = openssl_cipher_iv_length($encryption_method);
+	// 	$random_string = openssl_random_pseudo_bytes($cipher_iv_len);
+
+	// 	// Encrypt raw value
+	// 	$raw_value = openssl_encrypt($value . $this->salt, $encryption_method, $this->key, 0, $random_string);
+	// 	// If encrypting the raw value was a failure, return false
+	// 	if (!$raw_value) {
+	// 		return false;
+	// 	}
+
+	// 	// Return encoded data
+	// 	return base64_encode($random_string . $raw_value);
+	// }
 	public function encrypt( $value ) {
-		// Check that openssl library exists
-		if (!extension_loaded('openssl')) {
+		if ( ! extension_loaded( 'openssl' ) ) {
 			return $value;
 		}
 
-		// Define and get encryption parameters
-		$encryption_method = 'aes-256-ctr';
-		$cipher_iv_len = openssl_cipher_iv_length($encryption_method);
-		$random_string = openssl_random_pseudo_bytes($cipher_iv_len);
+		$method = 'aes-256-ctr';
+		$ivlen  = openssl_cipher_iv_length( $method );
+		$iv     = openssl_random_pseudo_bytes( $ivlen );
 
-		// Encrypt raw value
-		$raw_value = openssl_encrypt($value . $this->salt, $encryption_method, $this->key, 0, $random_string);
-		// If encrypting the raw value was a failure, return false
-		if (!$raw_value) {
+		$raw_value = openssl_encrypt( $value . $this->salt, $method, $this->key, 0, $iv );
+		if ( ! $raw_value ) {
 			return false;
 		}
 
-		// Return encoded data
-		return base64_encode($random_string . $raw_value);
+		return base64_encode( $iv . $raw_value );
 	}
 
 	// Decrypts value
+	// public function decrypt( $raw_value ) {
+	// 	// Check that openssl library exists
+	// 	if (!extension_loaded('openssl')) {
+	// 		return $raw_value;
+	// 	}
+
+	// 	// Decode raw value
+	// 	$raw_value = base64_decode($raw_value, true);
+	// 	$this->my_log_file($raw_value);
+	// 	do_action('qm/debug', $raw_value);
+
+	// 	// Define and get encryption parameters
+	// 	$encryption_method = 'aes-256-ctr';
+	// 	$cipher_iv_len = openssl_cipher_iv_length($encryption_method);
+	// 	$random_string = substr($raw_value, 0, $cipher_iv_len);
+
+	// 	// Update raw value
+	// 	$raw_value = substr($raw_value, $cipher_iv_len);
+	// 	do_action('qm/debug', 'raw value 2: ' . $raw_value);
+
+	// 	// Decrypt raw value to value
+	// 	$value = openssl_encrypt($raw_value, $encryption_method, $this->key, 0, $random_string);
+	// 	if (!$value || substr($value, -strlen($this->salt)) !== $this->salt) { // failed
+	// 		return false;
+	// 	}
+
+	// 	// Return back value
+	// 	return substr($value, 0, -strlen($this->salt));
+	// }
 	public function decrypt( $raw_value ) {
-		// Check that openssl library exists
-		if (!extension_loaded('openssl')) {
+		if ( ! extension_loaded( 'openssl' ) ) {
 			return $raw_value;
 		}
 
-		// Decode raw value
-		$raw_value = base64_decode($raw_value, true);
-		$this->my_log_file($raw_value);
-		do_action('qm/debug', $raw_value);
+		$raw_value = base64_decode( $raw_value, true );
 
-		// Define and get encryption parameters
-		$encryption_method = 'aes-256-ctr';
-		$cipher_iv_len = openssl_cipher_iv_length($encryption_method);
-		$random_string = substr($raw_value, 0, $cipher_iv_len);
+		$method = 'aes-256-ctr';
+		$ivlen  = openssl_cipher_iv_length( $method );
+		$iv     = substr( $raw_value, 0, $ivlen );
 
-		// Update raw value
-		$raw_value = substr($raw_value, $cipher_iv_len);
-		do_action('qm/debug', 'raw value 2: ' . $raw_value);
+		$raw_value = substr( $raw_value, $ivlen );
 
-		// Decrypt raw value to value
-		$value = openssl_encrypt($raw_value, $encryption_method, $this->key, 0, $random_string);
-		if (!$value || substr($value, -strlen($this->salt)) !== $this->salt) { // failed
+		$value = openssl_decrypt( $raw_value, $method, $this->key, 0, $iv );
+		if ( ! $value || substr( $value, - strlen( $this->salt ) ) !== $this->salt ) {
 			return false;
 		}
 
-		// Return back value
-		return substr($value, 0, -strlen($this->salt));
+		return substr( $value, 0, - strlen( $this->salt ) );
 	}
 
 	private function get_default_key() {
