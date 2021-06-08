@@ -14,10 +14,10 @@ class WAIntegration {
 	public function load_user_credentials() {
 		// Load encrypted credentials from database
 		$this->credentials = get_option('wawp_wal_name');
-		print_r($this->credentials);
-		do_action('qm/debug', 'api key: ' . $this->credentials['wawp_wal_api_key']);
-		do_action('qm/debug', 'client id: ' . $this->credentials['wawp_wal_client_id']);
-		do_action('qm/debug', 'client secret: ' . $this->credentials['wawp_wal_client_secret']);
+		// print_r($this->credentials);
+		// do_action('qm/debug', 'api key: ' . $this->credentials['wawp_wal_api_key']);
+		// do_action('qm/debug', 'client id: ' . $this->credentials['wawp_wal_client_id']);
+		// do_action('qm/debug', 'client secret: ' . $this->credentials['wawp_wal_client_secret']);
 		// Decrypt credentials
 		$decrypted_credentials = array();
 		$dataEncryption = new DataEncryption();
@@ -25,14 +25,23 @@ class WAIntegration {
 		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_id']);
 		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_secret']);
 		// Echo values for testing
-		print_r($decrypted_credentials);
+		// print_r($decrypted_credentials);
 		do_action('qm/debug', 'decrypt api key: ' . $decrypted_credentials['wawp_wal_api_key']);
 		do_action('qm/debug', 'decrypt client id: ' . $decrypted_credentials['wawp_wal_client_id']);
 		do_action('qm/debug', 'decrypt client secret: ' . $decrypted_credentials['wawp_wal_client_secret']);
+		// Encode API key
+		$api_string = 'APIKEY:' . $decrypted_credentials['wawp_wal_api_key'];
+		$encoded_api_string = base64_encode($api_string);
 		// Perform API request
-		$body = array(
-			'grant_type' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
+		$api_args = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . $encoded_api_string,
+				'Content-type' => 'application/x-www-form-urlencoded'
+			),
+			'body' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
 		);
+		$api_response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $api_args);
+		do_action('qm/debug', $api_response);
 	}
 }
 ?>
