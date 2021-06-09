@@ -52,6 +52,11 @@ class Addon {
         return get_option('wawp_license_keys');
     }
 
+    public static function has_license($slug) {
+        $licenses = self::get_licenses();
+        return array_key_exists($slug, $licenses);
+    }
+
     // @param: addon is assoc. array of slug => display title
     /**
      * Adds a new add-on to the array of add-ons stored in the options table.
@@ -112,12 +117,20 @@ class Addon {
         // if the license is invalid, return NULL
         // else return the valid license key
         if (array_key_exists('license-error', $response)) {
-            // if license key is invalid and plugin is PAID AND NOT WAWP then deactivate
-            add_settings_error('wawp_plugin_text_string', 'wawp_plugin_texterror', 'Invalid key', 'error');
             return NULL;
         } else {
+            // $plugin_name =__DIR__ . 
+            // if (!is_plugin_active(__FILE__)) {
+            //     activate_plugin(__FILE__);
+            // }
             return $license_key;
         }
+    }
+
+    private static function show_error($slug) {
+        $addons = self::get_addons();
+        echo "<div class='error'><p>";
+        echo "Invalid license key for " . $addons[$slug] . ". </p></div>";
     }
 
     /**
