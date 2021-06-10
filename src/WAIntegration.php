@@ -6,6 +6,7 @@ class WAIntegration {
 	private $access_token;
 	private $refresh_token;
 	private $base_wa_url;
+	private $log_menu_items; // holds list of elements in header that Login/Logout is added to
 
 	public function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
@@ -88,7 +89,19 @@ class WAIntegration {
 		} elseif (!is_user_logged_in() && $args->theme_location == 'primary') { // Login
 			$items .= '<li><a href="'. $login_url .'">Log In</a></li>';
 		}
+
+		// Printing out
+		$menu_name = 'primary'; // will change this based on what user selects
+		$menu_items = wp_get_nav_menu_items($menu_name);
+		do_action('qm/debug', 'menu items: ' . $menu_items);
+
+		$this->log_menu_items = $items;
 		return $items;
+	}
+
+	// Returns list of elements in menu
+	public function get_log_menu_items() {
+		return $this->log_menu_items;
 	}
 
 	// Login actions

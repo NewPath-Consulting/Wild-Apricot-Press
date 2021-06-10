@@ -54,11 +54,16 @@ $my_settings_page = new WAWP\MySettingsPage();
 // Create Wild Apricot Integration
 include 'src/WAIntegration.php';
 $wa_integration = new WAWP\WAIntegration();
+// Get menu
+if (!is_null($wa_integration->get_log_menu_items())) {
+	$login_menu_items = $wa_integration->get_log_menu_items();
+	do_action('qm/debug', 'login menu: ' . $login_menu_items);
+}
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
 	require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
-	WAWP\Deactivator::deactivate();
+	WAWP\Deactivator::deactivate($login_menu_items);
 } );
 
 ?>
