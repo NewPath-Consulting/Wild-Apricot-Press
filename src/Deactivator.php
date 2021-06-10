@@ -8,7 +8,7 @@ class Deactivator {
 		// Deactivation code
 
 		// Remove Login/Logout from the navigation bar
-
+		// check if menu_items is NULL or not
 	}
 }
 ?>
