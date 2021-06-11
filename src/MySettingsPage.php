@@ -225,9 +225,9 @@ class MySettingsPage
 
         // For each addon installed, render a license key form
         $addons = Addon::instance()::get_addons();
-        foreach ($addons as $addon) {
-            $slug = array_key_first($addon);
-            $title = $addon[$slug];
+        foreach ($addons as $slug => $addon) {
+            if ($slug == Activator::CORE) {continue;}
+            $title = $addon['title'];
             add_settings_field(
                 'wawp_license_form_' . $slug, // ID
                 $title, // title
@@ -373,10 +373,24 @@ class MySettingsPage
 
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
+            $option_name = 'license-check-' . $slug;
             if (is_null($key)) {
-                $msg = 'Invalid license for ' . $slug . '.';
-                add_settings_error('wawp_license', 'wawp_invalid_license', $msg);
+                add_action('admin_notices', function() use ($slug) {
+                    Addon::instance()::invalid_license_message($slug);
+                });
+                add_action('admin_init', function() use ($slug) {
+                    Addon::instance()::deactivate_addon($slug);
+                });
+                update_option($option_name, 'false');
+                // add errors here okay.
             } else {
+                add_action('admin_notices', function() use ($slug) {
+                    Addon::instance()::valid_license_message($slug);
+                });
+                add_action('admin_init', function() use ($slug) {
+                    Addon::instance()::activate_addon($slug);
+                });
+                delete_option($option_name);
                 $valid[$slug] = $key;
             }
         }

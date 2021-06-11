@@ -53,15 +53,29 @@ class Addon {
     }
 
     public static function has_license($slug) {
+        do_action('qm/debug', '{a} in has_license', ['a' => $slug]);
         $licenses = self::get_licenses();
         return array_key_exists($slug, $licenses);
     }
 
-    // @param: addon is assoc. array of slug => display title
+    public static function get_filename($slug) {
+        $addons = self::get_addons();
+        return $addons[$slug]['filename'];
+    }
+
+    public static function get_title($slug) {
+        $addons = self::get_addons();
+        return $addons[$slug]['title'];
+    }
+
     /**
      * Adds a new add-on to the array of add-ons stored in the options table.
      * @param $addon Add-on to be added to the DB. 
-     * Is an assoc. array of addon (slug => title)
+     * Is an assoc. array of addon info in the following format:
+     * slug = array(
+     *      [title] => Display title,
+     *      [filename] => Filename of main plugin file relative to plugin directory
+     * )
      */
     public static function new_addon($addon) {
         $option = get_option('wawp_addons');
@@ -72,13 +86,10 @@ class Addon {
             return;
         }
 
-        array_push($option, $addon);
-        update_option('wawp_addons', $option);
         $slug = array_key_first($addon);
-        if (in_array($slug, self::$instance::$addon_list)) {
-            return;
-        }
-        self::$instance::$addon_list[$slug] = $addon[$slug];
+        $option[$slug] = $addon[$slug];
+        // array_push($option, $addon);
+        update_option('wawp_addons', $option);
     }
 
     /**
@@ -116,21 +127,58 @@ class Addon {
 
         // if the license is invalid, return NULL
         // else return the valid license key
+        $filename = self::get_filename($addon_slug);
         if (array_key_exists('license-error', $response)) {
+            // add_action('admin_notices', Addon::valid_license_message());
+            if (is_plugin_active($filename)) {
+                deactivate_plugins($filename);
+            }
             return NULL;
         } else {
+            // add_action('admin_notices', Addon::invalid_license_message());
             // $plugin_name =__DIR__ . 
             // if (!is_plugin_active(__FILE__)) {
             //     activate_plugin(__FILE__);
             // }
+            if (!is_plugin_active($filename)) {
+                activate_plugin($filename);
+            }
             return $license_key;
         }
     }
 
-    private static function show_error($slug) {
-        $addons = self::get_addons();
+    public static function valid_license_message($slug) {
+        $title = self::get_title($slug);
+        $filename = self::get_filename($slug);
         echo "<div class='error'><p>";
-        echo "Invalid license key for " . $addons[$slug] . ". </p></div>";
+        echo "Saved license key for " . esc_attr($title) . ".</p>";
+        if (!is_plugin_active($filename)) {
+            echo "<p> Activating plugin.</p>";
+        }
+    }
+
+    public static function invalid_license_message($slug) {
+        $title = self::get_title($slug);
+        $filename = self::get_filename($slug);
+        echo "<div class='error'><p>";
+        echo "Invalid license key for " . esc_attr($title) . "</p>";
+        if (is_plugin_active($filename)) {
+            echo "<p> Deactivating plugin.</p>";
+        }
+    }
+
+    public static function deactivate_addon($slug) {
+        $filename = self::get_filename($slug);
+        if (is_plugin_active($filename)) {
+            deactivate_plugins($filename);
+        }
+    }
+
+    public static function activate_addon($slug) {
+        $filename = self::get_filename($slug);
+        if (!is_plugin_active($filename)) {
+            activate_plugin($filename);
+        }
     }
 
     /**
@@ -153,6 +201,5 @@ class Addon {
     }
 
 } // end of Addon class
-
 
 ?>

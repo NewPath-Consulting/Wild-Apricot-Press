@@ -38,7 +38,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 
-$activator = new Activator('wawp', __FILE__, 'Wild Apricot for Wordpress (WAWP)');
+$activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot for Wordpress (WAWP)');
 
 
 // Activation hook
