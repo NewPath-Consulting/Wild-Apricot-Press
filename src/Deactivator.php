@@ -9,6 +9,9 @@ class Deactivator {
 
 		// Remove Login/Logout from the navigation bar
 		// check if menu_items is NULL or not
+		if (!is_null($menu_items)) {
+			// Remove Login/Logout button
+		}
 	}
 }
 ?>

@@ -55,6 +55,7 @@ $my_settings_page = new WAWP\MySettingsPage();
 include 'src/WAIntegration.php';
 $wa_integration = new WAWP\WAIntegration();
 // Get menu
+$login_menu_items = NULL;
 if (!is_null($wa_integration->get_log_menu_items())) {
 	$login_menu_items = $wa_integration->get_log_menu_items();
 	do_action('qm/debug', 'login menu: ' . $login_menu_items);
