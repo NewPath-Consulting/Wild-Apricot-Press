@@ -7,6 +7,7 @@ class WAIntegration {
 	private $refresh_token;
 	private $base_wa_url;
 	private $log_menu_items; // holds list of elements in header that Login/Logout is added to
+	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 
 	public function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
@@ -15,6 +16,12 @@ class WAIntegration {
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Include any required files
 		require_once('DataEncryption.php');
+		// Check if Wild Apricot credentials have been entered
+		$this->wa_credentials_entered = false;
+		$wa_credentials = get_option('wawp_wal_name');
+		if (isset($wa_credentials) && $wa_credentials != '') {
+			$this->wa_credentials_entered = true;
+		}
 	}
 
 	// Creates login page that allows user to enter their email and password credentials for Wild Apricot
@@ -114,15 +121,17 @@ class WAIntegration {
 	public function create_wa_login_logout($items, $args) {
 		do_action('qm/debug', 'Adding login in menu!');
 		// Get login url based on user's Wild Apricot site
-		$login_url = '';
-		$logout_url = '';
-		do_action('qm/debug', 'theme location = ' . $args->theme_location);
-		// Check if user is logged in or logged out
-		$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
-		if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
-			$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url() .'">Log Out</a></li>';
-		} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
-			$items .= '<li id="wawp_login_logout_button"><a href="'. $login_url .'">Log In</a></li>';
+		if ($this->wa_credentials_entered) {
+			$login_url = '';
+			$logout_url = '';
+			do_action('qm/debug', 'theme location = ' . $args->theme_location);
+			// Check if user is logged in or logged out
+			$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
+			if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
+				$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url() .'">Log Out</a></li>';
+			} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
+				$items .= '<li id="wawp_login_logout_button"><a href="'. $login_url .'">Log In</a></li>';
+			}
 		}
 
 		// Printing out
@@ -131,7 +140,7 @@ class WAIntegration {
 		// do_action('qm/debug', 'menu items: ' . $menu_items);
 
 		// Save to database
-		update_option('wawp_wa-integration_login_menu_items', $items);
+		// update_option('wawp_wa-integration_login_menu_items', $items);
 
 		$this->log_menu_items = $items;
 		return $items;

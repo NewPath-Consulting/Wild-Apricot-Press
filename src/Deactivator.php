@@ -19,7 +19,7 @@ class Deactivator {
 		// wp_delete_post();
 
 		// Delete entry from table
-		delete_option('wawp_wa-integration_login_menu_items');
+		// delete_option('wawp_wa-integration_login_menu_items');
 	}
 }
 ?>
