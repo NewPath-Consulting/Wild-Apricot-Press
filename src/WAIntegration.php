@@ -34,12 +34,14 @@ class WAIntegration {
 		// Create metadata for hiding page from header
 		// Create details of page
 		$post_details = array(
-			'post_title' => 'WAWP Wild Apricot Login',
+			'post_title' => 'WA4WP Wild Apricot Login',
 			'post_content' => 'Login!',
 			'post_status' => 'publish',
 			'post_type' => 'page',
 		);
 		$page_id = wp_insert_post($post_details, FALSE);
+		// Add page id to options so that it can be removed on deactivation
+		update_option('wawp_wal_page_id', $page_id);
 		// Remove from header if it is automatically added
 		$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
 		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu

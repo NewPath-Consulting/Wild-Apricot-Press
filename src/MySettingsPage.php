@@ -117,7 +117,7 @@ class MySettingsPage
 						} else {
 							echo '<p style="color:green">Success! Credentials saved!</p>';
                             // Implement hook here to tell Wild Apricot to connect to these credentials
-                            do_action( 'wawp_wal_credentials_obtained' );
+                            do_action('wawp_wal_credentials_obtained');
 						}
 					?>
 				</div>

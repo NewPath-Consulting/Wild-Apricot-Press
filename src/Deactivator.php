@@ -16,7 +16,7 @@ class Deactivator {
 		// }
 
 		// Remove WAWP Login/Logout page
-		// wp_delete_post();
+		wp_delete_post(get_option('wawp_wal_page_id'));
 
 		// Delete entry from table
 		// delete_option('wawp_wa-integration_login_menu_items');
