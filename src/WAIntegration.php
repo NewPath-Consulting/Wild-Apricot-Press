@@ -34,7 +34,9 @@ class WAIntegration {
 		);
 		$page_id = wp_insert_post($post_details, FALSE);
 		// Remove from header if it is automatically added
-		$menu_with_button = 'primary'; // get this from settings
+		$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
+		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
+		// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
 
 	}
 
@@ -105,7 +107,6 @@ class WAIntegration {
 
 	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
-	// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
 	public function create_wa_login_logout($items, $args) {
 		do_action('qm/debug', 'Adding login in menu!');
 		// Get login url based on user's Wild Apricot site
@@ -113,7 +114,7 @@ class WAIntegration {
 		$logout_url = '';
 		do_action('qm/debug', 'theme location = ' . $args->theme_location);
 		// Check if user is logged in or logged out
-		$menu_to_add_button = 'primary'; // get this from settings
+		$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
 		if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
 			$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url() .'">Log Out</a></li>';
 		} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login

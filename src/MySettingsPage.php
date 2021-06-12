@@ -364,10 +364,17 @@ class MySettingsPage
     }
 
     /**
-     * Get the client secret
+     * Get the desired menu to add the login/logout button
      */
     public function login_logout_menu_callback() {
-        $menu_items = array('primary', 'secondary', 'hidden');
+        // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
+        $menu_locations = get_nav_menu_locations();
+        $menu_items = array();
+        // Save each menu name in menu_items
+        foreach ($menu_locations as $key => $value) {
+            // Append key to menu_items
+            $menu_items[] = $key;
+        }
         // Display dropdown menu
         echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
         // Loop through each option
