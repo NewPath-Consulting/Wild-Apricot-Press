@@ -35,6 +35,7 @@ class WAIntegration {
 		$page_id = wp_insert_post($post_details, FALSE);
 		// Remove from header if it is automatically added
 		$menu_with_button = 'primary'; // get this from settings
+
 	}
 
 	public function load_user_credentials() {
