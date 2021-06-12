@@ -17,6 +17,26 @@ class WAIntegration {
 		require_once('DataEncryption.php');
 	}
 
+	// Creates login page that allows user to enter their email and password credentials for Wild Apricot
+	// See: https://stackoverflow.com/questions/32314278/how-to-create-a-new-wordpress-page-programmatically
+	// https://stackoverflow.com/questions/13848052/create-a-new-page-with-wp-insert-post
+	private function create_login_page() {
+		do_action('qm/debug', 'creating login page!');
+		// Create page guid
+		// $page_guid = site_url() . '/wawp-wa-login'; // check if this exists
+		// Create metadata for hiding page from header
+		// Create details of page
+		$post_details = array(
+			'post_title' => 'WAWP Wild Apricot Login',
+			'post_content' => 'Login!',
+			'post_status' => 'publish',
+			'post_type' => 'page',
+		);
+		$page_id = wp_insert_post($post_details, FALSE);
+		// Remove from header if it is automatically added
+		$menu_with_button = 'primary'; // get this from settings
+	}
+
 	public function load_user_credentials() {
 		// Load encrypted credentials from database
 		$this->credentials = get_option('wawp_wal_name');
@@ -59,7 +79,9 @@ class WAIntegration {
 		do_action('qm/debug', $data);
 		$this->access_token = $data['access_token'];
 		$this->refresh_token = $data['refresh_token'];
-		// Add navigation menu
+
+		// Add new login page
+		$this->create_login_page();
 	}
 
 	public function get_base_api() {
@@ -88,11 +110,12 @@ class WAIntegration {
 		// Get login url based on user's Wild Apricot site
 		$login_url = '';
 		$logout_url = '';
-		// do_action('qm/debug', 'theme location = ' . $args->theme_location);
+		do_action('qm/debug', 'theme location = ' . $args->theme_location);
 		// Check if user is logged in or logged out
-		if (is_user_logged_in() && $args->theme_location == 'primary') { // Logout
+		$menu_to_add_button = 'primary'; // get this from settings
+		if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
 			$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url() .'">Log Out</a></li>';
-		} elseif (!is_user_logged_in() && $args->theme_location == 'primary') { // Login
+		} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
 			$items .= '<li id="wawp_login_logout_button"><a href="'. $login_url .'">Log In</a></li>';
 		}
 
