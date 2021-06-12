@@ -11,6 +11,8 @@ class WAIntegration {
 	public function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
 		add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
+		// Filter for adding to menu
+		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Include any required files
 		require_once('DataEncryption.php');
 	}
@@ -76,6 +78,34 @@ class WAIntegration {
 	// Returns list of elements in menu
 	public function get_log_menu_items() {
 		return $this->log_menu_items;
+	}
+
+	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
+	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
+	// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
+	public function create_wa_login_logout($items, $args) {
+		do_action('qm/debug', 'Adding login in menu!');
+		// Get login url based on user's Wild Apricot site
+		$login_url = '';
+		$logout_url = '';
+		// do_action('qm/debug', 'theme location = ' . $args->theme_location);
+		// Check if user is logged in or logged out
+		if (is_user_logged_in() && $args->theme_location == 'primary') { // Logout
+			$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url() .'">Log Out</a></li>';
+		} elseif (!is_user_logged_in() && $args->theme_location == 'primary') { // Login
+			$items .= '<li id="wawp_login_logout_button"><a href="'. $login_url .'">Log In</a></li>';
+		}
+
+		// Printing out
+		// $menu_name = 'primary'; // will change this based on what user selects
+		// $menu_items = wp_get_nav_menu_items($menu_name);
+		// do_action('qm/debug', 'menu items: ' . $menu_items);
+
+		// Save to database
+		update_option('wawp_wa-integration_login_menu_items', $items);
+
+		$this->log_menu_items = $items;
+		return $items;
 	}
 
 	// Login actions

@@ -36,8 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 // Activation hook
 register_activation_hook(__FILE__, function() {
-	// do_action('qm/debug', 'activation in plugin.php!');
-	require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
+	include 'src/Activator.php';
 	WAWP\Activator::activate();
 } );
 
@@ -55,16 +54,13 @@ $my_settings_page = new WAWP\MySettingsPage();
 include 'src/WAIntegration.php';
 $wa_integration = new WAWP\WAIntegration();
 // Get menu
-$login_menu_items = NULL;
-if (!is_null($wa_integration->get_log_menu_items())) {
-	$login_menu_items = $wa_integration->get_log_menu_items();
-	do_action('qm/debug', 'login menu: ' . $login_menu_items);
-}
+// $login_menu_items = $wa_integration->get_log_menu_items();
+// Maybe be valid or NULL
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
-	require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
-	WAWP\Deactivator::deactivate($login_menu_items);
+	include 'src/Deactivator.php';
+	WAWP\Deactivator::deactivate();
 } );
 
 ?>
