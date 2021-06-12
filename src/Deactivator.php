@@ -9,11 +9,15 @@ class Deactivator {
 
 		// Remove Login/Logout from the navigation bar
 		// check if menu_items is NULL or not
-		$menu_items = get_option('wawp_wa-integration_login_menu_items'); // false if it does not exist
-		if ($menu_items) { // NOT false, so menu can be accessed
-			// Remove Login/Logout button
-			wp_delete_post('wawp_login_logout_button');
-		}
+		// $menu_items = get_option('wawp_wa-integration_login_menu_items'); // false if it does not exist
+		// if ($menu_items) { // NOT false, so menu can be accessed
+		// 	// Remove Login/Logout button
+		// 	wp_delete_post('wawp_login_logout_button');
+		// }
+
+		// Remove WAWP Login/Logout page
+		// wp_delete_post();
+
 		// Delete entry from table
 		delete_option('wawp_wa-integration_login_menu_items');
 	}
