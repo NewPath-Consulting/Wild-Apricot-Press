@@ -29,27 +29,33 @@ class WAIntegration {
 	// https://stackoverflow.com/questions/13848052/create-a-new-page-with-wp-insert-post
 	private function create_login_page() {
 		do_action('qm/debug', 'creating login page!');
-		// Create page guid
-		// $page_guid = site_url() . '/wawp-wa-login'; // check if this exists
-		// Create metadata for hiding page from header
-		// Create details of page
-		$post_details = array(
-			'post_title' => 'WA4WP Wild Apricot Login',
-			'post_content' => 'Login!',
-			'post_status' => 'publish',
-			'post_type' => 'page',
-		);
-		$page_id = wp_insert_post($post_details, FALSE);
-		// Add page id to options so that it can be removed on deactivation
-		update_option('wawp_wal_page_id', $page_id);
-		// Remove from header if it is automatically added
-		$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
-		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
-		// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
-		$menu_item_ids = wp_get_associated_nav_menu_items($page_id, 'post_type');
-		// Loop through ids and remove
-		foreach ($menu_item_ids as $menu_item_id) {
-			wp_delete_post($menu_item_id, true);
+		// Check if Login page exists first
+		$login_page_id = get_option('wawp_wal_page_id');
+		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
+			// Set existing login page to publish
+			$login_page = get_post($login_page_id, 'ARRAY_A');
+			$login_page['post_status'] = 'publish';
+			wp_update_post($login_page);
+		} else { // Login page does not exist
+			// Create details of page
+			$post_details = array(
+				'post_title' => 'WA4WP Wild Apricot Login',
+				'post_content' => 'Login!',
+				'post_status' => 'publish',
+				'post_type' => 'page',
+			);
+			$page_id = wp_insert_post($post_details, FALSE);
+			// Add page id to options so that it can be removed on deactivation
+			update_option('wawp_wal_page_id', $page_id);
+			// Remove from header if it is automatically added
+			$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
+			// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
+			// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
+			$menu_item_ids = wp_get_associated_nav_menu_items($page_id, 'post_type');
+			// Loop through ids and remove
+			foreach ($menu_item_ids as $menu_item_id) {
+				wp_delete_post($menu_item_id, true);
+			}
 		}
 	}
 
