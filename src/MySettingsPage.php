@@ -116,6 +116,8 @@ class MySettingsPage
 							echo '<p style="color:red">Invalid credentials!</p>';
 						} else {
 							echo '<p style="color:green">Success! Credentials saved!</p>';
+                            // Implement hook here to tell Wild Apricot to connect to these credentials
+                            do_action('wawp_wal_credentials_obtained');
 						}
 					?>
 				</div>
@@ -129,7 +131,7 @@ class MySettingsPage
         ?>
         <div class="wrap">
             <form method="post" action="options.php">
-            <?php 
+            <?php
             settings_fields('wawp_license_keys');
             do_settings_sections('wawp_licensing');
             submit_button('Save', 'primary');
@@ -189,6 +191,15 @@ class MySettingsPage
             'wawp_wal_client_secret', // ID
             'Client Secret:', // Title
             array( $this, 'client_secret_callback' ), // Callback
+            'wawp-wal-admin', // Page
+            'wawp_wal_id' // Section
+        );
+
+        // Settings for Menu to add Login/Logout button
+        add_settings_field(
+            'wawp_wal_login_logout_button', // ID
+            'Menu:', // Title
+            array( $this, 'login_logout_menu_callback' ), // Callback
             'wawp-wal-admin', // Page
             'wawp_wal_id' // Section
         );
@@ -288,6 +299,9 @@ class MySettingsPage
             $valid['wawp_wal_client_secret'] = $dataEncryption->encrypt($valid['wawp_wal_client_secret']);
         }
 
+        // Sanitize menu dropdown
+        $valid['wawp_wal_login_logout_button'] = sanitize_text_field($input['wawp_wal_login_logout_button']);
+
 		// Return array of valid inputs
 		return $valid;
     }
@@ -347,6 +361,26 @@ class MySettingsPage
 		if (isset($this->options['wawp_wal_client_secret']) && $this->options['wawp_wal_client_secret'] != '') {
 			echo "<p>Client Secret is set!</p>";
 		}
+    }
+
+    /**
+     * Get the desired menu to add the login/logout button
+     */
+    public function login_logout_menu_callback() {
+        // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
+        $menu_locations = get_nav_menu_locations();
+        $menu_items = array();
+        // Save each menu name in menu_items
+        foreach ($menu_locations as $key => $value) {
+            // Append key to menu_items
+            $menu_items[] = $key;
+        }
+        // Display dropdown menu
+        echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
+        // Loop through each option
+        foreach ($menu_items as $item) {
+            echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
+        }
     }
 
     /**

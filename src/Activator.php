@@ -19,6 +19,8 @@ class Activator {
 	private $redirected = false;
 
 	public function __construct($slug, $filename, $plugin_name) {
+		$this->activate();
+
 		$this->slug = $slug;
 		$this->filename = $filename;
 		$this->plugin_name = $plugin_name;
@@ -35,13 +37,6 @@ class Activator {
 			'filename' => $filename
 		)));
 	}
-
-	// /**
-	//  * Activates the WA4WP plugin.
-	//  *
-	//  * Write the full details of what happens here.
-	//  */
-	// public function activate() {}
 
 	public function activate_plugin_callback() {
 		do_action('qm/debug', '{a} in activate_plugin_callback', ['a' => $this->slug]);
@@ -61,6 +56,22 @@ class Activator {
 		if (get_option($this->license_req_option_name)) {
 			add_action('admin_init', array($this, 'force_deactivate'));
 			add_action('admin_notices', array($this, 'show_activation_error'));
+		}
+	}
+
+	/**
+	 * Activates the WA4WP plugin.
+	 *
+	 * Write the full details of what happens here.
+	 */
+	public static function activate() {
+		// Activation code
+
+		// Log back into Wild Apricot if credentials are entered
+		$stored_wa_credentials = get_option('wawp_wal_name');
+		if (isset($stored_wa_credentials) && $stored_wa_credentials != '') {
+			// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
+			do_action('wawp_wal_credentials_obtained');
 		}
 	}
 
