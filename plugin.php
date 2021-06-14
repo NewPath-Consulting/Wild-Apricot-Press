@@ -53,9 +53,6 @@ $my_settings_page = new WAWP\MySettingsPage();
 // Create Wild Apricot Integration
 include 'src/WAIntegration.php';
 $wa_integration = new WAWP\WAIntegration();
-// Get menu
-// $login_menu_items = $wa_integration->get_log_menu_items();
-// Maybe be valid or NULL
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
