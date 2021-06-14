@@ -47,15 +47,16 @@ class WAIntegration {
 			$page_id = wp_insert_post($post_details, FALSE);
 			// Add page id to options so that it can be removed on deactivation
 			update_option('wawp_wal_page_id', $page_id);
-			// Remove from header if it is automatically added
-			$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
-			// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
-			// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
-			$menu_item_ids = wp_get_associated_nav_menu_items($page_id, 'post_type');
-			// Loop through ids and remove
-			foreach ($menu_item_ids as $menu_item_id) {
-				wp_delete_post($menu_item_id, true);
-			}
+		}
+		// Remove from header if it is automatically added
+		$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
+		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
+		// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
+		$page_id = get_option('wawp_wal_page_id');
+		$menu_item_ids = wp_get_associated_nav_menu_items($page_id, 'post_type');
+		// Loop through ids and remove
+		foreach ($menu_item_ids as $menu_item_id) {
+			wp_delete_post($menu_item_id, true);
 		}
 	}
 
