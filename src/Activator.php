@@ -19,8 +19,6 @@ class Activator {
 	private $redirected = false;
 
 	public function __construct($slug, $filename, $plugin_name) {
-		$this->activate();
-
 		$this->slug = $slug;
 		$this->filename = $filename;
 		$this->plugin_name = $plugin_name;
@@ -39,6 +37,7 @@ class Activator {
 	}
 
 	public function activate_plugin_callback() {
+		$this->activate();
 		do_action('qm/debug', '{a} in activate_plugin_callback', ['a' => $this->slug]);
 		$license_exists = Addon::instance()::has_license($this->slug);
 		if (!$license_exists) {
