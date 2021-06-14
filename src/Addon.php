@@ -55,7 +55,7 @@ class Addon {
     public static function has_license($slug) {
         do_action('qm/debug', '{a} in has_license', ['a' => $slug]);
         $licenses = self::get_licenses();
-        return array_key_exists($slug, $licenses);
+        return $licenses && array_key_exists($slug, $licenses);
     }
 
     public static function get_filename($slug) {
