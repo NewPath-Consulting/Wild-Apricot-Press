@@ -16,6 +16,8 @@
  * Domain Path:       /public/lang
  */
 
+use WAWP\Activator;
+
 /*
 Copyright (C) 2021 NewPath Consulting
 
@@ -34,11 +36,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
+
+$activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot for Wordpress (WAWP)');
+
+
 // Activation hook
-register_activation_hook(__FILE__, function() {
-	include 'src/Activator.php';
-	WAWP\Activator::activate();
-} );
+register_activation_hook(__FILE__, array($activator, 'activate_plugin_callback'));
 
 // Enqueue stylesheet
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
