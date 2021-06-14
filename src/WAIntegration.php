@@ -38,9 +38,17 @@ class WAIntegration {
 			wp_update_post($login_page);
 		} else { // Login page does not exist
 			// Create details of page
+			$page_content = '<p>Log into your Wild Apricot account here:</p>
+			<form method="post" action="options.php">
+				<label for="wawp_email">Email:</label>
+				<input type="text" id="wawp_email" name="wawp_email" placeholder="example@website.com"><br>
+				<label for="wawp_email">Password:</label>
+				<input type="text" id="wawp_password" name="wawp_password" placeholder="***********"><br>
+				<input type="submit" value="Submit">
+			</form>';
 			$post_details = array(
 				'post_title' => 'WA4WP Wild Apricot Login',
-				'post_content' => 'Login!',
+				'post_content' => $page_content,
 				'post_status' => 'publish',
 				'post_type' => 'page',
 			);
