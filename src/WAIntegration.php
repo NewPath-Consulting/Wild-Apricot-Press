@@ -131,8 +131,7 @@ class WAIntegration {
 		do_action('qm/debug', 'Adding login in menu!');
 		// Get login url based on user's Wild Apricot site
 		if ($this->wa_credentials_entered) {
-			$login_url = '';
-			$logout_url = '';
+			$login_url = home_url() . '/wa4wp-wild-apricot-login';
 			do_action('qm/debug', 'theme location = ' . $args->theme_location);
 			// Check if user is logged in or logged out
 			$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
