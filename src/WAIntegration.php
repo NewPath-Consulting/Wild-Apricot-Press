@@ -38,6 +38,7 @@ class WAIntegration {
 			wp_update_post($login_page);
 		} else { // Login page does not exist
 			// Create details of page
+			// See: https://wordpress.stackexchange.com/questions/222810/add-a-do-action-to-post-content-of-wp-insert-post
 			$page_content = '<p>Log into your Wild Apricot account here:</p>
 			<form method="post" action="options.php">
 				<label for="wawp_email">Email:</label>
@@ -48,9 +49,9 @@ class WAIntegration {
 			</form>';
 			$post_details = array(
 				'post_title' => 'WA4WP Wild Apricot Login',
-				'post_content' => $page_content,
 				'post_status' => 'publish',
 				'post_type' => 'page',
+				'post_content' => '[wawp_custom_login]' // shortcode
 			);
 			$page_id = wp_insert_post($post_details, FALSE);
 			// Add page id to options so that it can be removed on deactivation
