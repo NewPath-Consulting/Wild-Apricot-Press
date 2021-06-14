@@ -37,7 +37,7 @@ class Addon {
     //         self::$addons_to_license = $existing_licenses;
     //     }
     // }
-    
+
     /**
      * Returns the array of addons stored in the options table.
      */
@@ -70,7 +70,7 @@ class Addon {
 
     /**
      * Adds a new add-on to the array of add-ons stored in the options table.
-     * @param $addon Add-on to be added to the DB. 
+     * @param $addon Add-on to be added to the DB.
      * Is an assoc. array of addon info in the following format:
      * slug = array(
      *      [title] => Display title,
@@ -136,7 +136,7 @@ class Addon {
             return NULL;
         } else {
             // add_action('admin_notices', Addon::invalid_license_message());
-            // $plugin_name =__DIR__ . 
+            // $plugin_name =__DIR__ .
             // if (!is_plugin_active(__FILE__)) {
             //     activate_plugin(__FILE__);
             // }
@@ -194,7 +194,7 @@ class Addon {
             )
         );
         $context  = stream_context_create($options);
-        
+
         $result = json_decode(file_get_contents(self::HOOK_URL, false, $context), 1);
 
         return $result;

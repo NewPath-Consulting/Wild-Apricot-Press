@@ -40,10 +40,6 @@ require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 
 $activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot for Wordpress (WAWP)');
 
-
-// Activation hook
-register_activation_hook(__FILE__, array($activator, 'activate_plugin_callback'));
-
 // Enqueue stylesheet
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {
