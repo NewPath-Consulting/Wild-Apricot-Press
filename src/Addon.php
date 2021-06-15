@@ -105,13 +105,12 @@ class Addon {
 
         foreach ($addons as $slug => $addon) {
             $filename = $addon['filename'];
-            delete_plugins($filename);
+            delete_plugins(array(0 => $filename));
+            delete_option('license-check-' . $slug);
         }
 
         delete_option('wawp_addons');
         delete_option('wawp_license_keys');
-
-        // TODO: delete the other addons
     }
 
     /**

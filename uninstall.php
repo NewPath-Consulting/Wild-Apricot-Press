@@ -18,6 +18,8 @@ if (isset($wawp_wal_page_id) && $wawp_wal_page_id != '') {
 
 // Delete entries in wp_options table
 delete_option('wawp_wal_name');
+delete_option('wawp_wal_page_id');
+delete_option('wawp_license_form_nonce');
 
 Addon::instance()::delete();
 
