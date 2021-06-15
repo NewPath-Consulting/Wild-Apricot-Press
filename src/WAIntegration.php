@@ -14,6 +14,8 @@ class WAIntegration {
 		add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
 		// Filter for adding to menu
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
+		// Shortcode for login form
+		add_shortcode('wawp_custom_login_form', array($this, 'custom_login_form_shortcode'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		// Check if Wild Apricot credentials have been entered
@@ -39,19 +41,11 @@ class WAIntegration {
 		} else { // Login page does not exist
 			// Create details of page
 			// See: https://wordpress.stackexchange.com/questions/222810/add-a-do-action-to-post-content-of-wp-insert-post
-			$page_content = '<p>Log into your Wild Apricot account here:</p>
-			<form method="post" action="options.php">
-				<label for="wawp_email">Email:</label>
-				<input type="text" id="wawp_email" name="wawp_email" placeholder="example@website.com"><br>
-				<label for="wawp_email">Password:</label>
-				<input type="text" id="wawp_password" name="wawp_password" placeholder="***********"><br>
-				<input type="submit" value="Submit">
-			</form>';
 			$post_details = array(
 				'post_title' => 'WA4WP Wild Apricot Login',
 				'post_status' => 'publish',
 				'post_type' => 'page',
-				'post_content' => '[wawp_custom_login]' // shortcode
+				'post_content' => '[wawp_custom_login_form]' // shortcode
 			);
 			$page_id = wp_insert_post($post_details, FALSE);
 			// Add page id to options so that it can be removed on deactivation
@@ -67,6 +61,19 @@ class WAIntegration {
 		foreach ($menu_item_ids as $menu_item_id) {
 			wp_delete_post($menu_item_id, true);
 		}
+	}
+
+	public function custom_login_form_shortcode() {
+		// Create page content -> login form
+		$page_content = '<p>Log into your Wild Apricot account here:</p>
+			<form method="post" action="options.php">
+				<label for="wawp_email">Email:</label>
+				<input type="text" id="wawp_email" name="wawp_email" placeholder="example@website.com"><br>
+				<label for="wawp_email">Password:</label>
+				<input type="text" id="wawp_password" name="wawp_password" placeholder="***********"><br>
+				<input type="submit" value="Submit">
+			</form>';
+		return $page_content;
 	}
 
 	public function load_user_credentials() {
