@@ -63,16 +63,61 @@ class WAIntegration {
 		}
 	}
 
+	// Get post request and validate input
+	public function process_login_form() {
+		// if (isset($_POST['wawp_login_submit'])) { // login form has been submitted
+		// 	// Create array to hold the valid input
+		// 	$valid_login = array();
+		// 	// Check email form
+		// 	$email_input = $_POST['wawp_login_email'];
+		// 	if (!empty($email_input) && is_email($email_input)) { // email is well-formed
+		// 		// Sanitize email
+		// 		$valid_login['email'] = sanitize_email($email_input);
+		// 	} else { // email is NOT well-formed
+		// 		// Output error
+		// 	}
+		// }
+	}
+
 	public function custom_login_form_shortcode() {
 		// Create page content -> login form
 		$page_content = '<p>Log into your Wild Apricot account here:</p>
-			<form method="post" action="options.php">
-				<label for="wawp_email">Email:</label>
-				<input type="text" id="wawp_email" name="wawp_email" placeholder="example@website.com"><br>
-				<label for="wawp_email">Password:</label>
-				<input type="text" id="wawp_password" name="wawp_password" placeholder="***********"><br>
-				<input type="submit" value="Submit">
+			<form method="post">';
+		$email_content = '<label for="wawp_login_email">Email:</label>
+				<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">';
+		$password_content =	'<br><label for="wawp_login_password">Password:</label>
+				<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********">';
+		$submit_content = '<br><input type="submit" name="wawp_login_submit" value="Submit">
 			</form>';
+
+		if (isset($_POST['wawp_login_submit'])) { // login form has been submitted
+			// Create array to hold the valid input
+			$valid_login = array();
+
+			// Check email form
+			$email_input = $_POST['wawp_login_email'];
+			if (!empty($email_input) && is_email($email_input)) { // email is well-formed
+				// Sanitize email
+				$valid_login['email'] = sanitize_email($email_input);
+			} else { // email is NOT well-formed
+				// Output error
+				$email_content .= '<p style="color:red;">Error with email!</p>';
+			}
+
+			// Check password form
+			// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
+			// Any combination of letters, numbers, and characters (except spaces)
+			$password_input = $_POST['wawp_login_password'];
+			if (!empty($password_input) && !preg_match("/\\s/", $password_input)) { // not empty and no spaces
+				$valid_login['password'] = $password_input;
+			} else { // password is NOT valid
+				// Output error
+				$password_content .= '<p style="color:red;">Error with password!</p>';
+			}
+		}
+
+		// Combine all content together
+		$page_content .= $email_content . $password_content . $submit_content;
 		return $page_content;
 	}
 
