@@ -3,6 +3,7 @@ namespace WAWP;
 
 class WAIntegration {
 	private $credentials;
+	private $decrypted_credentials;
 	private $access_token;
 	private $refresh_token;
 	private $base_wa_url;
@@ -24,6 +25,38 @@ class WAIntegration {
 		if (isset($wa_credentials) && $wa_credentials != '') {
 			$this->wa_credentials_entered = true;
 		}
+	}
+
+	// Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
+	public static function is_application_valid($application_keys) {
+		// Encode API key
+		$api_string = 'APIKEY:' . $application_keys['wawp_wal_api_key'];
+		$encoded_api_string = base64_encode($api_string);
+		// Perform API request
+		$args = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . $encoded_api_string,
+				'Content-type' => 'application/x-www-form-urlencoded'
+			),
+			'body' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
+		);
+		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+
+		if (is_wp_error($response)) {
+			return false;
+		}
+		// Get body of response
+		$body = wp_remote_retrieve_body($response);
+		// Get data from json response
+		$data = json_decode($body);
+		// Check if there is an error in body
+		if (array_key_exists('error', $data)) { // error in body
+			// Update successful login as false
+			// update_option('wawp_wal_success', false);
+			return false;
+		}
+		// Valid response; return data
+		return $data;
 	}
 
 	// Creates login page that allows user to enter their email and password credentials for Wild Apricot
@@ -63,23 +96,28 @@ class WAIntegration {
 		}
 	}
 
-	// Get post request and validate input
-	public function process_login_form() {
-		// if (isset($_POST['wawp_login_submit'])) { // login form has been submitted
-		// 	// Create array to hold the valid input
-		// 	$valid_login = array();
-		// 	// Check email form
-		// 	$email_input = $_POST['wawp_login_email'];
-		// 	if (!empty($email_input) && is_email($email_input)) { // email is well-formed
-		// 		// Sanitize email
-		// 		$valid_login['email'] = sanitize_email($email_input);
-		// 	} else { // email is NOT well-formed
-		// 		// Output error
-		// 	}
-		// }
+	// Connect user to Wild Apricot API after obtaining their email and password
+	// https://gethelp.wildapricot.com/en/articles/484
+	private function login_email_password($valid_login) {
+		// Encode API key
+		$authorization_string = $this->decrypted_credentials['wawp_wal_client_id'] . ':' . $this->decrypted_credentials['wawp_wal_client_secret'];
+		$encoded_authorization_string = base64_encode($authorization_string);
+		// Perform API request
+		$args = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . $encoded_authorization_string,
+				'Content-type' => 'application/x-www-form-urlencoded'
+			),
+			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
+		);
+		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+		do_action('qm/debug', $response);
 	}
 
 	public function custom_login_form_shortcode() {
+		// Boolean to hold if user has entered valid input
+		$input_is_valid = true;
+
 		// Create page content -> login form
 		$page_content = '<p>Log into your Wild Apricot account here:</p>
 			<form method="post">';
@@ -101,18 +139,27 @@ class WAIntegration {
 				$valid_login['email'] = sanitize_email($email_input);
 			} else { // email is NOT well-formed
 				// Output error
-				$email_content .= '<p style="color:red;">Error with email!</p>';
+				$email_content .= '<p style="color:red;">Invalid email!</p>';
+				$input_is_valid = false;
 			}
 
 			// Check password form
 			// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
 			// Any combination of letters, numbers, and characters (except spaces)
 			$password_input = $_POST['wawp_login_password'];
-			if (!empty($password_input) && !preg_match("/\\s/", $password_input)) { // not empty and no spaces
-				$valid_login['password'] = $password_input;
+			// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
+			if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
+				// Sanitize password
+				$valid_login['password'] = sanitize_text_field($password_input);
 			} else { // password is NOT valid
 				// Output error
-				$password_content .= '<p style="color:red;">Error with password!</p>';
+				$password_content .= '<p style="color:red;">Invalid password!</p>';
+				$input_is_valid = false;
+			}
+
+			// Send POST request to Wild Apricot API to log in if input is valid
+			if ($input_is_valid) {
+				$this->login_email_password($valid_login);
 			}
 		}
 
@@ -121,26 +168,28 @@ class WAIntegration {
 		return $page_content;
 	}
 
+	// Sets API Key, Client ID, and Client Secret to '' to signal that the credentials are invalid
+	private function clear_wa_credentials() {
+		// Loop through credentials array
+		foreach ($this->credentials as $index => $credential) {
+			// Set credential and decrypted credential as ''
+			$credential = '';
+			$this->decrypted_credentials[$index] = '';
+		}
+	}
+
+	// Load Wild Apricot credentials that user has input in the WA4WP settings
 	public function load_user_credentials() {
 		// Load encrypted credentials from database
 		$this->credentials = get_option('wawp_wal_name');
-		// print_r($this->credentials);
-		// do_action('qm/debug', 'api key: ' . $this->credentials['wawp_wal_api_key']);
-		// do_action('qm/debug', 'client id: ' . $this->credentials['wawp_wal_client_id']);
-		// do_action('qm/debug', 'client secret: ' . $this->credentials['wawp_wal_client_secret']);
 		// Decrypt credentials
-		$decrypted_credentials = array();
+		$this->decrypted_credentials = array();
 		$dataEncryption = new DataEncryption();
-		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($this->credentials['wawp_wal_api_key']);
-		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_id']);
-		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_secret']);
-		// Echo values for testing
-		// print_r($decrypted_credentials);
-		// do_action('qm/debug', 'decrypt api key: ' . $decrypted_credentials['wawp_wal_api_key']);
-		// do_action('qm/debug', 'decrypt client id: ' . $decrypted_credentials['wawp_wal_client_id']);
-		// do_action('qm/debug', 'decrypt client secret: ' . $decrypted_credentials['wawp_wal_client_secret']);
+		$this->decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($this->credentials['wawp_wal_api_key']);
+		$this->decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_id']);
+		$this->decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_secret']);
 		// Encode API key
-		$api_string = 'APIKEY:' . $decrypted_credentials['wawp_wal_api_key'];
+		$api_string = 'APIKEY:' . $this->decrypted_credentials['wawp_wal_api_key'];
 		$encoded_api_string = base64_encode($api_string);
 		// Perform API request
 		$args = array(
@@ -154,6 +203,7 @@ class WAIntegration {
 		do_action('qm/debug', $response);
 		// Check that api response is valid -> return false if it is invalid
 		if (is_wp_error($response)) {
+			$this->clear_wa_credentials();
 			return false;
 		}
 		// Response is valid -> get body from response
@@ -161,24 +211,19 @@ class WAIntegration {
 		// Decode JSON string to array with 'true' parameter
 		$data = json_decode($body, true);
 		do_action('qm/debug', $data);
-		$this->access_token = $data['access_token'];
-		$this->refresh_token = $data['refresh_token'];
-
-		// Add new login page
-		$this->create_login_page();
-	}
-
-	public function get_base_api() {
-		$api_args = array(
-			'headers' => array(
-				'Authorization' => 'Bearer ' . $this->access_token,
-				'Accept' => 'application/json',
-				'User-Agent' => 'WildApricotForWordPress'
-			),
-		);
-		$api_response = wp_remote_post('https://api.wildapricot.org/', $api_args);
-		do_action('qm/debug', 'new api response!!!!' . $api_response);
-		return $api_response;
+		// Check if there is an error with connecting
+		if (array_key_exists('error', $data)) { // error in body
+			// Update successful login as false
+			update_option('wawp_wal_success', false);
+			// Clear the invalid Wild Apricot credentials
+			$this->clear_wa_credentials();
+		} else { // valid credentials
+			update_option('wawp_wal_success', true);
+			$this->access_token = $data['access_token'];
+			$this->refresh_token = $data['refresh_token'];
+			// Add new login page
+			$this->create_login_page();
+		}
 	}
 
 	// Returns list of elements in menu
