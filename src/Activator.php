@@ -16,7 +16,6 @@ class Activator {
 
 	private $license_req_option_name;
 
-	private $redirected = false;
 
 	public function __construct($slug, $filename, $plugin_name) {
 		$this->slug = $slug;
@@ -24,38 +23,16 @@ class Activator {
 		$this->plugin_name = $plugin_name;
 		$this->license_req_option_name = 'license-check-' . $slug;
 
-		do_action('qm/debug', '{a} in constructor', ['a' => $slug]);
-
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
 
 		$this->register_license_hooks();
+
+		add_action('admin_notices', array($this, 'license_admin_notices'));
 
 		Addon::instance()::new_addon(array($slug => array(
 			'title' => $plugin_name,
 			'filename' => $filename
 		)));
-	}
-
-	public function activate_plugin_callback() {
-		$this->activate();
-		do_action('qm/debug', '{a} in activate_plugin_callback', ['a' => $this->slug]);
-		$license_exists = Addon::instance()::has_license($this->slug);
-		if (!$license_exists) {
-			// if there is no license for the plugin/addon, deactivate
-			do_action('qm/debug', '{a} has no license', ['a' => $this->slug]);
-			update_option($this->license_req_option_name, 'false');
-			$this->redirected = false;
-		} else {
-			do_action('qm/debug', '{a} has license', ['a' => $this->slug]);
-			delete_option($this->license_req_option_name);
-		}
-	}
-
-	public function register_license_hooks() {
-		if (get_option($this->license_req_option_name)) {
-			add_action('admin_init', array($this, 'force_deactivate'));
-			add_action('admin_notices', array($this, 'show_activation_error'));
-		}
 	}
 
 	/**
@@ -74,17 +51,49 @@ class Activator {
 		}
 	}
 
-	public function show_activation_error() {
-		echo "<div class='error'><p>";
-        echo "Please enter a valid license key for " . $this->plugin_name . " in WA4WP > Licensing. </p></div>";
+	public function activate_plugin_callback() {
+		$this->activate();
+		$license_exists = Addon::instance()::has_license($this->slug);
+		if (!$license_exists) {
+			update_option($this->license_req_option_name, 'false');
+		} else {
+			delete_option($this->license_req_option_name);
+		}
+	}
 
-		if (is_plugin_active($this->filename)) {
-			echo "<p>Deactivating plugin.</p>";
+	public function register_license_hooks() {
+		$opt = get_option($this->license_req_option_name);
+		if ($opt == 'false' || $opt == 'invalid') {
+			add_action('admin_init', array($this, 'force_deactivate'));
+		}
+	}
+
+	public function license_admin_notices() {
+		$option = get_option($this->license_req_option_name);
+
+		if ($option == 'true') { // if license key is valid
+			echo "<div class='notice notice-success is-dismissible'><p>";
+			echo "Saved license key for <strong>" . $this->plugin_name . "</strong>.</p>";
+			if ($this->slug != self::CORE) {
+				echo "<p>Activating plugin.</p>";
+			}
+			echo "</div>";
+		} else if ($option == 'false') { // missing license key
+			echo "<div class='notice notice-warning'><p>";
+			echo "Please enter a valid license key for <strong>" . $this->plugin_name . "</strong> in ";
+			echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . ">WA4WP > Licensing</a>.";
+			echo "</p></div>";
+			unset($_GET['activate']); // prevents printing "Plugin activated" message
+		} else if ($option == 'invalid') { // invalid license entered
+			echo "<div class='notice notice-error is-dismissible'><p>";
+			echo "Invalid key entered for <strong>" . $this->plugin_name . "</strong>.</p>";
+			if ($this->slug != self::CORE) {
+				echo "<p>Deactivating plugin.</p>";
+			}
+			echo "</div>";
 		}
 
-		remove_action('admin_notices', array($this, 'show_activation_error'));
 		delete_site_option($this->license_req_option_name);
-		unset($_GET['activate']); // prevents printing "Plugin activated" message
 	}
 
 	public function force_deactivate() {
@@ -92,10 +101,6 @@ class Activator {
 			deactivate_plugins($this->filename);
 		}
 		remove_action('admin_init', array($this, 'force_deactivate'));
-		if (!$this->redirected) {
-			// exit(wp_redirect(admin_url('admin.php?page=wawp-licensing')));
-			$this->redirected = true;
-		}
 	}
 
 }
