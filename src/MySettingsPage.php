@@ -409,23 +409,17 @@ class MySettingsPage
             $key = Addon::instance()::validate_license_key($license, $slug);
             $option_name = 'license-check-' . $slug;
             if (is_null($key)) {
-                add_action('admin_notices', function() use ($slug) {
-                    Addon::instance()::invalid_license_message($slug);
-                });
-                add_action('admin_init', function() use ($slug) {
-                    Addon::instance()::deactivate_addon($slug);
-                });
-                update_option($option_name, 'false');
+                update_option($option_name, 'invalid');
                 // add errors here okay.
             } else {
-                add_action('admin_notices', function() use ($slug) {
-                    Addon::instance()::valid_license_message($slug);
-                });
-                add_action('admin_init', function() use ($slug) {
-                    Addon::instance()::activate_addon($slug);
-                });
-                delete_option($option_name);
-                $valid[$slug] = $key;
+                // delete_option($option_name);
+                if ($key == 'unchanged') {
+                    delete_option($option_name);
+                    $valid[$slug] = Addon::instance()::get_license($slug);
+                } else {
+                    update_option($option_name, 'true');
+                    $valid[$slug] = $key;
+                }
             }
         }
         return $valid;
