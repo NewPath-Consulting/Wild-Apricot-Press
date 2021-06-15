@@ -52,6 +52,11 @@ class Addon {
         return get_option('wawp_license_keys');
     }
 
+    public static function get_license($slug) {
+        $licenses = self::get_licenses();
+        return $licenses[$slug];
+    }
+
     public static function has_license($slug) {
         do_action('qm/debug', '{a} in has_license', ['a' => $slug]);
         $licenses = self::get_licenses();
@@ -96,6 +101,13 @@ class Addon {
      * Called in uninstall.php. Deletes the data stored in the options table.
      */
     public static function delete() {
+        $addons = self::get_addons();
+
+        foreach ($addons as $slug => $addon) {
+            $filename = $addon['filename'];
+            delete_plugins($filename);
+        }
+
         delete_option('wawp_addons');
         delete_option('wawp_license_keys');
 
@@ -109,7 +121,9 @@ class Addon {
      */
     public static function validate_license_key($license_key_input, $addon_slug) {
         // if license key is empty, do nothing
-        if (empty($license_key_input)) return ;
+        if (empty($license_key_input)) return NULL;
+
+        if (self::get_license($addon_slug) == $license_key_input) return 'unchanged';
 
         // remove non-alphanumeric, non-hyphen characters
         $license_key = preg_replace(
@@ -129,55 +143,15 @@ class Addon {
         // else return the valid license key
         $filename = self::get_filename($addon_slug);
         if (array_key_exists('license-error', $response)) {
-            // add_action('admin_notices', Addon::valid_license_message());
             if (is_plugin_active($filename)) {
                 deactivate_plugins($filename);
             }
             return NULL;
         } else {
-            // add_action('admin_notices', Addon::invalid_license_message());
-            // $plugin_name =__DIR__ .
-            // if (!is_plugin_active(__FILE__)) {
-            //     activate_plugin(__FILE__);
-            // }
             if (!is_plugin_active($filename)) {
                 activate_plugin($filename);
             }
             return $license_key;
-        }
-    }
-
-    public static function valid_license_message($slug) {
-        $title = self::get_title($slug);
-        $filename = self::get_filename($slug);
-        echo "<div class='error'><p>";
-        echo "Saved license key for " . esc_attr($title) . ".</p>";
-        if (!is_plugin_active($filename)) {
-            echo "<p> Activating plugin.</p>";
-        }
-    }
-
-    public static function invalid_license_message($slug) {
-        $title = self::get_title($slug);
-        $filename = self::get_filename($slug);
-        echo "<div class='error'><p>";
-        echo "Invalid license key for " . esc_attr($title) . "</p>";
-        if (is_plugin_active($filename)) {
-            echo "<p> Deactivating plugin.</p>";
-        }
-    }
-
-    public static function deactivate_addon($slug) {
-        $filename = self::get_filename($slug);
-        if (is_plugin_active($filename)) {
-            deactivate_plugins($filename);
-        }
-    }
-
-    public static function activate_addon($slug) {
-        $filename = self::get_filename($slug);
-        if (!is_plugin_active($filename)) {
-            activate_plugin($filename);
         }
     }
 
