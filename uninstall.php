@@ -1,4 +1,10 @@
 <?php
+require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
+require_once plugin_dir_path(__FILE__) . 'src/Addon.php';
+
+use WAWP\Activator;
+use WAWP\Addon;
+
 if (!defined('WP_UNINSTALL_PLUGIN')) {
 	wp_die(sprintf(__('%s should only be called when uninstalling the plugin.', 'wawp'), __FILE__ ));
 	exit;
@@ -13,8 +19,7 @@ if (isset($wawp_wal_page_id) && $wawp_wal_page_id != '') {
 // Delete entries in wp_options table
 delete_option('wawp_wal_name');
 
-delete_option('wawp_addons');
-delete_option('wawp_license_keys');
+Addon::instance()::delete();
 
 
 ?>
