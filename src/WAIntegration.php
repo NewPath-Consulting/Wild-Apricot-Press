@@ -135,7 +135,26 @@ class WAIntegration {
 			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-		$this->my_log_file($response);
+		// $this->my_log_file($response);
+
+		// Get body of response to obtain the success or error of the response
+		// If an error is returned, return false to end the request
+		if (is_wp_error($response)) {
+			return false;
+		}
+		// No errors -> parse the data
+		$body = wp_remote_retrieve_body($response);
+		// Decode JSON string
+		$data = json_decode($body, true); // returns an array
+		$this->my_log_file($data);
+
+		// If access_token is one of the keys, then we have successfully logged in!
+		if (isset($data['error'])) { // error with logging in
+			return false;
+		}
+		// Success with logging in
+		// Return required information (access token, refresh token, etc.)
+		return $data;
 	}
 
 	public function custom_login_form_shortcode() {
@@ -182,8 +201,18 @@ class WAIntegration {
 			}
 
 			// Send POST request to Wild Apricot API to log in if input is valid
-			if ($input_is_valid) {
-				$this->login_email_password($valid_login);
+			if ($input_is_valid) { // input is valid
+				$login_attempt = $this->login_email_password($valid_login);
+				// If login attempt is false, then the user could not log in
+				if (!$login_attempt) {
+					// Present user with log in error
+					$submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
+					If you are sure that you have entered the correct email and password, contact your administrator.</p>';
+				} else { // log in is successful!
+					// Redirect user to page they were previously on
+					$this->my_log_file('Logged in!');
+					wp_redirect(site_url());
+				}
 			}
 		}
 
