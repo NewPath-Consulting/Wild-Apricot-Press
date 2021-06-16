@@ -32,19 +32,6 @@ class MySettingsPage
         }
     }
 
-    // Debugging
-	function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
-
     /**
      * Add options page
      */
@@ -321,21 +308,15 @@ class MySettingsPage
 
         // If input is valid, check if it can connect to the API
         $valid_api;
-        $this->my_log_file($entered_valid);
         if ($entered_valid) {
             require_once('WAIntegration.php');
-            $this->my_log_file('checking if application is valid!');
             $valid_api = WAIntegration::is_application_valid($entered_api_key);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
         if (!$valid_api || !$entered_valid) {
-            $this->my_log_file('remove all elements!');
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
-        }
-        foreach ($valid as $element) {
-            $this->my_log_file($element);
         }
 
         // Sanitize menu dropdown

@@ -27,6 +27,19 @@ class WAIntegration {
 		}
 	}
 
+	// Debugging
+	function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
+
 	// Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
 	public static function is_application_valid($entered_api_key) {
 		// Encode API key
@@ -112,7 +125,7 @@ class WAIntegration {
 			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-		do_action('qm/debug', $response);
+		$this->my_log_file($response);
 	}
 
 	public function custom_login_form_shortcode() {
@@ -189,6 +202,10 @@ class WAIntegration {
 		$this->decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($this->credentials['wawp_wal_api_key']);
 		$this->decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_id']);
 		$this->decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_secret']);
+
+		// Create login page
+		$this->create_login_page();
+
 		// Encode API key
 		// $api_string = 'APIKEY:' . $this->decrypted_credentials['wawp_wal_api_key'];
 		// $encoded_api_string = base64_encode($api_string);
@@ -229,11 +246,6 @@ class WAIntegration {
 		// Get data from application
 		// $data = WAIntegration::is_application_valid($this->decrypted_credentials['wawp_wal_api_key']);
 		// Get required information
-	}
-
-	// Returns list of elements in menu
-	public function get_log_menu_items() {
-		return $this->log_menu_items;
 	}
 
 	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
