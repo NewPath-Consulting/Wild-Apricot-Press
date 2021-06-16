@@ -28,9 +28,9 @@ class WAIntegration {
 	}
 
 	// Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
-	public static function is_application_valid($application_keys) {
+	public static function is_application_valid($entered_api_key) {
 		// Encode API key
-		$api_string = 'APIKEY:' . $application_keys['wawp_wal_api_key'];
+		$api_string = 'APIKEY:' . $entered_api_key;
 		$encoded_api_string = base64_encode($api_string);
 		// Perform API request
 		$args = array(
@@ -48,9 +48,10 @@ class WAIntegration {
 		// Get body of response
 		$body = wp_remote_retrieve_body($response);
 		// Get data from json response
-		$data = json_decode($body);
+		$data = json_decode($body, true);
+		do_action('qm/debug', $data);
 		// Check if there is an error in body
-		if (array_key_exists('error', $data)) { // error in body
+		if (isset($data['error'])) { // error in body
 			// Update successful login as false
 			// update_option('wawp_wal_success', false);
 			return false;
@@ -189,41 +190,45 @@ class WAIntegration {
 		$this->decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_id']);
 		$this->decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_secret']);
 		// Encode API key
-		$api_string = 'APIKEY:' . $this->decrypted_credentials['wawp_wal_api_key'];
-		$encoded_api_string = base64_encode($api_string);
-		// Perform API request
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Basic ' . $encoded_api_string,
-				'Content-type' => 'application/x-www-form-urlencoded'
-			),
-			'body' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
-		);
-		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-		do_action('qm/debug', $response);
-		// Check that api response is valid -> return false if it is invalid
-		if (is_wp_error($response)) {
-			$this->clear_wa_credentials();
-			return false;
-		}
-		// Response is valid -> get body from response
-		$body = wp_remote_retrieve_body($response);
-		// Decode JSON string to array with 'true' parameter
-		$data = json_decode($body, true);
-		do_action('qm/debug', $data);
-		// Check if there is an error with connecting
-		if (array_key_exists('error', $data)) { // error in body
-			// Update successful login as false
-			update_option('wawp_wal_success', false);
-			// Clear the invalid Wild Apricot credentials
-			$this->clear_wa_credentials();
-		} else { // valid credentials
-			update_option('wawp_wal_success', true);
-			$this->access_token = $data['access_token'];
-			$this->refresh_token = $data['refresh_token'];
-			// Add new login page
-			$this->create_login_page();
-		}
+		// $api_string = 'APIKEY:' . $this->decrypted_credentials['wawp_wal_api_key'];
+		// $encoded_api_string = base64_encode($api_string);
+		// // Perform API request
+		// $args = array(
+		// 	'headers' => array(
+		// 		'Authorization' => 'Basic ' . $encoded_api_string,
+		// 		'Content-type' => 'application/x-www-form-urlencoded'
+		// 	),
+		// 	'body' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
+		// );
+		// $response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+		// do_action('qm/debug', $response);
+		// // Check that api response is valid -> return false if it is invalid
+		// if (is_wp_error($response)) {
+		// 	$this->clear_wa_credentials();
+		// 	return false;
+		// }
+		// // Response is valid -> get body from response
+		// $body = wp_remote_retrieve_body($response);
+		// // Decode JSON string to array with 'true' parameter
+		// $data = json_decode($body, true);
+		// do_action('qm/debug', $data);
+		// // Check if there is an error with connecting
+		// if (array_key_exists('error', $data)) { // error in body
+		// 	// Update successful login as false
+		// 	update_option('wawp_wal_success', false);
+		// 	// Clear the invalid Wild Apricot credentials
+		// 	$this->clear_wa_credentials();
+		// } else { // valid credentials
+		// 	update_option('wawp_wal_success', true);
+		// 	$this->access_token = $data['access_token'];
+		// 	$this->refresh_token = $data['refresh_token'];
+		// 	// Add new login page
+		// 	$this->create_login_page();
+		// }
+
+		// Get data from application
+		// $data = WAIntegration::is_application_valid($this->decrypted_credentials['wawp_wal_api_key']);
+		// Get required information
 	}
 
 	// Returns list of elements in menu

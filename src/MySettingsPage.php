@@ -32,6 +32,19 @@ class MySettingsPage
         }
     }
 
+    // Debugging
+	function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
+
     /**
      * Add options page
      */
@@ -112,10 +125,10 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
-                        $successful_credentials_entered = get_option('wawp_wal_success');
+                        // $successful_credentials_entered = get_option('wawp_wal_success');
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Invalid credentials! Please try again!</p>';
-						} elseif (isset($successful_credentials_entered) && $successful_credentials_entered) { // successful login
+						} else { // successful login
 							echo '<p style="color:green">Success! Credentials saved!</p>';
                             // Implement hook here to tell Wild Apricot to connect to these credentials
                             do_action('wawp_wal_credentials_obtained');
@@ -282,6 +295,7 @@ class MySettingsPage
 
         // Encrypt values if they are valid
         $entered_valid = true;
+        $entered_api_key = '';
         require_once('DataEncryption.php');
 		$dataEncryption = new DataEncryption();
         // Check if inputs are valid
@@ -289,6 +303,7 @@ class MySettingsPage
             $valid['wawp_wal_api_key'] = '';
             $entered_valid = false;
         } else { // valid
+            $entered_api_key = $valid['wawp_wal_api_key'];
             $valid['wawp_wal_api_key'] = $dataEncryption->encrypt($valid['wawp_wal_api_key']);
         }
         if ($valid['wawp_wal_client_id'] !== $input['wawp_wal_client_id']) { // incorrect client ID
@@ -305,13 +320,22 @@ class MySettingsPage
         }
 
         // If input is valid, check if it can connect to the API
+        $valid_api;
+        $this->my_log_file($entered_valid);
         if ($entered_valid) {
             require_once('WAIntegration.php');
-            WAIntegration::is_application_valid($valid);
-        } else { // Set all inputs to '' if at least one input is invalid
-            foreach ($valid as $element) {
-                $element = '';
-            }
+            $this->my_log_file('checking if application is valid!');
+            $valid_api = WAIntegration::is_application_valid($entered_api_key);
+        }
+        // Set all elements to '' if api call is invalid or invalid input has been entered
+        if (!$valid_api || !$entered_valid) {
+            $this->my_log_file('remove all elements!');
+            // Set all inputs to ''
+            $keys = array_keys($valid);
+            $valid = array_fill_keys($keys, '');
+        }
+        foreach ($valid as $element) {
+            $this->my_log_file($element);
         }
 
         // Sanitize menu dropdown
