@@ -2,8 +2,6 @@
 namespace WAWP;
 
 class WAIntegration {
-	private $credentials;
-	private $decrypted_credentials;
 	private $access_token;
 	private $refresh_token;
 	private $base_wa_url;
@@ -12,7 +10,8 @@ class WAIntegration {
 
 	public function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
-		add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
+		// add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
+		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
 		// Filter for adding to menu
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Shortcode for login form
@@ -25,6 +24,8 @@ class WAIntegration {
 		if (isset($wa_credentials) && $wa_credentials != '') {
 			$this->wa_credentials_entered = true;
 		}
+		// Initialize decrypted credentials to empty array
+		$this->decrypted_credentials = array();
 	}
 
 	// Debugging
@@ -76,7 +77,7 @@ class WAIntegration {
 	// Creates login page that allows user to enter their email and password credentials for Wild Apricot
 	// See: https://stackoverflow.com/questions/32314278/how-to-create-a-new-wordpress-page-programmatically
 	// https://stackoverflow.com/questions/13848052/create-a-new-page-with-wp-insert-post
-	private function create_login_page() {
+	public function create_login_page() {
 		do_action('qm/debug', 'creating login page!');
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
@@ -113,8 +114,17 @@ class WAIntegration {
 	// Connect user to Wild Apricot API after obtaining their email and password
 	// https://gethelp.wildapricot.com/en/articles/484
 	private function login_email_password($valid_login) {
+		// $this->my_log_file($valid_login['email']);
+		// $this->my_log_file($valid_login['password']);
+		// foreach ($this->credentials as $dc) {
+		// 	$this->my_log_file($dc);
+		// }
+		// Get decrypted credentials
+		$decrypted_credentials = $this->load_user_credentials();
+
 		// Encode API key
-		$authorization_string = $this->decrypted_credentials['wawp_wal_client_id'] . ':' . $this->decrypted_credentials['wawp_wal_client_secret'];
+		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
+		$this->my_log_file($authorization_string);
 		$encoded_authorization_string = base64_encode($authorization_string);
 		// Perform API request
 		$args = array(
@@ -182,29 +192,21 @@ class WAIntegration {
 		return $page_content;
 	}
 
-	// Sets API Key, Client ID, and Client Secret to '' to signal that the credentials are invalid
-	private function clear_wa_credentials() {
-		// Loop through credentials array
-		foreach ($this->credentials as $index => $credential) {
-			// Set credential and decrypted credential as ''
-			$credential = '';
-			$this->decrypted_credentials[$index] = '';
-		}
-	}
-
 	// Load Wild Apricot credentials that user has input in the WA4WP settings
 	public function load_user_credentials() {
 		// Load encrypted credentials from database
-		$this->credentials = get_option('wawp_wal_name');
+		$credentials = get_option('wawp_wal_name');
 		// Decrypt credentials
-		$this->decrypted_credentials = array();
 		$dataEncryption = new DataEncryption();
-		$this->decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($this->credentials['wawp_wal_api_key']);
-		$this->decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_id']);
-		$this->decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($this->credentials['wawp_wal_client_secret']);
+		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
+		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
+		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
+		// $this->my_log_file($this->decrypted_credentials);
 
-		// Create login page
-		$this->create_login_page();
+		return $decrypted_credentials;
+
+		// // Create login page
+		// $this->create_login_page();
 
 		// Encode API key
 		// $api_string = 'APIKEY:' . $this->decrypted_credentials['wawp_wal_api_key'];
