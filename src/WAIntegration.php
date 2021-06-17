@@ -13,7 +13,7 @@ class WAIntegration {
 		// Hook that runs after Wild Apricot credentials are saved
 		// add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
-		// add_action('init', array($this, 'create_user_and_redirect'));
+		add_action('init', array($this, 'create_user_and_redirect'));
 		// Filter for adding to menu
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Shortcode for login form
@@ -167,6 +167,16 @@ class WAIntegration {
 		return $data;
 	}
 
+	// Adds error to login shortcode page
+	public function add_login_error($content) {
+		// Only run on wa4wp page
+		if (is_page('wa4wp-wild-apricot-login')) {
+			return $content . '<p>Invalid credentials! Please check that you have entered the correct email and password.
+			If you are sure that you entered the correct email and password, please contact your administrator.</p>';
+		}
+		return $content;
+	}
+
 	// Function to handle the redirect after the user is logged in
 	public function create_user_and_redirect() {
 		// Get id of last page from url
@@ -182,8 +192,10 @@ class WAIntegration {
 				$valid_login['email'] = sanitize_email($email_input);
 			} else { // email is NOT well-formed
 				// Output error
-				$email_content .= '<p style="color:red;">Invalid email!</p>';
-				$input_is_valid = false;
+				// $email_content .= '<p style="color:red;">Invalid email!</p>';
+				// $input_is_valid = false;
+				add_filter('the_content', 'add_login_error');
+				return;
 			}
 
 			// Check password form
@@ -196,24 +208,27 @@ class WAIntegration {
 				$valid_login['password'] = sanitize_text_field($password_input);
 			} else { // password is NOT valid
 				// Output error
-				$password_content .= '<p style="color:red;">Invalid password!</p>';
-				$input_is_valid = false;
+				// $password_content .= '<p style="color:red;">Invalid password!</p>';
+				// $input_is_valid = false;
+				add_filter('the_content', 'add_login_error');
+				return;
 			}
 
 			// Send POST request to Wild Apricot API to log in if input is valid
-			if ($input_is_valid) { // input is valid
-				$login_attempt = $this->login_email_password($valid_login);
-				// If login attempt is false, then the user could not log in
-				if (!$login_attempt) {
-					// Present user with log in error
-					$submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
-					If you are sure that you have entered the correct email and password, contact your administrator.</p>';
-				} else { // log in is successful!
-					$this->wa_login_success = true;
-				}
+			// if ($input_is_valid) { // input is valid
+			$login_attempt = $this->login_email_password($valid_login);
+			// If login attempt is false, then the user could not log in
+			if (!$login_attempt) {
+				// Present user with log in error
+				// $submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
+				// If you are sure that you have entered the correct email and password, contact your administrator.</p>';
+				add_filter('the_content', 'add_login_error');
+				return;
 			}
+			// }
+			// If we are here, then it means that we have not come across any errors, and the login is successful!
 
-			// Redirect
+			// Redirect user to previous page, or home page if there is no previous page
 			$this->my_log_file('we are creating!');
 			$last_page_id = 0;
 			$redirect_code_exists = false;
@@ -229,16 +244,27 @@ class WAIntegration {
 			} else { // no redirect id; redirect to home page
 				$redirect_after_login_url = esc_url(site_url());
 			}
-			wp_redirect($redirect_after_login_url);
+			$this->my_log_file('redirecting to: ' . $redirect_after_login_url);
+			wp_safe_redirect($redirect_after_login_url);
 			exit();
 		}
 	}
 
 	public function custom_login_form_shortcode() {
 		// Boolean to hold if user has entered valid input
-		$input_is_valid = true;
+		// $input_is_valid = true;
 
-		// $login_results = create_user_and_redirect();
+		// // Get results of POST request after "submit" button is pushed
+		// $login_results = $this->create_user_and_redirect();
+		// // Check results and update form based on if there is an error or not
+		// if ($login_results == 'email-invalid') { // Error on email
+		// 	$email_content .= '<p style="color:red;">Invalid email!</p>';
+		// } elseif ($login_results == 'password-invalid') { // Error on password
+		// 	$password_content .= '<p style="color:red;">Invalid password!</p>';
+		// } elseif ($login_results == 'credentials-invalid') {
+		// 	$submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
+		// 	If you are sure that you have entered the correct email and password, contact your administrator.</p>';
+		// }
 
 		// Create page content -> login form
 		$page_content = '<p>Log into your Wild Apricot account here:</p>
