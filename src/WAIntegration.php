@@ -13,7 +13,8 @@ class WAIntegration {
 		// Hook that runs after Wild Apricot credentials are saved
 		// add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
-		add_action('init', array($this, 'create_user_and_redirect'));
+		// Action for when login page is updated when submit button is pressed
+		add_action('template_redirect', array($this, 'create_user_and_redirect'));
 		// Filter for adding to menu
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Shortcode for login form
@@ -117,6 +118,7 @@ class WAIntegration {
 			wp_delete_post($menu_item_id, true);
 		}
 		$this->my_log_file('page has been added!');
+		do_action('wawp_wal_check_post');
 		// Check that user has logged in through form
 		// $this->create_user_and_redirect();
 	}
@@ -179,74 +181,84 @@ class WAIntegration {
 
 	// Function to handle the redirect after the user is logged in
 	public function create_user_and_redirect() {
-		// Get id of last page from url
-		// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
-		if (isset($_POST['wawp_login_submit'])) {
-			// Create array to hold the valid input
-			$valid_login = array();
+		// Check that we are on the login page
+		$this->my_log_file('post updated!');
+		$login_page_id = get_option('wawp_wal_page_id');
+		$this->my_log_file('and login id: ' . $login_page_id);
+		if (is_page($login_page_id)) {
+			// Get id of last page from url
+			// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
+			$this->my_log_file('look where we are!');
+			if (isset($_POST['wawp_login_submit'])) {
+				// Create array to hold the valid input
+				$valid_login = array();
 
-			// Check email form
-			$email_input = $_POST['wawp_login_email'];
-			if (!empty($email_input) && is_email($email_input)) { // email is well-formed
-				// Sanitize email
-				$valid_login['email'] = sanitize_email($email_input);
-			} else { // email is NOT well-formed
-				// Output error
-				// $email_content .= '<p style="color:red;">Invalid email!</p>';
-				// $input_is_valid = false;
-				add_filter('the_content', 'add_login_error');
-				return;
-			}
+				// Check email form
+				$email_input = $_POST['wawp_login_email'];
+				if (!empty($email_input) && is_email($email_input)) { // email is well-formed
+					// Sanitize email
+					$valid_login['email'] = sanitize_email($email_input);
+				} else { // email is NOT well-formed
+					// Output error
+					// $email_content .= '<p style="color:red;">Invalid email!</p>';
+					// $input_is_valid = false;
+					$this->my_log_file('bad email!');
+					add_filter('the_content', array($this, 'add_login_error'));
+					return;
+				}
 
-			// Check password form
-			// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
-			// Any combination of letters, numbers, and characters (except spaces)
-			$password_input = $_POST['wawp_login_password'];
-			// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
-			if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
-				// Sanitize password
-				$valid_login['password'] = sanitize_text_field($password_input);
-			} else { // password is NOT valid
-				// Output error
-				// $password_content .= '<p style="color:red;">Invalid password!</p>';
-				// $input_is_valid = false;
-				add_filter('the_content', 'add_login_error');
-				return;
-			}
+				// Check password form
+				// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
+				// Any combination of letters, numbers, and characters (except spaces)
+				$password_input = $_POST['wawp_login_password'];
+				// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
+				if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
+					// Sanitize password
+					$valid_login['password'] = sanitize_text_field($password_input);
+				} else { // password is NOT valid
+					// Output error
+					// $password_content .= '<p style="color:red;">Invalid password!</p>';
+					// $input_is_valid = false;
+					$this->my_log_file('password error!');
+					add_filter('the_content', array($this, 'add_login_error'));
+					return;
+				}
 
-			// Send POST request to Wild Apricot API to log in if input is valid
-			// if ($input_is_valid) { // input is valid
-			$login_attempt = $this->login_email_password($valid_login);
-			// If login attempt is false, then the user could not log in
-			if (!$login_attempt) {
-				// Present user with log in error
-				// $submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
-				// If you are sure that you have entered the correct email and password, contact your administrator.</p>';
-				add_filter('the_content', 'add_login_error');
-				return;
-			}
-			// }
-			// If we are here, then it means that we have not come across any errors, and the login is successful!
+				// Send POST request to Wild Apricot API to log in if input is valid
+				// if ($input_is_valid) { // input is valid
+				$login_attempt = $this->login_email_password($valid_login);
+				// If login attempt is false, then the user could not log in
+				if (!$login_attempt) {
+					// Present user with log in error
+					// $submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
+					// If you are sure that you have entered the correct email and password, contact your administrator.</p>';
+					$this->my_log_file('login error!');
+					add_filter('the_content', array($this, 'add_login_error'));
+					return;
+				}
+				// }
+				// If we are here, then it means that we have not come across any errors, and the login is successful!
 
-			// Redirect user to previous page, or home page if there is no previous page
-			$this->my_log_file('we are creating!');
-			$last_page_id = 0;
-			$redirect_code_exists = false;
-			if (get_query_var('redirectId')) { // get id of last page
-				$last_page_id = get_query_var('redirectId');
-				$redirect_code_exists = true;
+				// Redirect user to previous page, or home page if there is no previous page
+				$this->my_log_file('we are creating!');
+				$last_page_id = 0;
+				$redirect_code_exists = false;
+				if (get_query_var('redirectId')) { // get id of last page
+					$last_page_id = get_query_var('redirectId');
+					$redirect_code_exists = true;
+				}
+				// Redirect user to page they were previously on
+				// https://wordpress.stackexchange.com/questions/179934/how-to-redirect-on-particular-page-in-wordpress/179939
+				$redirect_after_login_url = '';
+				if ($redirect_code_exists) {
+					$redirect_after_login_url = esc_url(get_permalink($last_page_id));
+				} else { // no redirect id; redirect to home page
+					$redirect_after_login_url = esc_url(site_url());
+				}
+				$this->my_log_file('redirecting to: ' . $redirect_after_login_url);
+				wp_safe_redirect($redirect_after_login_url);
+				exit();
 			}
-			// Redirect user to page they were previously on
-			// https://wordpress.stackexchange.com/questions/179934/how-to-redirect-on-particular-page-in-wordpress/179939
-			$redirect_after_login_url = '';
-			if ($redirect_code_exists) {
-				$redirect_after_login_url = esc_url(get_permalink($last_page_id));
-			} else { // no redirect id; redirect to home page
-				$redirect_after_login_url = esc_url(site_url());
-			}
-			$this->my_log_file('redirecting to: ' . $redirect_after_login_url);
-			wp_safe_redirect($redirect_after_login_url);
-			exit();
 		}
 	}
 
