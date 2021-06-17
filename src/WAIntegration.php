@@ -7,11 +7,13 @@ class WAIntegration {
 	private $base_wa_url;
 	private $log_menu_items; // holds list of elements in header that Login/Logout is added to
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
+	private $wa_login_success;
 
 	public function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
 		// add_action('wawp_wal_credentials_obtained', array($this, 'load_user_credentials'));
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
+		// add_action('init', array($this, 'create_user_and_redirect'));
 		// Filter for adding to menu
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Shortcode for login form
@@ -24,8 +26,7 @@ class WAIntegration {
 		if (isset($wa_credentials) && $wa_credentials != '') {
 			$this->wa_credentials_entered = true;
 		}
-		// Initialize decrypted credentials to empty array
-		$this->decrypted_credentials = array();
+		$this->wa_login_success = false; // not initially logged into Wild Apricot
 	}
 
 	// Debugging
@@ -79,6 +80,12 @@ class WAIntegration {
 	// https://stackoverflow.com/questions/13848052/create-a-new-page-with-wp-insert-post
 	public function create_login_page() {
 		do_action('qm/debug', 'creating login page!');
+
+		// See if we can access POST from here
+		if (isset($_POST['wawp_login_submit'])) {
+			$this->my_log_file('ok we can use POST here!');
+		}
+
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
@@ -109,6 +116,9 @@ class WAIntegration {
 		foreach ($menu_item_ids as $menu_item_id) {
 			wp_delete_post($menu_item_id, true);
 		}
+		$this->my_log_file('page has been added!');
+		// Check that user has logged in through form
+		// $this->create_user_and_redirect();
 	}
 
 	// Connect user to Wild Apricot API after obtaining their email and password
@@ -124,7 +134,7 @@ class WAIntegration {
 
 		// Encode API key
 		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
-		$this->my_log_file($authorization_string);
+		// $this->my_log_file($authorization_string);
 		$encoded_authorization_string = base64_encode($authorization_string);
 		// Perform API request
 		$args = array(
@@ -146,7 +156,7 @@ class WAIntegration {
 		$body = wp_remote_retrieve_body($response);
 		// Decode JSON string
 		$data = json_decode($body, true); // returns an array
-		$this->my_log_file($data);
+		// $this->my_log_file($data);
 
 		// If access_token is one of the keys, then we have successfully logged in!
 		if (isset($data['error'])) { // error with logging in
@@ -157,21 +167,11 @@ class WAIntegration {
 		return $data;
 	}
 
-	public function custom_login_form_shortcode() {
-		// Boolean to hold if user has entered valid input
-		$input_is_valid = true;
-
-		// Create page content -> login form
-		$page_content = '<p>Log into your Wild Apricot account here:</p>
-			<form method="post">';
-		$email_content = '<label for="wawp_login_email">Email:</label>
-				<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">';
-		$password_content =	'<br><label for="wawp_login_password">Password:</label>
-				<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********">';
-		$submit_content = '<br><input type="submit" name="wawp_login_submit" value="Submit">
-			</form>';
-
-		if (isset($_POST['wawp_login_submit'])) { // login form has been submitted
+	// Function to handle the redirect after the user is logged in
+	public function create_user_and_redirect() {
+		// Get id of last page from url
+		// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
+		if (isset($_POST['wawp_login_submit'])) {
 			// Create array to hold the valid input
 			$valid_login = array();
 
@@ -209,12 +209,89 @@ class WAIntegration {
 					$submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
 					If you are sure that you have entered the correct email and password, contact your administrator.</p>';
 				} else { // log in is successful!
-					// Redirect user to page they were previously on
-					$this->my_log_file('Logged in!');
-					wp_redirect(site_url());
+					$this->wa_login_success = true;
 				}
 			}
+
+			// Redirect
+			$this->my_log_file('we are creating!');
+			$last_page_id = 0;
+			$redirect_code_exists = false;
+			if (get_query_var('redirectId')) { // get id of last page
+				$last_page_id = get_query_var('redirectId');
+				$redirect_code_exists = true;
+			}
+			// Redirect user to page they were previously on
+			// https://wordpress.stackexchange.com/questions/179934/how-to-redirect-on-particular-page-in-wordpress/179939
+			$redirect_after_login_url = '';
+			if ($redirect_code_exists) {
+				$redirect_after_login_url = esc_url(get_permalink($last_page_id));
+			} else { // no redirect id; redirect to home page
+				$redirect_after_login_url = esc_url(site_url());
+			}
+			wp_redirect($redirect_after_login_url);
+			exit();
 		}
+	}
+
+	public function custom_login_form_shortcode() {
+		// Boolean to hold if user has entered valid input
+		$input_is_valid = true;
+
+		// $login_results = create_user_and_redirect();
+
+		// Create page content -> login form
+		$page_content = '<p>Log into your Wild Apricot account here:</p>
+			<form method="post">';
+		$email_content = '<label for="wawp_login_email">Email:</label>
+				<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">';
+		$password_content =	'<br><label for="wawp_login_password">Password:</label>
+				<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********">';
+		$submit_content = '<br><input type="submit" name="wawp_login_submit" value="Submit">
+			</form>';
+
+		// if (isset($_POST['wawp_login_submit'])) { // login form has been submitted
+		// 	// Create array to hold the valid input
+		// 	$valid_login = array();
+
+		// 	// Check email form
+		// 	$email_input = $_POST['wawp_login_email'];
+		// 	if (!empty($email_input) && is_email($email_input)) { // email is well-formed
+		// 		// Sanitize email
+		// 		$valid_login['email'] = sanitize_email($email_input);
+		// 	} else { // email is NOT well-formed
+		// 		// Output error
+		// 		$email_content .= '<p style="color:red;">Invalid email!</p>';
+		// 		$input_is_valid = false;
+		// 	}
+
+		// 	// Check password form
+		// 	// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
+		// 	// Any combination of letters, numbers, and characters (except spaces)
+		// 	$password_input = $_POST['wawp_login_password'];
+		// 	// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
+		// 	if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
+		// 		// Sanitize password
+		// 		$valid_login['password'] = sanitize_text_field($password_input);
+		// 	} else { // password is NOT valid
+		// 		// Output error
+		// 		$password_content .= '<p style="color:red;">Invalid password!</p>';
+		// 		$input_is_valid = false;
+		// 	}
+
+		// 	// Send POST request to Wild Apricot API to log in if input is valid
+		// 	if ($input_is_valid) { // input is valid
+		// 		$login_attempt = $this->login_email_password($valid_login);
+		// 		// If login attempt is false, then the user could not log in
+		// 		if (!$login_attempt) {
+		// 			// Present user with log in error
+		// 			$submit_content .= '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
+		// 			If you are sure that you have entered the correct email and password, contact your administrator.</p>';
+		// 		} else { // log in is successful!
+		// 			$this->wa_login_success = true;
+		// 		}
+		// 	}
+		// }
 
 		// Combine all content together
 		$page_content .= $email_content . $password_content . $submit_content;
@@ -285,7 +362,15 @@ class WAIntegration {
 		do_action('qm/debug', 'Adding login in menu!');
 		// Get login url based on user's Wild Apricot site
 		if ($this->wa_credentials_entered) {
-			$login_url = home_url() . '/wa4wp-wild-apricot-login';
+			// Create login url
+			$login_url = esc_url(home_url() . '/wa4wp-wild-apricot-login');
+			// Get current page id
+			// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
+			$current_page_id = get_queried_object_id();
+			$login_url = esc_url(add_query_arg(array(
+				'redirectId' => $current_page_id,
+			), $login_url));
+			$this->my_log_file('lets login: ' . $login_url);
 			do_action('qm/debug', 'theme location = ' . $args->theme_location);
 			// Check if user is logged in or logged out
 			$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
