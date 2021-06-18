@@ -40,7 +40,7 @@ class MySettingsPage
         // Create WA4WP admin page
         add_menu_page(
             'WA4WP Settings',
-            'WA4WP',
+            'WA4WP Settings',
             'manage_options',
             'wawp-wal-admin',
             array( $this, 'create_admin_page' ),
@@ -51,8 +51,8 @@ class MySettingsPage
 		// Create Login sub-menu under WA4WP
 		add_submenu_page(
 			'wawp-wal-admin',
-			'Wild Apricot Login',
-			'Login',
+			'Wild Apricot Authorization',
+			'Authorization',
 			'manage_options',
 			'wawp-login',
 			array($this, 'create_login_page')
@@ -164,7 +164,7 @@ class MySettingsPage
 		// Create settings section
         add_settings_section(
             'wawp_wal_id', // ID
-            'Wild Apricot Login', // Title
+            'Wild Apricot Authorized Application Credentials', // Title
             array( $this, 'wal_print_section_info' ), // Callback
             'wawp-wal-admin' // Page
         );
