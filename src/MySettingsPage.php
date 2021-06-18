@@ -115,6 +115,7 @@ class MySettingsPage
                         // $successful_credentials_entered = get_option('wawp_wal_success');
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Invalid credentials! Please try again!</p>';
+                            do_action('wawp_wal_set_login_private');
 						} else { // successful login
 							echo '<p style="color:green">Success! Credentials saved!</p>';
                             // Implement hook here to tell Wild Apricot to connect to these credentials
@@ -307,13 +308,13 @@ class MySettingsPage
         }
 
         // If input is valid, check if it can connect to the API
-        $valid_api;
+        $valid_api = '';
         if ($entered_valid) {
             require_once('WAIntegration.php');
             $valid_api = WAIntegration::is_application_valid($entered_api_key);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
-        if (!$valid_api || !$entered_valid) {
+        if ($valid_api == false || !$entered_valid) {
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');

@@ -24,6 +24,8 @@ class WAIntegration {
 		add_shortcode('wawp_custom_login_form', array($this, 'custom_login_form_shortcode'));
 		// Add redirectId to query vars array
 		add_filter('query_vars', array($this, 'add_custom_query_vars'));
+		// Action for making profile page private
+		add_action('wawp_wal_set_login_private', array($this, 'make_login_private'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		// Check if Wild Apricot credentials have been entered
@@ -105,6 +107,7 @@ class WAIntegration {
 	 *
 	 */
 	public function create_login_page() {
+		$this->my_log_file('creating page...');
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
@@ -134,6 +137,18 @@ class WAIntegration {
 		// Loop through ids and remove
 		foreach ($menu_item_ids as $menu_item_id) {
 			wp_delete_post($menu_item_id, true);
+		}
+	}
+
+	public function make_login_private() {
+		// Check if login page exists
+		$login_page_id = get_option('wawp_wal_page_id');
+		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
+			// Make login page private
+			// Set existing login page to publish
+			$login_page = get_post($login_page_id, 'ARRAY_A');
+			$login_page['post_status'] = 'private';
+			wp_update_post($login_page);
 		}
 	}
 
