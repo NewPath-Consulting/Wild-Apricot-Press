@@ -332,7 +332,7 @@ class WAIntegration {
 		$wa_credentials_saved = get_option('wawp_wal_name');
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
 			// Create login url
-			$login_url = esc_url(home_url() . '/wa4wp-wild-apricot-login');
+			$login_url = esc_url(site_url() . '/wa4wp-wild-apricot-login');
 			// Get current page id
 			// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
 			$current_page_id = get_queried_object_id();
