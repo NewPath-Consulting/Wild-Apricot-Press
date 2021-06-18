@@ -112,9 +112,10 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
+                        // $successful_credentials_entered = get_option('wawp_wal_success');
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
-							echo '<p style="color:red">Invalid credentials!</p>';
-						} else {
+							echo '<p style="color:red">Invalid credentials! Please try again!</p>';
+						} else { // successful login
 							echo '<p style="color:green">Success! Credentials saved!</p>';
                             // Implement hook here to tell Wild Apricot to connect to these credentials
                             do_action('wawp_wal_credentials_obtained');
@@ -280,23 +281,42 @@ class MySettingsPage
         );
 
         // Encrypt values if they are valid
+        $entered_valid = true;
+        $entered_api_key = '';
         require_once('DataEncryption.php');
 		$dataEncryption = new DataEncryption();
         // Check if inputs are valid
         if ($valid['wawp_wal_api_key'] !== $input['wawp_wal_api_key']) { // incorrect api key
             $valid['wawp_wal_api_key'] = '';
+            $entered_valid = false;
         } else { // valid
+            $entered_api_key = $valid['wawp_wal_api_key'];
             $valid['wawp_wal_api_key'] = $dataEncryption->encrypt($valid['wawp_wal_api_key']);
         }
         if ($valid['wawp_wal_client_id'] !== $input['wawp_wal_client_id']) { // incorrect client ID
             $valid['wawp_wal_client_id'] = '';
+            $entered_valid = false;
         } else {
             $valid['wawp_wal_client_id'] = $dataEncryption->encrypt($valid['wawp_wal_client_id']);
         }
         if ($valid['wawp_wal_client_secret'] !== $input['wawp_wal_client_secret']) { // incorrect client secret
             $valid['wawp_wal_client_secret'] = '';
+            $entered_valid = false;
         } else {
             $valid['wawp_wal_client_secret'] = $dataEncryption->encrypt($valid['wawp_wal_client_secret']);
+        }
+
+        // If input is valid, check if it can connect to the API
+        $valid_api;
+        if ($entered_valid) {
+            require_once('WAIntegration.php');
+            $valid_api = WAIntegration::is_application_valid($entered_api_key);
+        }
+        // Set all elements to '' if api call is invalid or invalid input has been entered
+        if (!$valid_api || !$entered_valid) {
+            // Set all inputs to ''
+            $keys = array_keys($valid);
+            $valid = array_fill_keys($keys, '');
         }
 
         // Sanitize menu dropdown
