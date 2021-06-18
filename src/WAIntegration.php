@@ -19,6 +19,8 @@ class WAIntegration {
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Shortcode for login form
 		add_shortcode('wawp_custom_login_form', array($this, 'custom_login_form_shortcode'));
+		// Add redirectId to query vars array
+		add_filter('query_vars', array($this, 'add_custom_query_vars'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		// Check if Wild Apricot credentials have been entered
@@ -41,6 +43,14 @@ class WAIntegration {
 		$msg = print_r( $msg, true );
 		$log = $name . "  |  " . $msg . "\n";
 		error_log( $log, 3, $error_dir );
+	}
+
+	// Add query vars to WordPress
+	// See: https://stackoverflow.com/questions/20379543/wordpress-get-query-var
+	public function add_custom_query_vars($vars) {
+		// Add redirectId to query vars
+		$vars[] = 'redirectId';
+		return $vars;
 	}
 
 	// Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
@@ -172,8 +182,9 @@ class WAIntegration {
 	// Adds error to login shortcode page
 	public function add_login_error($content) {
 		// Only run on wa4wp page
-		if (is_page('wa4wp-wild-apricot-login')) {
-			return $content . '<p>Invalid credentials! Please check that you have entered the correct email and password.
+		$login_page_id = get_option('wawp_wal_page_id');
+		if (is_page($login_page_id)) {
+			return $content . '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
 			If you are sure that you entered the correct email and password, please contact your administrator.</p>';
 		}
 		return $content;
@@ -241,12 +252,15 @@ class WAIntegration {
 
 				// Redirect user to previous page, or home page if there is no previous page
 				$this->my_log_file('we are creating!');
-				$last_page_id = 0;
+				$last_page_id = get_query_var('redirectId', false);
+				$this->my_log_file($last_page_id);
 				$redirect_code_exists = false;
-				if (get_query_var('redirectId')) { // get id of last page
-					$last_page_id = get_query_var('redirectId');
+				if ($last_page_id != false) { // get id of last page
+					// $last_page_id = get_query_var('redirectId');
 					$redirect_code_exists = true;
 				}
+				$this->my_log_file('is redirect code? ' . $redirect_code_exists);
+				$this->my_log_file('this is redirect code: ' . $last_page_id);
 				// Redirect user to page they were previously on
 				// https://wordpress.stackexchange.com/questions/179934/how-to-redirect-on-particular-page-in-wordpress/179939
 				$redirect_after_login_url = '';
