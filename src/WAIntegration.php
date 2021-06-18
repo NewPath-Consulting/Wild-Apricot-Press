@@ -313,7 +313,9 @@ class WAIntegration {
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
 	public function create_wa_login_logout($items, $args) {
 		// Get login url based on user's Wild Apricot site
-		if ($this->wa_credentials_entered) {
+		// First, check if Wild Apricot credentials are valid
+		$wa_credentials_saved = get_option('wawp_wal_name');
+		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
 			// Create login url
 			$login_url = esc_url(home_url() . '/wa4wp-wild-apricot-login');
 			// Get current page id
