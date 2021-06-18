@@ -40,7 +40,7 @@ class MySettingsPage
         // Create WA4WP admin page
         add_menu_page(
             'WA4WP Settings',
-            'WA4WP',
+            'WA4WP Settings',
             'manage_options',
             'wawp-wal-admin',
             array( $this, 'create_admin_page' ),
@@ -51,8 +51,8 @@ class MySettingsPage
 		// Create Login sub-menu under WA4WP
 		add_submenu_page(
 			'wawp-wal-admin',
-			'Wild Apricot Login',
-			'Login',
+			'Wild Apricot Authorization',
+			'Authorization',
 			'manage_options',
 			'wawp-login',
 			array($this, 'create_login_page')
@@ -115,6 +115,7 @@ class MySettingsPage
                         // $successful_credentials_entered = get_option('wawp_wal_success');
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Invalid credentials! Please try again!</p>';
+                            do_action('wawp_wal_set_login_private');
 						} else { // successful login
 							echo '<p style="color:green">Success! Credentials saved!</p>';
                             // Implement hook here to tell Wild Apricot to connect to these credentials
@@ -164,7 +165,7 @@ class MySettingsPage
 		// Create settings section
         add_settings_section(
             'wawp_wal_id', // ID
-            'Wild Apricot Login', // Title
+            'Wild Apricot Authorized Application Credentials', // Title
             array( $this, 'wal_print_section_info' ), // Callback
             'wawp-wal-admin' // Page
         );
@@ -286,20 +287,20 @@ class MySettingsPage
         require_once('DataEncryption.php');
 		$dataEncryption = new DataEncryption();
         // Check if inputs are valid
-        if ($valid['wawp_wal_api_key'] !== $input['wawp_wal_api_key']) { // incorrect api key
+        if ($valid['wawp_wal_api_key'] !== $input['wawp_wal_api_key'] || $input['wawp_wal_api_key'] == '') { // incorrect api key
             $valid['wawp_wal_api_key'] = '';
             $entered_valid = false;
         } else { // valid
             $entered_api_key = $valid['wawp_wal_api_key'];
             $valid['wawp_wal_api_key'] = $dataEncryption->encrypt($valid['wawp_wal_api_key']);
         }
-        if ($valid['wawp_wal_client_id'] !== $input['wawp_wal_client_id']) { // incorrect client ID
+        if ($valid['wawp_wal_client_id'] !== $input['wawp_wal_client_id'] || $input['wawp_wal_client_id'] == '') { // incorrect client ID
             $valid['wawp_wal_client_id'] = '';
             $entered_valid = false;
         } else {
             $valid['wawp_wal_client_id'] = $dataEncryption->encrypt($valid['wawp_wal_client_id']);
         }
-        if ($valid['wawp_wal_client_secret'] !== $input['wawp_wal_client_secret']) { // incorrect client secret
+        if ($valid['wawp_wal_client_secret'] !== $input['wawp_wal_client_secret'] || $input['wawp_wal_client_secret'] == '') { // incorrect client secret
             $valid['wawp_wal_client_secret'] = '';
             $entered_valid = false;
         } else {
@@ -307,13 +308,13 @@ class MySettingsPage
         }
 
         // If input is valid, check if it can connect to the API
-        $valid_api;
+        $valid_api = '';
         if ($entered_valid) {
             require_once('WAIntegration.php');
             $valid_api = WAIntegration::is_application_valid($entered_api_key);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
-        if (!$valid_api || !$entered_valid) {
+        if ($valid_api == false || !$entered_valid) {
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
@@ -429,23 +430,17 @@ class MySettingsPage
             $key = Addon::instance()::validate_license_key($license, $slug);
             $option_name = 'license-check-' . $slug;
             if (is_null($key)) {
-                add_action('admin_notices', function() use ($slug) {
-                    Addon::instance()::invalid_license_message($slug);
-                });
-                add_action('admin_init', function() use ($slug) {
-                    Addon::instance()::deactivate_addon($slug);
-                });
-                update_option($option_name, 'false');
+                update_option($option_name, 'invalid');
                 // add errors here okay.
             } else {
-                add_action('admin_notices', function() use ($slug) {
-                    Addon::instance()::valid_license_message($slug);
-                });
-                add_action('admin_init', function() use ($slug) {
-                    Addon::instance()::activate_addon($slug);
-                });
-                delete_option($option_name);
-                $valid[$slug] = $key;
+                // delete_option($option_name);
+                if ($key == 'unchanged') {
+                    delete_option($option_name);
+                    $valid[$slug] = Addon::instance()::get_license($slug);
+                } else {
+                    update_option($option_name, 'true');
+                    $valid[$slug] = $key;
+                }
             }
         }
         return $valid;
