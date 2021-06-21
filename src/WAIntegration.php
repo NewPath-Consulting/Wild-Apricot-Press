@@ -271,7 +271,8 @@ class WAIntegration {
 		$contact_info = json_decode($contact_info, true);
 		$this->my_log_file($contact_info);
 		// Extract atrributes from contact info
-		$membership_level = $contact_info['MembershipLevel'];
+		$membership_level = $contact_info['MembershipLevel']['Name'];
+		$this->my_log_file($membership_level);
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -294,12 +295,14 @@ class WAIntegration {
 			// 	$number_of_taken_usernames = $number_of_taken_usernames + 1;
 			// }
 			// Get values from contact info
-			$first_name = ;
+			$first_name = $contact_info['FirstName'];
+			$last_name = $contact_info['LastName'];
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
 				'user_login' => $generated_username,
-				'role' => 'subscriber'
+				'role' => 'subscriber',
+				'display_name' => $first_name . ' ' . $last_name
 			);
 			// Insert user
 			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
@@ -310,6 +313,9 @@ class WAIntegration {
 		}
 		// Now that we have the ID of the user, modify user with Wild Apricot information
 		$this->my_log_file($current_wp_user_id);
+
+		// Log user into WP account
+		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
 	}
 
 	/**
