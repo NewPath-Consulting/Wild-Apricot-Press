@@ -253,14 +253,40 @@ class WAIntegration {
 		$wa_user_id = $member_permissions['AccountId'];
 
 		// Check if WA email exists in the WP user database
+		$current_wp_user_id = 0;
 		if (email_exists($login_email)) { // email exists; we will update user
 			// Get user
-			// https://developer.wordpress.org/reference/functions/get_user_by/
-			$wp_user = get_user_by('email', $login_email);
+			$current_wp_user = get_user_by('email', $login_email); // returns WP_User
+			$current_wp_user_id = $current_wp_user->ID;
 			// Get user's permissions and user's membership level in Wild Apricot
 		} else { // email does not exist; we will create a new user
-
+			// Set user data
+			$generated_username = $login_email;
+			// Username will be the part before the @ in the email
+			// $generated_username = explode('@', $login_email)[0];
+			// // Check that generated username is not taken; if so, append the number of users to the end
+			// $number_of_taken_usernames = 0;
+			// while (username_exists($generated_username)) {
+			// 	// Append number of users on site to the end
+			// 	$extra_number = count_users() + $number_of_taken_usernames;
+			// 	$generated_username = $generated_username . $extra_number;
+			// 	$number_of_taken_usernames = $number_of_taken_usernames + 1;
+			// }
+			$user_data = array(
+				'user_email' => $login_email,
+				'user_pass' => wp_generate_password(),
+				'user_login' => $generated_username,
+				'role' => 'subscriber'
+			);
+			// Insert user
+			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
+			// Show error if necessary
+			if (is_wp_error($new_user_id)) {
+				echo $new_user_id->get_error_message();
+			}
 		}
+		// Now that we have the ID of the user, modify user with Wild Apricot information
+		$this->my_log_file($current_wp_user_id);
 	}
 
 	/**
