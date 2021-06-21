@@ -240,7 +240,8 @@ class WAIntegration {
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		$this->my_log_file($login_data);
-		// Get refresh token
+		// Get access token and refresh token
+		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
 		$time_remaining_to_refresh = $login_data['expires_in'];
@@ -251,6 +252,26 @@ class WAIntegration {
 		// Get email of current WA user
 		// https://gethelp.wildapricot.com/en/articles/391-user-id-aka-member-id
 		$wa_user_id = $member_permissions['AccountId'];
+		// Get details of current WA user with API request
+		$args = array(
+			'headers' => array(
+				'Authorization' => 'Bearer ' . $access_token,
+				'Accept' => 'application/json',
+				'User-Agent' => 'WildApricotForWordPress/1.0'
+			),
+		);
+		$contact_info = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $wa_user_id . '/contacts/me?includeDetails=true', $args);
+		if (is_wp_error($contact_info)) {
+			// Show error message
+			return false;
+		}
+		// Get body of response
+		$contact_info = wp_remote_retrieve_body($contact_info);
+		// Decode JSON
+		$contact_info = json_decode($contact_info, true);
+		$this->my_log_file($contact_info);
+		// Extract atrributes from contact info
+		$membership_level = $contact_info['MembershipLevel'];
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -272,6 +293,8 @@ class WAIntegration {
 			// 	$generated_username = $generated_username . $extra_number;
 			// 	$number_of_taken_usernames = $number_of_taken_usernames + 1;
 			// }
+			// Get values from contact info
+			$first_name = ;
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
