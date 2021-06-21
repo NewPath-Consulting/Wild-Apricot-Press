@@ -107,7 +107,6 @@ class WAIntegration {
 	 *
 	 */
 	public function create_login_page() {
-		$this->my_log_file('creating page...');
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
@@ -212,6 +211,14 @@ class WAIntegration {
 	}
 
 	/**
+	 * Syncs Wild Apricot logged in user with WordPress user database
+	 */
+	public function add_user_to_wp_database($login_data) {
+		// Check if WA email exists in the WP user database
+		$this->my_log_file($login_data);
+	}
+
+	/**
 	 * Handles the redirect after the user is logged in
 	 */
 	public function create_user_and_redirect() {
@@ -258,6 +265,7 @@ class WAIntegration {
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
+				$this->add_user_to_wp_database($login_attempt);
 
 				// Redirect user to previous page, or home page if there is no previous page
 				$last_page_id = get_query_var('redirectId', false);
@@ -332,7 +340,8 @@ class WAIntegration {
 		$wa_credentials_saved = get_option('wawp_wal_name');
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
 			// Create login url
-			$login_url = esc_url(home_url() . '/wa4wp-wild-apricot-login');
+			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
+			$login_url = esc_url(site_url() . '/wa4wp-wild-apricot-login');
 			// Get current page id
 			// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
 			$current_page_id = get_queried_object_id();
