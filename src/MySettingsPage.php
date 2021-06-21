@@ -26,7 +26,6 @@ class MySettingsPage
         // Currently, there is a WordPress bug that calls the 'sanitize' function twice if the option is not already in the database
         // See: https://core.trac.wordpress.org/ticket/21989
         if (!get_option('wawp_wal_name')) { // does not exist
-            do_action('qm/debug', 'option does not exist!');
             // Create option
             add_option('wawp_wal_name');
         }
@@ -147,7 +146,6 @@ class MySettingsPage
      */
     public function page_init()
     {
-        do_action('qm/debug', 'in wawp init!');
 
         $register_args = array(
             'type' => 'string',

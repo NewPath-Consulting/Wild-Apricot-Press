@@ -36,19 +36,6 @@ class WAIntegration {
 		}
 	}
 
-	// Debugging
-	function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
-
 	/**
 	 * Add query vars to WordPress
 	 *
@@ -107,7 +94,6 @@ class WAIntegration {
 	 *
 	 */
 	public function create_login_page() {
-		$this->my_log_file('creating page...');
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
