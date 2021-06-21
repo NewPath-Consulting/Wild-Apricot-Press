@@ -26,6 +26,8 @@ class WAIntegration {
 		add_filter('query_vars', array($this, 'add_custom_query_vars'));
 		// Action for making profile page private
 		add_action('wawp_wal_set_login_private', array($this, 'make_login_private'));
+		// Action for scheduling token refresh
+		add_action('wawp_wal_token_refresh', array($this, 'refresh_wa_session'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		// Check if Wild Apricot credentials have been entered
@@ -211,11 +213,54 @@ class WAIntegration {
 	}
 
 	/**
+	 * Gets refresh token after a scheduled CRON task
+	 */
+	public function refresh_wa_session() {
+		// Refresh token
+		// https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
+	}
+
+	/**
+	 * Schedules a single CRON event
+	 */
+	private function schedule_refresh_event($time_seconds, $refresh_token) {
+		// Define arguments
+		$args = [
+			$refresh_token
+		];
+		// Check that event is not already scheduled
+		if (!wp_next_scheduled('wawp_wal_token_refresh', $args)) {
+			// Schedule single event
+			wp_schedule_single_event(time() + $time_seconds, 'wawp_wal_token_refresh', $args);
+		}
+	}
+
+	/**
 	 * Syncs Wild Apricot logged in user with WordPress user database
 	 */
-	public function add_user_to_wp_database($login_data) {
-		// Check if WA email exists in the WP user database
+	public function add_user_to_wp_database($login_data, $login_email) {
 		$this->my_log_file($login_data);
+		// Get refresh token
+		$refresh_token = $login_data['refresh_token'];
+		// Get time that token is valid
+		$time_remaining_to_refresh = $login_data['expires_in'];
+		// Create a CRON event to refresh the token
+		$this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
+		// Get user's permissions
+		$member_permissions = $login_data['Permissions'][0];
+		// Get email of current WA user
+		// https://gethelp.wildapricot.com/en/articles/391-user-id-aka-member-id
+		$wa_user_id = $member_permissions['AccountId'];
+
+		// Check if WA email exists in the WP user database
+		if (email_exists($login_email)) { // email exists; we will update user
+			// Get user
+			// https://developer.wordpress.org/reference/functions/get_user_by/
+			$wp_user = get_user_by('email', $login_email);
+			// Get user's permissions and user's membership level in Wild Apricot
+		} else { // email does not exist; we will create a new user
+
+		}
 	}
 
 	/**
@@ -265,7 +310,7 @@ class WAIntegration {
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
-				$this->add_user_to_wp_database($login_attempt);
+				$this->add_user_to_wp_database($login_attempt, $valid_login['email']);
 
 				// Redirect user to previous page, or home page if there is no previous page
 				$last_page_id = get_query_var('redirectId', false);
@@ -341,7 +386,7 @@ class WAIntegration {
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
 			// Create login url
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
-			$login_url = esc_url(site_url() . '/wa4wp-wild-apricot-login');
+			$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
 			// Get current page id
 			// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
 			$current_page_id = get_queried_object_id();
