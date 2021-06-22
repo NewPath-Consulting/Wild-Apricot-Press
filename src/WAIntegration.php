@@ -308,9 +308,8 @@ class WAIntegration {
 			$first_name = $contact_info['FirstName'];
 			$last_name = $contact_info['LastName'];
 			// Set user data
-			// Generated username is 'firstInitial . lastName' with a random number on the end, if necessary
-			$first_initial = substr($first_name, 0, 1); // gets first initial
-			$generated_username = $first_initial . $last_name;
+			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
+			$generated_username = $first_name . $last_name;
 			// Check if generated username has been taken. If so, append a random number to the end of the user-id until a unique username is set
 			while (username_exists($generated_username)) {
 				// Generate random number
