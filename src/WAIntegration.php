@@ -7,6 +7,24 @@ namespace WAWP;
 class WAIntegration {
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
+
+	/**
+	 * Unique instance of WAIntegration to be used in singleton
+	 * @var WAIntegration
+	 */
+	private static $instance;
+
+	/**
+	 * Gets instance of WAIntegration class
+	 * @return WAIntegration
+	 */
+	public static function get_instance() {
+		if (null == self::$instance) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
 	/**
 	 * Constructs an instance of the WAIntegration class
 	 *
@@ -39,6 +57,20 @@ class WAIntegration {
 		if (isset($wa_credentials) && $wa_credentials != '') {
 			$this->wa_credentials_entered = true;
 		}
+		$this->my_log_file('made new wa integration!');
+	}
+
+	// Debugging
+	function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
 	}
 
 	/**
@@ -208,6 +240,7 @@ class WAIntegration {
 	public function show_membership_levels_on_profile($user) {
 		// Get membership levels from API
 		// Check if access token has been set yet
+		$this->my_log_file('away our access token is: ' . $this->access_token);
 		if ($this->access_token != '') {
 			$args = array(
 				'headers' => array(
