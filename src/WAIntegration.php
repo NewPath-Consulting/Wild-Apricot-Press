@@ -7,19 +7,34 @@ namespace WAWP;
 class WAIntegration {
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
+	private $wa_api_instance;
 
 	/**
 	 * Unique instance of WAIntegration to be used in singleton
 	 * @var WAIntegration
 	 */
-	private static $instance;
+	private static $instance = null;
+
+	// Debugging
+	static function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
 
 	/**
 	 * Gets instance of WAIntegration class
 	 * @return WAIntegration
 	 */
 	public static function get_instance() {
-		if (null == self::$instance) {
+		if (null === self::$instance) {
+			self::my_log_file('creating new instance...');
 			self::$instance = new self();
 		}
 		return self::$instance;
@@ -31,7 +46,7 @@ class WAIntegration {
 	 * Adds the actions and filters required. Includes other required files. Initializes class variables.
 	 *
 	 */
-	public function __construct() {
+	private function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
 		// Action for when login page is updated when submit button is pressed
@@ -58,19 +73,6 @@ class WAIntegration {
 			$this->wa_credentials_entered = true;
 		}
 		$this->my_log_file('made new wa integration!');
-	}
-
-	// Debugging
-	function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
 	}
 
 	/**

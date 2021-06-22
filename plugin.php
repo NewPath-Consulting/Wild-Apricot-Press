@@ -51,8 +51,11 @@ include 'src/MySettingsPage.php';
 $my_settings_page = new WAWP\MySettingsPage();
 
 // Create Wild Apricot Integration
-include 'src/WAIntegration.php';
-$wa_integration = WAWP\WAIntegration::get_instance();
+if (did_action('wawp_wal_credentials_obtained') > 0) {
+	// Run singleton
+	include 'src/WAIntegration.php';
+	$wa_integration_instance = WAWP\WAIntegration::get_instance();
+}
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
