@@ -304,8 +304,19 @@ class WAIntegration {
 			$current_wp_user_id = $current_wp_user->ID;
 			// Get user's permissions and user's membership level in Wild Apricot
 		} else { // email does not exist; we will create a new user
+			// Get values from contact info
+			$first_name = $contact_info['FirstName'];
+			$last_name = $contact_info['LastName'];
 			// Set user data
-			$generated_username = $login_email;
+			// Generated username is 'firstInitial . lastName' with a random number on the end, if necessary
+			$first_initial = substr($first_name, 0, 1); // gets first initial
+			$generated_username = $first_initial . $last_name;
+			// Check if generated username has been taken. If so, append a random number to the end of the user-id until a unique username is set
+			while (username_exists($generated_username)) {
+				// Generate random number
+				$random_user_num = wp_rand(0, 9);
+				$generated_username .= $random_user_num;
+			}
 			// Username will be the part before the @ in the email
 			// $generated_username = explode('@', $login_email)[0];
 			// // Check that generated username is not taken; if so, append the number of users to the end
@@ -316,9 +327,6 @@ class WAIntegration {
 			// 	$generated_username = $generated_username . $extra_number;
 			// 	$number_of_taken_usernames = $number_of_taken_usernames + 1;
 			// }
-			// Get values from contact info
-			$first_name = $contact_info['FirstName'];
-			$last_name = $contact_info['LastName'];
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
