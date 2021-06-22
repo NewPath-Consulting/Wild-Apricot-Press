@@ -6,7 +6,7 @@ namespace WAWP;
  */
 class WAIntegration {
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
-
+	private $access_token;
 	/**
 	 * Constructs an instance of the WAIntegration class
 	 *
@@ -26,6 +26,11 @@ class WAIntegration {
 		add_filter('query_vars', array($this, 'add_custom_query_vars'));
 		// Action for making profile page private
 		add_action('wawp_wal_set_login_private', array($this, 'make_login_private'));
+		// Action for scheduling token refresh
+		add_action('wawp_wal_token_refresh', array($this, 'refresh_wa_session'));
+		// Actions for displaying membership levels on user profile
+		add_action('show_user_profile', array($this, 'show_membership_levels_on_profile'));
+		add_action('edit_user_profile', array($this, 'show_membership_levels_on_profile'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		// Check if Wild Apricot credentials have been entered
@@ -198,6 +203,135 @@ class WAIntegration {
 	}
 
 	/**
+	 * Show membership levels on user profile
+	 */
+	public function show_membership_levels_on_profile($user) {
+		// Get membership levels from API
+		// Check if access token has been set yet
+		if ($this->access_token != '') {
+			$args = array(
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $access_token,
+					'Accept' => 'application/json',
+					'User-Agent' => 'WildApricotForWordPress/1.0'
+				),
+			);
+		}
+	}
+
+	/**
+	 * Gets refresh token after a scheduled CRON task
+	 */
+	public function refresh_wa_session() {
+		// Refresh token
+		// https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
+	}
+
+	/**
+	 * Schedules a single CRON event
+	 */
+	private function schedule_refresh_event($time_seconds, $refresh_token) {
+		// Define arguments
+		$args = [
+			$refresh_token
+		];
+		// Check that event is not already scheduled
+		if (!wp_next_scheduled('wawp_wal_token_refresh', $args)) {
+			// Schedule single event
+			wp_schedule_single_event(time() + $time_seconds, 'wawp_wal_token_refresh', $args);
+		}
+	}
+
+	/**
+	 * Syncs Wild Apricot logged in user with WordPress user database
+	 */
+	public function add_user_to_wp_database($login_data, $login_email) {
+		// Get access token and refresh token
+		$access_token = $login_data['access_token'];
+		$this->access_token = $access_token;
+		$refresh_token = $login_data['refresh_token'];
+		// Get time that token is valid
+		$time_remaining_to_refresh = $login_data['expires_in'];
+		// Create a CRON event to refresh the token
+		$this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
+		// Get user's permissions
+		$member_permissions = $login_data['Permissions'][0];
+		// Get email of current WA user
+		// https://gethelp.wildapricot.com/en/articles/391-user-id-aka-member-id
+		$wa_user_id = $member_permissions['AccountId'];
+		// Get details of current WA user with API request
+		$args = array(
+			'headers' => array(
+				'Authorization' => 'Bearer ' . $access_token,
+				'Accept' => 'application/json',
+				'User-Agent' => 'WildApricotForWordPress/1.0'
+			),
+		);
+		$contact_info = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $wa_user_id . '/contacts/me?includeDetails=true', $args);
+		if (is_wp_error($contact_info)) {
+			// Show error message
+			return false;
+		}
+		// Get body of response
+		$contact_info = wp_remote_retrieve_body($contact_info);
+		// Decode JSON
+		$contact_info = json_decode($contact_info, true);
+		// Extract atrributes from contact info
+		$membership_level = $contact_info['MembershipLevel']['Name'];
+
+		// Check if WA email exists in the WP user database
+		$current_wp_user_id = 0;
+		if (email_exists($login_email)) { // email exists; we will update user
+			// Get user
+			$current_wp_user = get_user_by('email', $login_email); // returns WP_User
+			$current_wp_user_id = $current_wp_user->ID;
+			// Get user's permissions and user's membership level in Wild Apricot
+		} else { // email does not exist; we will create a new user
+			// Get values from contact info
+			$first_name = $contact_info['FirstName'];
+			$last_name = $contact_info['LastName'];
+			// Set user data
+			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
+			$generated_username = $first_name . $last_name;
+			// Check if generated username has been taken. If so, append a random number to the end of the user-id until a unique username is set
+			while (username_exists($generated_username)) {
+				// Generate random number
+				$random_user_num = wp_rand(0, 9);
+				$generated_username .= $random_user_num;
+			}
+			// Username will be the part before the @ in the email
+			// $generated_username = explode('@', $login_email)[0];
+			// // Check that generated username is not taken; if so, append the number of users to the end
+			// $number_of_taken_usernames = 0;
+			// while (username_exists($generated_username)) {
+			// 	// Append number of users on site to the end
+			// 	$extra_number = count_users() + $number_of_taken_usernames;
+			// 	$generated_username = $generated_username . $extra_number;
+			// 	$number_of_taken_usernames = $number_of_taken_usernames + 1;
+			// }
+			$user_data = array(
+				'user_email' => $login_email,
+				'user_pass' => wp_generate_password(),
+				'user_login' => $generated_username,
+				'role' => 'subscriber',
+				'display_name' => $first_name . ' ' . $last_name
+			);
+			// Insert user
+			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
+			// Show error if necessary
+			if (is_wp_error($new_user_id)) {
+				echo $new_user_id->get_error_message();
+			}
+		}
+		// Now that we have the ID of the user, modify user with Wild Apricot information
+		// Show WA membership on profile
+		update_user_meta($current_wp_user_id, 'wawp_wild_apricot_membership_level', $membership_level);
+
+		// Log user into WP account
+		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
+	}
+
+	/**
 	 * Handles the redirect after the user is logged in
 	 */
 	public function create_user_and_redirect() {
@@ -244,6 +378,7 @@ class WAIntegration {
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
+				$this->add_user_to_wp_database($login_attempt, $valid_login['email']);
 
 				// Redirect user to previous page, or home page if there is no previous page
 				$last_page_id = get_query_var('redirectId', false);
