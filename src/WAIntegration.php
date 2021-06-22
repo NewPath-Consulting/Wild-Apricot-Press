@@ -6,7 +6,7 @@ namespace WAWP;
  */
 class WAIntegration {
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
-
+	private $access_token;
 	/**
 	 * Constructs an instance of the WAIntegration class
 	 *
@@ -28,6 +28,9 @@ class WAIntegration {
 		add_action('wawp_wal_set_login_private', array($this, 'make_login_private'));
 		// Action for scheduling token refresh
 		add_action('wawp_wal_token_refresh', array($this, 'refresh_wa_session'));
+		// Actions for displaying membership levels on user profile
+		add_action('show_user_profile', array($this, 'show_membership_levels_on_profile'));
+		add_action('edit_user_profile', array($this, 'show_membership_levels_on_profile'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		// Check if Wild Apricot credentials have been entered
@@ -213,6 +216,24 @@ class WAIntegration {
 	}
 
 	/**
+	 * Show membership levels on user profile
+	 */
+	public function show_membership_levels_on_profile($user) {
+		// Get membership levels from API
+		// Check if access token has been set yet
+		$this->my_log_file('access token = ' . $this->access_token);
+		if ($this->access_token != '') {
+			$args = array(
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $access_token,
+					'Accept' => 'application/json',
+					'User-Agent' => 'WildApricotForWordPress/1.0'
+				),
+			);
+		}
+	}
+
+	/**
 	 * Gets refresh token after a scheduled CRON task
 	 */
 	public function refresh_wa_session() {
@@ -242,6 +263,7 @@ class WAIntegration {
 		$this->my_log_file($login_data);
 		// Get access token and refresh token
 		$access_token = $login_data['access_token'];
+		$this->access_token = $access_token;
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
 		$time_remaining_to_refresh = $login_data['expires_in'];
@@ -313,6 +335,8 @@ class WAIntegration {
 		}
 		// Now that we have the ID of the user, modify user with Wild Apricot information
 		$this->my_log_file($current_wp_user_id);
+		// Show WA membership on profile
+		update_user_meta($current_wp_user_id, 'wawp_wild_apricot_membership_level', $membership_level);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
