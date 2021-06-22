@@ -41,19 +41,6 @@ class WAIntegration {
 		}
 	}
 
-	// Debugging
-	function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
-
 	/**
 	 * Add query vars to WordPress
 	 *
@@ -221,7 +208,6 @@ class WAIntegration {
 	public function show_membership_levels_on_profile($user) {
 		// Get membership levels from API
 		// Check if access token has been set yet
-		$this->my_log_file('access token = ' . $this->access_token);
 		if ($this->access_token != '') {
 			$args = array(
 				'headers' => array(
@@ -260,7 +246,6 @@ class WAIntegration {
 	 * Syncs Wild Apricot logged in user with WordPress user database
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
-		$this->my_log_file($login_data);
 		// Get access token and refresh token
 		$access_token = $login_data['access_token'];
 		$this->access_token = $access_token;
@@ -291,10 +276,8 @@ class WAIntegration {
 		$contact_info = wp_remote_retrieve_body($contact_info);
 		// Decode JSON
 		$contact_info = json_decode($contact_info, true);
-		$this->my_log_file($contact_info);
 		// Extract atrributes from contact info
 		$membership_level = $contact_info['MembershipLevel']['Name'];
-		$this->my_log_file($membership_level);
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -341,7 +324,6 @@ class WAIntegration {
 			}
 		}
 		// Now that we have the ID of the user, modify user with Wild Apricot information
-		$this->my_log_file($current_wp_user_id);
 		// Show WA membership on profile
 		update_user_meta($current_wp_user_id, 'wawp_wild_apricot_membership_level', $membership_level);
 
