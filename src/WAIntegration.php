@@ -52,13 +52,14 @@ class WAIntegration {
 		add_action('edit_user_profile', array($this, 'show_membership_levels_on_profile'));
 		// Include any required files
 		require_once('DataEncryption.php');
+		require_once('WAWPApi.php');
 		// Check if Wild Apricot credentials have been entered
 		$this->wa_credentials_entered = false;
 		$wa_credentials = get_option('wawp_wal_name');
 		if (isset($wa_credentials) && $wa_credentials != '') {
 			$this->wa_credentials_entered = true;
 		}
-		$this->my_log_file('made new wa integration!');
+		// $this->my_log_file('made new wa integration!');
 	}
 
 	/**
@@ -73,42 +74,6 @@ class WAIntegration {
 		// Add redirectId to query vars
 		$vars[] = 'redirectId';
 		return $vars;
-	}
-
-	/**
-	 * Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
-	 *
-	 * @param string         $entered_api_key The Wild Apricot API Key to check
-	 * @return array|boolean $data	          An array of the response from the WA API if the key is valid; false otherwise
-	 */
-	public static function is_application_valid($entered_api_key) {
-		// Encode API key
-		$api_string = 'APIKEY:' . $entered_api_key;
-		$encoded_api_string = base64_encode($api_string);
-		// Perform API request
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Basic ' . $encoded_api_string,
-				'Content-type' => 'application/x-www-form-urlencoded'
-			),
-			'body' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
-		);
-		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-
-		if (is_wp_error($response)) {
-			return false;
-		}
-		// Get body of response
-		$body = wp_remote_retrieve_body($response);
-		// Get data from json response
-		$data = json_decode($body, true);
-		// Check if there is an error in body
-		if (isset($data['error'])) { // error in body
-			// Update successful login as false
-			return false;
-		}
-		// Valid response; return data
-		return $data;
 	}
 
 	/**
@@ -278,23 +243,10 @@ class WAIntegration {
 		// Get email of current WA user
 		// https://gethelp.wildapricot.com/en/articles/391-user-id-aka-member-id
 		$wa_user_id = $member_permissions['AccountId'];
-		// Get details of current WA user with API request
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Bearer ' . $access_token,
-				'Accept' => 'application/json',
-				'User-Agent' => 'WildApricotForWordPress/1.0'
-			),
-		);
-		$contact_info = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $wa_user_id . '/contacts/me?includeDetails=true', $args);
-		if (is_wp_error($contact_info)) {
-			// Show error message
-			return false;
-		}
-		// Get body of response
-		$contact_info = wp_remote_retrieve_body($contact_info);
-		// Decode JSON
-		$contact_info = json_decode($contact_info, true);
+		// Get user's contact information
+		$wawp_api = new WAWPApi($access_token);
+		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
+		$this->my_log_file($contact_info);
 		// Extract atrributes from contact info
 		$membership_level = $contact_info['MembershipLevel']['Name'];
 
