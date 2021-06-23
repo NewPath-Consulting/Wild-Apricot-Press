@@ -9,12 +9,6 @@ class WAIntegration {
 	private $access_token;
 	private $wa_api_instance;
 
-	/**
-	 * Unique instance of WAIntegration to be used in singleton
-	 * @var WAIntegration
-	 */
-	private static $instance = null;
-
 	// Debugging
 	static function my_log_file( $msg, $name = '' )
 	{
@@ -29,24 +23,12 @@ class WAIntegration {
 	}
 
 	/**
-	 * Gets instance of WAIntegration class
-	 * @return WAIntegration
-	 */
-	public static function get_instance() {
-		if (null === self::$instance) {
-			self::my_log_file('creating new instance...');
-			self::$instance = new self();
-		}
-		return self::$instance;
-	}
-
-	/**
 	 * Constructs an instance of the WAIntegration class
 	 *
 	 * Adds the actions and filters required. Includes other required files. Initializes class variables.
 	 *
 	 */
-	private function __construct() {
+	public function __construct() {
 		// Hook that runs after Wild Apricot credentials are saved
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
 		// Action for when login page is updated when submit button is pressed

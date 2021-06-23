@@ -37,6 +37,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */
 
 require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
+require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
+require_once plugin_dir_path(__FILE__) . 'src/MySettingsPage.php';
+require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
 
 $activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot for Wordpress (WAWP)');
 
@@ -47,19 +50,13 @@ function wawp_enqueue_admin_script($hook) {
 }
 
 // Create settings page
-include 'src/MySettingsPage.php';
 $my_settings_page = new WAWP\MySettingsPage();
 
-// Create Wild Apricot Integration
-if (did_action('wawp_wal_credentials_obtained') > 0) {
-	// Run singleton
-	include 'src/WAIntegration.php';
-	$wa_integration_instance = WAWP\WAIntegration::get_instance();
-}
+// Create WA Integration instance
+$wa_integration_instance = new WAWP\WAIntegration();
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
-	include 'src/Deactivator.php';
 	WAWP\Deactivator::deactivate();
 } );
 
