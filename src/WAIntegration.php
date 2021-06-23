@@ -5,6 +5,10 @@ namespace WAWP;
  * Class for managing the user's Wild Apricot account
  */
 class WAIntegration {
+	// Constants
+	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
+	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
+
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
 	private $wa_api_instance;
@@ -269,8 +273,6 @@ class WAIntegration {
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
 		$time_remaining_to_refresh = $login_data['expires_in'];
-		// Create a CRON event to refresh the token
-		$this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
 		// Get user's permissions
 		$member_permissions = $login_data['Permissions'][0];
 		// Get email of current WA user
@@ -341,6 +343,12 @@ class WAIntegration {
 			}
 		}
 		// Now that we have the ID of the user, modify user with Wild Apricot information
+
+		// Add access token and secret token to user's metadata
+		$dataEncryption = new DataEncryption();
+		add_user_meta($current_wp_user_id, $dataEncryption->encrypt(ACCESS_TOKEN_META_KEY), $access_token, true); // directly insert
+		add_user_meta($current_wp_user_id, $dataEncryption->encrypt(REFRESH_TOKEN_META_KEY), $refresh_token, true); // directly insert
+
 		// Show WA membership on profile
 		update_user_meta($current_wp_user_id, 'wawp_wild_apricot_membership_level', $membership_level);
 
