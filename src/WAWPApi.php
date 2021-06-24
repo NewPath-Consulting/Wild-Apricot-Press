@@ -19,7 +19,7 @@ class WAWPApi {
 
     public function __construct($access_token) {
         $this->access_token = $access_token;
-        self::my_log_file('constructing wa api!');
+        // self::my_log_file('constructing wa api!');
     }
 
     private static function response_to_data($response) {
@@ -38,6 +38,23 @@ class WAWPApi {
 		// Valid response; return data
 		return $data;
     }
+
+    	/**
+	 * Load Wild Apricot credentials that user has input in the WA4WP settings
+	 *
+	 * @return array $decrypted_credentials	Decrypted Wild Apricot credentials
+	 */
+	private static function load_user_credentials() {
+		// Load encrypted credentials from database
+		$credentials = get_option('wawp_wal_name');
+		// Decrypt credentials
+		$dataEncryption = new DataEncryption();
+		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
+		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
+		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
+
+		return $decrypted_credentials;
+	}
 
     private function request_data_args() {
         $args = array(
@@ -88,5 +105,33 @@ class WAWPApi {
 
 		$data = self::response_to_data($response);
         return $data;
+	}
+
+    /**
+	 * Connect user to Wild Apricot API after obtaining their email and password
+	 *
+	 * https://gethelp.wildapricot.com/en/articles/484
+	 *
+	 * @param array          $valid_login Holds the email and password entered into the login screen
+	 * @return array|boolean $data        Returns the response from the WA API if the credentials are valid; false otherwise
+	 */
+	public static function login_email_password($valid_login) {
+		// Get decrypted credentials
+		$decrypted_credentials = self::load_user_credentials();
+		// Encode API key
+		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
+		$encoded_authorization_string = base64_encode($authorization_string);
+		// Perform API request
+		$args = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . $encoded_authorization_string,
+				'Content-type' => 'application/x-www-form-urlencoded'
+			),
+			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
+		);
+		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+
+		$data = self::response_to_data($response);
+		return $data;
 	}
 }

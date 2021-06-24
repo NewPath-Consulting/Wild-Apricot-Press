@@ -129,49 +129,6 @@ class WAIntegration {
 	}
 
 	/**
-	 * Connect user to Wild Apricot API after obtaining their email and password
-	 *
-	 * https://gethelp.wildapricot.com/en/articles/484
-	 *
-	 * @param array          $valid_login Holds the email and password entered into the login screen
-	 * @return array|boolean $data        Returns the response from the WA API if the credentials are valid; false otherwise
-	 */
-	private function login_email_password($valid_login) {
-		// Get decrypted credentials
-		$decrypted_credentials = $this->load_user_credentials();
-		// Encode API key
-		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
-		$encoded_authorization_string = base64_encode($authorization_string);
-		// Perform API request
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Basic ' . $encoded_authorization_string,
-				'Content-type' => 'application/x-www-form-urlencoded'
-			),
-			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
-		);
-		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-
-		// Get body of response to obtain the success or error of the response
-		// If an error is returned, return false to end the request
-		if (is_wp_error($response)) {
-			return false;
-		}
-		// No errors -> parse the data
-		$body = wp_remote_retrieve_body($response);
-		// Decode JSON string
-		$data = json_decode($body, true); // returns an array
-
-		// If error is NOT one of the keys, then we have successfully logged in!
-		if (isset($data['error'])) { // error with logging in
-			return false;
-		}
-		// Success with logging in
-		// Return required information (access token, refresh token, etc.)
-		return $data;
-	}
-
-	/**
 	 * Adds error to login shortcode page
 	 *
 	 * @param  string $content Holds the existing content on the page
@@ -246,7 +203,7 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token);
 		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
-		$this->my_log_file($contact_info);
+		// $this->my_log_file($contact_info);
 		// Extract atrributes from contact info
 		$membership_level = $contact_info['MembershipLevel']['Name'];
 
@@ -347,7 +304,7 @@ class WAIntegration {
 				}
 
 				// Send POST request to Wild Apricot API to log in if input is valid
-				$login_attempt = $this->login_email_password($valid_login);
+				$login_attempt = WAWPApi::login_email_password($valid_login);
 				// If login attempt is false, then the user could not log in
 				if (!$login_attempt) {
 					// Present user with log in error
@@ -396,23 +353,6 @@ class WAIntegration {
 		// Combine all content together
 		$page_content .= $email_content . $password_content . $submit_content;
 		return $page_content;
-	}
-
-	/**
-	 * Load Wild Apricot credentials that user has input in the WA4WP settings
-	 *
-	 * @return array $decrypted_credentials	Decrypted Wild Apricot credentials
-	 */
-	public function load_user_credentials() {
-		// Load encrypted credentials from database
-		$credentials = get_option('wawp_wal_name');
-		// Decrypt credentials
-		$dataEncryption = new DataEncryption();
-		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
-		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
-		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
-
-		return $decrypted_credentials;
 	}
 
 	/**
