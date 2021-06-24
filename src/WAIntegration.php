@@ -380,6 +380,13 @@ class WAIntegration {
 	}
 
 	/**
+	 * Logout user of their current session, and redirect them back to their current page.
+	 */
+	private function logout_wa_user() {
+
+	}
+
+	/**
 	 * Create login and logout buttons in the menu
 	 *
 	 * @param  string $items  HTML of menu items
@@ -405,7 +412,7 @@ class WAIntegration {
 			// Check if user is logged in or logged out
 			$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
 			if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
-				$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url() .'">Log Out</a></li>';
+				$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
 			} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
 				$items .= '<li id="wawp_login_logout_button"><a href="'. $login_url .'">Log In</a></li>';
 			}
