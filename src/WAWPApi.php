@@ -16,6 +16,19 @@ class WAWPApi {
         $this->wa_user_id = $wa_user_id;
     }
 
+	// Debugging
+	static function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
+
 	/**
 	 * Converts the API response to the body in which data can be extracted
 	 *
@@ -71,6 +84,36 @@ class WAWPApi {
 		);
         return $args;
     }
+
+	/**
+	 * Returns a new access token after it has expired
+	 * https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
+	 */
+	public static function get_new_access_token($refresh_token) {
+		// Get decrypted credentials
+		$decrypted_credentials = self::load_user_credentials();
+		// Encode API key
+		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
+		$encoded_authorization_string = base64_encode($authorization_string);
+
+		// Perform API request
+		$args = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . $encoded_authorization_string,
+				'Content-type' => 'application/x-www-form-urlencoded'
+			),
+			'body' => 'grant_type=refresh_token&refresh_token=' . $refresh_token
+		);
+		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+
+		$data = self::response_to_data($response);
+		self::my_log_file($data);
+
+		// Get new access token from data
+		$new_access_token = $data['AccessToken']; // ??
+
+		return $data;
+	}
 
 	/**
 	 * Performs an API request to get data about the current Wild Apricot user

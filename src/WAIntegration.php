@@ -175,9 +175,10 @@ class WAIntegration {
 	/**
 	 * Gets refresh token after a scheduled CRON task
 	 */
-	public function refresh_wa_session() {
-		// Refresh token
-		// https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
+	public function refresh_wa_session($refresh_token) {
+		$new_access_token = WAWPApi::get_new_access_token($refresh_token);
+		// Save new access token in user metadata
+		add_user_meta(get_current_user_id(), ACCESS_TOKEN_META_KEY, $new_access_token, true); // overwrite
 	}
 
 	/**
@@ -273,6 +274,9 @@ class WAIntegration {
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
+
+		// Schedule refresh of access token
+		$this->schedule_refresh_event();
 	}
 
 	/**
