@@ -8,6 +8,8 @@ class WAIntegration {
 	// Constants
 	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
+	const WA_USER_ID_KEY = 'wawp_wa_user_id';
+	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -48,8 +50,8 @@ class WAIntegration {
 		// Action for scheduling token refresh
 		add_action('wawp_wal_token_refresh', array($this, 'refresh_wa_session'));
 		// Actions for displaying membership levels on user profile
-		add_action('show_user_profile', array($this, 'show_membership_levels_on_profile'));
-		add_action('edit_user_profile', array($this, 'show_membership_levels_on_profile'));
+		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
+		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -147,18 +149,26 @@ class WAIntegration {
 	/**
 	 * Show membership levels on user profile
 	 */
-	public function show_membership_levels_on_profile($user) {
+	public function show_membership_level_on_profile($user) {
 		// Get membership levels from API
-		// Check if access token has been set yet
-		$this->my_log_file('away our access token is: ' . $this->access_token);
-		if ($this->access_token != '') {
-			$args = array(
-				'headers' => array(
-					'Authorization' => 'Bearer ' . $access_token,
-					'Accept' => 'application/json',
-					'User-Agent' => 'WildApricotForWordPress/1.0'
-				),
-			);
+		// Get access token
+		$membership_level = get_user_meta($user->ID, 'wawp_membership_level_key', true);
+		$this->my_log_file($membership_level);
+		if ($membership_level) { // valid
+			// Display membership levels in dropdown menu
+			?>
+			<h2>Wild Apricot Membership Level</h2>
+			<table class="form-table">
+				<tr>
+					<th><label>Membership Level</label></th>
+					<td>
+					<?php
+						echo '<label>' . $membership_level . '</label>';
+					?>
+					</td>
+				</tr>
+			</table>
+			<?php
 		}
 	}
 
@@ -201,7 +211,7 @@ class WAIntegration {
 		// https://gethelp.wildapricot.com/en/articles/391-user-id-aka-member-id
 		$wa_user_id = $member_permissions['AccountId'];
 		// Get user's contact information
-		$wawp_api = new WAWPApi($access_token);
+		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
 		// $this->my_log_file($contact_info);
 		// Extract atrributes from contact info
@@ -227,16 +237,6 @@ class WAIntegration {
 				$random_user_num = wp_rand(0, 9);
 				$generated_username .= $random_user_num;
 			}
-			// Username will be the part before the @ in the email
-			// $generated_username = explode('@', $login_email)[0];
-			// // Check that generated username is not taken; if so, append the number of users to the end
-			// $number_of_taken_usernames = 0;
-			// while (username_exists($generated_username)) {
-			// 	// Append number of users on site to the end
-			// 	$extra_number = count_users() + $number_of_taken_usernames;
-			// 	$generated_username = $generated_username . $extra_number;
-			// 	$number_of_taken_usernames = $number_of_taken_usernames + 1;
-			// }
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
@@ -255,11 +255,12 @@ class WAIntegration {
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		add_user_meta($current_wp_user_id, $dataEncryption->encrypt(ACCESS_TOKEN_META_KEY), $access_token, true); // directly insert
-		add_user_meta($current_wp_user_id, $dataEncryption->encrypt(REFRESH_TOKEN_META_KEY), $refresh_token, true); // directly insert
-
-		// Show WA membership on profile
-		update_user_meta($current_wp_user_id, 'wawp_wild_apricot_membership_level', $membership_level);
+		add_user_meta($current_wp_user_id, ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
+		add_user_meta($current_wp_user_id, REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		// Add Wild Apricot id to user's metadata
+		add_user_meta($current_wp_user_id, WA_USER_ID_KEY, $wa_user_id, true);
+		// Add Wild Apricot membership level to user's metadata
+		add_user_meta($current_wp_user_id, WA_MEMBERSHIP_LEVEL_KEY, $membership_level, true);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
