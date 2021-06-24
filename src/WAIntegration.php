@@ -326,7 +326,10 @@ class WAIntegration {
 					add_filter('the_content', array($this, 'add_login_error'));
 					return;
 				}
-
+				// Display error and die if nonce is not verified
+				if (!wp_verify_nonce($_POST['wawp_login_nonce_name'], 'wawp_login_nonce_action')) {
+					wp_die('Your login nonce could not be verified.');
+				}
 				// Send POST request to Wild Apricot API to log in if input is valid
 				$login_attempt = WAWPApi::login_email_password($valid_login);
 				// If login attempt is false, then the user could not log in
@@ -366,7 +369,8 @@ class WAIntegration {
 	public function custom_login_form_shortcode() {
 		// Create page content -> login form
 		$page_content = '<p>Log into your Wild Apricot account here:</p>
-			<form method="post">';
+			<form method="post" action="">';
+		$php_nonce = '<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>';
 		$email_content = '<label for="wawp_login_email">Email:</label>
 				<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">';
 		$password_content =	'<br><label for="wawp_login_password">Password:</label>
@@ -375,15 +379,9 @@ class WAIntegration {
 			</form>';
 
 		// Combine all content together
-		$page_content .= $email_content . $password_content . $submit_content;
+		$page_content .= $php_nonce . $email_content . $password_content . $submit_content;
+		$this->my_log_file($page_content);
 		return $page_content;
-	}
-
-	/**
-	 * Logout user of their current session, and redirect them back to their current page.
-	 */
-	private function logout_wa_user() {
-
 	}
 
 	/**
