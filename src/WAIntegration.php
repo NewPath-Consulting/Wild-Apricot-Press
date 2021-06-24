@@ -10,6 +10,7 @@ class WAIntegration {
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
+	const WA_USER_STATUS_KEY = 'wawp_user_status_key';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -152,12 +153,13 @@ class WAIntegration {
 	public function show_membership_level_on_profile($user) {
 		// Get membership levels from API
 		// Get access token
-		$membership_level = get_user_meta($user->ID, 'wawp_membership_level_key', true);
+		$membership_level = get_user_meta($user->ID, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, true);
+		$user_status = get_user_meta($user->ID, WAIntegration::WA_USER_STATUS_KEY, true);
 		$this->my_log_file($membership_level);
-		if ($membership_level) { // valid
+		if ($membership_level && $user_status) { // valid
 			// Display membership levels in dropdown menu
 			?>
-			<h2>Wild Apricot Membership Level</h2>
+			<h2>Wild Apricot Membership Details</h2>
 			<table class="form-table">
 				<tr>
 					<th><label>Membership Level</label></th>
@@ -167,8 +169,18 @@ class WAIntegration {
 					?>
 					</td>
 				</tr>
+				<tr>
+					<th><label>User Status</label></th>
+					<td>
+					<?php
+						echo '<label>' . $user_status . '</label>';
+					?>
+					</td>
+				</tr>
 			</table>
 			<?php
+		} else {
+			$this->my_log_file('no membership level found!');
 		}
 	}
 
@@ -213,9 +225,17 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
-		// $this->my_log_file($contact_info);
-		// Extract atrributes from contact info
+		$this->my_log_file($contact_info);
+		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
+		if (!isset($membership_level) || $membership_level == '') {
+			$membership_level = '**None found**';
+		}
+		// Get user status
+		$user_status = $contact_info['Status'];
+		if (!isset($user_status) || $user_status == '') {
+			$user_status = '**None found**';
+		}
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -260,7 +280,10 @@ class WAIntegration {
 		// Add Wild Apricot id to user's metadata
 		add_user_meta($current_wp_user_id, WA_USER_ID_KEY, $wa_user_id, true);
 		// Add Wild Apricot membership level to user's metadata
-		add_user_meta($current_wp_user_id, WA_MEMBERSHIP_LEVEL_KEY, $membership_level, true);
+		$this->my_log_file('membership level here: ' . $membership_level);
+		add_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level, true);
+		// Add Wild Apricot user status to user's metadata
+		add_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status, true);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
