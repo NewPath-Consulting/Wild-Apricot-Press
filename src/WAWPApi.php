@@ -5,25 +5,23 @@ class WAWPApi {
     private $access_token;
     private $wa_user_id;
 
-    // Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
-
+	/**
+	 * Creates instance of class based on the user's access token and Wild Apricot user ID
+	 *
+	 * @param string $access_token is the user's access token obtained from the Wild Apricot API
+	 * @param string $wa_user_id is the user's Wild Apricot ID
+	 */
     public function __construct($access_token, $wa_user_id) {
         $this->access_token = $access_token;
         $this->wa_user_id = $wa_user_id;
-        // self::my_log_file('constructing wa api!');
     }
 
+	/**
+	 * Converts the API response to the body in which data can be extracted
+	 *
+	 * @param  array $response holds the output from the API request, organized in a key-value pattern
+	 * @return array $data is the body of the response
+	 */
     private static function response_to_data($response) {
         if (is_wp_error($response)) {
 			return false;
@@ -41,7 +39,7 @@ class WAWPApi {
 		return $data;
     }
 
-    	/**
+    /**
 	 * Load Wild Apricot credentials that user has input in the WA4WP settings
 	 *
 	 * @return array $decrypted_credentials	Decrypted Wild Apricot credentials
@@ -58,6 +56,11 @@ class WAWPApi {
 		return $decrypted_credentials;
 	}
 
+	/**
+	 * Returns the arguments required for making API calls
+	 *
+	 * @return $args are the arguments that will be passed in the API call
+	 */
     private function request_data_args() {
         $args = array(
 			'headers' => array(
@@ -69,6 +72,11 @@ class WAWPApi {
         return $args;
     }
 
+	/**
+	 * Performs an API request to get data about the current Wild Apricot user
+	 *
+	 * @return $contact_info holds the body of the API response
+	 */
     public function get_info_on_current_user() {
         // Get details of current WA user with API request
         $args = $this->request_data_args($this->access_token);
@@ -79,6 +87,11 @@ class WAWPApi {
         return $contact_info;
     }
 
+	/**
+	 * Returns the membership levels of the current Wild Apricot organization
+	 *
+	 * @return $membership_levels holds the membership levels from Wild Apricot
+	 */
     public function get_membership_levels() {
         $args = $this->request_data_args();
         $url = 'https://api.wildapricot.org/publicview/v1/accounts/' . $this->wa_user_id . '/membershiplevels';

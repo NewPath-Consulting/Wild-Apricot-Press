@@ -16,19 +16,6 @@ class WAIntegration {
 	private $access_token;
 	private $wa_api_instance;
 
-	// Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
-
 	/**
 	 * Constructs an instance of the WAIntegration class
 	 *
@@ -62,7 +49,6 @@ class WAIntegration {
 		if (isset($wa_credentials) && $wa_credentials != '') {
 			$this->wa_credentials_entered = true;
 		}
-		// $this->my_log_file('made new wa integration!');
 	}
 
 	/**
@@ -119,6 +105,9 @@ class WAIntegration {
 		}
 	}
 
+	/**
+	 * Sets the login page to private if the plugin is deactivated or invalid credentials are entered
+	 */
 	public function make_login_private() {
 		// Check if login page exists
 		$login_page_id = get_option('wawp_wal_page_id');
@@ -149,13 +138,14 @@ class WAIntegration {
 
 	/**
 	 * Show membership levels on user profile
+	 *
+	 * @param WP_User $user is the user of the current profile
 	 */
 	public function show_membership_level_on_profile($user) {
 		// Get membership levels from API
 		// Get access token
 		$membership_level = get_user_meta($user->ID, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, true);
 		$user_status = get_user_meta($user->ID, WAIntegration::WA_USER_STATUS_KEY, true);
-		$this->my_log_file($membership_level);
 		if ($membership_level && $user_status) { // valid
 			// Display membership levels in dropdown menu
 			?>
@@ -179,8 +169,6 @@ class WAIntegration {
 				</tr>
 			</table>
 			<?php
-		} else {
-			$this->my_log_file('no membership level found!');
 		}
 	}
 
@@ -225,7 +213,6 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
-		$this->my_log_file($contact_info);
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
 		if (!isset($membership_level) || $membership_level == '') {
@@ -280,7 +267,6 @@ class WAIntegration {
 		// Add Wild Apricot id to user's metadata
 		add_user_meta($current_wp_user_id, WA_USER_ID_KEY, $wa_user_id, true);
 		// Add Wild Apricot membership level to user's metadata
-		$this->my_log_file('membership level here: ' . $membership_level);
 		add_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level, true);
 		// Add Wild Apricot user status to user's metadata
 		add_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status, true);
@@ -368,7 +354,6 @@ class WAIntegration {
 	 */
 	public function custom_login_form_shortcode() {
 		// Create page content -> login form
-
 		ob_start(); ?>
 			<p>Log into your Wild Apricot account here:</p>
 			<form method="post" action="">
@@ -381,11 +366,6 @@ class WAIntegration {
 			</form>
 		<?php
 		return ob_get_clean();
-
-		// Combine all content together
-		// $page_content .= $php_nonce . $email_content . $password_content . $submit_content;
-		// $this->my_log_file($page_content);
-		// return $page_content;
 	}
 
 	/**
