@@ -51,6 +51,19 @@ class WAIntegration {
 		}
 	}
 
+	// Debugging
+	static function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
+
 	/**
 	 * Add query vars to WordPress
 	 *
@@ -145,6 +158,7 @@ class WAIntegration {
 		// Get membership levels from API
 		// Get access token
 		$membership_level = get_user_meta($user->ID, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, true);
+		self::my_log_file($membership_level);
 		$user_status = get_user_meta($user->ID, WAIntegration::WA_USER_STATUS_KEY, true);
 		if ($membership_level && $user_status) { // valid
 			// Display membership levels in dropdown menu
@@ -191,7 +205,7 @@ class WAIntegration {
 		];
 		// Check that event is not already scheduled
 		if (!wp_next_scheduled('wawp_wal_token_refresh', $args)) {
-			$time_seconds = 10;
+			// $time_seconds = 10;
 			// Schedule single event
 			wp_schedule_single_event(time() + $time_seconds, 'wawp_wal_token_refresh', $args);
 		}
@@ -217,13 +231,14 @@ class WAIntegration {
 		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
+		self::my_log_file($membership_level);
 		if (!isset($membership_level) || $membership_level == '') {
-			$membership_level = '**None found**'; // change this
+			$membership_level = ''; // changed to blank
 		}
 		// Get user status
 		$user_status = $contact_info['Status'];
 		if (!isset($user_status) || $user_status == '') {
-			$user_status = '**None found**';
+			$user_status = ''; // changed to blank
 		}
 		// Get first and last name
 		$first_name = $contact_info['FirstName'];
@@ -247,7 +262,21 @@ class WAIntegration {
 			// Get user
 			$current_wp_user = get_user_by('email', $login_email); // returns WP_User
 			$current_wp_user_id = $current_wp_user->ID;
-			// Get user's permissions and user's membership level in Wild Apricot
+			// Update user's first and last name if they are not set yet
+			$current_first_name = get_user_meta($current_wp_user_id, 'first_name', true);
+			$current_last_name = get_user_meta($current_wp_user_id, 'last_name', true);
+			if (!isset($current_first_name) || $current_first_name == '') {
+				wp_update_user([
+					'ID' => $current_wp_user_id,
+					'first_name' => $first_name
+				]);
+			}
+			if (!isset($current_last_name) || $current_last_name == '') {
+				wp_update_user([
+					'ID' => $current_wp_user_id,
+					'last_name' => $last_name
+				]);
+			}
 		} else { // email does not exist; we will create a new user
 			// Set user data
 			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
@@ -283,7 +312,9 @@ class WAIntegration {
 		// Add Wild Apricot id to user's metadata
 		add_user_meta($current_wp_user_id, WA_USER_ID_KEY, $wa_user_id, true);
 		// Add Wild Apricot membership level to user's metadata
-		add_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level, true);
+		self::my_log_file($membership_level);
+		self::my_log_file(isset($membership_level));
+		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
 		// Add Wild Apricot user status to user's metadata
 		add_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status, true);
 
@@ -291,7 +322,7 @@ class WAIntegration {
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
 
 		// Schedule refresh of access token
-		$this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
+		// $this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
 	}
 
 	/**
