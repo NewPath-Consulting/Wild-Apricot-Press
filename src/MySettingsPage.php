@@ -103,6 +103,8 @@ class MySettingsPage
 				<div class="loginChild">
 					<form method="post" action="options.php">
 					<?php
+                        // Nonce for verification
+                        wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
 						// This prints out all hidden setting fields
 						settings_fields( 'wawp_wal_group' );
 						do_settings_sections( 'wawp-wal-admin' );
@@ -257,6 +259,10 @@ class MySettingsPage
      */
     public function wal_sanitize( $input )
     {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_credentials_nonce_name'], 'wawp_credentials_nonce_action')) {
+            wp_die('Your nonce could not be verified.');
+        }
 		// Create valid array that will hold the valid input
 		$valid = array();
 
@@ -308,8 +314,8 @@ class MySettingsPage
         // If input is valid, check if it can connect to the API
         $valid_api = '';
         if ($entered_valid) {
-            require_once('WAIntegration.php');
-            $valid_api = WAIntegration::is_application_valid($entered_api_key);
+            require_once('WAWPApi.php');
+            $valid_api = WAWPApi::is_application_valid($entered_api_key);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
         if ($valid_api == false || !$entered_valid) {

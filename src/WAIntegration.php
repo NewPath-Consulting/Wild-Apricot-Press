@@ -5,8 +5,17 @@ namespace WAWP;
  * Class for managing the user's Wild Apricot account
  */
 class WAIntegration {
+	// Constants
+	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
+	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
+	const WA_USER_ID_KEY = 'wawp_wa_user_id';
+	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
+	const WA_USER_STATUS_KEY = 'wawp_user_status_key';
+
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
+	private $wa_api_instance;
+
 	/**
 	 * Constructs an instance of the WAIntegration class
 	 *
@@ -29,10 +38,11 @@ class WAIntegration {
 		// Action for scheduling token refresh
 		add_action('wawp_wal_token_refresh', array($this, 'refresh_wa_session'));
 		// Actions for displaying membership levels on user profile
-		add_action('show_user_profile', array($this, 'show_membership_levels_on_profile'));
-		add_action('edit_user_profile', array($this, 'show_membership_levels_on_profile'));
+		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
+		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
 		// Include any required files
 		require_once('DataEncryption.php');
+		require_once('WAWPApi.php');
 		// Check if Wild Apricot credentials have been entered
 		$this->wa_credentials_entered = false;
 		$wa_credentials = get_option('wawp_wal_name');
@@ -53,42 +63,6 @@ class WAIntegration {
 		// Add redirectId to query vars
 		$vars[] = 'redirectId';
 		return $vars;
-	}
-
-	/**
-	 * Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
-	 *
-	 * @param string         $entered_api_key The Wild Apricot API Key to check
-	 * @return array|boolean $data	          An array of the response from the WA API if the key is valid; false otherwise
-	 */
-	public static function is_application_valid($entered_api_key) {
-		// Encode API key
-		$api_string = 'APIKEY:' . $entered_api_key;
-		$encoded_api_string = base64_encode($api_string);
-		// Perform API request
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Basic ' . $encoded_api_string,
-				'Content-type' => 'application/x-www-form-urlencoded'
-			),
-			'body' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
-		);
-		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-
-		if (is_wp_error($response)) {
-			return false;
-		}
-		// Get body of response
-		$body = wp_remote_retrieve_body($response);
-		// Get data from json response
-		$data = json_decode($body, true);
-		// Check if there is an error in body
-		if (isset($data['error'])) { // error in body
-			// Update successful login as false
-			return false;
-		}
-		// Valid response; return data
-		return $data;
 	}
 
 	/**
@@ -131,6 +105,9 @@ class WAIntegration {
 		}
 	}
 
+	/**
+	 * Sets the login page to private if the plugin is deactivated or invalid credentials are entered
+	 */
 	public function make_login_private() {
 		// Check if login page exists
 		$login_page_id = get_option('wawp_wal_page_id');
@@ -141,49 +118,6 @@ class WAIntegration {
 			$login_page['post_status'] = 'private';
 			wp_update_post($login_page);
 		}
-	}
-
-	/**
-	 * Connect user to Wild Apricot API after obtaining their email and password
-	 *
-	 * https://gethelp.wildapricot.com/en/articles/484
-	 *
-	 * @param array          $valid_login Holds the email and password entered into the login screen
-	 * @return array|boolean $data        Returns the response from the WA API if the credentials are valid; false otherwise
-	 */
-	private function login_email_password($valid_login) {
-		// Get decrypted credentials
-		$decrypted_credentials = $this->load_user_credentials();
-		// Encode API key
-		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
-		$encoded_authorization_string = base64_encode($authorization_string);
-		// Perform API request
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Basic ' . $encoded_authorization_string,
-				'Content-type' => 'application/x-www-form-urlencoded'
-			),
-			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
-		);
-		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-
-		// Get body of response to obtain the success or error of the response
-		// If an error is returned, return false to end the request
-		if (is_wp_error($response)) {
-			return false;
-		}
-		// No errors -> parse the data
-		$body = wp_remote_retrieve_body($response);
-		// Decode JSON string
-		$data = json_decode($body, true); // returns an array
-
-		// If error is NOT one of the keys, then we have successfully logged in!
-		if (isset($data['error'])) { // error with logging in
-			return false;
-		}
-		// Success with logging in
-		// Return required information (access token, refresh token, etc.)
-		return $data;
 	}
 
 	/**
@@ -204,27 +138,47 @@ class WAIntegration {
 
 	/**
 	 * Show membership levels on user profile
+	 *
+	 * @param WP_User $user is the user of the current profile
 	 */
-	public function show_membership_levels_on_profile($user) {
+	public function show_membership_level_on_profile($user) {
 		// Get membership levels from API
-		// Check if access token has been set yet
-		if ($this->access_token != '') {
-			$args = array(
-				'headers' => array(
-					'Authorization' => 'Bearer ' . $access_token,
-					'Accept' => 'application/json',
-					'User-Agent' => 'WildApricotForWordPress/1.0'
-				),
-			);
+		// Get access token
+		$membership_level = get_user_meta($user->ID, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, true);
+		$user_status = get_user_meta($user->ID, WAIntegration::WA_USER_STATUS_KEY, true);
+		if ($membership_level && $user_status) { // valid
+			// Display membership levels in dropdown menu
+			?>
+			<h2>Wild Apricot Membership Details</h2>
+			<table class="form-table">
+				<tr>
+					<th><label>Membership Level</label></th>
+					<td>
+					<?php
+						echo '<label>' . $membership_level . '</label>';
+					?>
+					</td>
+				</tr>
+				<tr>
+					<th><label>User Status</label></th>
+					<td>
+					<?php
+						echo '<label>' . $user_status . '</label>';
+					?>
+					</td>
+				</tr>
+			</table>
+			<?php
 		}
 	}
 
 	/**
 	 * Gets refresh token after a scheduled CRON task
 	 */
-	public function refresh_wa_session() {
-		// Refresh token
-		// https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
+	public function refresh_wa_session($refresh_token) {
+		$new_access_token = WAWPApi::get_new_access_token($refresh_token);
+		// Save new access token in user metadata
+		add_user_meta(get_current_user_id(), ACCESS_TOKEN_META_KEY, $new_access_token, true); // overwrite
 	}
 
 	/**
@@ -252,32 +206,24 @@ class WAIntegration {
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
 		$time_remaining_to_refresh = $login_data['expires_in'];
-		// Create a CRON event to refresh the token
-		$this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
 		// Get user's permissions
 		$member_permissions = $login_data['Permissions'][0];
 		// Get email of current WA user
 		// https://gethelp.wildapricot.com/en/articles/391-user-id-aka-member-id
 		$wa_user_id = $member_permissions['AccountId'];
-		// Get details of current WA user with API request
-		$args = array(
-			'headers' => array(
-				'Authorization' => 'Bearer ' . $access_token,
-				'Accept' => 'application/json',
-				'User-Agent' => 'WildApricotForWordPress/1.0'
-			),
-		);
-		$contact_info = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $wa_user_id . '/contacts/me?includeDetails=true', $args);
-		if (is_wp_error($contact_info)) {
-			// Show error message
-			return false;
-		}
-		// Get body of response
-		$contact_info = wp_remote_retrieve_body($contact_info);
-		// Decode JSON
-		$contact_info = json_decode($contact_info, true);
-		// Extract atrributes from contact info
+		// Get user's contact information
+		$wawp_api = new WAWPApi($access_token, $wa_user_id);
+		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
+		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
+		if (!isset($membership_level) || $membership_level == '') {
+			$membership_level = '**None found**';
+		}
+		// Get user status
+		$user_status = $contact_info['Status'];
+		if (!isset($user_status) || $user_status == '') {
+			$user_status = '**None found**';
+		}
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -299,16 +245,6 @@ class WAIntegration {
 				$random_user_num = wp_rand(0, 9);
 				$generated_username .= $random_user_num;
 			}
-			// Username will be the part before the @ in the email
-			// $generated_username = explode('@', $login_email)[0];
-			// // Check that generated username is not taken; if so, append the number of users to the end
-			// $number_of_taken_usernames = 0;
-			// while (username_exists($generated_username)) {
-			// 	// Append number of users on site to the end
-			// 	$extra_number = count_users() + $number_of_taken_usernames;
-			// 	$generated_username = $generated_username . $extra_number;
-			// 	$number_of_taken_usernames = $number_of_taken_usernames + 1;
-			// }
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
@@ -324,11 +260,23 @@ class WAIntegration {
 			}
 		}
 		// Now that we have the ID of the user, modify user with Wild Apricot information
-		// Show WA membership on profile
-		update_user_meta($current_wp_user_id, 'wawp_wild_apricot_membership_level', $membership_level);
+
+		// Add access token and secret token to user's metadata
+		$dataEncryption = new DataEncryption();
+		add_user_meta($current_wp_user_id, ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
+		add_user_meta($current_wp_user_id, REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		// Add Wild Apricot id to user's metadata
+		add_user_meta($current_wp_user_id, WA_USER_ID_KEY, $wa_user_id, true);
+		// Add Wild Apricot membership level to user's metadata
+		add_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level, true);
+		// Add Wild Apricot user status to user's metadata
+		add_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status, true);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
+
+		// Schedule refresh of access token
+		$this->schedule_refresh_event();
 	}
 
 	/**
@@ -368,9 +316,12 @@ class WAIntegration {
 					add_filter('the_content', array($this, 'add_login_error'));
 					return;
 				}
-
+				// Check that nonce is valid
+				if (!wp_verify_nonce($_POST['wawp_login_nonce_name'], 'wawp_login_nonce_action')) {
+					wp_die('Your nonce could not be verified.');
+				}
 				// Send POST request to Wild Apricot API to log in if input is valid
-				$login_attempt = $this->login_email_password($valid_login);
+				$login_attempt = WAWPApi::login_email_password($valid_login);
 				// If login attempt is false, then the user could not log in
 				if (!$login_attempt) {
 					// Present user with log in error
@@ -407,35 +358,18 @@ class WAIntegration {
 	 */
 	public function custom_login_form_shortcode() {
 		// Create page content -> login form
-		$page_content = '<p>Log into your Wild Apricot account here:</p>
-			<form method="post">';
-		$email_content = '<label for="wawp_login_email">Email:</label>
-				<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">';
-		$password_content =	'<br><label for="wawp_login_password">Password:</label>
-				<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********">';
-		$submit_content = '<br><input type="submit" name="wawp_login_submit" value="Submit">
-			</form>';
-
-		// Combine all content together
-		$page_content .= $email_content . $password_content . $submit_content;
-		return $page_content;
-	}
-
-	/**
-	 * Load Wild Apricot credentials that user has input in the WA4WP settings
-	 *
-	 * @return array $decrypted_credentials	Decrypted Wild Apricot credentials
-	 */
-	public function load_user_credentials() {
-		// Load encrypted credentials from database
-		$credentials = get_option('wawp_wal_name');
-		// Decrypt credentials
-		$dataEncryption = new DataEncryption();
-		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
-		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
-		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
-
-		return $decrypted_credentials;
+		ob_start(); ?>
+			<p>Log into your Wild Apricot account here:</p>
+			<form method="post" action="">
+				<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
+				<label for="wawp_login_email">Email:</label>
+				<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
+				<br><label for="wawp_login_password">Password:</label>
+				<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********">
+				<br><input type="submit" name="wawp_login_submit" value="Submit">
+			</form>
+		<?php
+		return ob_get_clean();
 	}
 
 	/**
@@ -464,7 +398,7 @@ class WAIntegration {
 			// Check if user is logged in or logged out
 			$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
 			if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
-				$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url() .'">Log Out</a></li>';
+				$items .= '<li id="wawp_login_logout_button"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
 			} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
 				$items .= '<li id="wawp_login_logout_button"><a href="'. $login_url .'">Log In</a></li>';
 			}
