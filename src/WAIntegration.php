@@ -191,6 +191,7 @@ class WAIntegration {
 		];
 		// Check that event is not already scheduled
 		if (!wp_next_scheduled('wawp_wal_token_refresh', $args)) {
+			$time_seconds = 10;
 			// Schedule single event
 			wp_schedule_single_event(time() + $time_seconds, 'wawp_wal_token_refresh', $args);
 		}
@@ -217,13 +218,28 @@ class WAIntegration {
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
 		if (!isset($membership_level) || $membership_level == '') {
-			$membership_level = '**None found**';
+			$membership_level = '**None found**'; // change this
 		}
 		// Get user status
 		$user_status = $contact_info['Status'];
 		if (!isset($user_status) || $user_status == '') {
 			$user_status = '**None found**';
 		}
+		// Get first and last name
+		$first_name = $contact_info['FirstName'];
+		$last_name = $contact_info['LastName'];
+		// Wild Apricot contact details
+		// add member ID
+		// membership groups - one member can be in 0 or more groups
+		// First name, last name
+		// Organization
+		// membership level - one member has one level
+		// membership status
+		// not dropdowns, just text fields
+		// add membership level to "roles"
+		// support for groups and levels
+		// cron to resyncrhonize every hour for data from wild apricot
+		// establish session with wild apricot
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -233,9 +249,6 @@ class WAIntegration {
 			$current_wp_user_id = $current_wp_user->ID;
 			// Get user's permissions and user's membership level in Wild Apricot
 		} else { // email does not exist; we will create a new user
-			// Get values from contact info
-			$first_name = $contact_info['FirstName'];
-			$last_name = $contact_info['LastName'];
 			// Set user data
 			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
 			$generated_username = $first_name . $last_name;
@@ -250,7 +263,9 @@ class WAIntegration {
 				'user_pass' => wp_generate_password(),
 				'user_login' => $generated_username,
 				'role' => 'subscriber',
-				'display_name' => $first_name . ' ' . $last_name
+				'display_name' => $first_name . ' ' . $last_name,
+				'first_name' => $first_name,
+				'last_name' => $last_name
 			);
 			// Insert user
 			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
@@ -276,7 +291,7 @@ class WAIntegration {
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
 
 		// Schedule refresh of access token
-		$this->schedule_refresh_event();
+		$this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
 	}
 
 	/**
