@@ -12,6 +12,7 @@ class WAIntegration {
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_USER_STATUS_KEY = 'wawp_user_status_key';
 	const WA_ORGANIZATION_KEY = 'wawp_organization_key';
+	const WA_MEMBER_GROUPS_KEY = 'wawp_list_of_groups_key';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -161,6 +162,15 @@ class WAIntegration {
 		$user_status = get_user_meta($user->ID, WAIntegration::WA_USER_STATUS_KEY, true);
 		$wa_account_id = get_user_meta($user->ID, WAIntegration::WA_USER_ID_KEY, true);
 		$organization = get_user_meta($user->ID, WAIntegration::WA_ORGANIZATION_KEY, true);
+		$user_groups = get_user_meta($user->ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
+		self::my_log_file($user_groups);
+		// Create list of user groups, if applicable
+		$user_groups = maybe_unserialize($user_groups[0]);
+		self::my_log_file($user_groups);
+		$group_list = '';
+		foreach ($user_groups as $key => $value) {
+			$group_list .= $value . ', ';
+		}
 		if (isset($membership_level) && isset($user_status) && isset($wa_account_id) && isset($organization)) { // valid
 			// Display Wild Apricot parameters
 			?>
@@ -199,6 +209,15 @@ class WAIntegration {
 					<td>
 					<?php
 						echo '<label>' . $organization . '</label>';
+					?>
+					</td>
+				</tr>
+				<!-- Groups -->
+				<tr>
+					<th><label>Groups</label></th>
+					<td>
+					<?php
+						echo '<label>' . $group_list . '</label>';
 					?>
 					</td>
 				</tr>
@@ -266,9 +285,11 @@ class WAIntegration {
 		$last_name = $contact_info['LastName'];
 		// Get organization
 		$organization = $contact_info['Organization'];
+		// Get field values
+		$field_values = $contact_info['FieldValues'];
+
 		// Wild Apricot contact details
 		// membership groups - one member can be in 0 or more groups
-		// Organization
 		// membership level - one member has one level
 		// membership status
 		// not dropdowns, just text fields
@@ -338,6 +359,28 @@ class WAIntegration {
 		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status);
 		// Add Wild Apricot organization to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_ORGANIZATION_KEY, $organization);
+
+		// Get groups
+		// Delete user meta data if it exists because it will be overriden with a new array
+		// $existing_user_groups = get_user_meta($current_wp_user_id, WAIntegration::WA_GROUP_PARTICIPATION_KEY);
+		// if ($existing_user_groups) { // groups are set
+		// 	delete_user_meta($current_wp_user_id, WAIntegration::WA_GROUP_PARTICIPATION_KEY);
+		// }
+		// Loop through each field value until 'Group participation' is found
+		$user_groups_array = array();
+		foreach ($field_values as $field_value) {
+			if ($field_value['FieldName'] == 'Group participation') { // Found
+				$group_array = $field_value['Value'];
+				// Loop through each group
+				foreach ($group_array as $group) {
+					$user_groups_array[$group['Id']] = $group['Label'];
+				}
+			}
+		}
+		// Serialize the user groups array so that it can be added as user meta data
+		$user_groups_array = maybe_serialize($user_groups_array);
+		// Save to user's meta data
+		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
