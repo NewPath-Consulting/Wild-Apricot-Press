@@ -322,6 +322,15 @@ class MySettingsPage
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
+        } else { // Valid input and valid response
+            // Extract access token and ID
+            $access_token = $valid_api['access_token'];
+            $account_id = $valid_api['AccountId'];
+            // Get all membership levels
+            $wawp_api_instance = new WAWPApi($access_token, $account_id);
+            $all_membership_levels = $wawp_api_instance->get_membership_levels();
+            // Save membership levels to options
+            update_option('wawp_all_memberships_key', $all_membership_levels);
         }
 
         // Sanitize menu dropdown

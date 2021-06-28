@@ -154,7 +154,7 @@ class WAWPApi {
 	 */
     public function get_membership_levels() {
         $args = $this->request_data_args();
-        $url = 'https://api.wildapricot.org/publicview/v1/accounts/' . $this->wa_user_id . '/membershiplevels';
+        $url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/membershiplevels';
         $membership_levels = wp_remote_get($url, $args);
 
         // Return membership levels

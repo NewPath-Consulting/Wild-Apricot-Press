@@ -13,6 +13,7 @@ class WAIntegration {
 	const WA_USER_STATUS_KEY = 'wawp_user_status_key';
 	const WA_ORGANIZATION_KEY = 'wawp_organization_key';
 	const WA_MEMBER_GROUPS_KEY = 'wawp_list_of_groups_key';
+	const WA_ALL_MEMBERSHIPS_KEY = 'wawp_all_memberships_key';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -121,6 +122,7 @@ class WAIntegration {
 		foreach ($menu_item_ids as $menu_item_id) {
 			wp_delete_post($menu_item_id, true);
 		}
+		// Get all membership levels and save them
 	}
 
 	/**
@@ -294,7 +296,7 @@ class WAIntegration {
 		$wa_user_id = $member_permissions['AccountId'];
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
-		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
+		$contact_info = $wawp_api->get_info_on_current_user();
 		self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
