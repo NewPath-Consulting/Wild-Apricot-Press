@@ -42,6 +42,9 @@ class WAIntegration {
 		// Actions for displaying membership levels on user profile
 		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
 		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
+		// Fire our meta box setup function on the post editor screen
+		add_action('load-post.php', array($this, 'page_access_meta_boxes_setup'));
+		add_action('load-post-new.php', array($this, 'page_access_meta_boxes_setup'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -149,6 +152,29 @@ class WAIntegration {
 			If you are sure that you entered the correct email and password, please contact your administrator.</p>';
 		}
 		return $content;
+	}
+
+	public function page_access_display($page) {
+		?>
+			<p>Hello!</p>
+		<?php
+	}
+
+	public function page_access_add_post_meta_boxes() {
+		// Add meta box
+		add_meta_box(
+			'wawp_page_access_meta_box_id', // ID
+			'Wild Apricot Page Access Control', // title
+			array($this, 'page_access_display'), // callback
+			'page', // screen
+			'side', // location of meta box
+			'high' // priority in comparison to other meta boxes
+		);
+	}
+
+	public function page_access_meta_boxes_setup() {
+		/* Add meta boxes on the 'add_meta_boxes' hook. */
+		add_action('add_meta_boxes', array($this, 'page_access_add_post_meta_boxes'));
 	}
 
 	/**
@@ -348,8 +374,8 @@ class WAIntegration {
 			// Insert user
 			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
 			// Show error if necessary
-			if (is_wp_error($new_user_id)) {
-				echo $new_user_id->get_error_message();
+			if (is_wp_error($current_wp_user_id)) {
+				echo $current_wp_user_id->get_error_message();
 			}
 		}
 		// Now that we have the ID of the user, modify user with Wild Apricot information
