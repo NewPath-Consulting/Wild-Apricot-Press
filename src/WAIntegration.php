@@ -232,7 +232,7 @@ class WAIntegration {
 	public function refresh_wa_session($refresh_token) {
 		$new_access_token = WAWPApi::get_new_access_token($refresh_token);
 		// Save new access token in user metadata
-		add_user_meta(get_current_user_id(), ACCESS_TOKEN_META_KEY, $new_access_token, true); // overwrite
+		add_user_meta(get_current_user_id(), WAIntegration::ACCESS_TOKEN_META_KEY, $new_access_token, true); // overwrite
 	}
 
 	/**
@@ -287,6 +287,8 @@ class WAIntegration {
 		$organization = $contact_info['Organization'];
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
+		// Check if user is administator or not
+		$is_adminstrator = isset($contact_info['IsAccountAdministrator']);
 
 		// Wild Apricot contact details
 		// membership groups - one member can be in 0 or more groups
@@ -329,11 +331,16 @@ class WAIntegration {
 				$random_user_num = wp_rand(0, 9);
 				$generated_username .= $random_user_num;
 			}
+			// Get role
+			$user_role = 'subscriber';
+			if ($is_adminstrator) {
+				$user_role = 'administrator';
+			}
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
 				'user_login' => $generated_username,
-				'role' => 'subscriber',
+				'role' => $user_role,
 				'display_name' => $first_name . ' ' . $last_name,
 				'first_name' => $first_name,
 				'last_name' => $last_name
@@ -349,8 +356,8 @@ class WAIntegration {
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		add_user_meta($current_wp_user_id, ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
-		add_user_meta($current_wp_user_id, REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		add_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
+		add_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
 		// Add Wild Apricot id to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
@@ -432,6 +439,7 @@ class WAIntegration {
 				}
 				// Send POST request to Wild Apricot API to log in if input is valid
 				$login_attempt = WAWPApi::login_email_password($valid_login);
+				self::my_log_file($login_attempt);
 				// If login attempt is false, then the user could not log in
 				if (!$login_attempt) {
 					// Present user with log in error

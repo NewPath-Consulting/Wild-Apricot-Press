@@ -122,12 +122,29 @@ class WAWPApi {
 	 */
     public function get_info_on_current_user() {
         // Get details of current WA user with API request
+		// Get user's contact ID
         $args = $this->request_data_args($this->access_token);
-		$contact_info = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
-
-        // Return contact information
+		$contact_info = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
         $contact_info = self::response_to_data($contact_info);
-        return $contact_info;
+		// Get if user is administrator or not
+		$is_administrator = $contact_info['IsAccountAdministrator'];
+		// Get data and field values of user
+		// $contact_id = $contact_info['Id'];
+		// self::my_log_file($contact_info);
+		// $full_info = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
+		// self::my_log_file($full_info);
+		// $full_info = self::response_to_data($full_info);
+		$user_data_api = NULL;
+		if (isset($is_administrator) && $is_administrator == '1') { // user is administrator
+			$contact_id = $contact_info['Id'];
+			$user_data_api = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
+		} else { // not administrator
+			$user_data_api = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
+		}
+		// Extract body
+		$full_info = self::response_to_data($user_data_api);
+		// Get all information for current user
+        return $full_info;
     }
 
 	/**
