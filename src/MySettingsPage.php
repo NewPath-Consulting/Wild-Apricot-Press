@@ -326,11 +326,13 @@ class MySettingsPage
             // Extract access token and ID
             $access_token = $valid_api['access_token'];
             $account_id = $valid_api['Permissions'][0]['AccountId'];
-            // Get all membership levels
+            // Get all membership levels and groups
             $wawp_api_instance = new WAWPApi($access_token, $account_id);
             $all_membership_levels = $wawp_api_instance->get_membership_levels();
-            // Save membership levels to options
+            $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
+            // Save membership levels and groups to options
             update_option('wawp_all_memberships_key', $all_membership_levels);
+            update_option('wawp_all_groups_key', $all_membership_groups);
         }
 
         // Sanitize menu dropdown

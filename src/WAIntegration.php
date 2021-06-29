@@ -159,9 +159,11 @@ class WAIntegration {
 	public function page_access_display($page) {
 		// Load in saved membership levels
 		$all_membership_levels = get_option('wawp_all_memberships_key');
+		$all_membership_groups = get_option('wawp_all_groups_key');
 		// Add a nonce field to check on save
 		wp_nonce_field(basename(__FILE__), 'wawp_page_access_control');
 		?>
+			<!-- Membership Levels -->
 			<ul>
 			<p>Hello!</p>
 			<li style="margin:0;font-weight: 600;">
@@ -172,6 +174,21 @@ class WAIntegration {
 				self::my_log_file($membership_level); ?>
 				<li>
 					<input type="checkbox" name="wawp_membership_levels[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_level); ?> </input>
+				</li>
+			<?php
+			}
+			?>
+			</ul>
+			<!-- Membership Groups -->
+			<ul>
+			<li style="margin:0;font-weight: 600;">
+                <label for="wawp_check_all_groups"><input type="checkbox" value="wawp_check_all_groups" id='wawp_check_all_groups' name="wawp_check_all_groups" /> Select All Membership Groups</label>
+            </li>
+			<?php
+			foreach ($all_membership_groups as $membership_key => $membership_group) {
+				self::my_log_file($membership_group); ?>
+				<li>
+					<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_group); ?> </input>
 				</li>
 			<?php
 			}

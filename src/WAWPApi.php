@@ -152,9 +152,12 @@ class WAWPApi {
 	 *
 	 * @return $membership_levels holds the membership levels from Wild Apricot
 	 */
-    public function get_membership_levels() {
+    public function get_membership_levels($request_groups = false) {
         $args = $this->request_data_args();
-        $url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/membershiplevels';
+		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/membershiplevels';
+		if ($request_groups) {
+        	$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/membergroups';
+		}
         $membership_levels_response = wp_remote_get($url, $args);
 
         // Return membership levels
