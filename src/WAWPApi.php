@@ -162,17 +162,19 @@ class WAWPApi {
 
         // Return membership levels
         $membership_levels_response = self::response_to_data($membership_levels_response);
+		self::my_log_file($membership_levels_response);
 
 		// Extract membership levels into array
 		$membership_levels = array();
-		foreach ($membership_levels_response as $level) {
-			// Get current key and level
-			$current_key = $level['Id'];
-			$current_level = $level['Name'];
-			// Set level to membership_levels array
-			$membership_levels[$current_key] = $current_level;
+		if (!empty($membership_levels_response)) {
+			foreach ($membership_levels_response as $level) {
+				// Get current key and level
+				$current_key = $level['Id'];
+				$current_level = $level['Name'];
+				// Set level to membership_levels array
+				$membership_levels[$current_key] = $current_level;
+			}
 		}
-		self::my_log_file($membership_levels);
 
         return $membership_levels;
     }

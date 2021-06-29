@@ -101,6 +101,14 @@ class WAIntegration {
 			$login_page = get_post($login_page_id, 'ARRAY_A');
 			$login_page['post_status'] = 'publish';
 			wp_update_post($login_page);
+			// Add user roles
+			$saved_wa_roles = get_option('wawp_all_memberships_key');
+			// Loop through roles and add them as roles to WordPress
+			if (!empty($saved_wa_roles)) {
+				foreach ($saved_wa_roles as $role) {
+					add_role('wawp_' . str_replace(' ', '', $role), $role);
+				}
+			}
 		} else { // Login page does not exist
 			// Create details of page
 			// See: https://wordpress.stackexchange.com/questions/222810/add-a-do-action-to-post-content-of-wp-insert-post
@@ -124,7 +132,6 @@ class WAIntegration {
 		foreach ($menu_item_ids as $menu_item_id) {
 			wp_delete_post($menu_item_id, true);
 		}
-		// Get all membership levels and save them
 	}
 
 	/**

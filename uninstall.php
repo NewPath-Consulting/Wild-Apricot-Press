@@ -21,6 +21,8 @@ delete_option('wawp_wal_page_id');
 delete_option('wawp_wal_name');
 delete_option('wawp_wal_page_id');
 delete_option('wawp_license_form_nonce');
+delete_option('wawp_all_memberships_key');
+delete_option('wawp_all_groups_key');
 
 Addon::instance()::delete();
 

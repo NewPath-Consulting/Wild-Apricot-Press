@@ -330,8 +330,14 @@ class MySettingsPage
             $wawp_api_instance = new WAWPApi($access_token, $account_id);
             $all_membership_levels = $wawp_api_instance->get_membership_levels();
             // Create a new role for each membership level
-            // First, delete the old roles if applicable
-
+            // Delete old roles if applicable
+            $old_wa_roles = get_option('wawp_all_memberships_key');
+            if (isset($old_wa_roles)) {
+                // Loop through each role and delete it
+                foreach ($old_wa_roles as $old_role) {
+                    remove_role('wawp_' . str_replace(' ', '', $old_role));
+                }
+            }
             foreach ($all_membership_levels as $level) {
                 // In identifier, remove spaces so that the role can become a single word
                 add_role('wawp_' . str_replace(' ', '', $level), $level);
