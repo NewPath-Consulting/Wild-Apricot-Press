@@ -46,6 +46,8 @@ class WAIntegration {
 		// Fire our meta box setup function on the post editor screen
 		add_action('load-post.php', array($this, 'page_access_meta_boxes_setup'));
 		add_action('load-post-new.php', array($this, 'page_access_meta_boxes_setup'));
+		// Loads in restricted groups/levels when page is saved
+		add_action('save_post_page', array($this, 'page_access_load_restrictions'), 10, 2);
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -156,6 +158,30 @@ class WAIntegration {
 		return $content;
 	}
 
+	public function page_access_load_restrictions($post_id, $post) {
+		// Verify the nonce before proceeding
+		if (!isset($_POST['wawp_page_access_control']) || !wp_verify_nonce($_POST['wawp_page_access_control'], basename(__FILE__))) {
+			return;
+		}
+
+		// Return if user does not have permission to edit the post
+		if (!current_user_can('edit_post', $post_id)) {
+			return;
+		}
+
+		// Return if this is an Ajax request, autosave, or revision
+		// if (wp_is_doing_ajax() || wp_is_post_autosave($post_id) ||) {
+
+		// }
+
+		// Get levels and groups that the user checked off
+		$checked_groups_ids = $_POST['wawp_membership_levels'];
+		$checked_levels_ids = $_POST['wawp_membership_groups'];
+		self::my_log_file($checked_groups);
+		self::my_log_file($checked_levels);
+		// Restrict this page to those levels and groups
+	}
+
 	public function page_access_display($page) {
 		// Load in saved membership levels
 		$all_membership_levels = get_option('wawp_all_memberships_key');
@@ -171,7 +197,7 @@ class WAIntegration {
             </li>
 			<?php
 			foreach ($all_membership_levels as $membership_key => $membership_level) {
-				self::my_log_file($membership_level); ?>
+			?>
 				<li>
 					<input type="checkbox" name="wawp_membership_levels[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_level); ?> </input>
 				</li>
@@ -186,7 +212,7 @@ class WAIntegration {
             </li>
 			<?php
 			foreach ($all_membership_groups as $membership_key => $membership_group) {
-				self::my_log_file($membership_group); ?>
+			?>
 				<li>
 					<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_group); ?> </input>
 				</li>
