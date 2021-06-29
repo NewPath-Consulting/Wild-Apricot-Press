@@ -329,6 +329,13 @@ class MySettingsPage
             // Get all membership levels and groups
             $wawp_api_instance = new WAWPApi($access_token, $account_id);
             $all_membership_levels = $wawp_api_instance->get_membership_levels();
+            // Create a new role for each membership level
+            // First, delete the old roles if applicable
+
+            foreach ($all_membership_levels as $level) {
+                // In identifier, remove spaces so that the role can become a single word
+                add_role('wawp_' . str_replace(' ', '', $level), $level);
+            }
             $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
             // Save membership levels and groups to options
             update_option('wawp_all_memberships_key', $all_membership_levels);
