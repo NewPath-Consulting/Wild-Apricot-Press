@@ -91,13 +91,54 @@ class MySettingsPage
 				<div class="loginChild">
 					<p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account:</p>
 					<ul>
-						<li>API key</li>
-						<li>Client ID</li>
-						<li>Client secret</li>
+					   <li>API key</li>
+					   <li>Client ID</li>
+					   <li>Client secret</li>
 					</ul>
 					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
 					<ol>
-						<li>First
+					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select Settings. On the Global settings screen, select the Authorized applications option (under Integration). <br><br>
+					      <img src="https://user-images.githubusercontent.com/458134/122569603-e8e44a80-d018-11eb-86b9-0386c6d23a5f.png" alt="Settings > Integration > Authorized applications" width="500"> <br>
+					   </li>
+					   <li>On the Authorized applications screen, click the Authorize application button in the top left corner. 
+					      <br><br>
+					      <img src="https://user-images.githubusercontent.com/458134/122569583-e2ee6980-d018-11eb-879a-bbbcbecbc349.png" alt="Authorized application button" width="500"> <br>
+					   </li>
+					   <li> On the Application authorization screen, click the Server application option then click the Continue button. <br><br>
+					      <img src="https://raw.githubusercontent.com/kendrakleber/files/master/server.png" alt="Authorized application button" width="500"><br>
+					   </li>
+					   <li>
+					      On the Application details screen, the following options should be set:
+					      <ul>
+						 <li>
+						    Application name
+						    <ul>
+						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site"
+						       </li>
+						    </ul>
+						 </li>
+						 <li>
+						    Access Level
+						    <ul>
+						       <li>Choose full access as the WAWP plugin requires ability to read and write to your Wild Apricot database.
+						       </li>
+						    </ul>
+						 </li>
+						 <li>
+						    Client Secret
+						    <ul>
+						       <li>If there is no Client secret value displayed, click the green Generate client secret button. To delete the client secret, click the red X beside the value.
+						       </li>
+						    </ul>
+					      </ul>
+					   </li>
+					   <li>
+					      Click the Save button to save your changes.
+					   </li>
+					   <li>From the Application details screen, copy the API key, Client ID, and Client secret (the blue boxes). Input these values into their respective locations in Wordpress, to the rights of these instructions. <br><br>
+					      <img src="https://raw.githubusercontent.com/kendrakleber/files/master/values.png" alt="Authorized application button" width="500">  <br>
+					   </li>
+					   <br>
 					</ol>
 				</div>
 				<div class="loginChild">
