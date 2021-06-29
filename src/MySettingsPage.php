@@ -325,7 +325,7 @@ class MySettingsPage
         } else { // Valid input and valid response
             // Extract access token and ID
             $access_token = $valid_api['access_token'];
-            $account_id = $valid_api['AccountId'];
+            $account_id = $valid_api['Permissions'][0]['AccountId'];
             // Get all membership levels
             $wawp_api_instance = new WAWPApi($access_token, $account_id);
             $all_membership_levels = $wawp_api_instance->get_membership_levels();

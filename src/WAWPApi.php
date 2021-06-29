@@ -155,10 +155,22 @@ class WAWPApi {
     public function get_membership_levels() {
         $args = $this->request_data_args();
         $url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/membershiplevels';
-        $membership_levels = wp_remote_get($url, $args);
+        $membership_levels_response = wp_remote_get($url, $args);
 
         // Return membership levels
-        $membership_levels = self::response_to_data($membership_levels);
+        $membership_levels_response = self::response_to_data($membership_levels_response);
+
+		// Extract membership levels into array
+		$membership_levels = array();
+		foreach ($membership_levels_response as $level) {
+			// Get current key and level
+			$current_key = $level['Id'];
+			$current_level = $level['Name'];
+			// Set level to membership_levels array
+			$membership_levels[$current_key] = $current_level;
+		}
+		self::my_log_file($membership_levels);
+
         return $membership_levels;
     }
 
