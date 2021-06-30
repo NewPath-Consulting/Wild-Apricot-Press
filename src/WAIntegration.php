@@ -17,6 +17,7 @@ class WAIntegration {
 	const WA_ALL_MEMBERSHIPS_KEY = 'wawp_all_memberships_key';
 	const RESTRICTED_GROUPS = 'wawp_restricted_groups';
 	const RESTRICTED_LEVELS = 'wawp_restricted_levels';
+	const IS_PAGE_RESTRICTED = 'wawp_is_page_restricted';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -173,47 +174,62 @@ class WAIntegration {
 	public function restrict_page_wa($page_content) {
 		self::my_log_file('page loading????');
 
-		// IF statement here to make sure we are only doing this when user is logged into Wild Apricot
-		if (is_user_logged_in()) {
-			// Get ID of current page
-			$current_page_ID = get_queried_object_id();
-			// Get page meta data
-			$page_restricted_groups = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_GROUPS);
-			// Unserialize
-			$page_restricted_groups = maybe_unserialize($page_restricted_groups[0]);
-			self::my_log_file('page restricted groups');
-			self::my_log_file($page_restricted_groups);
-			$page_restricted_levels = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_LEVELS);
-			// Unserialize
-			$page_restricted_levels = maybe_unserialize($page_restricted_levels[0]);
-			self::my_log_file('page restricted levels');
-			self::my_log_file($page_restricted_levels);
-			// Get user meta data
-			$current_user_ID = wp_get_current_user()->ID;
-			$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
-			$user_groups = maybe_unserialize($user_groups[0]);
-			// Get keys of each group
-			$user_groups = array_keys($user_groups);
-			self::my_log_file('user groups: ');
-			self::my_log_file($user_groups);
-			$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
-			// $user_level = maybe_unserialize($user_level[0]);
-			// Get key of level
-			self::my_log_file('user level: ');
-			self::my_log_file($user_level);
+		// Get ID of current page
+		$current_page_ID = get_queried_object_id();
 
-			// Check if page groups and user groups overlap
-			$restrict_page = false;
-			$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
-			$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
-			// Determine if page should be restricted
-			if (empty($common_groups) && !$common_level) {
-				// Page should be restricted
-				$page_content = '<p>Oops! You cannot access this page!</p>';
+		// IF statement here to make sure a page is requested
+		if (is_page()) {
+			// Check that this current page is restricted
+			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
+			if (isset($is_page_restricted) && $is_page_restricted) {
+				// Load in restriction message
+				$restriction_message = '<p>Oops! You cannot access this page!</p>';
+				// Automatically restrict the page if user is not logged in
+				if (!is_user_logged_in()) {
+					return $restriction_message;
+				}
+				// Get page meta data
+				$page_restricted_groups = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_GROUPS);
+				// Unserialize
+				$page_restricted_groups = maybe_unserialize($page_restricted_groups[0]);
+				self::my_log_file('page restricted groups');
+				self::my_log_file($page_restricted_groups);
+				$page_restricted_levels = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_LEVELS);
+				// Unserialize
+				$page_restricted_levels = maybe_unserialize($page_restricted_levels[0]);
+				self::my_log_file('page restricted levels');
+				self::my_log_file($page_restricted_levels);
+				// Get user meta data
+				$current_user_ID = wp_get_current_user()->ID;
+				$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
+				$user_groups = maybe_unserialize($user_groups[0]);
+				// Get keys of each group
+				$user_groups = array_keys($user_groups);
+				self::my_log_file('user groups: ');
+				self::my_log_file($user_groups);
+				$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
+				// $user_level = maybe_unserialize($user_level[0]);
+				// Get key of level
+				self::my_log_file('user level: ');
+				self::my_log_file($user_level);
+
+				// Check if page groups and user groups overlap
+				$common_groups = array();
+				if (isset($page_restricted_groups)) {
+					$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
+				}
+				$common_level = false;
+				if (isset($page_restricted_levels)) {
+					$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
+				}
+				// Determine if page should be restricted
+				if (empty($common_groups) && !$common_level) {
+					// Page should be restricted
+					return $restriction_message;
+				}
 			}
 		}
-
-		// Return original page content
+		// Return original page content if no changes are made
 		return $page_content;
 	}
 
@@ -256,6 +272,9 @@ class WAIntegration {
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 		// Restrict this page to those levels and groups
 		// add_action('the_content', array($this, 'restrict_page_wa'));
+
+		// Add the 'restricted' property to this page's meta data
+		update_post_meta($post_id, WAIntegration::IS_PAGE_RESTRICTED, true, true);
 	}
 
 	public function page_access_display($page) {
