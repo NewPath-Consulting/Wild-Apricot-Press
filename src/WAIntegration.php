@@ -201,6 +201,16 @@ class WAIntegration {
 			// Get key of level
 			self::my_log_file('user level: ');
 			self::my_log_file($user_level);
+
+			// Check if page groups and user groups overlap
+			$restrict_page = false;
+			$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
+			$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
+			// Determine if page should be restricted
+			if (empty($common_groups) && !$common_level) {
+				// Page should be restricted
+				$page_content = '<p>Oops! You cannot access this page!</p>';
+			}
 		}
 
 		// Return original page content
