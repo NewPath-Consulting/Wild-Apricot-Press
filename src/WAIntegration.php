@@ -182,7 +182,7 @@ class WAIntegration {
 			// Check that this current page is restricted
 			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
 			if (isset($is_page_restricted) && $is_page_restricted) {
-				// Load in restriction message
+				// Load in restriction message from message set by user
 				$restriction_message = '<p>Oops! You cannot access this page!</p>';
 				// Automatically restrict the page if user is not logged in
 				if (!is_user_logged_in()) {
@@ -199,6 +199,13 @@ class WAIntegration {
 				$page_restricted_levels = maybe_unserialize($page_restricted_levels[0]);
 				self::my_log_file('page restricted levels');
 				self::my_log_file($page_restricted_levels);
+
+				// If no options are selected, then the page is unrestricted, as there cannot be a page with no viewers
+				if (!isset($page_restricted_groups) && !isset($page_restricted_levels)) {
+					update_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, false);
+					return $page_content;
+				}
+
 				// Get user meta data
 				$current_user_ID = wp_get_current_user()->ID;
 				$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
@@ -218,10 +225,12 @@ class WAIntegration {
 				if (isset($page_restricted_groups)) {
 					$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
 				}
+				self::my_log_file($common_groups);
 				$common_level = false;
 				if (isset($page_restricted_levels)) {
 					$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
 				}
+				self::my_log_file($common_level);
 				// Determine if page should be restricted
 				if (empty($common_groups) && !$common_level) {
 					// Page should be restricted
