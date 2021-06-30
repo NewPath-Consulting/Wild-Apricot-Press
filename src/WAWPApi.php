@@ -162,7 +162,7 @@ class WAWPApi {
 
         // Return membership levels
         $membership_levels_response = self::response_to_data($membership_levels_response);
-		self::my_log_file($membership_levels_response);
+		// self::my_log_file($membership_levels_response);
 
 		// Extract membership levels into array
 		$membership_levels = array();
