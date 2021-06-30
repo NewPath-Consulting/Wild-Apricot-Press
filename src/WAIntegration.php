@@ -48,6 +48,8 @@ class WAIntegration {
 		add_action('load-post-new.php', array($this, 'page_access_meta_boxes_setup'));
 		// Loads in restricted groups/levels when page is saved
 		add_action('save_post_page', array($this, 'page_access_load_restrictions'), 10, 2);
+		// On page load check if the page can be accessed by the current user
+		add_action('the_content', array($this, 'restrict_page_wa'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -165,14 +167,21 @@ class WAIntegration {
 		return $content;
 	}
 
+	public function restrict_page_wa($page_content) {
+		self::my_log_file('page loading????');
+		return $page_content;
+	}
+
 	public function page_access_load_restrictions($post_id, $post) {
 		// Verify the nonce before proceeding
 		if (!isset($_POST['wawp_page_access_control']) || !wp_verify_nonce($_POST['wawp_page_access_control'], basename(__FILE__))) {
+			// self::my_log_file('invalid nonce on restrictions!');
 			return;
 		}
 
 		// Return if user does not have permission to edit the post
 		if (!current_user_can('edit_post', $post_id)) {
+			// self::my_log_file('you cant edit this post!');
 			return;
 		}
 
@@ -187,6 +196,7 @@ class WAIntegration {
 		self::my_log_file($checked_groups);
 		self::my_log_file($checked_levels);
 		// Restrict this page to those levels and groups
+		// add_action('the_content', array($this, 'restrict_page_wa'));
 	}
 
 	public function page_access_display($page) {
@@ -194,7 +204,7 @@ class WAIntegration {
 		$all_membership_levels = get_option('wawp_all_memberships_key');
 		$all_membership_groups = get_option('wawp_all_groups_key');
 		// Add a nonce field to check on save
-		wp_nonce_field(basename(__FILE__), 'wawp_page_access_control');
+		wp_nonce_field(basename(__FILE__), 'wawp_page_access_control', 10, 2);
 		?>
 			<!-- Membership Levels -->
 			<ul>
