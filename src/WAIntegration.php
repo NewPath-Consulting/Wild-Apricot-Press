@@ -261,8 +261,8 @@ class WAIntegration {
 		// }
 
 		// Get levels and groups that the user checked off
-		$checked_groups_ids = $_POST['wawp_membership_levels'];
-		$checked_levels_ids = $_POST['wawp_membership_groups'];
+		$checked_groups_ids = $_POST['wawp_membership_groups'];
+		$checked_levels_ids = $_POST['wawp_membership_levels'];
 		// self::my_log_file($checked_groups_ids);
 		// self::my_log_file($checked_levels_ids);
 		$checked_groups_ids = maybe_serialize($checked_groups_ids);
