@@ -398,6 +398,7 @@ class MySettingsPage
 		// Check if api key has been set; if so, echo that the client secret has been set!
 		if (isset($this->options['wawp_wal_api_key']) && $this->options['wawp_wal_api_key'] != '') {
 			echo "<p>API Key is set!</p>";
+            //TODO say which WA account this is (not needed but would be nice)
 		}
     }
 
@@ -453,6 +454,7 @@ class MySettingsPage
             echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label><br><br>";
             $counter++;
         }
+        //TODO make selected options be checked after, or give some indication
     }
 
     /**

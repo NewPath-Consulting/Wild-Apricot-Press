@@ -93,6 +93,7 @@ class WAIntegration {
 			// Add page id to options so that it can be removed on deactivation
 			update_option('wawp_wal_page_id', $page_id);
 		}
+		//@TODO add support for multiple menu locations (and none?)
 		// Remove from header if it is automatically added
 		$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
 		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
