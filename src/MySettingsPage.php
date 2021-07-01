@@ -441,11 +441,17 @@ class MySettingsPage
             // Append key to menu_items
             $menu_items[] = $key;
         }
+        //Checkbox options for menus to add login to
+        // checkboxes: https://www.w3schools.com/tags/att_input_type_checkbox.asp
+        $counter = 1;
         // Display dropdown menu
-        echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
+        //echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
         // Loop through each option
         foreach ($menu_items as $item) {
-            echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
+            //echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
+            echo "<input type=\"checkbox\" id=\"menu" . $counter .  "\" name=\"menu" . $counter . "\" value=\"" . esc_attr($item) . "\">";
+            echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label><br><br>";
+            $counter++;
         }
     }
 
