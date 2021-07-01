@@ -290,6 +290,7 @@ class WAIntegration {
 		// Load in saved membership levels
 		$all_membership_levels = get_option('wawp_all_memberships_key');
 		$all_membership_groups = get_option('wawp_all_groups_key');
+		$current_page_id = $page->ID;
 		// Add a nonce field to check on save
 		wp_nonce_field(basename(__FILE__), 'wawp_page_access_control', 10, 2);
 		?>
@@ -301,11 +302,23 @@ class WAIntegration {
             </li>
 			<?php
 			foreach ($all_membership_levels as $membership_key => $membership_level) {
-			?>
-				<li>
-					<input type="checkbox" name="wawp_membership_levels[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_level); ?> </input>
-				</li>
-			<?php
+				// Check if level is already checked
+				// Get checked levels from post meta data
+				$already_checked_levels = get_post_meta($current_page_id, WAIntegration::RESTRICTED_LEVELS);
+				$level_checked = '';
+				if (isset($already_checked_levels)) {
+					// Unserialize into array
+					$already_checked_levels = maybe_unserialize($already_checked_levels[0]);
+					// Check if membership_key is in already_checked_levels
+					if (in_array($membership_key, $already_checked_levels)) { // already checked
+						$level_checked = 'checked';
+					}
+				}
+				?>
+					<li>
+						<input type="checkbox" name="wawp_membership_levels[]" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($level_checked); ?>/> <?php echo htmlspecialchars($membership_level); ?> </input>
+					</li>
+				<?php
 			}
 			?>
 			</ul>
@@ -316,11 +329,11 @@ class WAIntegration {
             </li>
 			<?php
 			foreach ($all_membership_groups as $membership_key => $membership_group) {
-			?>
-				<li>
-					<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_group); ?> </input>
-				</li>
-			<?php
+				?>
+					<li>
+						<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_group); ?> </input>
+					</li>
+				<?php
 			}
 			?>
 			</ul>
