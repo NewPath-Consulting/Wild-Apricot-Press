@@ -329,9 +329,21 @@ class WAIntegration {
             </li>
 			<?php
 			foreach ($all_membership_groups as $membership_key => $membership_group) {
+				// Check if group is already checked
+				// Get checked groups from post meta data
+				$already_checked_groups = get_post_meta($current_page_id, WAIntegration::RESTRICTED_GROUPS);
+				$group_checked = '';
+				if (isset($already_checked_groups)) {
+					// Unserialize into array
+					$already_checked_groups = maybe_unserialize($already_checked_groups[0]);
+					// Check if membership_key is in already_checked_levels
+					if (in_array($membership_key, $already_checked_groups)) { // already checked
+						$group_checked = 'checked';
+					}
+				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>"/> <?php echo htmlspecialchars($membership_group); ?> </input>
+						<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($group_checked); ?>/> <?php echo htmlspecialchars($membership_group); ?> </input>
 					</li>
 				<?php
 			}
