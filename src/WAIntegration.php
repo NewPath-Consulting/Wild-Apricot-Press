@@ -173,7 +173,7 @@ class WAIntegration {
 	}
 
 	public function restrict_page_wa($page_content) {
-		self::my_log_file('page loading????');
+		// self::my_log_file('page loading????');
 
 		// Get ID of current page
 		$current_page_ID = get_queried_object_id();
@@ -195,13 +195,13 @@ class WAIntegration {
 				$page_restricted_groups = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_GROUPS);
 				// Unserialize
 				$page_restricted_groups = maybe_unserialize($page_restricted_groups[0]);
-				self::my_log_file('page restricted groups');
-				self::my_log_file($page_restricted_groups);
+				// self::my_log_file('page restricted groups');
+				// self::my_log_file($page_restricted_groups);
 				$page_restricted_levels = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_LEVELS);
 				// Unserialize
 				$page_restricted_levels = maybe_unserialize($page_restricted_levels[0]);
-				self::my_log_file('page restricted levels');
-				self::my_log_file($page_restricted_levels);
+				// self::my_log_file('page restricted levels');
+				// self::my_log_file($page_restricted_levels);
 
 				// If no options are selected, then the page is unrestricted, as there cannot be a page with no viewers
 				if (!isset($page_restricted_groups) && !isset($page_restricted_levels)) {
@@ -215,25 +215,25 @@ class WAIntegration {
 				$user_groups = maybe_unserialize($user_groups[0]);
 				// Get keys of each group
 				$user_groups = array_keys($user_groups);
-				self::my_log_file('user groups: ');
-				self::my_log_file($user_groups);
+				// self::my_log_file('user groups: ');
+				// self::my_log_file($user_groups);
 				$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
 				// $user_level = maybe_unserialize($user_level[0]);
 				// Get key of level
-				self::my_log_file('user level: ');
-				self::my_log_file($user_level);
+				// self::my_log_file('user level: ');
+				// self::my_log_file($user_level);
 
 				// Check if page groups and user groups overlap
 				$common_groups = array();
 				if (isset($page_restricted_groups)) {
 					$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
 				}
-				self::my_log_file($common_groups);
+				// self::my_log_file($common_groups);
 				$common_level = false;
 				if (isset($page_restricted_levels)) {
 					$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
 				}
-				self::my_log_file($common_level);
+				// self::my_log_file($common_level);
 				// Determine if page should be restricted
 				if (empty($common_groups) && !$common_level) {
 					// Page should be restricted
@@ -291,7 +291,7 @@ class WAIntegration {
 		// Add this page to the 'restricted' pages in the options table so that its extra post meta data can be deleted upon uninstall
 		// Get current array of restricted pages, if applicable
 		$site_restricted_pages = get_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES);
-		self::my_log_file($site_restricted_pages);
+		// self::my_log_file($site_restricted_pages);
 		$updated_restricted_pages = array();
 		// Check if restricted pages already exist
 		if (isset($site_restricted_pages)) {
@@ -323,17 +323,29 @@ class WAIntegration {
                 <label for="wawp_check_all_membership"><input type="checkbox" value="wawp_check_all_membership" id='wawp_check_all_membership' name="wawp_check_all_membership" /> Select All Membership Levels</label>
             </li>
 			<?php
+			// Get checked levels from post meta data
+			$already_checked_levels = get_post_meta($current_page_id, WAIntegration::RESTRICTED_LEVELS);
+			if (isset($already_checked_levels) && !empty($already_checked_levels)) {
+				$already_checked_levels = $already_checked_levels[0];
+			}
+			self::my_log_file($already_checked_levels);
 			foreach ($all_membership_levels as $membership_key => $membership_level) {
 				// Check if level is already checked
-				// Get checked levels from post meta data
-				$already_checked_levels = get_post_meta($current_page_id, WAIntegration::RESTRICTED_LEVELS);
 				$level_checked = '';
-				if (isset($already_checked_levels)) {
+				if (isset($already_checked_levels) && !empty($already_checked_levels)) {
 					// Unserialize into array
-					$already_checked_levels = maybe_unserialize($already_checked_levels[0]);
+					// self::my_log_file($already_checked_levels);
+					$already_checked_levels = maybe_unserialize($already_checked_levels);
+					// self::my_log_file($already_checked_levels);
 					// Check if membership_key is in already_checked_levels
-					if (in_array($membership_key, $already_checked_levels)) { // already checked
-						$level_checked = 'checked';
+					if (is_array($already_checked_levels)) {
+						if (in_array($membership_key, $already_checked_levels)) { // already checked
+							$level_checked = 'checked';
+						}
+					} else {
+						if ($membership_key == $already_checked_levels) {
+							$level_checked = 'checked';
+						}
 					}
 				}
 				?>
@@ -350,17 +362,29 @@ class WAIntegration {
                 <label for="wawp_check_all_groups"><input type="checkbox" value="wawp_check_all_groups" id='wawp_check_all_groups' name="wawp_check_all_groups" /> Select All Membership Groups</label>
             </li>
 			<?php
+			// Get checked groups from post meta data
+			$already_checked_groups = get_post_meta($current_page_id, WAIntegration::RESTRICTED_GROUPS);
+			if (isset($already_checked_groups) && !empty($already_checked_groups)) {
+				$already_checked_groups = $already_checked_groups[0];
+			}
+			self::my_log_file($already_checked_groups);
 			foreach ($all_membership_groups as $membership_key => $membership_group) {
 				// Check if group is already checked
-				// Get checked groups from post meta data
-				$already_checked_groups = get_post_meta($current_page_id, WAIntegration::RESTRICTED_GROUPS);
 				$group_checked = '';
-				if (isset($already_checked_groups)) {
+				if (isset($already_checked_groups) && !empty($already_checked_groups)) {
 					// Unserialize into array
-					$already_checked_groups = maybe_unserialize($already_checked_groups[0]);
+					// self::my_log_file($already_checked_groups);
+					$already_checked_groups = maybe_unserialize($already_checked_groups);
+					// self::my_log_file($already_checked_groups);
 					// Check if membership_key is in already_checked_levels
-					if (in_array($membership_key, $already_checked_groups)) { // already checked
-						$group_checked = 'checked';
+					if (is_array($already_checked_groups)) {
+						if (in_array($membership_key, $already_checked_groups)) { // already checked
+							$group_checked = 'checked';
+						}
+					} else {
+						if ($membership_key == $already_checked_groups) {
+							$group_checked = 'checked';
+						}
 					}
 				}
 				?>
