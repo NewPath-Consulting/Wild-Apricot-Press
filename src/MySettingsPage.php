@@ -116,9 +116,13 @@ class MySettingsPage
                         // $successful_credentials_entered = get_option('wawp_wal_success');
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Invalid credentials! Please try again!</p>';
+                            // Save that wawp credentials are not fully activated
+                            update_option('wawp_wa_credentials_valid', false);
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
 							echo '<p style="color:green">Success! Credentials saved!</p>';
+                            // Save that wawp credentials have been fully activated
+                            update_option('wawp_wa_credentials_valid', true);
                             // Implement hook here to tell Wild Apricot to connect to these credentials
                             do_action('wawp_wal_credentials_obtained');
 						}

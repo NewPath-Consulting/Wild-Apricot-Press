@@ -18,6 +18,7 @@ class WAIntegration {
 	const RESTRICTED_GROUPS = 'wawp_restricted_groups';
 	const RESTRICTED_LEVELS = 'wawp_restricted_levels';
 	const IS_PAGE_RESTRICTED = 'wawp_is_page_restricted';
+	const ARRAY_OF_RESTRICTED_PAGES = 'wawp_array_of_restricted_pages';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -176,9 +177,11 @@ class WAIntegration {
 
 		// Get ID of current page
 		$current_page_ID = get_queried_object_id();
+		// Check if valid Wild Apricot credentials have been entered
+		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 
 		// IF statement here to make sure a page is requested
-		if (is_page()) {
+		if (is_page() && isset($valid_wa_credentials) && $valid_wa_credentials) {
 			// Check that this current page is restricted
 			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
 			if (isset($is_page_restricted) && $is_page_restricted) {
@@ -284,6 +287,25 @@ class WAIntegration {
 
 		// Add the 'restricted' property to this page's meta data
 		update_post_meta($post_id, WAIntegration::IS_PAGE_RESTRICTED, true, true);
+
+		// Add this page to the 'restricted' pages in the options table so that its extra post meta data can be deleted upon uninstall
+		// Get current array of restricted pages, if applicable
+		$site_restricted_pages = get_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES);
+		self::my_log_file($site_restricted_pages);
+		$updated_restricted_pages = array();
+		// Check if restricted pages already exist
+		if (isset($site_restricted_pages)) {
+			// Append this current page to the array if it is not already added
+			if (!in_array($post_id, $site_restricted_pages)) {
+				$site_restricted_pages[] = $post_id;
+			}
+			$updated_restricted_pages = $site_restricted_pages;
+		} else {
+			// No restricted pages yet; we must make the array from scratch
+			$updated_restricted_pages[] = $post_id;
+		}
+		// Save updated restricted pages to options table
+		update_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES, $updated_restricted_pages);
 	}
 
 	public function page_access_display($page) {
@@ -365,8 +387,12 @@ class WAIntegration {
 	}
 
 	public function page_access_meta_boxes_setup() {
-		/* Add meta boxes on the 'add_meta_boxes' hook. */
-		add_action('add_meta_boxes', array($this, 'page_access_add_post_meta_boxes'));
+		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
+		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
+		if (isset($valid_wa_credentials) && $valid_wa_credentials) {
+			// Add meta boxes on the 'add_meta_boxes' hook
+			add_action('add_meta_boxes', array($this, 'page_access_add_post_meta_boxes'));
+		}
 	}
 
 	/**

@@ -25,6 +25,9 @@ class Deactivator {
                 remove_role('wawp_' . str_replace(' ', '', $old_role));
             }
         }
+
+		// Set valid Wild Apricot credentials to false because the plugin is not activated
+		update_option('wawp_wa_credentials_valid', false);
 	}
 }
 ?>
