@@ -687,7 +687,7 @@ class WAIntegration {
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
 
 		// Schedule refresh of access token
-		// $this->schedule_refresh_event($time_remaining_to_refresh, $refresh_token);
+		// $this->schedule_refresh_event();
 	}
 
 	/**
