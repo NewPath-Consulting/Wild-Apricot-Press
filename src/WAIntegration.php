@@ -5,7 +5,7 @@ namespace WAWP;
  * Class for managing the user's Wild Apricot account
  */
 class WAIntegration {
-	// Constants
+	// Constants for keys used for database management
 	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
@@ -172,6 +172,13 @@ class WAIntegration {
 		return $content;
 	}
 
+	/**
+	 * Determines whether or not to restrict the page to the current user based on the user's levels/groups and the page's list of restricted levels/groups
+	 *
+	 * @param string $page_content holds the page content in HTML form
+	 *
+	 * @return string $page_content is the new page content - either the original page content if the page is not restricted, or the restriction message if otherwise
+	 */
 	public function restrict_page_wa($page_content) {
 		// self::my_log_file('page loading????');
 
@@ -245,6 +252,12 @@ class WAIntegration {
 		return $page_content;
 	}
 
+	/**
+	 * Processes the restricted groups set in the post meta data and update these levels/groups to the current post's meta data
+	 *
+	 * @param int     $post_id holds the ID of the current post (page)
+	 * @param WP_Post $post holds the current post (page)
+	 */
 	public function page_access_load_restrictions($post_id, $post) {
 		// Verify the nonce before proceeding
 		if (!isset($_POST['wawp_page_access_control']) || !wp_verify_nonce($_POST['wawp_page_access_control'], basename(__FILE__))) {
@@ -308,6 +321,11 @@ class WAIntegration {
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES, $updated_restricted_pages);
 	}
 
+	/**
+	 * Displays the post meta data on each page to select which levels and groups can access the page
+	 *
+	 * @param WP_Post $page is the current page being edited
+	 */
 	public function page_access_display($page) {
 		// Load in saved membership levels
 		$all_membership_levels = get_option('wawp_all_memberships_key');
@@ -398,6 +416,9 @@ class WAIntegration {
 		<?php
 	}
 
+	/**
+	 * Adds post meta box when editing a page
+	 */
 	public function page_access_add_post_meta_boxes() {
 		// Add meta box
 		add_meta_box(
@@ -410,6 +431,9 @@ class WAIntegration {
 		);
 	}
 
+	/**
+	 * Sets up the post meta data for Wild Apricot access control if valid Wild Apricot credentials have already been entered
+	 */
 	public function page_access_meta_boxes_setup() {
 		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
 		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
