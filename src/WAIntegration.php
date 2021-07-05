@@ -219,25 +219,28 @@ class WAIntegration {
 				// Get user meta data
 				$current_user_ID = wp_get_current_user()->ID;
 				$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
-				$user_groups = maybe_unserialize($user_groups[0]);
-				// Get keys of each group
-				$user_groups = array_keys($user_groups);
-				// self::my_log_file('user groups: ');
-				// self::my_log_file($user_groups);
 				$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
-				// $user_level = maybe_unserialize($user_level[0]);
-				// Get key of level
-				// self::my_log_file('user level: ');
-				// self::my_log_file($user_level);
 
-				// Check if page groups and user groups overlap
+				// If user_groups is NULL, then the user is not part of any groups
 				$common_groups = array();
-				if (isset($page_restricted_groups)) {
+				if (!empty($user_groups) && !empty($page_restricted_groups)) {
+					$user_groups = maybe_unserialize($user_groups[0]);
+					// Get keys of each group
+					$user_groups = array_keys($user_groups);
+					// self::my_log_file('user groups: ');
+					// self::my_log_file($user_groups);
+					// $user_level = maybe_unserialize($user_level[0]);
+					// Get key of level
+					// self::my_log_file('user level: ');
+					// self::my_log_file($user_level);
+
+					// Check if page groups and user groups overlap
 					$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
 				}
+
 				// self::my_log_file($common_groups);
 				$common_level = false;
-				if (isset($page_restricted_levels)) {
+				if (!empty($page_restricted_levels) && !empty($user_level)) {
 					$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
 				}
 				// self::my_log_file($common_level);
