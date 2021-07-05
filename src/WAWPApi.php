@@ -107,7 +107,7 @@ class WAWPApi {
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
 		$data = self::response_to_data($response);
-		self::my_log_file($data);
+		//self::my_log_file($data);
 
 		// Get new access token from data
 		$new_access_token = $data['AccessToken']; // ??

@@ -307,7 +307,7 @@ class WAIntegration {
 		// self::my_log_file($site_restricted_pages);
 		$updated_restricted_pages = array();
 		// Check if restricted pages already exist
-		if (isset($site_restricted_pages)) {
+		if (!empty($site_restricted_pages)) {
 			// Append this current page to the array if it is not already added
 			if (!in_array($post_id, $site_restricted_pages)) {
 				$site_restricted_pages[] = $post_id;
@@ -346,7 +346,7 @@ class WAIntegration {
 			if (isset($already_checked_levels) && !empty($already_checked_levels)) {
 				$already_checked_levels = $already_checked_levels[0];
 			}
-			self::my_log_file($already_checked_levels);
+			// self::my_log_file($already_checked_levels);
 			foreach ($all_membership_levels as $membership_key => $membership_level) {
 				// Check if level is already checked
 				$level_checked = '';
@@ -385,7 +385,7 @@ class WAIntegration {
 			if (isset($already_checked_groups) && !empty($already_checked_groups)) {
 				$already_checked_groups = $already_checked_groups[0];
 			}
-			self::my_log_file($already_checked_groups);
+			// self::my_log_file($already_checked_groups);
 			foreach ($all_membership_groups as $membership_key => $membership_group) {
 				// Check if group is already checked
 				$group_checked = '';
@@ -561,7 +561,7 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user();
-		// self::my_log_file($contact_info);
+		self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
 		$membership_level_id = $contact_info['MembershipLevel']['Id'];
