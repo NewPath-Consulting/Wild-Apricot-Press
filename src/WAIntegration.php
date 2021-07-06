@@ -5,12 +5,20 @@ namespace WAWP;
  * Class for managing the user's Wild Apricot account
  */
 class WAIntegration {
-	// Constants
+	// Constants for keys used for database management
 	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
+	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
 	const WA_USER_STATUS_KEY = 'wawp_user_status_key';
+	const WA_ORGANIZATION_KEY = 'wawp_organization_key';
+	const WA_MEMBER_GROUPS_KEY = 'wawp_list_of_groups_key';
+	const WA_ALL_MEMBERSHIPS_KEY = 'wawp_all_memberships_key';
+	const RESTRICTED_GROUPS = 'wawp_restricted_groups';
+	const RESTRICTED_LEVELS = 'wawp_restricted_levels';
+	const IS_PAGE_RESTRICTED = 'wawp_is_page_restricted';
+	const ARRAY_OF_RESTRICTED_PAGES = 'wawp_array_of_restricted_pages';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -40,6 +48,13 @@ class WAIntegration {
 		// Actions for displaying membership levels on user profile
 		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
 		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
+		// Fire our meta box setup function on the post editor screen
+		add_action('load-post.php', array($this, 'page_access_meta_boxes_setup'));
+		add_action('load-post-new.php', array($this, 'page_access_meta_boxes_setup'));
+		// Loads in restricted groups/levels when page is saved
+		add_action('save_post_page', array($this, 'page_access_load_restrictions'), 10, 2);
+		// On page load check if the page can be accessed by the current user
+		add_action('the_content', array($this, 'restrict_page_wa'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -49,6 +64,19 @@ class WAIntegration {
 		if (isset($wa_credentials) && $wa_credentials != '') {
 			$this->wa_credentials_entered = true;
 		}
+	}
+
+	// Debugging
+	static function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
 	}
 
 	/**
@@ -80,6 +108,14 @@ class WAIntegration {
 			$login_page = get_post($login_page_id, 'ARRAY_A');
 			$login_page['post_status'] = 'publish';
 			wp_update_post($login_page);
+			// Add user roles
+			$saved_wa_roles = get_option('wawp_all_memberships_key');
+			// Loop through roles and add them as roles to WordPress
+			if (!empty($saved_wa_roles)) {
+				foreach ($saved_wa_roles as $role) {
+					add_role('wawp_' . str_replace(' ', '', $role), $role);
+				}
+			}
 		} else { // Login page does not exist
 			// Create details of page
 			// See: https://wordpress.stackexchange.com/questions/222810/add-a-do-action-to-post-content-of-wp-insert-post
@@ -137,20 +173,314 @@ class WAIntegration {
 	}
 
 	/**
+	 * Determines whether or not to restrict the page to the current user based on the user's levels/groups and the page's list of restricted levels/groups
+	 *
+	 * @param string $page_content holds the page content in HTML form
+	 *
+	 * @return string $page_content is the new page content - either the original page content if the page is not restricted, or the restriction message if otherwise
+	 */
+	public function restrict_page_wa($page_content) {
+		// self::my_log_file('page loading????');
+
+		// Get ID of current page
+		$current_page_ID = get_queried_object_id();
+		// Check if valid Wild Apricot credentials have been entered
+		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
+
+		// IF statement here to make sure a page is requested
+		if (is_page() && isset($valid_wa_credentials) && $valid_wa_credentials) {
+			// Check that this current page is restricted
+			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
+			if (isset($is_page_restricted) && $is_page_restricted) {
+				// Load in restriction message from message set by user
+				$restriction_message = '<p>Oops! You cannot access this page!</p>';
+				// Automatically restrict the page if user is not logged in
+				if (!is_user_logged_in()) {
+					return $restriction_message;
+				}
+				// Get page meta data
+				$page_restricted_groups = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_GROUPS);
+				// Unserialize
+				$page_restricted_groups = maybe_unserialize($page_restricted_groups[0]);
+				// self::my_log_file('page restricted groups');
+				// self::my_log_file($page_restricted_groups);
+				$page_restricted_levels = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_LEVELS);
+				// Unserialize
+				$page_restricted_levels = maybe_unserialize($page_restricted_levels[0]);
+				// self::my_log_file('page restricted levels');
+				// self::my_log_file($page_restricted_levels);
+
+				// If no options are selected, then the page is unrestricted, as there cannot be a page with no viewers
+				if (!isset($page_restricted_groups) && !isset($page_restricted_levels)) {
+					update_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, false);
+					return $page_content;
+				}
+
+				// Get user meta data
+				$current_user_ID = wp_get_current_user()->ID;
+				$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
+				$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
+
+				// If user_groups is NULL, then the user is not part of any groups
+				$common_groups = array();
+				if (!empty($user_groups) && !empty($page_restricted_groups)) {
+					$user_groups = maybe_unserialize($user_groups[0]);
+					// Get keys of each group
+					$user_groups = array_keys($user_groups);
+					// self::my_log_file('user groups: ');
+					// self::my_log_file($user_groups);
+					// $user_level = maybe_unserialize($user_level[0]);
+					// Get key of level
+					// self::my_log_file('user level: ');
+					// self::my_log_file($user_level);
+
+					// Check if page groups and user groups overlap
+					$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
+				}
+
+				// self::my_log_file($common_groups);
+				$common_level = false;
+				if (!empty($page_restricted_levels) && !empty($user_level)) {
+					$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
+				}
+				// self::my_log_file($common_level);
+				// Determine if page should be restricted
+				if (empty($common_groups) && !$common_level) {
+					// Page should be restricted
+					return $restriction_message;
+				}
+			}
+		}
+		// Return original page content if no changes are made
+		return $page_content;
+	}
+
+	/**
+	 * Processes the restricted groups set in the post meta data and update these levels/groups to the current post's meta data
+	 *
+	 * @param int     $post_id holds the ID of the current post (page)
+	 * @param WP_Post $post holds the current post (page)
+	 */
+	public function page_access_load_restrictions($post_id, $post) {
+		// Verify the nonce before proceeding
+		if (!isset($_POST['wawp_page_access_control']) || !wp_verify_nonce($_POST['wawp_page_access_control'], basename(__FILE__))) {
+			// self::my_log_file('invalid nonce on restrictions!');
+			return;
+		}
+
+		// Return if user does not have permission to edit the post
+		if (!current_user_can('edit_post', $post_id)) {
+			// self::my_log_file('you cant edit this post!');
+			return;
+		}
+
+		// Return if this is an Ajax request, autosave, or revision
+		// if (wp_is_doing_ajax() || wp_is_post_autosave($post_id) ||) {
+
+		// }
+
+		// Get levels and groups that the user checked off
+		$checked_groups_ids = $_POST['wawp_membership_groups'];
+		$checked_levels_ids = $_POST['wawp_membership_levels'];
+		// self::my_log_file($checked_groups_ids);
+		// self::my_log_file($checked_levels_ids);
+		$checked_groups_ids = maybe_serialize($checked_groups_ids);
+		$checked_levels_ids = maybe_serialize($checked_levels_ids);
+		// Delete past restricted groups if they exist
+		$old_groups = get_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
+		if (isset($old_groups)) {
+			delete_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
+		}
+		$old_levels = get_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
+		if (isset($old_levels)) {
+			delete_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
+		}
+		// Store these levels and groups to this post's meta data
+		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids, true); // only add single value
+		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
+		// Restrict this page to those levels and groups
+		// add_action('the_content', array($this, 'restrict_page_wa'));
+
+		// Add the 'restricted' property to this page's meta data
+		update_post_meta($post_id, WAIntegration::IS_PAGE_RESTRICTED, true, true);
+
+		// Add this page to the 'restricted' pages in the options table so that its extra post meta data can be deleted upon uninstall
+		// Get current array of restricted pages, if applicable
+		$site_restricted_pages = get_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES);
+		// self::my_log_file($site_restricted_pages);
+		$updated_restricted_pages = array();
+		// Check if restricted pages already exist
+		if (!empty($site_restricted_pages)) {
+			// Append this current page to the array if it is not already added
+			if (!in_array($post_id, $site_restricted_pages)) {
+				$site_restricted_pages[] = $post_id;
+			}
+			$updated_restricted_pages = $site_restricted_pages;
+		} else {
+			// No restricted pages yet; we must make the array from scratch
+			$updated_restricted_pages[] = $post_id;
+		}
+		// Save updated restricted pages to options table
+		update_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES, $updated_restricted_pages);
+	}
+
+	/**
+	 * Displays the post meta data on each page to select which levels and groups can access the page
+	 *
+	 * @param WP_Post $page is the current page being edited
+	 */
+	public function page_access_display($page) {
+		// Load in saved membership levels
+		$all_membership_levels = get_option('wawp_all_memberships_key');
+		$all_membership_groups = get_option('wawp_all_groups_key');
+		$current_page_id = $page->ID;
+		// Add a nonce field to check on save
+		wp_nonce_field(basename(__FILE__), 'wawp_page_access_control', 10, 2);
+		?>
+			<!-- Membership Levels -->
+			<ul>
+			<p>Hello!</p>
+			<li style="margin:0;font-weight: 600;">
+                <label for="wawp_check_all_membership"><input type="checkbox" value="wawp_check_all_membership" id='wawp_check_all_membership' name="wawp_check_all_membership" /> Select All Membership Levels</label>
+            </li>
+			<?php
+			// Get checked levels from post meta data
+			$already_checked_levels = get_post_meta($current_page_id, WAIntegration::RESTRICTED_LEVELS);
+			if (isset($already_checked_levels) && !empty($already_checked_levels)) {
+				$already_checked_levels = $already_checked_levels[0];
+			}
+			// self::my_log_file($already_checked_levels);
+			foreach ($all_membership_levels as $membership_key => $membership_level) {
+				// Check if level is already checked
+				$level_checked = '';
+				if (isset($already_checked_levels) && !empty($already_checked_levels)) {
+					// Unserialize into array
+					// self::my_log_file($already_checked_levels);
+					$already_checked_levels = maybe_unserialize($already_checked_levels);
+					// self::my_log_file($already_checked_levels);
+					// Check if membership_key is in already_checked_levels
+					if (is_array($already_checked_levels)) {
+						if (in_array($membership_key, $already_checked_levels)) { // already checked
+							$level_checked = 'checked';
+						}
+					} else {
+						if ($membership_key == $already_checked_levels) {
+							$level_checked = 'checked';
+						}
+					}
+				}
+				?>
+					<li>
+						<input type="checkbox" name="wawp_membership_levels[]" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($level_checked); ?>/> <?php echo htmlspecialchars($membership_level); ?> </input>
+					</li>
+				<?php
+			}
+			?>
+			</ul>
+			<!-- Membership Groups -->
+			<ul>
+			<li style="margin:0;font-weight: 600;">
+                <label for="wawp_check_all_groups"><input type="checkbox" value="wawp_check_all_groups" id='wawp_check_all_groups' name="wawp_check_all_groups" /> Select All Membership Groups</label>
+            </li>
+			<?php
+			// Get checked groups from post meta data
+			$already_checked_groups = get_post_meta($current_page_id, WAIntegration::RESTRICTED_GROUPS);
+			if (isset($already_checked_groups) && !empty($already_checked_groups)) {
+				$already_checked_groups = $already_checked_groups[0];
+			}
+			// self::my_log_file($already_checked_groups);
+			foreach ($all_membership_groups as $membership_key => $membership_group) {
+				// Check if group is already checked
+				$group_checked = '';
+				if (isset($already_checked_groups) && !empty($already_checked_groups)) {
+					// Unserialize into array
+					// self::my_log_file($already_checked_groups);
+					$already_checked_groups = maybe_unserialize($already_checked_groups);
+					// self::my_log_file($already_checked_groups);
+					// Check if membership_key is in already_checked_levels
+					if (is_array($already_checked_groups)) {
+						if (in_array($membership_key, $already_checked_groups)) { // already checked
+							$group_checked = 'checked';
+						}
+					} else {
+						if ($membership_key == $already_checked_groups) {
+							$group_checked = 'checked';
+						}
+					}
+				}
+				?>
+					<li>
+						<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($group_checked); ?>/> <?php echo htmlspecialchars($membership_group); ?> </input>
+					</li>
+				<?php
+			}
+			?>
+			</ul>
+		<?php
+	}
+
+	/**
+	 * Adds post meta box when editing a page
+	 */
+	public function page_access_add_post_meta_boxes() {
+		// Add meta box
+		add_meta_box(
+			'wawp_page_access_meta_box_id', // ID
+			'Wild Apricot Page Access Control', // title
+			array($this, 'page_access_display'), // callback
+			'page', // screen
+			'side', // location of meta box
+			'high' // priority in comparison to other meta boxes
+		);
+	}
+
+	/**
+	 * Sets up the post meta data for Wild Apricot access control if valid Wild Apricot credentials have already been entered
+	 */
+	public function page_access_meta_boxes_setup() {
+		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
+		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
+		if (isset($valid_wa_credentials) && $valid_wa_credentials) {
+			// Add meta boxes on the 'add_meta_boxes' hook
+			add_action('add_meta_boxes', array($this, 'page_access_add_post_meta_boxes'));
+		}
+	}
+
+	/**
 	 * Show membership levels on user profile
 	 *
 	 * @param WP_User $user is the user of the current profile
 	 */
 	public function show_membership_level_on_profile($user) {
-		// Get membership levels from API
-		// Get access token
+		// Load in parameters from user's meta data
 		$membership_level = get_user_meta($user->ID, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, true);
 		$user_status = get_user_meta($user->ID, WAIntegration::WA_USER_STATUS_KEY, true);
-		if ($membership_level && $user_status) { // valid
-			// Display membership levels in dropdown menu
+		$wa_account_id = get_user_meta($user->ID, WAIntegration::WA_USER_ID_KEY, true);
+		$organization = get_user_meta($user->ID, WAIntegration::WA_ORGANIZATION_KEY, true);
+		$user_groups = get_user_meta($user->ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
+		// self::my_log_file($user_groups);
+		// Create list of user groups, if applicable
+		$user_groups = maybe_unserialize($user_groups[0]);
+		// self::my_log_file($user_groups);
+		$group_list = '';
+		foreach ($user_groups as $key => $value) {
+			$group_list .= $value . ', ';
+		}
+		if (isset($membership_level) && isset($user_status) && isset($wa_account_id) && isset($organization)) { // valid
+			// Display Wild Apricot parameters
 			?>
 			<h2>Wild Apricot Membership Details</h2>
 			<table class="form-table">
+				<!-- Wild Apricot Account ID -->
+				<tr>
+					<th><label>Account ID</label></th>
+					<td>
+					<?php
+						echo '<label>' . $wa_account_id . '</label>';
+					?>
+					</td>
+				</tr>
+				<!-- Membership Level -->
 				<tr>
 					<th><label>Membership Level</label></th>
 					<td>
@@ -159,11 +489,30 @@ class WAIntegration {
 					?>
 					</td>
 				</tr>
+				<!-- User Status -->
 				<tr>
 					<th><label>User Status</label></th>
 					<td>
 					<?php
 						echo '<label>' . $user_status . '</label>';
+					?>
+					</td>
+				</tr>
+				<!-- Organization -->
+				<tr>
+					<th><label>Organization</label></th>
+					<td>
+					<?php
+						echo '<label>' . $organization . '</label>';
+					?>
+					</td>
+				</tr>
+				<!-- Groups -->
+				<tr>
+					<th><label>Groups</label></th>
+					<td>
+					<?php
+						echo '<label>' . $group_list . '</label>';
 					?>
 					</td>
 				</tr>
@@ -178,7 +527,7 @@ class WAIntegration {
 	public function refresh_wa_session($refresh_token) {
 		$new_access_token = WAWPApi::get_new_access_token($refresh_token);
 		// Save new access token in user metadata
-		add_user_meta(get_current_user_id(), ACCESS_TOKEN_META_KEY, $new_access_token, true); // overwrite
+		add_user_meta(get_current_user_id(), WAIntegration::ACCESS_TOKEN_META_KEY, $new_access_token, true); // overwrite
 	}
 
 	/**
@@ -191,6 +540,7 @@ class WAIntegration {
 		];
 		// Check that event is not already scheduled
 		if (!wp_next_scheduled('wawp_wal_token_refresh', $args)) {
+			// $time_seconds = 10;
 			// Schedule single event
 			wp_schedule_single_event(time() + $time_seconds, 'wawp_wal_token_refresh', $args);
 		}
@@ -213,17 +563,38 @@ class WAIntegration {
 		$wa_user_id = $member_permissions['AccountId'];
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
-		$contact_info = $wawp_api->get_info_on_current_user($wa_user_id);
+		$contact_info = $wawp_api->get_info_on_current_user();
+		self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
-		if (!isset($membership_level) || $membership_level == '') {
-			$membership_level = '**None found**';
+		$membership_level_id = $contact_info['MembershipLevel']['Id'];
+		if (!isset($membership_level)) {
+			$membership_level = ''; // changed to blank
 		}
 		// Get user status
 		$user_status = $contact_info['Status'];
-		if (!isset($user_status) || $user_status == '') {
-			$user_status = '**None found**';
+		if (!isset($user_status)) {
+			$user_status = ''; // changed to blank
 		}
+		// Get first and last name
+		$first_name = $contact_info['FirstName'];
+		$last_name = $contact_info['LastName'];
+		// Get organization
+		$organization = $contact_info['Organization'];
+		// Get field values
+		$field_values = $contact_info['FieldValues'];
+		// Check if user is administator or not
+		$is_adminstrator = isset($contact_info['IsAccountAdministrator']);
+
+		// Wild Apricot contact details
+		// membership groups - one member can be in 0 or more groups
+		// membership level - one member has one level
+		// membership status
+		// not dropdowns, just text fields
+		// add membership level to "roles"
+		// support for groups and levels
+		// cron to resynchronize every hour for data from wild apricot
+		// establish session with wild apricot
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -231,11 +602,22 @@ class WAIntegration {
 			// Get user
 			$current_wp_user = get_user_by('email', $login_email); // returns WP_User
 			$current_wp_user_id = $current_wp_user->ID;
-			// Get user's permissions and user's membership level in Wild Apricot
+			// Update user's first and last name if they are not set yet
+			$current_first_name = get_user_meta($current_wp_user_id, 'first_name', true);
+			$current_last_name = get_user_meta($current_wp_user_id, 'last_name', true);
+			if (!isset($current_first_name) || $current_first_name == '') {
+				wp_update_user([
+					'ID' => $current_wp_user_id,
+					'first_name' => $first_name
+				]);
+			}
+			if (!isset($current_last_name) || $current_last_name == '') {
+				wp_update_user([
+					'ID' => $current_wp_user_id,
+					'last_name' => $last_name
+				]);
+			}
 		} else { // email does not exist; we will create a new user
-			// Get values from contact info
-			$first_name = $contact_info['FirstName'];
-			$last_name = $contact_info['LastName'];
 			// Set user data
 			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
 			$generated_username = $first_name . $last_name;
@@ -245,32 +627,64 @@ class WAIntegration {
 				$random_user_num = wp_rand(0, 9);
 				$generated_username .= $random_user_num;
 			}
+			// Get role
+			$user_role = 'subscriber';
+			if ($is_adminstrator) {
+				$user_role = 'administrator';
+			}
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
 				'user_login' => $generated_username,
-				'role' => 'subscriber',
-				'display_name' => $first_name . ' ' . $last_name
+				'role' => $user_role,
+				'display_name' => $first_name . ' ' . $last_name,
+				'first_name' => $first_name,
+				'last_name' => $last_name
 			);
 			// Insert user
 			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
 			// Show error if necessary
-			if (is_wp_error($new_user_id)) {
-				echo $new_user_id->get_error_message();
+			if (is_wp_error($current_wp_user_id)) {
+				echo $current_wp_user_id->get_error_message();
 			}
 		}
 		// Now that we have the ID of the user, modify user with Wild Apricot information
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		add_user_meta($current_wp_user_id, ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
-		add_user_meta($current_wp_user_id, REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		add_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
+		add_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
 		// Add Wild Apricot id to user's metadata
-		add_user_meta($current_wp_user_id, WA_USER_ID_KEY, $wa_user_id, true);
+		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
-		add_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level, true);
+		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
+		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
 		// Add Wild Apricot user status to user's metadata
-		add_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status, true);
+		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status);
+		// Add Wild Apricot organization to user's metadata
+		update_user_meta($current_wp_user_id, WAIntegration::WA_ORGANIZATION_KEY, $organization);
+
+		// Get groups
+		// Delete user meta data if it exists because it will be overriden with a new array
+		// $existing_user_groups = get_user_meta($current_wp_user_id, WAIntegration::WA_GROUP_PARTICIPATION_KEY);
+		// if ($existing_user_groups) { // groups are set
+		// 	delete_user_meta($current_wp_user_id, WAIntegration::WA_GROUP_PARTICIPATION_KEY);
+		// }
+		// Loop through each field value until 'Group participation' is found
+		$user_groups_array = array();
+		foreach ($field_values as $field_value) {
+			if ($field_value['FieldName'] == 'Group participation') { // Found
+				$group_array = $field_value['Value'];
+				// Loop through each group
+				foreach ($group_array as $group) {
+					$user_groups_array[$group['Id']] = $group['Label'];
+				}
+			}
+		}
+		// Serialize the user groups array so that it can be added as user meta data
+		$user_groups_array = maybe_serialize($user_groups_array);
+		// Save to user's meta data
+		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
@@ -322,6 +736,7 @@ class WAIntegration {
 				}
 				// Send POST request to Wild Apricot API to log in if input is valid
 				$login_attempt = WAWPApi::login_email_password($valid_login);
+				// self::my_log_file($login_attempt);
 				// If login attempt is false, then the user could not log in
 				if (!$login_attempt) {
 					// Present user with log in error

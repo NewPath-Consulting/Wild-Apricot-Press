@@ -157,9 +157,13 @@ class MySettingsPage
                         // $successful_credentials_entered = get_option('wawp_wal_success');
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Invalid credentials! Please try again!</p>';
+                            // Save that wawp credentials are not fully activated
+                            update_option('wawp_wa_credentials_valid', false);
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
 							echo '<p style="color:green">Success! Credentials saved!</p>';
+                            // Save that wawp credentials have been fully activated
+                            update_option('wawp_wa_credentials_valid', true);
                             // Implement hook here to tell Wild Apricot to connect to these credentials
                             do_action('wawp_wal_credentials_obtained');
 						}
@@ -363,6 +367,30 @@ class MySettingsPage
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
+        } else { // Valid input and valid response
+            // Extract access token and ID
+            $access_token = $valid_api['access_token'];
+            $account_id = $valid_api['Permissions'][0]['AccountId'];
+            // Get all membership levels and groups
+            $wawp_api_instance = new WAWPApi($access_token, $account_id);
+            $all_membership_levels = $wawp_api_instance->get_membership_levels();
+            // Create a new role for each membership level
+            // Delete old roles if applicable
+            $old_wa_roles = get_option('wawp_all_memberships_key');
+            if (isset($old_wa_roles) && !empty($old_wa_roles)) {
+                // Loop through each role and delete it
+                foreach ($old_wa_roles as $old_role) {
+                    remove_role('wawp_' . str_replace(' ', '', $old_role));
+                }
+            }
+            foreach ($all_membership_levels as $level) {
+                // In identifier, remove spaces so that the role can become a single word
+                add_role('wawp_' . str_replace(' ', '', $level), $level);
+            }
+            $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
+            // Save membership levels and groups to options
+            update_option('wawp_all_memberships_key', $all_membership_levels);
+            update_option('wawp_all_groups_key', $all_membership_groups);
         }
 
         // Sanitize menu dropdown
