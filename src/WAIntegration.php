@@ -55,6 +55,8 @@ class WAIntegration {
 		add_action('save_post_page', array($this, 'page_access_load_restrictions'), 10, 2);
 		// On page load check if the page can be accessed by the current user
 		add_action('the_content', array($this, 'restrict_page_wa'));
+		// Action for creating 'select all' checkboxes
+		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -325,6 +327,43 @@ class WAIntegration {
 	}
 
 	/**
+	 * Allows for the 'select all' checkbox to select all boxes
+	 */
+	public function select_all_checkboxes_jquery() {
+		?>
+		<script language="javascript">
+			// Check all levels
+			jQuery('#wawp_check_all_levels').click(function () {
+				jQuery('.wawp_case_level').prop('checked', true);
+			});
+
+			// Check all groups
+			jQuery('#wawp_check_all_groups').click(function () {
+				jQuery('.wawp_case_group').prop('checked', true);
+			});
+
+			// If all checkboxes are selected, check the select-all checkbox, and vice versa
+			// Levels
+			jQuery(".wawp_case_level").click(function() {
+				if(jQuery(".wawp_case_level").length == jQuery(".wawp_case_level:checked").length) {
+					jQuery("#wawp_check_all_levels").attr("checked", "checked");
+				} else {
+					jQuery("#wawp_check_all_levels").removeAttr("checked");
+				}
+			});
+			// Groups
+			jQuery(".wawp_case_group").click(function() {
+				if(jQuery(".wawp_case_group").length == jQuery(".wawp_case_group:checked").length) {
+					jQuery("#wawp_check_all_groups").attr("checked", "checked");
+				} else {
+					jQuery("#wawp_check_all_groups").removeAttr("checked");
+				}
+			});
+    	</script>
+		<?php
+	}
+
+	/**
 	 * Displays the post meta data on each page to select which levels and groups can access the page
 	 *
 	 * @param WP_Post $page is the current page being edited
@@ -339,9 +378,8 @@ class WAIntegration {
 		?>
 			<!-- Membership Levels -->
 			<ul>
-			<p>Hello!</p>
 			<li style="margin:0;font-weight: 600;">
-                <label for="wawp_check_all_membership"><input type="checkbox" value="wawp_check_all_membership" id='wawp_check_all_membership' name="wawp_check_all_membership" /> Select All Membership Levels</label>
+                <label for="wawp_check_all_levels"><input type="checkbox" value="wawp_check_all_levels" id='wawp_check_all_levels' name="wawp_check_all_levels" /> Select All Membership Levels</label>
             </li>
 			<?php
 			// Get checked levels from post meta data
@@ -371,7 +409,7 @@ class WAIntegration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_levels[]" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($level_checked); ?>/> <?php echo htmlspecialchars($membership_level); ?> </input>
+						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($level_checked); ?>/> <?php echo htmlspecialchars($membership_level); ?> </input>
 					</li>
 				<?php
 			}
@@ -410,13 +448,15 @@ class WAIntegration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_groups[]" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($group_checked); ?>/> <?php echo htmlspecialchars($membership_group); ?> </input>
+						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($group_checked); ?>/> <?php echo htmlspecialchars($membership_group); ?> </input>
 					</li>
 				<?php
 			}
 			?>
 			</ul>
 		<?php
+		// Fire action to allow "select all" checkboxes to select all options
+		do_action('wawp_create_select_all_checkboxes');
 	}
 
 	/**
@@ -564,7 +604,7 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user();
-		self::my_log_file($contact_info);
+		//self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
 		$membership_level_id = $contact_info['MembershipLevel']['Id'];
