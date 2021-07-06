@@ -7,6 +7,13 @@ use WAWP\Addon;
 
 use function PHPSTORM_META\map;
 
+// Include css file
+/*?>
+<style>
+<?php include 'CSS/main.css'; ?>
+</style>
+<?php*/
+
 class MySettingsPage
 {
     /**
@@ -77,6 +84,24 @@ class MySettingsPage
     {
         // Set class property
         $this->options = get_option( 'wawp_wal_name' );
+
+        // Display the restricted message
+        ?>
+        <div class="wrap">
+            <h1>Set your global restriction message</h1>
+            <form method="post" action="options.php">
+					<?php
+                        // Nonce for verification
+                        wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
+						settings_fields( 'wawp_wal_group' );
+						do_settings_sections( 'wawp-wal-admin' );
+						submit_button();
+					?>
+					</form>
+            <p>Users who attempt to access Wild Apricot restricted pages and are not eligible to view the page will be presented with this message. You can customize it below!</p>
+            <textarea id="wawp_restricted_message_textarea" placeholder="Your restricted members will see this message!"></textarea>
+        </div>
+        <?php
     }
 
 	/**
@@ -100,7 +125,7 @@ class MySettingsPage
 					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select Settings. On the Global settings screen, select the Authorized applications option (under Integration). <br><br>
 					      <img src="https://user-images.githubusercontent.com/458134/122569603-e8e44a80-d018-11eb-86b9-0386c6d23a5f.png" alt="Settings > Integration > Authorized applications" width="500"> <br>
 					   </li>
-					   <li>On the Authorized applications screen, click the Authorize application button in the top left corner. 
+					   <li>On the Authorized applications screen, click the Authorize application button in the top left corner.
 					      <br><br>
 					      <img src="https://user-images.githubusercontent.com/458134/122569583-e2ee6980-d018-11eb-879a-bbbcbecbc349.png" alt="Authorized application button" width="500"> <br>
 					   </li>
@@ -295,6 +320,20 @@ class MySettingsPage
                 array('slug' => $slug, 'title', $title) // args for callback
             );
         }
+
+        // Add settings section and field for restriction message
+        add_settings_section(
+            'wawp_restriction_id', // ID
+            'Global Page Restriction Message', // title
+            array($this, 'create_admin_page'), // callback
+            'wawp-wal-admin' // page
+        );
+        add_settings_field(
+            'wawp_restriction_field_id', // ID
+            '', // title
+            array($this, 'restriction_message_callback'), // callback
+
+        );
     }
 
     /**

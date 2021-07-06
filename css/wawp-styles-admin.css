@@ -13,3 +13,7 @@
 .errorAlert {
 	color: red;
 }
+
+#wawp_restricted_message_textarea {
+	width: 50%;
+}
