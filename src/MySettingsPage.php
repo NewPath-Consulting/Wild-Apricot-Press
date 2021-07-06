@@ -82,26 +82,27 @@ class MySettingsPage
      */
     public function create_admin_page()
     {
-        // Set class property
-        $this->options = get_option( 'wawp_wal_name' );
-
-        // Display the restricted message
+        echo "<p>Users who attempt to access Wild Apricot restricted pages and are not eligible to view the page will be presented with this message. You can customize it below!</p>";
         ?>
-        <div class="wrap">
-            <h1>Set your global restriction message</h1>
-            <form method="post" action="options.php">
-					<?php
-                        // Nonce for verification
-                        wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
-						settings_fields( 'wawp_wal_group' );
-						do_settings_sections( 'wawp-wal-admin' );
-						submit_button();
-					?>
-					</form>
-            <p>Users who attempt to access Wild Apricot restricted pages and are not eligible to view the page will be presented with this message. You can customize it below!</p>
-            <textarea id="wawp_restricted_message_textarea" placeholder="Your restricted members will see this message!"></textarea>
-        </div>
+        <form method="post" action="options.php">
+			<?php
+                // Nonce for verification
+                wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
+				// This prints out all hidden setting fields
+				settings_fields( 'wawp_restriction_group' );
+				do_settings_sections( 'wawp-wal-admin' );
+				submit_button();
+			?>
+		</form>
         <?php
+    }
+
+    /**
+     * Displays the restriction message text area
+     */
+    public function restriction_message_callback() {
+        // Echo textarea
+        echo "<textarea id='wawp_restricted_message_textarea' name='wawp_restriction_name' placeholder='Your restricted members will see this message! Change it to your liking!'></textarea>";
     }
 
 	/**
@@ -173,7 +174,7 @@ class MySettingsPage
                         wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
 						// This prints out all hidden setting fields
 						settings_fields( 'wawp_wal_group' );
-						do_settings_sections( 'wawp-wal-admin' );
+						do_settings_sections( 'wawp-login' );
 						submit_button();
 					?>
 					</form>
@@ -237,7 +238,7 @@ class MySettingsPage
             'wawp_wal_id', // ID
             'Wild Apricot Authorized Application Credentials', // Title
             array( $this, 'wal_print_section_info' ), // Callback
-            'wawp-wal-admin' // Page
+            'wawp-login' // Page
         );
 
 		// Settings for API Key
@@ -245,7 +246,7 @@ class MySettingsPage
             'wawp_wal_api_key', // ID
             'API Key:', // Title
             array( $this, 'api_key_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-login', // Page
             'wawp_wal_id' // Section
         );
 
@@ -254,7 +255,7 @@ class MySettingsPage
             'wawp_wal_client_id', // ID
             'Client ID:', // Title
             array( $this, 'client_id_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-login', // Page
             'wawp_wal_id' // Section
         );
 
@@ -263,7 +264,7 @@ class MySettingsPage
             'wawp_wal_client_secret', // ID
             'Client Secret:', // Title
             array( $this, 'client_secret_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-login', // Page
             'wawp_wal_id' // Section
         );
 
@@ -272,7 +273,7 @@ class MySettingsPage
             'wawp_wal_login_logout_button', // ID
             'Menu:', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-login', // Page
             'wawp_wal_id' // Section
         );
 
@@ -321,18 +322,32 @@ class MySettingsPage
             );
         }
 
+        // ------------------------ Restriction page ---------------------------
+        // Register setting
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'restriction_sanitize'),
+            'default' => NULL
+        );
+        register_setting(
+            'wawp_restriction_group', // group name for settings
+            'wawp_restriction_name', // name of option to sanitize and save
+            $register_args
+        );
+
         // Add settings section and field for restriction message
         add_settings_section(
             'wawp_restriction_id', // ID
             'Global Page Restriction Message', // title
-            array($this, 'create_admin_page'), // callback
+            array($this, 'print_restriction_info'), // callback
             'wawp-wal-admin' // page
         );
         add_settings_field(
             'wawp_restriction_field_id', // ID
             '', // title
             array($this, 'restriction_message_callback'), // callback
-
+            'wawp-wal-admin', // page
+            'wawp_restriction_id' // section
         );
     }
 
@@ -437,6 +452,13 @@ class MySettingsPage
 
 		// Return array of valid inputs
 		return $valid;
+    }
+
+    /**
+     * Print the Restriction text
+     */
+    public function print_restriction_info() {
+        print 'Enter your restriction message here:';
     }
 
     /**
