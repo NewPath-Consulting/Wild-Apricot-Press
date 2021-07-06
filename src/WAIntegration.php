@@ -326,41 +326,39 @@ class WAIntegration {
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES, $updated_restricted_pages);
 	}
 
+	/**
+	 * Allows for the 'select all' checkbox to select all boxes
+	 */
 	public function select_all_checkboxes_jquery() {
 		?>
-		<script>
-		// jQuery('#wawp_check_all_levels').click(function () {
-		// 	$('.wawp_case_level').attr('checked', this.checked);
- 		// });
+		<script language="javascript">
+			// Check all levels
+			jQuery('#wawp_check_all_levels').click(function () {
+				jQuery('.wawp_case_level').prop('checked', true);
+			});
 
-				// add multiple select / deselect functionality
-				// Levels
-				// jQuery("#wawp_check_all_levels").click(function () {
-				// 	jQuery('.wawp_case_level').attr('checked', this.checked);
-				// });
-				// // Groups
-				// jQuery("#wawp_check_all_groups").click(function () {
-				// 	jQuery('.wawp_case_group').attr('checked', this.checked);
-				// });
+			// Check all groups
+			jQuery('#wawp_check_all_groups').click(function () {
+				jQuery('.wawp_case_group').prop('checked', true);
+			});
 
-				// if all checkboxes are selected, check the selectall checkbox
-				// and viceversa
-				// jQuery(".wawp_case_level").click(function() {
-				// 	if(jQuery(".wawp_case_level").length == jQuery(".wawp_case_level:checked").length) {
-				// 		jQuery("#wawp_check_all_levels").attr("checked", "checked");
-				// 	}
-				// 	else {
-				// 		jQuery("#wawp_check_all_levels").removeAttr("checked");
-				// 	}
-				// });
-				// jQuery(".wawp_case_group").click(function() {
-				// 	if(jQuery(".wawp_case_group").length == jQuery(".wawp_case_group:checked").length) {
-				// 		jQuery("#wawp_check_all_groups").attr("checked", "checked");
-				// 	}
-				// 	else {
-				// 		jQuery("#wawp_check_all_groups").removeAttr("checked");
-				// 	}
-				// });
+			// If all checkboxes are selected, check the select-all checkbox, and vice versa
+			// Levels
+			jQuery(".wawp_case_level").click(function() {
+				if(jQuery(".wawp_case_level").length == jQuery(".wawp_case_level:checked").length) {
+					jQuery("#wawp_check_all_levels").attr("checked", "checked");
+				} else {
+					jQuery("#wawp_check_all_levels").removeAttr("checked");
+				}
+			});
+			// Groups
+			jQuery(".wawp_case_group").click(function() {
+				if(jQuery(".wawp_case_group").length == jQuery(".wawp_case_group:checked").length) {
+					jQuery("#wawp_check_all_groups").attr("checked", "checked");
+				} else {
+					jQuery("#wawp_check_all_groups").removeAttr("checked");
+				}
+			});
     	</script>
 		<?php
 	}
