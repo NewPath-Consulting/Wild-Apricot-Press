@@ -38,6 +38,19 @@ class MySettingsPage
         }
     }
 
+    // Debugging
+	static function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
+
     /**
      * Add options page
      */
@@ -82,12 +95,11 @@ class MySettingsPage
      */
     public function create_admin_page()
     {
-        echo "<p>Users who attempt to access Wild Apricot restricted pages and are not eligible to view the page will be presented with this message. You can customize it below!</p>";
         ?>
         <form method="post" action="options.php">
 			<?php
                 // Nonce for verification
-                wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
+                wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
 				// This prints out all hidden setting fields
 				settings_fields( 'wawp_restriction_group' );
 				do_settings_sections( 'wawp-wal-admin' );
@@ -212,6 +224,22 @@ class MySettingsPage
             ?> </form>
         </div>
         <?php
+    }
+
+    /**
+     * Sanitize restriction message
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_sanitize($input) {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
+            wp_die('Your nonce for the restriction message could not be verified.');
+        }
+		// Create valid variable that will hold the valid input
+		$valid = sanitize_textarea_field($input);
+        // Return valid input
+        return $valid;
     }
 
     /**
