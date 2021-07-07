@@ -174,6 +174,18 @@ class WAIntegration {
 		return $content;
 	}
 
+	private function get_login_link() {
+		$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
+		// Get current page id
+		// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
+		$current_page_id = get_queried_object_id();
+		$login_url = esc_url(add_query_arg(array(
+			'redirectId' => $current_page_id,
+		), $login_url));
+		// Return login url
+		return $login_url;
+	}
+
 	/**
 	 * Determines whether or not to restrict the page to the current user based on the user's levels/groups and the page's list of restricted levels/groups
 	 *
@@ -198,6 +210,9 @@ class WAIntegration {
 				// Load in restriction message from message set by user
 				// $restriction_message = '<p>Oops! You cannot access this page!</p>';
 				$restriction_message = wpautop(get_option('wawp_restriction_name'));
+				// Append 'Log In' button to the restriction message
+				$login_url = $this->get_login_link();
+				$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
 				// Automatically restrict the page if user is not logged in
 				if (!is_user_logged_in()) {
 					return $restriction_message;
@@ -845,13 +860,14 @@ class WAIntegration {
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
 			// Create login url
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
-			$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
-			// Get current page id
-			// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
+			// $login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
+			// // Get current page id
+			// // https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
 			$current_page_id = get_queried_object_id();
-			$login_url = esc_url(add_query_arg(array(
-				'redirectId' => $current_page_id,
-			), $login_url));
+			// $login_url = esc_url(add_query_arg(array(
+			// 	'redirectId' => $current_page_id,
+			// ), $login_url));
+			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out
 			$menu_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
 			if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
