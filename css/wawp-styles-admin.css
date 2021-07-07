@@ -15,5 +15,13 @@
 }
 
 #wawp_restricted_message_textarea {
-	width: 50%;
+	width: 80%;
+	height: 20em;
+}
+
+/* For mobile screen */
+@media only screen and (max-width: 600px) {
+	#wawp_restricted_message_textarea {
+		width: 100%;
+	}
 }

@@ -372,7 +372,7 @@ class MySettingsPage
         );
         add_settings_field(
             'wawp_restriction_field_id', // ID
-            '', // title
+            'Restriction Message:', // title
             array($this, 'restriction_message_callback'), // callback
             'wawp-wal-admin', // page
             'wawp_restriction_id' // section
@@ -486,7 +486,7 @@ class MySettingsPage
      * Print the Restriction text
      */
     public function print_restriction_info() {
-        print 'Enter your restriction message here:';
+        print 'The "Global Page Restriction Message" is the message that is shown to users who are not members of the Wild Apricot membership levels and groups required to access the page. Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the page. You can also set a custom restriction message for each individual page by editing the page from your WordPress dashboard.';
     }
 
     /**
