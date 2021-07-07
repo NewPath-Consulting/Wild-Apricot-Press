@@ -114,7 +114,20 @@ class MySettingsPage
      */
     public function restriction_message_callback() {
         // Echo textarea
-        echo "<textarea id='wawp_restricted_message_textarea' name='wawp_restriction_name' placeholder='Your restricted members will see this message! Change it to your liking!'></textarea>";
+        // echo "<textarea id='wawp_restricted_message_textarea' name='wawp_restriction_name' placeholder='Your restricted members will see this message! Change it to your liking!'></textarea>";
+        // Add wp editor
+        // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
+        // https://developer.wordpress.org/reference/functions/wp_editor/
+        // Get default or saved restriction message
+        $initial_content = get_option('wawp_restriction_name');
+        if (empty($initial_content)) {
+            $initial_content = 'Your restricted members will see this message! Change it to your liking!';
+        }
+        $editor_id = 'wawp_restricted_message_textarea';
+        $editor_name = 'wawp_restriction_name';
+        $editor_settings = array('textarea_name' => $editor_name);
+        // Create WP editor
+        wp_editor($initial_content, $editor_id, $editor_settings);
     }
 
 	/**
@@ -237,7 +250,9 @@ class MySettingsPage
             wp_die('Your nonce for the restriction message could not be verified.');
         }
 		// Create valid variable that will hold the valid input
-		$valid = sanitize_textarea_field($input);
+        // Sanitize wp editor
+        // https://wordpress.stackexchange.com/questions/262796/sanitize-content-from-wp-editor
+		$valid = wp_kses_post($input);
         // Return valid input
         return $valid;
     }
