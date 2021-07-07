@@ -35,10 +35,9 @@ if (!empty($restricted_pages)) {
 		delete_post_meta($restricted_page_id, 'wawp_restricted_groups');
 		delete_post_meta($restricted_page_id, 'wawp_restricted_levels');
 		delete_post_meta($restricted_page_id, 'wawp_is_page_restricted');
+		delete_post_meta($restricted_page_id, 'wawp_individual_restriction_message_key');
 	}
 }
-// delete_post_meta(2, 'wawp_groups');
-// delete_post_meta(2, 'wawp_levels');
 // Delete restricted pages option value
 delete_option('wawp_array_of_restricted_pages');
 

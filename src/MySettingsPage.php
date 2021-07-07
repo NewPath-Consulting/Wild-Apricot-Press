@@ -36,6 +36,10 @@ class MySettingsPage
             // Create option
             add_option('wawp_wal_name');
         }
+        // Set default global page restriction message
+        if (!get_option('wawp_restriction_name')) {
+            add_option('wawp_restriction_name', '<h1>Restricted Page!</h1> <p>Oops! This page is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the page!</p>');
+        }
     }
 
     // Debugging
@@ -120,9 +124,9 @@ class MySettingsPage
         // https://developer.wordpress.org/reference/functions/wp_editor/
         // Get default or saved restriction message
         $initial_content = get_option('wawp_restriction_name');
-        if (empty($initial_content)) {
-            $initial_content = 'Your restricted members will see this message! Change it to your liking!';
-        }
+        // if (empty($initial_content)) {
+        //     $initial_content = 'Your restricted members will see this message! Change it to your liking!';
+        // }
         $editor_id = 'wawp_restricted_message_textarea';
         $editor_name = 'wawp_restriction_name';
         $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);

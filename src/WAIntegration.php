@@ -19,6 +19,7 @@ class WAIntegration {
 	const RESTRICTED_LEVELS = 'wawp_restricted_levels';
 	const IS_PAGE_RESTRICTED = 'wawp_is_page_restricted';
 	const ARRAY_OF_RESTRICTED_PAGES = 'wawp_array_of_restricted_pages';
+	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY = 'wawp_individual_restriction_message_key';
 
 	private $wa_credentials_entered; // boolean if user has entered their Wild Apricot credentials
 	private $access_token;
@@ -206,10 +207,14 @@ class WAIntegration {
 			// Check that this current page is restricted
 			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
 			if (isset($is_page_restricted) && $is_page_restricted) {
-				self::my_log_file($page_content);
+				// self::my_log_file($page_content);
 				// Load in restriction message from message set by user
-				// $restriction_message = '<p>Oops! You cannot access this page!</p>';
 				$restriction_message = wpautop(get_option('wawp_restriction_name'));
+				// Check if current page has a custom restriction message
+				$individual_restriction_message = wpautop(get_post_meta($current_page_ID, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true));
+				if (!empty($individual_restriction_message) && $individual_restriction_message != '') { // this page has an individual restriction message
+					$restriction_message = $individual_restriction_message;
+				}
 				// Append 'Log In' button to the restriction message
 				$login_url = $this->get_login_link();
 				$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
@@ -341,6 +346,15 @@ class WAIntegration {
 		}
 		// Save updated restricted pages to options table
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES, $updated_restricted_pages);
+
+		// Save individual restriction message to post meta data
+		$individual_message = $_POST['wawp_individual_page_restricted_message_textarea'];
+		if (!empty($individual_message)) {
+			// Filter restriction message
+			$individual_message = wp_kses_post($individual_message);
+			// Save to post meta data
+			update_post_meta($post_id, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, $individual_message);
+		}
 	}
 
 	/**
@@ -378,6 +392,30 @@ class WAIntegration {
 			});
     	</script>
 		<?php
+	}
+
+	/**
+	 * Displays the post meta box for the custom restriction message for the individual page
+	 *
+	 * @param WP_Post $page is the current page being edited
+	 */
+	public function individual_restriction_message_display($page) {
+		?>
+		<p>If you like, you can enter a restriction message that is custom to this individual page! If not, just leave this field blank - the global restriction message set under "WA4WP Settings" will be displayed to restricted users.</p>
+		<?php
+		$current_page_id = $page->ID;
+		// Get individual restriction message from post meta data
+		$initial_message = get_post_meta($current_page_id, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true); // return single value
+		// Set initial message to blank if there is no saved message
+		if (empty($initial_message)) {
+			$initial_message = '';
+		}
+		// Create wp editor
+		$editor_id = 'wawp_individual_page_restricted_message_editor';
+        $editor_name = 'wawp_individual_page_restricted_message_textarea';
+        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
+		wp_editor($initial_message, $editor_id, $editor_settings);
+		// Get data from
 	}
 
 	/**
@@ -480,13 +518,23 @@ class WAIntegration {
 	 * Adds post meta box when editing a page
 	 */
 	public function page_access_add_post_meta_boxes() {
-		// Add meta box
+		// Add meta box for page access
 		add_meta_box(
 			'wawp_page_access_meta_box_id', // ID
 			'Wild Apricot Page Access Control', // title
 			array($this, 'page_access_display'), // callback
 			'page', // screen
 			'side', // location of meta box
+			'high' // priority in comparison to other meta boxes
+		);
+
+		// Add meta box for page's custom restriction message
+		add_meta_box(
+			'wawp_page_access_custom_message_id', // ID
+			'Individual Page Restriction Message', // title
+			array($this, 'individual_restriction_message_display'), // callback
+			'page', // screen
+			'normal', // location of meta box
 			'high' // priority in comparison to other meta boxes
 		);
 	}
