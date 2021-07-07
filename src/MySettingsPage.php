@@ -125,7 +125,7 @@ class MySettingsPage
         }
         $editor_id = 'wawp_restricted_message_textarea';
         $editor_name = 'wawp_restriction_name';
-        $editor_settings = array('textarea_name' => $editor_name);
+        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
         // Create WP editor
         wp_editor($initial_content, $editor_id, $editor_settings);
     }

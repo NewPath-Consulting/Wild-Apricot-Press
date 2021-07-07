@@ -194,9 +194,10 @@ class WAIntegration {
 			// Check that this current page is restricted
 			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
 			if (isset($is_page_restricted) && $is_page_restricted) {
+				self::my_log_file($page_content);
 				// Load in restriction message from message set by user
 				// $restriction_message = '<p>Oops! You cannot access this page!</p>';
-				$restriction_message = get_option('wawp_restriction_name');
+				$restriction_message = wpautop(get_option('wawp_restriction_name'));
 				// Automatically restrict the page if user is not logged in
 				if (!is_user_logged_in()) {
 					return $restriction_message;
