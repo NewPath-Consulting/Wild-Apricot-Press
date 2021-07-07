@@ -413,7 +413,7 @@ class WAIntegration {
 		// Create wp editor
 		$editor_id = 'wawp_individual_page_restricted_message_editor';
         $editor_name = 'wawp_individual_page_restricted_message_textarea';
-        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
+        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => false);
 		wp_editor($initial_message, $editor_id, $editor_settings);
 		// Get data from
 	}
