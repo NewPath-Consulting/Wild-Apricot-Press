@@ -128,12 +128,7 @@ class WAWPApi {
         $contact_info = self::response_to_data($contact_info);
 		// Get if user is administrator or not
 		$is_administrator = $contact_info['IsAccountAdministrator'];
-		// Get data and field values of user
-		// $contact_id = $contact_info['Id'];
-		// self::my_log_file($contact_info);
-		// $full_info = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
-		// self::my_log_file($full_info);
-		// $full_info = self::response_to_data($full_info);
+		// Perform API call based on if user is administrator or not
 		$user_data_api = NULL;
 		if (isset($is_administrator) && $is_administrator == '1') { // user is administrator
 			$contact_id = $contact_info['Id'];

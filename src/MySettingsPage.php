@@ -106,6 +106,7 @@ class MySettingsPage
                 wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
 				// This prints out all hidden setting fields
 				settings_fields( 'wawp_restriction_group' );
+                settings_fields('wawp_restriction_status_group');
 				do_settings_sections( 'wawp-wal-admin' );
 				submit_button();
 			?>
@@ -114,19 +115,49 @@ class MySettingsPage
     }
 
     /**
+     * Displays the checkboxes for selecting the restricted status(es)
+     */
+    public function restriction_status_callback() {
+        // Display checkboxes for each Wild Apricot status
+        // List of statuses here: https://gethelp.wildapricot.com/en/articles/137-member-and-contact-statuses
+        $list_of_statuses = array(
+            'Active' => 'Active',
+            'Lapsed' => 'Lapsed',
+            'PendingNew' => 'Pending - New',
+            'PendingRenewal' => 'Pending - Renewal',
+            'PendingLevel' => 'Pending - Level change'
+        );
+        // Should 'suspended' and 'archived' be included?
+
+        // Load in the list of restricted statuses, if applicable
+        $saved_statuses = get_option('wawp_restriction_status_name');
+        // Check if saved statuses exists; if not, then create an empty array
+        if (empty($saved_statuses)) { // create empty array
+            $saved_statuses = array();
+        }
+
+        // Loop through the list of statuses and add each as a checkbox
+        foreach ($list_of_statuses as $status_key => $status) {
+            // Check if checkbox is already checked off
+            $status_checked = '';
+            if (in_array($status_key, $saved_statuses)) {
+                $status_checked = 'checked';
+            }
+            ?>
+            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo htmlspecialchars($status_key); ?>" <?php echo($status_checked); ?>/> <?php echo htmlspecialchars($status); ?> </input>
+            <?php
+        }
+    }
+
+    /**
      * Displays the restriction message text area
      */
     public function restriction_message_callback() {
-        // Echo textarea
-        // echo "<textarea id='wawp_restricted_message_textarea' name='wawp_restriction_name' placeholder='Your restricted members will see this message! Change it to your liking!'></textarea>";
         // Add wp editor
         // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
         // https://developer.wordpress.org/reference/functions/wp_editor/
         // Get default or saved restriction message
         $initial_content = get_option('wawp_restriction_name');
-        // if (empty($initial_content)) {
-        //     $initial_content = 'Your restricted members will see this message! Change it to your liking!';
-        // }
         $editor_id = 'wawp_restricted_message_textarea';
         $editor_name = 'wawp_restriction_name';
         $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
@@ -241,6 +272,20 @@ class MySettingsPage
             ?> </form>
         </div>
         <?php
+    }
+
+    /**
+     * Sanitize restriction
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_status_sanitize($input) {
+        $valid = array();
+        // Loop through each checkbox and sanitize
+        foreach ($input as $key => $box) {
+            $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+        }
+        return $valid;
     }
 
     /**
@@ -369,6 +414,33 @@ class MySettingsPage
             );
         }
 
+        // ------------------------ Restriction status ---------------------------
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'restriction_status_sanitize'),
+            'default' => NULL
+        );
+        register_setting(
+            'wawp_restriction_status_group', // group name for settings
+            'wawp_restriction_status_name', // name of option to sanitize and save
+            $register_args
+        );
+        // Add settings section and field for restriction status
+        add_settings_section(
+            'wawp_restriction_status_id', // ID
+            'Wild Apricot Status Restriction', // title
+            array($this, 'print_restriction_status_info'), // callback
+            'wawp-wal-admin' // page
+        );
+        // Field for membership statuses
+        add_settings_field(
+            'wawp_restriction_status_field_id', // ID
+            'Restriction Status(es):', // title
+            array($this, 'restriction_status_callback'), // callback
+            'wawp-wal-admin', // page
+            'wawp_restriction_status_id' // section
+        );
+
         // ------------------------ Restriction page ---------------------------
         // Register setting
         $register_args = array(
@@ -389,6 +461,7 @@ class MySettingsPage
             array($this, 'print_restriction_info'), // callback
             'wawp-wal-admin' // page
         );
+        // Field for restriction message
         add_settings_field(
             'wawp_restriction_field_id', // ID
             'Restriction Message:', // title
@@ -499,6 +572,13 @@ class MySettingsPage
 
 		// Return array of valid inputs
 		return $valid;
+    }
+
+    /**
+     * Print instructions on how to use the restriction status checkboxes
+     */
+    public function print_restriction_status_info() {
+        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted pages.';
     }
 
     /**
