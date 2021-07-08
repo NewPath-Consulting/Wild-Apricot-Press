@@ -229,6 +229,19 @@ class WAIntegration {
 				$current_user_ID = wp_get_current_user()->ID;
 				$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
 				$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
+				$user_status = get_user_meta($current_user_ID, WAIntegration::WA_USER_STATUS_KEY, true);
+
+				// Check if user's status is allowed to view restricted pages
+				// Get restricted status(es) from options table
+				$restricted_statuses = get_option('wawp_restriction_status_name');
+				// If there are restricted statuses, then we must check them against the user's status
+				if (!empty($restricted_statuses)) {
+					// If user's status is not in the restricted statuses, then the user cannot see the page
+					if (!in_array($user_status, $restricted_statuses)) {
+						// User cannot access the page
+						return $restriction_message;
+					}
+				}
 
 				// Find common groups between the user and the page's restrictions
 				// If user_groups is NULL, then the user is not part of any groups
@@ -646,8 +659,6 @@ class WAIntegration {
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user();
 		self::my_log_file($contact_info);
-		// Get membership status
-		$membership_status = $contact_info['Status'];
 		// Get membership level
 		$membership_level = $contact_info['MembershipLevel']['Name'];
 		$membership_level_id = $contact_info['MembershipLevel']['Id'];
