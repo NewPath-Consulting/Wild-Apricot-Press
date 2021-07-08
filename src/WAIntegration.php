@@ -660,10 +660,19 @@ class WAIntegration {
 		$contact_info = $wawp_api->get_info_on_current_user();
 		self::my_log_file($contact_info);
 		// Get membership level
-		$membership_level = $contact_info['MembershipLevel']['Name'];
-		$membership_level_id = $contact_info['MembershipLevel']['Id'];
-		if (!isset($membership_level)) {
-			$membership_level = ''; // changed to blank
+		$membership_level = '';
+		$membership_level_id = '';
+		// Check that these are valid indicies in the array
+		if (array_key_exists('MembershipLevel', $contact_info)) {
+			$membership_level_array = $contact_info['MembershipLevel'];
+			if (!empty($membership_level_array)) {
+				if (array_key_exists('Name', $membership_level_array)) {
+					$membership_level = $membership_level_array['Name'];
+				}
+				if (array_key_exists('Id', $membership_level_array)) {
+					$membership_level_id = $membership_level_array['Id'];
+				}
+			}
 		}
 		// Get user status
 		$user_status = $contact_info['Status'];
