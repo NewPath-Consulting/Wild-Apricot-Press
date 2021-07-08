@@ -144,7 +144,7 @@ class MySettingsPage
                 $status_checked = 'checked';
             }
             ?>
-            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo htmlspecialchars($status_key); ?>" <?php echo($status_checked); ?>/> <?php echo htmlspecialchars($status); ?> </input>
+            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo htmlspecialchars($status_key); ?>" <?php echo($status_checked); ?>/> <?php echo htmlspecialchars($status); ?> </input><br>
             <?php
         }
     }

@@ -645,7 +645,6 @@ class WAIntegration {
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		// Get access token and refresh token
-		self::my_log_file($login_data);
 		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
@@ -658,7 +657,6 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user();
-		self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = '';
 		$membership_level_id = '';
