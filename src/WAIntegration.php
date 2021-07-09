@@ -49,7 +49,7 @@ class WAIntegration {
 		add_action('load-post.php', array($this, 'page_access_meta_boxes_setup'));
 		add_action('load-post-new.php', array($this, 'page_access_meta_boxes_setup'));
 		// Loads in restricted groups/levels when page is saved
-		add_action('save_post_page', array($this, 'page_access_load_restrictions'), 10, 2);
+		add_action('save_post', array($this, 'page_access_load_restrictions'), 10, 2); // changed to all types of posts
 		// On page load check if the page can be accessed by the current user
 		add_action('the_content', array($this, 'restrict_page_wa'));
 		// Action for creating 'select all' checkboxes
@@ -190,8 +190,8 @@ class WAIntegration {
 		// Check if valid Wild Apricot credentials have been entered
 		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 
-		// Make sure a page is requested and the user has already entered their valid Wild Apricot credentials
-		if (is_page() && isset($valid_wa_credentials) && $valid_wa_credentials) {
+		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
+		if (is_singular() && isset($valid_wa_credentials) && $valid_wa_credentials) {
 			// Check that this current page is restricted
 			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
 			if (isset($is_page_restricted) && $is_page_restricted) {
@@ -498,12 +498,16 @@ class WAIntegration {
 	 * Adds post meta box when editing a page
 	 */
 	public function page_access_add_post_meta_boxes() {
+		// Get post types to add the meta boxes to
+		// Get all post types, including built-in WordPress post types and custom post types
+		$post_types = get_post_types(array('public' => true));
+
 		// Add meta box for page access
 		add_meta_box(
 			'wawp_page_access_meta_box_id', // ID
-			'Wild Apricot Page Access Control', // title
+			'Wild Apricot Access Control', // title
 			array($this, 'page_access_display'), // callback
-			'page', // screen
+			$post_types, // screen
 			'side', // location of meta box
 			'high' // priority in comparison to other meta boxes
 		);
@@ -513,7 +517,7 @@ class WAIntegration {
 			'wawp_page_access_custom_message_id', // ID
 			'Individual Page Restriction Message', // title
 			array($this, 'individual_restriction_message_display'), // callback
-			'page', // screen
+			$post_types, // screen
 			'normal', // location of meta box
 			'high' // priority in comparison to other meta boxes
 		);
