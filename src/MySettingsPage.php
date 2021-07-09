@@ -239,11 +239,11 @@ class MySettingsPage
         );
 
         // Settings for Menu to add Login/Logout button
-        add_settings_field(
+        add_settings_field(    //YEET
             'wawp_wal_login_logout_button', // ID
             'Menu:', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-wal-admin', // Page //so this could be changed to the other one?
             'wawp_wal_id' // Section
         );
 
@@ -366,7 +366,10 @@ class MySettingsPage
         }
 
         // Sanitize menu dropdown
-        $valid['wawp_wal_login_logout_button'] = sanitize_text_field($input['wawp_wal_login_logout_button']);
+        //$valid['wawp_wal_login_logout_button'] = sanitize_text_field($input['wawp_wal_login_logout_button']); //YEET
+        //sanatize array
+        //https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
+        $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
 
 		// Return array of valid inputs
 		return $valid;
@@ -444,15 +447,22 @@ class MySettingsPage
         }
         //Checkbox options for menus to add login to
         // checkboxes: https://www.w3schools.com/tags/att_input_type_checkbox.asp
-        $counter = 1;
+        
+        //apparently you can just do it? : https://wpquestions.com/settings_API_how_to_create_a_multicheckbox_with_blog_categories/6682
         // Display dropdown menu
         //echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
         // Loop through each option
+        //make a checkbox, will be checked if currently displayed
+        $current_locations = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
+        $checked = false;
+        if($current_locations != '') {
+            $checked =true;
+        }
         foreach ($menu_items as $item) {
             //echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
-            echo "<input type=\"checkbox\" id=\"menu" . $counter .  "\" name=\"menu" . $counter . "\" value=\"" . esc_attr($item) . "\">";
+            echo "<input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button]\" value=\"" . esc_attr($item) . "\" $checked : in_array(esc_attr($item), $current_locations) ? 'checked=\"checked\"' : '' :>";
             echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label><br><br>";
-            $counter++;
+            
         }
         //TODO make selected options be checked after, or give some indication
     }
