@@ -38,7 +38,7 @@ class MySettingsPage
         }
         // Set default global page restriction message
         if (!get_option('wawp_restriction_name')) {
-            add_option('wawp_restriction_name', '<h1>Restricted Page!</h1> <p>Oops! This page is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the page!</p>');
+            add_option('wawp_restriction_name', '<h2>Restricted Page!</h2> <p>Oops! This page is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the page!</p>');
         }
     }
 

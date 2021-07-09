@@ -385,8 +385,10 @@ class WAIntegration {
 	 * @param WP_Post $page is the current page being edited
 	 */
 	public function individual_restriction_message_display($page) {
+		// Get link to the global restriction page
+		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual page! If not, just leave this field blank - the global restriction message set under "WA4WP Settings" will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual page! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WA4WP Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_page_id = $page->ID;
 		// Get individual restriction message from post meta data
