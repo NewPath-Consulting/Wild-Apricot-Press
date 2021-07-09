@@ -38,7 +38,7 @@ class MySettingsPage
         }
         // Set default global page restriction message
         if (!get_option('wawp_restriction_name')) {
-            add_option('wawp_restriction_name', '<h2>Restricted Page!</h2> <p>Oops! This page is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the page!</p>');
+            add_option('wawp_restriction_name', '<h2>Restricted Content!</h2> <p>Oops! This post is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the post!</p>');
         }
     }
 
@@ -282,9 +282,12 @@ class MySettingsPage
     public function restriction_status_sanitize($input) {
         $valid = array();
         // Loop through each checkbox and sanitize
-        foreach ($input as $key => $box) {
-            $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+        if (!empty($input)) {
+            foreach ($input as $key => $box) {
+                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+            }
         }
+        // Return sanitized value
         return $valid;
     }
 
@@ -435,7 +438,7 @@ class MySettingsPage
         // Field for membership statuses
         add_settings_field(
             'wawp_restriction_status_field_id', // ID
-            'Restriction Status(es):', // title
+            'Membership Status(es):', // title
             array($this, 'restriction_status_callback'), // callback
             'wawp-wal-admin', // page
             'wawp_restriction_status_id' // section
@@ -457,7 +460,7 @@ class MySettingsPage
         // Add settings section and field for restriction message
         add_settings_section(
             'wawp_restriction_id', // ID
-            'Global Page Restriction Message', // title
+            'Global Restriction Message', // title
             array($this, 'print_restriction_info'), // callback
             'wawp-wal-admin' // page
         );
@@ -550,7 +553,7 @@ class MySettingsPage
             $all_membership_levels = $wawp_api_instance->get_membership_levels();
             // Create a new role for each membership level
             // Delete old roles if applicable
-            $old_wa_roles = get_option('wawp_all_memberships_key');
+            $old_wa_roles = get_option('wawp_all_levels_key');
             if (isset($old_wa_roles) && !empty($old_wa_roles)) {
                 // Loop through each role and delete it
                 foreach ($old_wa_roles as $old_role) {
@@ -563,7 +566,7 @@ class MySettingsPage
             }
             $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
             // Save membership levels and groups to options
-            update_option('wawp_all_memberships_key', $all_membership_levels);
+            update_option('wawp_all_levels_key', $all_membership_levels);
             update_option('wawp_all_groups_key', $all_membership_groups);
         }
 
@@ -578,14 +581,14 @@ class MySettingsPage
      * Print instructions on how to use the restriction status checkboxes
      */
     public function print_restriction_status_info() {
-        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted pages.';
+        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts.';
     }
 
     /**
      * Print the Restriction text
      */
     public function print_restriction_info() {
-        print 'The "Global Page Restriction Message" is the message that is shown to users who are not members of the Wild Apricot membership levels and groups required to access the page. Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the page. You can also set a custom restriction message for each individual page by editing the page from your WordPress dashboard.';
+        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the Wild Apricot membership level(s) or group(s) required to access a restricted post. Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
     }
 
     /**

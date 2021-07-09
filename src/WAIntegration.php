@@ -14,11 +14,11 @@ class WAIntegration {
 	const WA_USER_STATUS_KEY = 'wawp_user_status_key';
 	const WA_ORGANIZATION_KEY = 'wawp_organization_key';
 	const WA_MEMBER_GROUPS_KEY = 'wawp_list_of_groups_key';
-	const WA_ALL_MEMBERSHIPS_KEY = 'wawp_all_memberships_key';
+	const WA_ALL_MEMBERSHIPS_KEY = 'wawp_all_levels_key';
 	const RESTRICTED_GROUPS = 'wawp_restricted_groups';
 	const RESTRICTED_LEVELS = 'wawp_restricted_levels';
-	const IS_PAGE_RESTRICTED = 'wawp_is_page_restricted';
-	const ARRAY_OF_RESTRICTED_PAGES = 'wawp_array_of_restricted_pages';
+	const IS_POST_RESTRICTED = 'wawp_is_post_restricted';
+	const ARRAY_OF_RESTRICTED_POSTS = 'wawp_array_of_restricted_posts';
 	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY = 'wawp_individual_restriction_message_key';
 
 	/**
@@ -46,12 +46,12 @@ class WAIntegration {
 		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
 		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
 		// Fire our meta box setup function on the post editor screen
-		add_action('load-post.php', array($this, 'page_access_meta_boxes_setup'));
-		add_action('load-post-new.php', array($this, 'page_access_meta_boxes_setup'));
-		// Loads in restricted groups/levels when page is saved
-		add_action('save_post', array($this, 'page_access_load_restrictions'), 10, 2); // changed to all types of posts
-		// On page load check if the page can be accessed by the current user
-		add_action('the_content', array($this, 'restrict_page_wa'));
+		add_action('load-post.php', array($this, 'post_access_meta_boxes_setup'));
+		add_action('load-post-new.php', array($this, 'post_access_meta_boxes_setup'));
+		// Loads in restricted groups/levels when post is saved
+		add_action('save_post', array($this, 'post_access_load_restrictions'), 10, 2); // changed to all types of posts
+		// On post load check if the post can be accessed by the current user
+		add_action('the_content', array($this, 'restrict_post_wa'));
 		// Action for creating 'select all' checkboxes
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Include any required files
@@ -102,7 +102,7 @@ class WAIntegration {
 			$login_page['post_status'] = 'publish';
 			wp_update_post($login_page);
 			// Add user roles
-			$saved_wa_roles = get_option('wawp_all_memberships_key');
+			$saved_wa_roles = get_option('wawp_all_levels_key');
 			// Loop through roles and add them as roles to WordPress
 			if (!empty($saved_wa_roles)) {
 				foreach ($saved_wa_roles as $role) {
@@ -178,51 +178,51 @@ class WAIntegration {
 	}
 
 	/**
-	 * Determines whether or not to restrict the page to the current user based on the user's levels/groups and the page's list of restricted levels/groups
+	 * Determines whether or not to restrict the post to the current user based on the user's levels/groups and the post's list of restricted levels/groups
 	 *
-	 * @param string $page_content holds the page content in HTML form
+	 * @param string $post_content holds the post content in HTML form
 	 *
-	 * @return string $page_content is the new page content - either the original page content if the page is not restricted, or the restriction message if otherwise
+	 * @return string $post_content is the new post content - either the original post content if the post is not restricted, or the restriction message if otherwise
 	 */
-	public function restrict_page_wa($page_content) {
-		// Get ID of current page
-		$current_page_ID = get_queried_object_id();
+	public function restrict_post_wa($post_content) {
+		// Get ID of current post
+		$current_post_ID = get_queried_object_id();
 		// Check if valid Wild Apricot credentials have been entered
 		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
 		if (is_singular() && isset($valid_wa_credentials) && $valid_wa_credentials) {
-			// Check that this current page is restricted
-			$is_page_restricted = get_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, true); // return single value
-			if (isset($is_page_restricted) && $is_page_restricted) {
+			// Check that this current post is restricted
+			$is_post_restricted = get_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, true); // return single value
+			if (isset($is_post_restricted) && $is_post_restricted) {
 				// Load in restriction message from message set by user
 				$restriction_message = wpautop(get_option('wawp_restriction_name'));
-				// Check if current page has a custom restriction message
-				$individual_restriction_message = wpautop(get_post_meta($current_page_ID, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true));
-				if (!empty($individual_restriction_message) && $individual_restriction_message != '') { // this page has an individual restriction message
+				// Check if current post has a custom restriction message
+				$individual_restriction_message = wpautop(get_post_meta($current_post_ID, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true));
+				if (!empty($individual_restriction_message) && $individual_restriction_message != '') { // this post has an individual restriction message
 					$restriction_message = $individual_restriction_message;
 				}
 				// Append 'Log In' button to the restriction message
 				$login_url = $this->get_login_link();
 				$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
-				// Automatically restrict the page if user is not logged in
+				// Automatically restrict the post if user is not logged in
 				if (!is_user_logged_in()) {
 					return $restriction_message;
 				}
-				// Get page meta data
-				// Get page's restricted groups
-				$page_restricted_groups = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_GROUPS);
+				// Get post meta data
+				// Get post's restricted groups
+				$post_restricted_groups = get_post_meta($current_post_ID, WAIntegration::RESTRICTED_GROUPS);
 				// Unserialize
-				$page_restricted_groups = maybe_unserialize($page_restricted_groups[0]);
-				// Get page's restricted levels
-				$page_restricted_levels = get_post_meta($current_page_ID, WAIntegration::RESTRICTED_LEVELS);
+				$post_restricted_groups = maybe_unserialize($post_restricted_groups[0]);
+				// Get post's restricted levels
+				$post_restricted_levels = get_post_meta($current_post_ID, WAIntegration::RESTRICTED_LEVELS);
 				// Unserialize
-				$page_restricted_levels = maybe_unserialize($page_restricted_levels[0]);
+				$post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
 
-				// If no options are selected, then the page is unrestricted, as there cannot be a page with no viewers
-				if (!isset($page_restricted_groups) && !isset($page_restricted_levels)) {
-					update_post_meta($current_page_ID, WAIntegration::IS_PAGE_RESTRICTED, false);
-					return $page_content;
+				// If no options are selected, then the post is unrestricted, as there cannot be a post with no viewers
+				if (!isset($post_restricted_groups) && !isset($post_restricted_levels)) {
+					update_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, false);
+					return $post_content;
 				}
 
 				// Get user meta data
@@ -231,56 +231,56 @@ class WAIntegration {
 				$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
 				$user_status = get_user_meta($current_user_ID, WAIntegration::WA_USER_STATUS_KEY, true);
 
-				// Check if user's status is allowed to view restricted pages
+				// Check if user's status is allowed to view restricted posts
 				// Get restricted status(es) from options table
 				$restricted_statuses = get_option('wawp_restriction_status_name');
 				// If there are restricted statuses, then we must check them against the user's status
 				if (!empty($restricted_statuses)) {
-					// If user's status is not in the restricted statuses, then the user cannot see the page
+					// If user's status is not in the restricted statuses, then the user cannot see the post
 					if (!in_array($user_status, $restricted_statuses)) {
-						// User cannot access the page
+						// User cannot access the post
 						return $restriction_message;
 					}
 				}
 
-				// Find common groups between the user and the page's restrictions
+				// Find common groups between the user and the post's restrictions
 				// If user_groups is NULL, then the user is not part of any groups
 				$common_groups = array();
-				if (!empty($user_groups) && !empty($page_restricted_groups)) {
+				if (!empty($user_groups) && !empty($post_restricted_groups)) {
 					$user_groups = maybe_unserialize($user_groups[0]);
 					// Get keys of each group
 					$user_groups = array_keys($user_groups);
 
-					// Check if page groups and user groups overlap
-					$common_groups = array_intersect($user_groups, $page_restricted_groups); // not empty if one or more of the user's groups are within the page's restricted groups
+					// Check if post groups and user groups overlap
+					$common_groups = array_intersect($user_groups, $post_restricted_groups); // not empty if one or more of the user's groups are within the post's restricted groups
 				}
 
-				// Find common levels between the user and the page's restrictions
+				// Find common levels between the user and the post's restrictions
 				$common_level = false;
-				if (!empty($page_restricted_levels) && !empty($user_level)) {
-					$common_level = in_array($user_level, $page_restricted_levels); // true if the user's level is one of the page's restricted levels
+				if (!empty($post_restricted_levels) && !empty($user_level)) {
+					$common_level = in_array($user_level, $post_restricted_levels); // true if the user's level is one of the post's restricted levels
 				}
 
-				// Determine if page should be restricted
+				// Determine if post should be restricted
 				if (empty($common_groups) && !$common_level) {
 					// Page should be restricted
 					return $restriction_message;
 				}
 			}
 		}
-		// Return original page content if no changes are made
-		return $page_content;
+		// Return original post content if no changes are made
+		return $post_content;
 	}
 
 	/**
 	 * Processes the restricted groups set in the post meta data and update these levels/groups to the current post's meta data
 	 *
-	 * @param int     $post_id holds the ID of the current post (page)
-	 * @param WP_Post $post holds the current post (page)
+	 * @param int     $post_id holds the ID of the current post
+	 * @param WP_Post $post holds the current post
 	 */
-	public function page_access_load_restrictions($post_id, $post) {
+	public function post_access_load_restrictions($post_id, $post) {
 		// Verify the nonce before proceeding
-		if (!isset($_POST['wawp_page_access_control']) || !wp_verify_nonce($_POST['wawp_page_access_control'], basename(__FILE__))) {
+		if (!isset($_POST['wawp_post_access_control']) || !wp_verify_nonce($_POST['wawp_post_access_control'], basename(__FILE__))) {
 			// Invalid nonce
 			return;
 		}
@@ -311,29 +311,29 @@ class WAIntegration {
 		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids, true); // only add single value
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
-		// Add the 'restricted' property to this page's meta data
-		update_post_meta($post_id, WAIntegration::IS_PAGE_RESTRICTED, true, true);
+		// Add the 'restricted' property to this post's meta data
+		update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true, true);
 
-		// Add this page to the 'restricted' pages in the options table so that its extra post meta data can be deleted upon uninstall
-		// Get current array of restricted pages, if applicable
-		$site_restricted_pages = get_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES);
-		$updated_restricted_pages = array();
-		// Check if restricted pages already exist
-		if (!empty($site_restricted_pages)) {
-			// Append this current page to the array if it is not already added
-			if (!in_array($post_id, $site_restricted_pages)) {
-				$site_restricted_pages[] = $post_id;
+		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
+		// Get current array of restricted post, if applicable
+		$site_restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
+		$updated_restricted_posts = array();
+		// Check if restricted posts already exist
+		if (!empty($site_restricted_posts)) {
+			// Append this current post to the array if it is not already added
+			if (!in_array($post_id, $site_restricted_posts)) {
+				$site_restricted_posts[] = $post_id;
 			}
-			$updated_restricted_pages = $site_restricted_pages;
+			$updated_restricted_posts = $site_restricted_posts;
 		} else {
-			// No restricted pages yet; we must make the array from scratch
-			$updated_restricted_pages[] = $post_id;
+			// No restricted posts yet; we must make the array from scratch
+			$updated_restricted_posts[] = $post_id;
 		}
-		// Save updated restricted pages to options table
-		update_option(WAIntegration::ARRAY_OF_RESTRICTED_PAGES, $updated_restricted_pages);
+		// Save updated restricted posts to options table
+		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
 		// Save individual restriction message to post meta data
-		$individual_message = $_POST['wawp_individual_page_restricted_message_textarea'];
+		$individual_message = $_POST['wawp_individual_post_restricted_message_textarea'];
 		if (!empty($individual_message)) {
 			// Filter restriction message
 			$individual_message = wp_kses_post($individual_message);
@@ -380,42 +380,42 @@ class WAIntegration {
 	}
 
 	/**
-	 * Displays the post meta box for the custom restriction message for the individual page
+	 * Displays the post meta box for the custom restriction message for the individual post
 	 *
-	 * @param WP_Post $page is the current page being edited
+	 * @param WP_Post $post is the current post being edited
 	 */
-	public function individual_restriction_message_display($page) {
+	public function individual_restriction_message_display($post) {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual page! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WA4WP Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WA4WP Settings</a> will be displayed to restricted users.</p>
 		<?php
-		$current_page_id = $page->ID;
+		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
-		$initial_message = get_post_meta($current_page_id, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true); // return single value
+		$initial_message = get_post_meta($current_post_id, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true); // return single value
 		// Set initial message to blank if there is no saved message
 		if (empty($initial_message)) {
 			$initial_message = '';
 		}
 		// Create wp editor
-		$editor_id = 'wawp_individual_page_restricted_message_editor';
-        $editor_name = 'wawp_individual_page_restricted_message_textarea';
+		$editor_id = 'wawp_individual_post_restricted_message_editor';
+        $editor_name = 'wawp_individual_post_restricted_message_textarea';
         $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => false);
 		wp_editor($initial_message, $editor_id, $editor_settings);
 	}
 
 	/**
-	 * Displays the post meta data on each page to select which levels and groups can access the page
+	 * Displays the post meta data on each post to select which levels and groups can access the post
 	 *
-	 * @param WP_Post $page is the current page being edited
+	 * @param WP_Post $post is the current post being edited
 	 */
-	public function page_access_display($page) {
+	public function post_access_display($post) {
 		// Load in saved membership levels
-		$all_membership_levels = get_option('wawp_all_memberships_key');
+		$all_membership_levels = get_option('wawp_all_levels_key');
 		$all_membership_groups = get_option('wawp_all_groups_key');
-		$current_page_id = $page->ID;
+		$current_post_id = $post->ID;
 		// Add a nonce field to check on save
-		wp_nonce_field(basename(__FILE__), 'wawp_page_access_control', 10, 2);
+		wp_nonce_field(basename(__FILE__), 'wawp_post_access_control', 10, 2);
 		?>
 			<!-- Membership Levels -->
 			<ul>
@@ -424,7 +424,7 @@ class WAIntegration {
             </li>
 			<?php
 			// Get checked levels from post meta data
-			$already_checked_levels = get_post_meta($current_page_id, WAIntegration::RESTRICTED_LEVELS);
+			$already_checked_levels = get_post_meta($current_post_id, WAIntegration::RESTRICTED_LEVELS);
 			if (isset($already_checked_levels) && !empty($already_checked_levels)) {
 				$already_checked_levels = $already_checked_levels[0];
 			}
@@ -461,7 +461,7 @@ class WAIntegration {
             </li>
 			<?php
 			// Get checked groups from post meta data
-			$already_checked_groups = get_post_meta($current_page_id, WAIntegration::RESTRICTED_GROUPS);
+			$already_checked_groups = get_post_meta($current_post_id, WAIntegration::RESTRICTED_GROUPS);
 			if (isset($already_checked_groups) && !empty($already_checked_groups)) {
 				$already_checked_groups = $already_checked_groups[0];
 			}
@@ -497,27 +497,27 @@ class WAIntegration {
 	}
 
 	/**
-	 * Adds post meta box when editing a page
+	 * Adds post meta box when editing a post
 	 */
-	public function page_access_add_post_meta_boxes() {
+	public function post_access_add_post_meta_boxes() {
 		// Get post types to add the meta boxes to
 		// Get all post types, including built-in WordPress post types and custom post types
 		$post_types = get_post_types(array('public' => true));
 
-		// Add meta box for page access
+		// Add meta box for post access
 		add_meta_box(
-			'wawp_page_access_meta_box_id', // ID
+			'wawp_post_access_meta_box_id', // ID
 			'Wild Apricot Access Control', // title
-			array($this, 'page_access_display'), // callback
+			array($this, 'post_access_display'), // callback
 			$post_types, // screen
 			'side', // location of meta box
 			'high' // priority in comparison to other meta boxes
 		);
 
-		// Add meta box for page's custom restriction message
+		// Add meta box for post's custom restriction message
 		add_meta_box(
-			'wawp_page_access_custom_message_id', // ID
-			'Individual Page Restriction Message', // title
+			'wawp_post_access_custom_message_id', // ID
+			'Individual Restriction Message', // title
 			array($this, 'individual_restriction_message_display'), // callback
 			$post_types, // screen
 			'normal', // location of meta box
@@ -528,12 +528,12 @@ class WAIntegration {
 	/**
 	 * Sets up the post meta data for Wild Apricot access control if valid Wild Apricot credentials have already been entered
 	 */
-	public function page_access_meta_boxes_setup() {
+	public function post_access_meta_boxes_setup() {
 		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
 		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 		if (isset($valid_wa_credentials) && $valid_wa_credentials) {
 			// Add meta boxes on the 'add_meta_boxes' hook
-			add_action('add_meta_boxes', array($this, 'page_access_add_post_meta_boxes'));
+			add_action('add_meta_boxes', array($this, 'post_access_add_post_meta_boxes'));
 		}
 	}
 
