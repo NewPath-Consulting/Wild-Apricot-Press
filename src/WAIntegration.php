@@ -209,6 +209,16 @@ class WAIntegration {
 				if (!is_user_logged_in()) {
 					return $restriction_message;
 				}
+				// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with Wild Apricot
+				// Get user's Wild Apricot ID -> if it does not exist, then the user is not synced with Wild Apricot
+				$current_user_ID = wp_get_current_user()->ID;
+				$user_wa_id = get_user_meta($current_user_ID, WAIntegration::WA_USER_ID_KEY, true);
+				if (empty($user_wa_id)) {
+					// Present notice that user is not synced with Wild Apricot
+					$restriction_message .= '<p style="color:red;">Please note that while you are logged into WordPress, you have not synced your account with Wild Apricot. Please <a href="'. $login_url .'">Log In</a> into your Wild Apricot account to sync your data in your WordPress site.</p>';
+					return $restriction_message;
+				}
+
 				// Get post meta data
 				// Get post's restricted groups
 				$post_restricted_groups = get_post_meta($current_post_ID, WAIntegration::RESTRICTED_GROUPS);
@@ -226,7 +236,6 @@ class WAIntegration {
 				}
 
 				// Get user meta data
-				$current_user_ID = wp_get_current_user()->ID;
 				$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
 				$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
 				$user_status = get_user_meta($current_user_ID, WAIntegration::WA_USER_STATUS_KEY, true);
