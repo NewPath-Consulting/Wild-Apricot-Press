@@ -550,23 +550,28 @@ class WAIntegration {
 		$organization = get_user_meta($user->ID, WAIntegration::WA_ORGANIZATION_KEY, true);
 		$user_groups = get_user_meta($user->ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
 		// Create list of user groups, if applicable
-		$user_groups = maybe_unserialize($user_groups[0]);
 		$group_list = '';
-		// Add comma after group only if it is NOT the last group
-		$i = 0;
-		$len = count($user_groups);
-		foreach ($user_groups as $key => $value) {
-			// Check if index is NOT the last index
-			if (!($i == $len - 1)) { // NOT last
-				$group_list .= $value . ', ';
-			} else {
-				$group_list .= $value;
+		if (!empty($user_groups)) {
+			$user_groups = maybe_unserialize($user_groups[0]);
+			// Add comma after group only if it is NOT the last group
+			$i = 0;
+			$len = count($user_groups);
+			foreach ($user_groups as $key => $value) {
+				// Check if index is NOT the last index
+				if (!($i == $len - 1)) { // NOT last
+					$group_list .= $value . ', ';
+				} else {
+					$group_list .= $value;
+				}
+				// Increment counter
+				$i++;
 			}
-			// Increment counter
-			$i++;
+		} else {
+			// Set user groups to empty array
+			$user_groups = array();
 		}
 		// Check if user has valid Wild Apricot credentials, and if so, display them
-		if (isset($membership_level) && isset($user_status) && isset($wa_account_id) && isset($organization)) { // valid
+		if (isset($membership_level) && isset($user_status) && isset($wa_account_id) && isset($organization) && isset($user_groups)) { // valid
 			// Display Wild Apricot parameters
 			?>
 			<h2>Wild Apricot Membership Details</h2>
