@@ -12,9 +12,22 @@ class WAWPApi {
 	 * @param string $wa_user_id is the user's Wild Apricot ID
 	 */
     public function __construct($access_token, $wa_user_id) {
+		self::my_log_file('constructing wawp api right here!');
         $this->access_token = $access_token;
         $this->wa_user_id = $wa_user_id;
+		add_filter('cron_schedules', array($this, 'wawp_add_cron_interval'));
+		// Action for CRON update
+		add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
     }
+
+	function wawp_add_cron_interval( $schedules ) {
+		self::my_log_file('thirty seconds here we come');
+		$schedules['wawp_refresh_rate'] = [
+			'interval' => 30,
+			'display'  => '30 Seconds'
+		];
+		return $schedules;
+	}
 
 	// Debugging
 	static function my_log_file( $msg, $name = '' )
@@ -141,6 +154,36 @@ class WAWPApi {
 		// Get all information for current user
         return $full_info;
     }
+
+	/**
+	 * Performs API calls to get new data from Wild Apricot and update the data in options table
+	 */
+	public function check_for_new_data() {
+		self::my_log_file('were running the cron!');
+		// Get membership levels
+		$updated_levels = get_membership_levels();
+		// Save updated levels to options table
+		update_option('wawp_all_levels_key', $updated_levels);
+
+		// Get membership groups
+		$updated_groups = get_membership_levels(true);
+		// Save updated groups to options table
+		update_option('wawp_all_groups_key', $updated_groups);
+	}
+
+	/**
+	 * Schedules a CRON update for updating data from Wild Apricot
+	 */
+	public function update_data_from_wa() {
+		self::my_log_file('lets update with cron!');
+		// Ensure that the event is not already scheduled
+		if (!wp_next_scheduled('wawp_check_for_new_wa_data')) {
+			// Schedule event
+			self::my_log_file('start schedule!');
+			wp_schedule_event(time(), 'hourly', 'wawp_check_for_new_wa_data');
+			// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		}
+	}
 
 	/**
 	 * Returns the membership levels of the current Wild Apricot organization

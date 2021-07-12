@@ -568,6 +568,9 @@ class MySettingsPage
             // Save membership levels and groups to options
             update_option('wawp_all_levels_key', $all_membership_levels);
             update_option('wawp_all_groups_key', $all_membership_groups);
+
+            // Schedule CRON update for updating the available membership levels and groups
+            $wawp_api_instance->update_data_from_wa();
         }
 
         // Sanitize menu dropdown
