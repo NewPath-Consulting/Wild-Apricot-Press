@@ -21,25 +21,26 @@ delete_option('wawp_wal_page_id');
 delete_option('wawp_wal_name');
 delete_option('wawp_wal_page_id');
 delete_option('wawp_license_form_nonce');
-delete_option('wawp_all_memberships_key');
+delete_option('wawp_all_levels_key');
 delete_option('wawp_all_groups_key');
 delete_option('wawp_wa_credentials_valid');
+delete_option('wawp_restriction_name');
+delete_option('wawp_restriction_status_name');
 
 // Delete the added post meta data to the restricted pages
 // Get array of restricted pages
-$restricted_pages = get_option('wawp_array_of_restricted_pages');
+$restricted_pages = get_option('wawp_array_of_restricted_posts');
 // Loop through each page and delete our extra post meta
-if (isset($restricted_pages) && !empty($restricted_pages)) {
+if (!empty($restricted_pages)) {
 	foreach ($restricted_pages as $restricted_page_id) {
 		delete_post_meta($restricted_page_id, 'wawp_restricted_groups');
 		delete_post_meta($restricted_page_id, 'wawp_restricted_levels');
-		delete_post_meta($restricted_page_id, 'wawp_is_page_restricted');
+		delete_post_meta($restricted_page_id, 'wawp_is_post_restricted');
+		delete_post_meta($restricted_page_id, 'wawp_individual_restriction_message_key');
 	}
 }
-// delete_post_meta(2, 'wawp_groups');
-// delete_post_meta(2, 'wawp_levels');
 // Delete restricted pages option value
-delete_option('wawp_array_of_restricted_pages');
+delete_option('wawp_array_of_restricted_posts');
 
 Addon::instance()::delete();
 

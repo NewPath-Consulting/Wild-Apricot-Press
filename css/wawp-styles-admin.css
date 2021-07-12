@@ -13,3 +13,23 @@
 .errorAlert {
 	color: red;
 }
+
+#wawp_restricted_message_textarea {
+	width: 80%;
+	height: 20em;
+}
+
+/* For mobile screen */
+@media only screen and (max-width: 600px) {
+	#wawp_restricted_message_textarea {
+		width: 100%;
+	}
+}
+
+/* Indent for checkboxes */
+.wawp_case_level {
+	margin-left: 8% !important;
+}
+.wawp_case_group {
+	margin-left: 8% !important;
+}
