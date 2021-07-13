@@ -460,7 +460,7 @@ class MySettingsPage
         
         foreach ($menu_items as $item) {
             //echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
-            echo "<input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . checked( in_array( esc_attr($item), $wawp_wal_login_logout_button ), 1 ) . ">";
+            echo "<input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . "\"" . checked( in_array( esc_attr($item), $wawp_wal_login_logout_button ), 1 ) . ">";
             echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label><br><br>";
             
         }
