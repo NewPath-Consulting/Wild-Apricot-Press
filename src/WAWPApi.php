@@ -17,11 +17,17 @@ class WAWPApi {
         $this->wa_user_id = $wa_user_id;
 		add_filter('cron_schedules', array($this, 'wawp_add_cron_interval'));
 		// Action for CRON update
-		add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		add_action('init', array($this, 'init'));
+		// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
     }
 
+	public function init() {
+		self::my_log_file('wwe are initing!');
+		add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+	}
+
 	function wawp_add_cron_interval( $schedules ) {
-		self::my_log_file('thirty seconds here we come');
+		// self::my_log_file('thirty seconds here we come');
 		$schedules['wawp_refresh_rate'] = [
 			'interval' => 30,
 			'display'  => '30 Seconds'
@@ -183,6 +189,7 @@ class WAWPApi {
 			wp_schedule_event(time(), 'hourly', 'wawp_check_for_new_wa_data');
 			// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
 		}
+		// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
 	}
 
 	/**

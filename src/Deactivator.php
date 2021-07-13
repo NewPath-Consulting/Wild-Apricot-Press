@@ -28,6 +28,12 @@ class Deactivator {
 
 		// Set valid Wild Apricot credentials to false because the plugin is not activated
 		update_option('wawp_wa_credentials_valid', false);
+
+		// Unschedule the CRON events
+		$next_event_timestamp = wp_next_scheduled('wawp_check_for_new_wa_data');
+		if ($next_event_timestamp) {
+			wp_unschedule_event($next_event_timestamp, 'wawp_check_for_new_wa_data');
+		}
 	}
 }
 ?>
