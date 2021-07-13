@@ -245,6 +245,7 @@ class MySettingsPage
             array( $this, 'login_logout_menu_callback' ), // Callback
             'wawp-wal-admin', // Page //so this could be changed to the other one?
             'wawp_wal_id' // Section
+            
         );
 
         // Registering and adding settings for the license key forms
@@ -436,7 +437,7 @@ class MySettingsPage
     /**
      * Get the desired menu to add the login/logout button
      */
-    public function login_logout_menu_callback() {
+    public function login_logout_menu_callback() { //yeet
         // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
         $menu_locations = get_nav_menu_locations();
         $menu_items = array();
@@ -453,17 +454,25 @@ class MySettingsPage
         //echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
         // Loop through each option
         //make a checkbox, will be checked if currently displayed
-        $current_locations = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
-        $checked = false;
-        if($current_locations != '') {
-            $checked =true;
-        }
+        $option_group = get_option('wawp_wal_name',[]);
+        $wawp_wal_login_logout_button = isset( $option_group['wawp_wal_login_logout_button'] )
+        ? (array) $option_group['wawp_wal_login_logout_button'] : [];
+        
         foreach ($menu_items as $item) {
             //echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
-            echo "<input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button]\" value=\"" . esc_attr($item) . "\" $checked : in_array(esc_attr($item), $current_locations) ? 'checked=\"checked\"' : '' :>";
+            echo "<input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . checked( in_array( esc_attr($item), $wawp_wal_login_logout_button ), 1 ) . ">";
             echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label><br><br>";
             
         }
+        //https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
+        /*$current_locations = get_option('wawp_wal_name', '');
+        if($current_locations != '') {
+            $current_locations = get_option('wawp_wal_name')['wawp_wal_login_logout_button'][];
+        }*/
+        
+
+
+
         //TODO make selected options be checked after, or give some indication
     }
 
