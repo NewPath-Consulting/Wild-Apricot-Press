@@ -23,7 +23,8 @@ class WAWPApi {
 
 	public function init() {
 		self::my_log_file('wwe are initing!');
-		add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'), 10, 0);
 	}
 
 	function wawp_add_cron_interval( $schedules ) {
@@ -186,10 +187,17 @@ class WAWPApi {
 		if (!wp_next_scheduled('wawp_check_for_new_wa_data')) {
 			// Schedule event
 			self::my_log_file('start schedule!');
-			wp_schedule_event(time(), 'hourly', 'wawp_check_for_new_wa_data');
+			wp_schedule_event(current_time('timestamp'), 'hourly', 'wawp_check_for_new_wa_data');
 			// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
 		}
-		// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		// is action actually registered?
+		$action_registered = has_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		if (!$action_registered) {
+			self::my_log_file('what is this hook?');
+		} else {
+			self::my_log_file('this hook is registered! :)');
+		}
+		self::my_log_file($action_registered);
 	}
 
 	/**
