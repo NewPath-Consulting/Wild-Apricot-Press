@@ -95,8 +95,11 @@ class WAIntegration {
 		}
 		
 		// Remove from header if it is automatically added
-		//is this var even used? if so, for each but doesn't look like it
-		//$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings  //YEET
+		
+		//commented out because this isn't ever used? be aware it is an array now
+		//$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings 
+
+
 		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
 		// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
 		$page_id = get_option('wawp_wal_page_id');
@@ -383,33 +386,32 @@ class WAIntegration {
 	 */
 	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
-	public function create_wa_login_logout($items, $args) {
-		// Get login url based on user's Wild Apricot site
-		// First, check if Wild Apricot credentials are valid
-		$wa_credentials_saved = get_option('wawp_wal_name');
-		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
-			// Create login url
-			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
-			$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
-			// Get current page id
-			// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
-			$current_page_id = get_queried_object_id();
-			$login_url = esc_url(add_query_arg(array(
-				'redirectId' => $current_page_id,
-			), $login_url));
-			// Check if user is logged in or logged out
-			//Yeet
-			$menus_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; //backtrack
-			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
-			foreach ($menus_to_add_button as $menu_to_add_button) {
-				if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
-					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
-				} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
-					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $login_url .'">Log In</a></li>';
-				}
+		public function create_wa_login_logout($items, $args) {
+			// Get login url based on user's Wild Apricot site
+			// First, check if Wild Apricot credentials are valid
+			$wa_credentials_saved = get_option('wawp_wal_name');
+			if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
+				// Create login url
+				// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
+				$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
+				// Get current page id
+				// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
+				$current_page_id = get_queried_object_id();
+				$login_url = esc_url(add_query_arg(array(
+					'redirectId' => $current_page_id,
+				), $login_url));
+				// Check if user is logged in or logged out, now an array
+				$menus_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; //backtrack
+				//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
+				foreach ($menus_to_add_button as $menu_to_add_button) {
+					if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
+						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
+					} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
+						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $login_url .'">Log In</a></li>';
+					}
+			}
+			return $items;
 		}
-		return $items;
 	}
-}
 }
 ?>

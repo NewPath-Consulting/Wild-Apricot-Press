@@ -239,11 +239,11 @@ class MySettingsPage
         );
 
         // Settings for Menu to add Login/Logout button
-        add_settings_field(    //YEET
+        add_settings_field(   
             'wawp_wal_login_logout_button', // ID
             'Menu:', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
-            'wawp-wal-admin', // Page //so this could be changed to the other one?
+            'wawp-wal-admin', // Page //possibly put on other one?
             'wawp_wal_id' // Section
             
         );
@@ -367,9 +367,7 @@ class MySettingsPage
         }
 
         // Sanitize menu dropdown
-        //$valid['wawp_wal_login_logout_button'] = sanitize_text_field($input['wawp_wal_login_logout_button']); //YEET
-        //sanatize array
-        //https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
+        //sanatize array https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
         $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
 
 		// Return array of valid inputs
@@ -437,7 +435,7 @@ class MySettingsPage
     /**
      * Get the desired menu to add the login/logout button
      */
-    public function login_logout_menu_callback() { //yeet
+    public function login_logout_menu_callback() {
         // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
         $menu_locations = get_nav_menu_locations();
         $menu_items = array();
@@ -446,35 +444,18 @@ class MySettingsPage
             // Append key to menu_items
             $menu_items[] = $key;
         }
-        //Checkbox options for menus to add login to
-        // checkboxes: https://www.w3schools.com/tags/att_input_type_checkbox.asp
         
-        //apparently you can just do it? : https://wpquestions.com/settings_API_how_to_create_a_multicheckbox_with_blog_categories/6682
-        // Display dropdown menu
-        //echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
-        // Loop through each option
-        //make a checkbox, will be checked if currently displayed
+        //https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
         $option_group = get_option('wawp_wal_name',[]);
         $wawp_wal_login_logout_button = isset( $option_group['wawp_wal_login_logout_button'] )
         ? (array) $option_group['wawp_wal_login_logout_button'] : [];
         
         foreach ($menu_items as $item) {
-            //echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
-            echo "<input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . "\"" .  ">";
-            //checked( in_array( esc_attr($item), $wawp_wal_login_logout_button ), 1 ) .
+            echo "<input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . "\"" . checked( in_array( esc_attr($item), $wawp_wal_login_logout_button ), 1 ) . ">";
+            //checked( in_array( esc_attr($item), $wawp_wal_login_logout_button ), 1 )
             echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label><br><br>";
             
         }
-        //https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
-        /*$current_locations = get_option('wawp_wal_name', '');
-        if($current_locations != '') {
-            $current_locations = get_option('wawp_wal_name')['wawp_wal_login_logout_button'][];
-        }*/
-        
-
-
-
-        //TODO make selected options be checked after, or give some indication
     }
 
     /**
