@@ -411,4 +411,5 @@ class WAIntegration {
 		return $items;
 	}
 }
+}
 ?>
