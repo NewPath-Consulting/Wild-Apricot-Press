@@ -5,6 +5,8 @@ class WAWPApi {
     private $access_token;
     private $wa_user_id;
 
+	const CRON_HOOK = 'wawp_cron_refresh_hook';
+
 	/**
 	 * Creates instance of class based on the user's access token and Wild Apricot user ID
 	 *
@@ -15,16 +17,17 @@ class WAWPApi {
 		self::my_log_file('constructing wawp api right here!');
         $this->access_token = $access_token;
         $this->wa_user_id = $wa_user_id;
-		add_filter('cron_schedules', array($this, 'wawp_add_cron_interval'));
+		// add_filter('cron_schedules', array($this, 'wawp_add_cron_interval'));
 		// Action for CRON update
-		add_action('init', array($this, 'init'));
+		// add_action('init', array($this, 'init'));
 		// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		// add_action(self::CRON_HOOK, array($this, 'updateWhatToMineAPI'));
     }
 
-	public function init() {
+	public static function init_api() {
 		self::my_log_file('wwe are initing!');
 		// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
-		add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'), 10, 0);
+		add_action(self::CRON_HOOK, array('WAWPApi', 'updateWhatToMineAPI'));
 	}
 
 	function wawp_add_cron_interval( $schedules ) {
@@ -35,6 +38,46 @@ class WAWPApi {
 		];
 		return $schedules;
 	}
+
+	public static function updateWhatToMineAPI()
+    {
+        self::my_log_file('congrats! we working! we won!');
+    }
+
+	/**
+	 * Setups up CRON job
+	 */
+	public static function setupCronJob()
+    {
+        //Use wp_next_scheduled to check if the event is already scheduled
+        $timestamp = wp_next_scheduled( self::CRON_HOOK );
+
+        //If $timestamp === false schedule the event since it hasn't been done previously
+        if( $timestamp === false ){
+            //Schedule the event for right now, then to repeat daily using the hook
+            wp_schedule_event( current_time('timestamp'), 'hourly', self::CRON_HOOK );
+        }
+		// is action actually registered?
+		$action_registered = has_action(self::CRON_HOOK, array('WAWPApi', 'updateWhatToMineAPI'));
+		if (!$action_registered) {
+			self::my_log_file('what is this hook?');
+		} else {
+			self::my_log_file('this hook is registered! :)');
+		}
+		self::my_log_file($action_registered);
+    }
+
+	/**
+	 * Removes CRON job
+	 */
+	public static function unsetCronJob()
+    {
+        // Get the timestamp for the next event.
+        $timestamp = wp_next_scheduled( self::CRON_HOOK );
+		if ($timestamp) {
+        	wp_unschedule_event( $timestamp, self::CRON_HOOK );
+		}
+    }
 
 	// Debugging
 	static function my_log_file( $msg, $name = '' )
@@ -165,15 +208,15 @@ class WAWPApi {
 	/**
 	 * Performs API calls to get new data from Wild Apricot and update the data in options table
 	 */
-	public function check_for_new_data() {
+	public static function check_for_new_data() {
 		self::my_log_file('were running the cron!');
 		// Get membership levels
-		$updated_levels = get_membership_levels();
+		$updated_levels = self::get_membership_levels();
 		// Save updated levels to options table
 		update_option('wawp_all_levels_key', $updated_levels);
 
 		// Get membership groups
-		$updated_groups = get_membership_levels(true);
+		$updated_groups = self::get_membership_levels(true);
 		// Save updated groups to options table
 		update_option('wawp_all_groups_key', $updated_groups);
 	}
@@ -181,7 +224,7 @@ class WAWPApi {
 	/**
 	 * Schedules a CRON update for updating data from Wild Apricot
 	 */
-	public function update_data_from_wa() {
+	public static function update_data_from_wa() {
 		self::my_log_file('lets update with cron!');
 		// Ensure that the event is not already scheduled
 		if (!wp_next_scheduled('wawp_check_for_new_wa_data')) {
@@ -191,7 +234,7 @@ class WAWPApi {
 			// add_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
 		}
 		// is action actually registered?
-		$action_registered = has_action('wawp_check_for_new_wa_data', array($this, 'check_for_new_data'));
+		$action_registered = has_action('wawp_check_for_new_wa_data', array('WAWPApi', 'check_for_new_data'));
 		if (!$action_registered) {
 			self::my_log_file('what is this hook?');
 		} else {

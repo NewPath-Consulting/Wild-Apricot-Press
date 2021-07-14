@@ -16,6 +16,8 @@ use function PHPSTORM_META\map;
 
 class MySettingsPage
 {
+    const CRON_HOOK = 'wawp_cron_refresh_hook';
+
     /**
      * Holds the values to be used in the fields callbacks
      */
@@ -40,6 +42,14 @@ class MySettingsPage
         if (!get_option('wawp_restriction_name')) {
             add_option('wawp_restriction_name', '<h2>Restricted Content!</h2> <p>Oops! This post is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the post!</p>');
         }
+
+        // Add actions for cron update
+        add_action(self::CRON_HOOK, array($this, 'updateWhatToMineAPI'));
+    }
+
+    public function updateWhatToMineAPI()
+    {
+        self::my_log_file('congrats! we working! we won!');
     }
 
     // Debugging
@@ -475,6 +485,29 @@ class MySettingsPage
     }
 
     /**
+	 * Setups up CRON job
+	 */
+	public function setupCronJob()
+    {
+        //Use wp_next_scheduled to check if the event is already scheduled
+        $timestamp = wp_next_scheduled( self::CRON_HOOK );
+
+        //If $timestamp === false schedule the event since it hasn't been done previously
+        if( $timestamp === false ){
+            //Schedule the event for right now, then to repeat daily using the hook
+            wp_schedule_event( current_time('timestamp'), 'hourly', self::CRON_HOOK );
+        }
+		// is action actually registered?
+		$action_registered = has_action(self::CRON_HOOK, array($this, 'updateWhatToMineAPI'));
+		if (!$action_registered) {
+			self::my_log_file('what is this hook?');
+		} else {
+			self::my_log_file('this hook is registered! :)');
+		}
+		self::my_log_file($action_registered);
+    }
+
+    /**
      * Sanitize each setting field as needed
      *
      * @param array $input Contains all settings fields as array keys
@@ -570,8 +603,12 @@ class MySettingsPage
             update_option('wawp_all_groups_key', $all_membership_groups);
 
             // Schedule CRON update for updating the available membership levels and groups
-            $wawp_api_instance->init();
-            $wawp_api_instance->update_data_from_wa();
+            // WAWPApi::init_api();
+            // WAWPApi::update_data_from_wa();
+            // WAWPApi::init_api();
+            // WAWPApi::setupCronJob();
+            // Setup cron job
+            $this->setupCronJob();
         }
 
         // Sanitize menu dropdown
