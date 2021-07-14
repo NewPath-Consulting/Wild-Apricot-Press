@@ -404,7 +404,7 @@ class WAIntegration {
 				$menus_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; //backtrack
 				
 				//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
-				if(!empty($menus_to_add_button) {
+				if(!empty($menus_to_add_button)) {
 					foreach ($menus_to_add_button as $menu_to_add_button) {
 						if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
 							$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
