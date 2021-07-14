@@ -16,6 +16,18 @@ class Deactivator {
 			$login_page['post_status'] = 'private';
 			wp_update_post($login_page);
 		}
+
+		// Remove custom, Wild Apricot roles
+		$old_wa_roles = get_option('wawp_all_levels_key');
+        if (!empty($old_wa_roles)) {
+            // Loop through each role and delete it
+            foreach ($old_wa_roles as $old_role) {
+                remove_role('wawp_' . str_replace(' ', '', $old_role));
+            }
+        }
+
+		// Set valid Wild Apricot credentials to false because the plugin is not activated
+		update_option('wawp_wa_credentials_valid', false);
 	}
 }
 ?>

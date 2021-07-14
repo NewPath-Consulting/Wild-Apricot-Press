@@ -7,6 +7,13 @@ use WAWP\Addon;
 
 use function PHPSTORM_META\map;
 
+// Include css file
+/*?>
+<style>
+<?php include 'CSS/main.css'; ?>
+</style>
+<?php*/
+
 class MySettingsPage
 {
     /**
@@ -29,7 +36,24 @@ class MySettingsPage
             // Create option
             add_option('wawp_wal_name');
         }
+        // Set default global page restriction message
+        if (!get_option('wawp_restriction_name')) {
+            add_option('wawp_restriction_name', '<h2>Restricted Content!</h2> <p>Oops! This post is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the post!</p>');
+        }
     }
+
+    // Debugging
+	static function my_log_file( $msg, $name = '' )
+	{
+		// Print the name of the calling function if $name is left empty
+		$trace=debug_backtrace();
+		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+		$error_dir = '/Applications/MAMP/logs/php_error.log';
+		$msg = print_r( $msg, true );
+		$log = $name . "  |  " . $msg . "\n";
+		error_log( $log, 3, $error_dir );
+	}
 
     /**
      * Add options page
@@ -75,8 +99,70 @@ class MySettingsPage
      */
     public function create_admin_page()
     {
-        // Set class property
-        $this->options = get_option( 'wawp_wal_name' );
+        ?>
+        <form method="post" action="options.php">
+			<?php
+                // Nonce for verification
+                wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
+				// This prints out all hidden setting fields
+				settings_fields( 'wawp_restriction_group' );
+                settings_fields('wawp_restriction_status_group');
+				do_settings_sections( 'wawp-wal-admin' );
+				submit_button();
+			?>
+		</form>
+        <?php
+    }
+
+    /**
+     * Displays the checkboxes for selecting the restricted status(es)
+     */
+    public function restriction_status_callback() {
+        // Display checkboxes for each Wild Apricot status
+        // List of statuses here: https://gethelp.wildapricot.com/en/articles/137-member-and-contact-statuses
+        $list_of_statuses = array(
+            'Active' => 'Active',
+            'Lapsed' => 'Lapsed',
+            'PendingNew' => 'Pending - New',
+            'PendingRenewal' => 'Pending - Renewal',
+            'PendingLevel' => 'Pending - Level change'
+        );
+        // Should 'suspended' and 'archived' be included?
+
+        // Load in the list of restricted statuses, if applicable
+        $saved_statuses = get_option('wawp_restriction_status_name');
+        // Check if saved statuses exists; if not, then create an empty array
+        if (empty($saved_statuses)) { // create empty array
+            $saved_statuses = array();
+        }
+
+        // Loop through the list of statuses and add each as a checkbox
+        foreach ($list_of_statuses as $status_key => $status) {
+            // Check if checkbox is already checked off
+            $status_checked = '';
+            if (in_array($status_key, $saved_statuses)) {
+                $status_checked = 'checked';
+            }
+            ?>
+            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo htmlspecialchars($status_key); ?>" <?php echo($status_checked); ?>/> <?php echo htmlspecialchars($status); ?> </input><br>
+            <?php
+        }
+    }
+
+    /**
+     * Displays the restriction message text area
+     */
+    public function restriction_message_callback() {
+        // Add wp editor
+        // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
+        // https://developer.wordpress.org/reference/functions/wp_editor/
+        // Get default or saved restriction message
+        $initial_content = get_option('wawp_restriction_name');
+        $editor_id = 'wawp_restricted_message_textarea';
+        $editor_name = 'wawp_restriction_name';
+        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
+        // Create WP editor
+        wp_editor($initial_content, $editor_id, $editor_settings);
     }
 
 	/**
@@ -100,7 +186,7 @@ class MySettingsPage
 					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select Settings. On the Global settings screen, select the Authorized applications option (under Integration). <br><br>
 					      <img src="https://user-images.githubusercontent.com/458134/122569603-e8e44a80-d018-11eb-86b9-0386c6d23a5f.png" alt="Settings > Integration > Authorized applications" width="500"> <br>
 					   </li>
-					   <li>On the Authorized applications screen, click the Authorize application button in the top left corner. 
+					   <li>On the Authorized applications screen, click the Authorize application button in the top left corner.
 					      <br><br>
 					      <img src="https://user-images.githubusercontent.com/458134/122569583-e2ee6980-d018-11eb-879a-bbbcbecbc349.png" alt="Authorized application button" width="500"> <br>
 					   </li>
@@ -148,7 +234,7 @@ class MySettingsPage
                         wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
 						// This prints out all hidden setting fields
 						settings_fields( 'wawp_wal_group' );
-						do_settings_sections( 'wawp-wal-admin' );
+						do_settings_sections( 'wawp-login' );
 						submit_button();
 					?>
 					</form>
@@ -157,9 +243,13 @@ class MySettingsPage
                         // $successful_credentials_entered = get_option('wawp_wal_success');
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Invalid credentials! Please try again!</p>';
+                            // Save that wawp credentials are not fully activated
+                            update_option('wawp_wa_credentials_valid', false);
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
 							echo '<p style="color:green">Success! Credentials saved!</p>';
+                            // Save that wawp credentials have been fully activated
+                            update_option('wawp_wa_credentials_valid', true);
                             // Implement hook here to tell Wild Apricot to connect to these credentials
                             do_action('wawp_wal_credentials_obtained');
 						}
@@ -182,6 +272,41 @@ class MySettingsPage
             ?> </form>
         </div>
         <?php
+    }
+
+    /**
+     * Sanitize restriction
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_status_sanitize($input) {
+        $valid = array();
+        // Loop through each checkbox and sanitize
+        if (!empty($input)) {
+            foreach ($input as $key => $box) {
+                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+            }
+        }
+        // Return sanitized value
+        return $valid;
+    }
+
+    /**
+     * Sanitize restriction message
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_sanitize($input) {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
+            wp_die('Your nonce for the restriction message could not be verified.');
+        }
+		// Create valid variable that will hold the valid input
+        // Sanitize wp editor
+        // https://wordpress.stackexchange.com/questions/262796/sanitize-content-from-wp-editor
+		$valid = wp_kses_post($input);
+        // Return valid input
+        return $valid;
     }
 
     /**
@@ -208,7 +333,7 @@ class MySettingsPage
             'wawp_wal_id', // ID
             'Wild Apricot Authorized Application Credentials', // Title
             array( $this, 'wal_print_section_info' ), // Callback
-            'wawp-wal-admin' // Page
+            'wawp-login' // Page
         );
 
 		// Settings for API Key
@@ -216,7 +341,7 @@ class MySettingsPage
             'wawp_wal_api_key', // ID
             'API Key:', // Title
             array( $this, 'api_key_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-login', // Page
             'wawp_wal_id' // Section
         );
 
@@ -225,7 +350,7 @@ class MySettingsPage
             'wawp_wal_client_id', // ID
             'Client ID:', // Title
             array( $this, 'client_id_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-login', // Page
             'wawp_wal_id' // Section
         );
 
@@ -234,7 +359,7 @@ class MySettingsPage
             'wawp_wal_client_secret', // ID
             'Client Secret:', // Title
             array( $this, 'client_secret_callback' ), // Callback
-            'wawp-wal-admin', // Page
+            'wawp-login', // Page
             'wawp_wal_id' // Section
         );
 
@@ -243,7 +368,7 @@ class MySettingsPage
             'wawp_wal_login_logout_button', // ID
             'Menu:', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
-            'wawp-wal-admin', // Page //possibly put on other one?
+            'wawp-login', // Page // Possibly put somewhere else
             'wawp_wal_id' // Section
             
         );
@@ -292,6 +417,62 @@ class MySettingsPage
                 array('slug' => $slug, 'title', $title) // args for callback
             );
         }
+
+        // ------------------------ Restriction status ---------------------------
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'restriction_status_sanitize'),
+            'default' => NULL
+        );
+        register_setting(
+            'wawp_restriction_status_group', // group name for settings
+            'wawp_restriction_status_name', // name of option to sanitize and save
+            $register_args
+        );
+        // Add settings section and field for restriction status
+        add_settings_section(
+            'wawp_restriction_status_id', // ID
+            'Wild Apricot Status Restriction', // title
+            array($this, 'print_restriction_status_info'), // callback
+            'wawp-wal-admin' // page
+        );
+        // Field for membership statuses
+        add_settings_field(
+            'wawp_restriction_status_field_id', // ID
+            'Membership Status(es):', // title
+            array($this, 'restriction_status_callback'), // callback
+            'wawp-wal-admin', // page
+            'wawp_restriction_status_id' // section
+        );
+
+        // ------------------------ Restriction page ---------------------------
+        // Register setting
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'restriction_sanitize'),
+            'default' => NULL
+        );
+        register_setting(
+            'wawp_restriction_group', // group name for settings
+            'wawp_restriction_name', // name of option to sanitize and save
+            $register_args
+        );
+
+        // Add settings section and field for restriction message
+        add_settings_section(
+            'wawp_restriction_id', // ID
+            'Global Restriction Message', // title
+            array($this, 'print_restriction_info'), // callback
+            'wawp-wal-admin' // page
+        );
+        // Field for restriction message
+        add_settings_field(
+            'wawp_restriction_field_id', // ID
+            'Restriction Message:', // title
+            array($this, 'restriction_message_callback'), // callback
+            'wawp-wal-admin', // page
+            'wawp_restriction_id' // section
+        );
     }
 
     /**
@@ -364,6 +545,30 @@ class MySettingsPage
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
+        } else { // Valid input and valid response
+            // Extract access token and ID
+            $access_token = $valid_api['access_token'];
+            $account_id = $valid_api['Permissions'][0]['AccountId'];
+            // Get all membership levels and groups
+            $wawp_api_instance = new WAWPApi($access_token, $account_id);
+            $all_membership_levels = $wawp_api_instance->get_membership_levels();
+            // Create a new role for each membership level
+            // Delete old roles if applicable
+            $old_wa_roles = get_option('wawp_all_levels_key');
+            if (isset($old_wa_roles) && !empty($old_wa_roles)) {
+                // Loop through each role and delete it
+                foreach ($old_wa_roles as $old_role) {
+                    remove_role('wawp_' . str_replace(' ', '', $old_role));
+                }
+            }
+            foreach ($all_membership_levels as $level) {
+                // In identifier, remove spaces so that the role can become a single word
+                add_role('wawp_' . str_replace(' ', '', $level), $level);
+            }
+            $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
+            // Save membership levels and groups to options
+            update_option('wawp_all_levels_key', $all_membership_levels);
+            update_option('wawp_all_groups_key', $all_membership_groups);
         }
 
         // Sanitize menu dropdown
@@ -372,6 +577,20 @@ class MySettingsPage
 
 		// Return array of valid inputs
 		return $valid;
+    }
+
+    /**
+     * Print instructions on how to use the restriction status checkboxes
+     */
+    public function print_restriction_status_info() {
+        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts.';
+    }
+
+    /**
+     * Print the Restriction text
+     */
+    public function print_restriction_info() {
+        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the Wild Apricot membership level(s) or group(s) required to access a restricted post. Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
     }
 
     /**

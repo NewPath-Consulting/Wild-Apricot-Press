@@ -107,7 +107,7 @@ class WAWPApi {
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
 		$data = self::response_to_data($response);
-		self::my_log_file($data);
+		//self::my_log_file($data);
 
 		// Get new access token from data
 		$new_access_token = $data['AccessToken']; // ??
@@ -122,12 +122,24 @@ class WAWPApi {
 	 */
     public function get_info_on_current_user() {
         // Get details of current WA user with API request
+		// Get user's contact ID
         $args = $this->request_data_args($this->access_token);
-		$contact_info = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
-
-        // Return contact information
+		$contact_info = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
         $contact_info = self::response_to_data($contact_info);
-        return $contact_info;
+		// Get if user is administrator or not
+		$is_administrator = $contact_info['IsAccountAdministrator'];
+		// Perform API call based on if user is administrator or not
+		$user_data_api = NULL;
+		if (isset($is_administrator) && $is_administrator == '1') { // user is administrator
+			$contact_id = $contact_info['Id'];
+			$user_data_api = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
+		} else { // not administrator
+			$user_data_api = wp_remote_get('https://api.wildapricot.org/publicview/v1/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
+		}
+		// Extract body
+		$full_info = self::response_to_data($user_data_api);
+		// Get all information for current user
+        return $full_info;
     }
 
 	/**
@@ -135,13 +147,30 @@ class WAWPApi {
 	 *
 	 * @return $membership_levels holds the membership levels from Wild Apricot
 	 */
-    public function get_membership_levels() {
+    public function get_membership_levels($request_groups = false) {
         $args = $this->request_data_args();
-        $url = 'https://api.wildapricot.org/publicview/v1/accounts/' . $this->wa_user_id . '/membershiplevels';
-        $membership_levels = wp_remote_get($url, $args);
+		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/membershiplevels';
+		if ($request_groups) {
+        	$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/membergroups';
+		}
+        $membership_levels_response = wp_remote_get($url, $args);
 
         // Return membership levels
-        $membership_levels = self::response_to_data($membership_levels);
+        $membership_levels_response = self::response_to_data($membership_levels_response);
+		// self::my_log_file($membership_levels_response);
+
+		// Extract membership levels into array
+		$membership_levels = array();
+		if (!empty($membership_levels_response)) {
+			foreach ($membership_levels_response as $level) {
+				// Get current key and level
+				$current_key = $level['Id'];
+				$current_level = $level['Name'];
+				// Set level to membership_levels array
+				$membership_levels[$current_key] = $current_level;
+			}
+		}
+
         return $membership_levels;
     }
 
