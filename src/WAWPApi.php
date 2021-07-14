@@ -203,7 +203,7 @@ class WAWPApi {
 				$membership_levels[$current_key] = $current_level;
 			}
 		}
-
+		self::my_log_file($membership_levels);
         return $membership_levels;
     }
 

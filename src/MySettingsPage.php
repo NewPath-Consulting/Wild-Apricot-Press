@@ -45,6 +45,9 @@ class MySettingsPage
 
         // Add actions for cron update
         add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'));
+
+        // Include files
+        require_once('DataEncryption.php');
     }
 
     public function cron_update_wa_memberships() {
@@ -53,19 +56,37 @@ class MySettingsPage
         // Get access token and account id
         $access_token = get_transient('wawp_admin_access_token');
         $wa_account_id = get_transient('wawp_admin_account_id');
+        if (!empty($access_token) && !empty($wa_account_id)) {
+            $dataEncryption = new DataEncryption();
+            $access_token = $dataEncryption->decrypt($access_token);
+            $wa_account_id = $dataEncryption->decrypt($wa_account_id);
 
-        // Create WAWP Api instance
-        $wawp_api = new WAWPApi($access_token, $wa_account_id);
+            // Create WAWP Api instance
+            $wawp_api = new WAWPApi($access_token, $wa_account_id);
 
-        // Get membership levels
-		$updated_levels = $wawp_api->get_membership_levels();
-		// Save updated levels to options table
-		update_option('wawp_all_levels_key', $updated_levels);
+            // Get membership levels
+            $updated_levels = $wawp_api->get_membership_levels();
+            // Save updated levels to options table
+            update_option('wawp_all_levels_key', $updated_levels);
 
-		// Get membership groups
-		$updated_groups = $wawp_api->get_membership_levels(true);
-		// Save updated groups to options table
-		update_option('wawp_all_groups_key', $updated_groups);
+            // Get membership groups
+            $updated_groups = $wawp_api->get_membership_levels(true);
+            // Save updated groups to options table
+            update_option('wawp_all_groups_key', $updated_groups);
+        }
+
+        // // Create WAWP Api instance
+        // $wawp_api = new WAWPApi($access_token, $wa_account_id);
+
+        // // Get membership levels
+		// $updated_levels = $wawp_api->get_membership_levels();
+		// // Save updated levels to options table
+		// update_option('wawp_all_levels_key', $updated_levels);
+
+		// // Get membership groups
+		// $updated_groups = $wawp_api->get_membership_levels(true);
+		// // Save updated groups to options table
+		// update_option('wawp_all_groups_key', $updated_groups);
     }
 
     // Debugging
@@ -554,7 +575,7 @@ class MySettingsPage
         // Encrypt values if they are valid
         $entered_valid = true;
         $entered_api_key = '';
-        require_once('DataEncryption.php');
+        // require_once('DataEncryption.php');
 		$dataEncryption = new DataEncryption();
         // Check if inputs are valid
         if ($valid['wawp_wal_api_key'] !== $input['wawp_wal_api_key'] || $input['wawp_wal_api_key'] == '') { // incorrect api key
