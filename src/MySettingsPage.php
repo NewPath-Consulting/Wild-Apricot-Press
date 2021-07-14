@@ -364,12 +364,13 @@ class MySettingsPage
         );
 
         // Settings for Menu to add Login/Logout button
-        add_settings_field(
+        add_settings_field(   
             'wawp_wal_login_logout_button', // ID
             'Menu:', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
-            'wawp-login', // Page
+            'wawp-login', // Page // Possibly put somewhere else
             'wawp_wal_id' // Section
+            
         );
 
         // Registering and adding settings for the license key forms
@@ -571,7 +572,8 @@ class MySettingsPage
         }
 
         // Sanitize menu dropdown
-        $valid['wawp_wal_login_logout_button'] = sanitize_text_field($input['wawp_wal_login_logout_button']);
+        //sanatize array https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
+        $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
 
 		// Return array of valid inputs
 		return $valid;
@@ -617,6 +619,7 @@ class MySettingsPage
 		// Check if api key has been set; if so, echo that the client secret has been set!
 		if (isset($this->options['wawp_wal_api_key']) && $this->options['wawp_wal_api_key'] != '') {
 			echo "<p>API Key is set!</p>";
+            //TODO say which WA account this is (not needed but would be nice)
 		}
     }
 
@@ -660,11 +663,16 @@ class MySettingsPage
             // Append key to menu_items
             $menu_items[] = $key;
         }
-        // Display dropdown menu
-        echo "<select id='wawp_selected_menu' name='wawp_wal_name[wawp_wal_login_logout_button]'>";
-        // Loop through each option
+        
+        //https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
+        $option_group = get_option('wawp_wal_name',[]);
+        $wawp_wal_login_logout_button = isset( $option_group['wawp_wal_login_logout_button'] )
+        ? (array) $option_group['wawp_wal_login_logout_button'] : [];
+        
         foreach ($menu_items as $item) {
-            echo "<option value='" . esc_attr( $item ) . "' >" . esc_html( $item ) . "</option>";
+            echo "<div><input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . "\"" . (in_array( esc_attr($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
+            echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label></div>";
+            
         }
     }
 
