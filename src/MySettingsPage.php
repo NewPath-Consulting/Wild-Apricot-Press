@@ -44,12 +44,24 @@ class MySettingsPage
         }
 
         // Add actions for cron update
-        add_action(self::CRON_HOOK, array($this, 'updateWhatToMineAPI'));
+        add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'), 10, 2);
     }
 
-    public function updateWhatToMineAPI()
-    {
-        self::my_log_file('congrats! we working! we won!');
+    public function cron_update_wa_memberships($access_token, $wa_user_id) {
+        self::my_log_file('updating wa memberships...');
+
+        // Create WAWP Api instance
+        $wawp_api = new WAWPApi($access_token, $wa_user_id);
+
+        // Get membership levels
+		$updated_levels = $wawp_api->get_membership_levels();
+		// Save updated levels to options table
+		update_option('wawp_all_levels_key', $updated_levels);
+
+		// Get membership groups
+		$updated_groups = $wawp_api->get_membership_levels(true);
+		// Save updated groups to options table
+		update_option('wawp_all_groups_key', $updated_groups);
     }
 
     // Debugging
@@ -487,24 +499,19 @@ class MySettingsPage
     /**
 	 * Setups up CRON job
 	 */
-	public function setupCronJob()
+	public function setup_cron_job($access_token, $wa_user_id)
     {
+        // Create arguments
+        $args = array($access_token, $wa_user_id);
+
         //Use wp_next_scheduled to check if the event is already scheduled
-        $timestamp = wp_next_scheduled( self::CRON_HOOK );
+        $timestamp = wp_next_scheduled(self::CRON_HOOK, $args);
 
         //If $timestamp === false schedule the event since it hasn't been done previously
-        if( $timestamp === false ){
+        if (!$timestamp) {
             //Schedule the event for right now, then to repeat daily using the hook
-            wp_schedule_event( current_time('timestamp'), 'hourly', self::CRON_HOOK );
+            wp_schedule_event(current_time('timestamp'), 'hourly', self::CRON_HOOK, $args);
         }
-		// is action actually registered?
-		$action_registered = has_action(self::CRON_HOOK, array($this, 'updateWhatToMineAPI'));
-		if (!$action_registered) {
-			self::my_log_file('what is this hook?');
-		} else {
-			self::my_log_file('this hook is registered! :)');
-		}
-		self::my_log_file($action_registered);
     }
 
     /**
@@ -603,12 +610,7 @@ class MySettingsPage
             update_option('wawp_all_groups_key', $all_membership_groups);
 
             // Schedule CRON update for updating the available membership levels and groups
-            // WAWPApi::init_api();
-            // WAWPApi::update_data_from_wa();
-            // WAWPApi::init_api();
-            // WAWPApi::setupCronJob();
-            // Setup cron job
-            $this->setupCronJob();
+            $this->setup_cron_job($access_token, $account_id);
         }
 
         // Sanitize menu dropdown
