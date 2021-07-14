@@ -23,10 +23,30 @@ class WAWPApi {
 	 */
 	public static function unsetCronJob()
     {
-        // Get the timestamp for the next event.
-        $timestamp = wp_next_scheduled( self::CRON_HOOK );
+		// // Get args from transients
+		// $access_token = get_transient('wawp_admin_access_token');
+		// $wa_account_id = get_transient('wawp_admin_account_id');
+		// // Check that access token and account ID are valid
+		// if (!empty($access_token) && !empty($wa_account_id)) {
+		// 	$dataEncryption = new DataEncryption();
+		// 	$access_token = $dataEncryption->decrypt($access_token);
+		// 	$wa_account_id = $dataEncryption->decrypt($wa_account_id);
+		// 	// Construct arguments
+		// 	$args = array($access_token, $wa_account_id);
+		// 	self::my_log_file($args);
+		// 	// // Get the timestamp for the next event.
+		// 	// $timestamp = wp_next_scheduled(self::CRON_HOOK, $args);
+		// 	// if ($timestamp) {
+		// 	// 	self::my_log_file('we have an unschedule!');
+		// 	// 	wp_unschedule_event($timestamp, self::CRON_HOOK, $args);
+		// 	// }
+		// }
+
+		// Get the timestamp for the next event.
+		$timestamp = wp_next_scheduled(self::CRON_HOOK);
 		if ($timestamp) {
-        	wp_unschedule_event( $timestamp, self::CRON_HOOK );
+			self::my_log_file('we have an unschedule!');
+			wp_unschedule_event($timestamp, self::CRON_HOOK);
 		}
     }
 
@@ -170,6 +190,7 @@ class WAWPApi {
 
         // Return membership levels
         $membership_levels_response = self::response_to_data($membership_levels_response);
+		// self::my_log_file($membership_levels_response);
 
 		// Extract membership levels into array
 		$membership_levels = array();

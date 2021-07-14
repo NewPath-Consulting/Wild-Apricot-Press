@@ -44,14 +44,18 @@ class MySettingsPage
         }
 
         // Add actions for cron update
-        add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'), 10, 2);
+        add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'));
     }
 
-    public function cron_update_wa_memberships($access_token, $wa_user_id) {
+    public function cron_update_wa_memberships() {
         self::my_log_file('updating wa memberships...');
 
+        // Get access token and account id
+        $access_token = get_transient('wawp_admin_access_token');
+        $wa_account_id = get_transient('wawp_admin_account_id');
+
         // Create WAWP Api instance
-        $wawp_api = new WAWPApi($access_token, $wa_user_id);
+        $wawp_api = new WAWPApi($access_token, $wa_account_id);
 
         // Get membership levels
 		$updated_levels = $wawp_api->get_membership_levels();
@@ -499,18 +503,18 @@ class MySettingsPage
     /**
 	 * Setups up CRON job
 	 */
-	public function setup_cron_job($access_token, $wa_user_id)
+	public static function setup_cron_job()
     {
         // Create arguments
-        $args = array($access_token, $wa_user_id);
+        // $args = array($access_token, $wa_account_id);
 
         //Use wp_next_scheduled to check if the event is already scheduled
-        $timestamp = wp_next_scheduled(self::CRON_HOOK, $args);
+        // $timestamp = wp_next_scheduled(self::CRON_HOOK, $args);
 
         //If $timestamp === false schedule the event since it hasn't been done previously
-        if (!$timestamp) {
+        if (!wp_next_scheduled(self::CRON_HOOK)) {
             //Schedule the event for right now, then to repeat daily using the hook
-            wp_schedule_event(current_time('timestamp'), 'hourly', self::CRON_HOOK, $args);
+            wp_schedule_event(current_time('timestamp'), 'hourly', self::CRON_HOOK);
         }
     }
 
@@ -578,6 +582,7 @@ class MySettingsPage
         if ($entered_valid) {
             require_once('WAWPApi.php');
             $valid_api = WAWPApi::is_application_valid($entered_api_key);
+            // self::my_log_file($valid_api);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
         if ($valid_api == false || !$entered_valid) {
@@ -585,9 +590,13 @@ class MySettingsPage
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
         } else { // Valid input and valid response
-            // Extract access token and ID
+            // Extract access token and ID, as well as expiring time
             $access_token = $valid_api['access_token'];
             $account_id = $valid_api['Permissions'][0]['AccountId'];
+            $expiring_time = $valid_api['expires_in'];
+            // Store access token and account ID as transients
+            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
+            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
             // Get all membership levels and groups
             $wawp_api_instance = new WAWPApi($access_token, $account_id);
             $all_membership_levels = $wawp_api_instance->get_membership_levels();
@@ -610,7 +619,7 @@ class MySettingsPage
             update_option('wawp_all_groups_key', $all_membership_groups);
 
             // Schedule CRON update for updating the available membership levels and groups
-            $this->setup_cron_job($access_token, $account_id);
+            self::setup_cron_job();
         }
 
         // Sanitize menu dropdown

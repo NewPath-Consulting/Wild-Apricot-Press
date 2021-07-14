@@ -42,6 +42,10 @@ if (!empty($restricted_pages)) {
 // Delete restricted pages option value
 delete_option('wawp_array_of_restricted_posts');
 
+// Delete transients, even if they have not expired yet
+delete_transient('wawp_admin_access_token');
+delete_transient('wawp_admin_account_id');
+
 Addon::instance()::delete();
 
 

@@ -50,6 +50,9 @@ class Activator {
 			update_option('wawp_wa_credentials_valid', true);
 			// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
 			do_action('wawp_wal_credentials_obtained');
+			// Also create CRON event to refresh the membership levels/groups
+			require_once('MySettingsPage.php');
+			MySettingsPage::setup_cron_job();
 		}
 	}
 
