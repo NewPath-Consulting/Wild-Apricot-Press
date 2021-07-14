@@ -73,6 +73,35 @@ class MySettingsPage
             $updated_groups = $wawp_api->get_membership_levels(true);
             // Save updated groups to options table
             update_option('wawp_all_groups_key', $updated_groups);
+
+            // If the number of updated groups/levels is less than the number of old groups/levels, then this means that one or more group/level has been deleted
+            // So, we must find the deleted group/level and remove it from the restriction post meta data of a post, if applicable
+            $old_levels = get_option('wawp_all_levels_key');
+            $old_groups = get_option('wawp_all_groups_key');
+            $restricted_posts = get_option('wawp_array_of_restricted_posts');
+            if (!empty($restricted_pages)) {
+                if (!empty($old_levels) && (count($updated_levels) < count($old_levels))) {
+                    // Find the deleted level(s)
+                    $deleted_levels = array();
+                    // Loop through each updated level and check if it is in the old levels
+                    foreach ($updated_levels as $updated_level) {
+                        if (!in_array($updated_level, $old_levels)) { // updated level is NOT in the old levels
+                            // This is a deleted level!
+                            // Remove this level from restricted posts
+                            // Loop through each restricted post and check if its post meta data contains this post
+                            foreach ($restricted_posts as $restricted_post) {
+                                // Get post's list of restricted levels
+                                $post_restricted_levels = get_post_meta($restricted_post, 'wawp_restricted_levels');
+                                $post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
+                                // See line 230 on WAIntegration.php
+                            }
+                        }
+                    }
+                }
+                if (!empty($old_groups) && (count($updated_groups) < count($old_groups))) {
+
+                }
+            }
         }
 
         // // Create WAWP Api instance
