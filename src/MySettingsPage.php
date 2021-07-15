@@ -51,26 +51,38 @@ class MySettingsPage
     }
 
     private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key) {
-        // Find the deleted level(s)
-        $deleted_levels = array();
-        // Loop through each updated level and check if it is in the old levels
-        foreach ($updated_levels as $updated_level) {
-            if (!in_array($updated_level, $old_levels)) { // updated level is NOT in the old levels
-                // This is a deleted level! ($updated_level)
+        $restricted_posts = get_option('wawp_array_of_restricted_posts');
+
+        // Convert levels arrays to its keys
+        $updated_levels = array_keys($updated_levels);
+        $old_levels = array_keys($old_levels);
+
+        // Loop through each old level and check if it is in the updated levels
+        foreach ($old_levels as $old_level) {
+            if (!in_array($old_level, $updated_levels)) { // old level is NOT in the updated levels
+                // This is a deleted level! ($old_level)
+                self::my_log_file('The deleted level: ' . $old_level);
+                $level_to_delete = $old_level;
                 // Remove this level from restricted posts
-                // Loop through each restricted post and check if its post meta data contains this post
+                // Loop through each restricted post and check if its post meta data contains this level
                 foreach ($restricted_posts as $restricted_post) {
                     // Get post's list of restricted levels
                     $post_restricted_levels = get_post_meta($restricted_post, $restricted_levels_key);
                     $post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
+                    self::my_log_file($post_restricted_levels);
                     // See line 230 on WAIntegration.php
-                    if (in_array($updated_level, $post_restricted_levels)) {
+                    if (in_array($level_to_delete, $post_restricted_levels)) {
                         // Remove this updated level from post restricted levels
-                        $post_restricted_levels = array_diff($post_restricted_levels, array($updated_level));
+                        self::my_log_file('lets remove this level ' . $level_to_delete);
+                        $post_restricted_levels = array_diff($post_restricted_levels, array($level_to_delete));
+                        self::my_log_file($post_restricted_levels);
                     }
                     // Save new restricted levels to post meta data
                     $post_restricted_levels = maybe_serialize($post_restricted_levels);
-                    update_post_meta($restricted_post, $restricted_levels_key, $post_restricted_levels, true); // single value
+                    self::my_log_file($post_restricted_levels);
+                    // Delete past value
+                    // $old_post_levels = get_post_meta($restricted_post);
+                    update_post_meta($restricted_post, $restricted_levels_key, $post_restricted_levels); // single value
                 }
             }
         }
@@ -108,11 +120,11 @@ class MySettingsPage
             self::my_log_file(count($old_groups));
             if (!empty($restricted_posts)) {
                 self::my_log_file('not restricted pages!');
-                if (!empty($old_levels) && (count($updated_levels) < count($old_levels))) {
+                if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
                     self::my_log_file('level has been removed!');
                     $this->remove_invalid_groups_levels($updated_levels, $old_levels, 'wawp_restricted_levels');
                 }
-                if (!empty($old_groups) && (count($updated_groups) < count($old_groups))) {
+                if (!empty($old_groups) && !empty($updated_groups) && (count($updated_groups) < count($old_groups))) {
                     self::my_log_file('group has been removed!');
                     $this->remove_invalid_groups_levels($updated_groups, $old_groups, 'wawp_restricted_groups');
                 }
