@@ -8,6 +8,7 @@ class WAIntegration {
 	// Constants for keys used for database management
 	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
+	const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
@@ -776,6 +777,8 @@ class WAIntegration {
 		$dataEncryption = new DataEncryption();
 		add_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
 		add_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		// Store time that access token expires
+		add_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, time() + $time_remaining_to_refresh, true); // directly insert
 		// Add Wild Apricot id to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
@@ -859,6 +862,7 @@ class WAIntegration {
 					add_filter('the_content', array($this, 'add_login_error'));
 					return;
 				}
+				self::my_log_file($login_attempt);
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
 				$this->add_user_to_wp_database($login_attempt, $valid_login['email']);
 

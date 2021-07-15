@@ -48,6 +48,7 @@ class MySettingsPage
 
         // Include files
         require_once('DataEncryption.php');
+        require_once('WAWPApi.php');
     }
 
     private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key) {
@@ -91,11 +92,23 @@ class MySettingsPage
     public function cron_update_wa_memberships() {
         self::my_log_file('updating wa memberships...');
 
+        $dataEncryption = new DataEncryption();
+
         // Get access token and account id
         $access_token = get_transient('wawp_admin_access_token');
         $wa_account_id = get_transient('wawp_admin_account_id');
+
+        // Check that the transients are still valid -> if not, get new token
+        if (empty($access_token) || empty($wa_account_id)) {
+            // Retrieve refresh token from database
+            $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
+            // Get new access token
+            $new_access_token = WAWPApi::get_new_access_token($refresh_token);
+            self::my_log_file('getting new access token: ');
+            self::my_log_file($new_access_token);
+        }
+
         if (!empty($access_token) && !empty($wa_account_id)) {
-            $dataEncryption = new DataEncryption();
             $access_token = $dataEncryption->decrypt($access_token);
             $wa_account_id = $dataEncryption->decrypt($wa_account_id);
 
@@ -665,7 +678,7 @@ class MySettingsPage
         if ($entered_valid) {
             require_once('WAWPApi.php');
             $valid_api = WAWPApi::is_application_valid($entered_api_key);
-            // self::my_log_file($valid_api);
+            self::my_log_file($valid_api);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
         if ($valid_api == false || !$entered_valid) {
@@ -677,9 +690,12 @@ class MySettingsPage
             $access_token = $valid_api['access_token'];
             $account_id = $valid_api['Permissions'][0]['AccountId'];
             $expiring_time = $valid_api['expires_in'];
+            $refresh_token = $valid_api['refresh_token'];
             // Store access token and account ID as transients
             set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
             set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
+            // Store refresh token in database
+            update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
             // Get all membership levels and groups
             $wawp_api_instance = new WAWPApi($access_token, $account_id);
             $all_membership_levels = $wawp_api_instance->get_membership_levels();
