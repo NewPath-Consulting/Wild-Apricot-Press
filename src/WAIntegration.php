@@ -230,7 +230,7 @@ class WAIntegration {
 				$post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
 
 				// If no options are selected, then the post is unrestricted, as there cannot be a post with no viewers
-				if (!isset($post_restricted_groups) && !isset($post_restricted_levels)) {
+				if (empty($post_restricted_groups) && empty($post_restricted_levels)) {
 					update_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, false);
 					return $post_content;
 				}
@@ -321,7 +321,8 @@ class WAIntegration {
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
 		// Add the 'restricted' property to this post's meta data
-		update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true, true);
+		self::my_log_file('saving new page and this page should be restricted!');
+		update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true);
 
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
 		// Get current array of restricted post, if applicable
