@@ -103,9 +103,21 @@ class MySettingsPage
             // Retrieve refresh token from database
             $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
             // Get new access token
-            $new_access_token = WAWPApi::get_new_access_token($refresh_token);
+            $new_response = WAWPApi::get_new_access_token($refresh_token);
             self::my_log_file('getting new access token: ');
-            self::my_log_file($new_access_token);
+            self::my_log_file($new_response);
+            // Get variables from response
+            $new_access_token = $new_response['access_token'];
+            $new_expiring_time = $new_response['expires_in'];
+            $new_account_id = $new_response['Permissions'][0]['AccountId'];
+            // Set these new values to the transients
+            set_transient('wawp_admin_access_token', $new_access_token, $new_expiring_time);
+            set_transient('wawp_admin_account_id', $new_account_id, $new_expiring_time);
+            // Update values
+            $access_token = $new_access_token;
+            $wa_account_id = $new_account_id;
+            self::my_log_file($access_token);
+            self::my_log_file($wa_account_id);
         }
 
         if (!empty($access_token) && !empty($wa_account_id)) {
@@ -692,8 +704,8 @@ class MySettingsPage
             $expiring_time = $valid_api['expires_in'];
             $refresh_token = $valid_api['refresh_token'];
             // Store access token and account ID as transients
-            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
-            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
+            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), 180);
+            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), 180);
             // Store refresh token in database
             update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
             // Get all membership levels and groups
