@@ -142,9 +142,6 @@ class WAWPApi {
 
 		$data = self::response_to_data($response);
 
-		// Get new access token from data
-		$new_access_token = $data['AccessToken']; // ??
-
 		return $data;
 	}
 

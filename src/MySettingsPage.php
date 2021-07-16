@@ -89,6 +89,9 @@ class MySettingsPage
         }
     }
 
+    /**
+     * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
+     */
     public function cron_update_wa_memberships() {
         self::my_log_file('updating wa memberships...');
 
@@ -98,8 +101,11 @@ class MySettingsPage
         $access_token = get_transient('wawp_admin_access_token');
         $wa_account_id = get_transient('wawp_admin_account_id');
 
+        $same_credentials = true;
+
         // Check that the transients are still valid -> if not, get new token
         if (empty($access_token) || empty($wa_account_id)) {
+            $same_credentials = false;
             // Retrieve refresh token from database
             $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
             // Get new access token
@@ -111,8 +117,8 @@ class MySettingsPage
             $new_expiring_time = $new_response['expires_in'];
             $new_account_id = $new_response['Permissions'][0]['AccountId'];
             // Set these new values to the transients
-            set_transient('wawp_admin_access_token', $new_access_token, $new_expiring_time);
-            set_transient('wawp_admin_account_id', $new_account_id, $new_expiring_time);
+            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($new_account_id), $new_expiring_time);
             // Update values
             $access_token = $new_access_token;
             $wa_account_id = $new_account_id;
@@ -121,8 +127,10 @@ class MySettingsPage
         }
 
         if (!empty($access_token) && !empty($wa_account_id)) {
-            $access_token = $dataEncryption->decrypt($access_token);
-            $wa_account_id = $dataEncryption->decrypt($wa_account_id);
+            if ($same_credentials) {
+                $access_token = $dataEncryption->decrypt($access_token);
+                $wa_account_id = $dataEncryption->decrypt($wa_account_id);
+            }
 
             // Create WAWP Api instance
             $wawp_api = new WAWPApi($access_token, $wa_account_id);
@@ -704,8 +712,8 @@ class MySettingsPage
             $expiring_time = $valid_api['expires_in'];
             $refresh_token = $valid_api['refresh_token'];
             // Store access token and account ID as transients
-            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), 180);
-            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), 180);
+            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
+            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
             // Store refresh token in database
             update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
             // Get all membership levels and groups
