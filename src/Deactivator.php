@@ -35,7 +35,8 @@ class Deactivator {
 		// 	wp_unschedule_event($next_event_timestamp, 'wawp_check_for_new_wa_data');
 		// }
 		require_once('WAWPApi.php');
-		WAWPApi::unsetCronJob();
+		WAWPApi::unsetCronJob('wawp_cron_refresh_memberships_hook');
+		WAWPApi::unsetCronJob('wawp_cron_refresh_user_hook');
 	}
 }
 ?>

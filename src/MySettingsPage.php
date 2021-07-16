@@ -16,7 +16,7 @@ use function PHPSTORM_META\map;
 
 class MySettingsPage
 {
-    const CRON_HOOK = 'wawp_cron_refresh_hook';
+    const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
 
     /**
      * Holds the values to be used in the fields callbacks

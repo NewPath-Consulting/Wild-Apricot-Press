@@ -22,7 +22,7 @@ class WAIntegration {
 	const ARRAY_OF_RESTRICTED_POSTS = 'wawp_array_of_restricted_posts';
 	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY = 'wawp_individual_restriction_message_key';
 
-	const USER_REFRESH_HOOK = 'wawp_user_refresh_cron';
+	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
 	/**
 	 * Constructs an instance of the WAIntegration class
@@ -645,9 +645,14 @@ class WAIntegration {
 	public function refresh_user_wa_info() {
 		self::my_log_file('refreshing user info!');
 		// Ensure that user is logged into a Wild Apricot synced account
+		// self::my_log_file(is_user_logged_in());
+		if (!function_exists('is_user_logged_in')) {
+			self::my_log_file('function doesnt exist!');
+		}
 		if (is_user_logged_in()) {
 			$current_user_id = get_current_user_id();
 			$wa_account_id = get_user_meta($current_user_id, self::WA_USER_ID_KEY, true);
+			self::my_log_file($wa_account_id);
 			if (!empty($wa_account_id)) { // user is also synced with Wild Apricot
 				$access_token = get_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, true);
 				// Check if access token has expired (most likely will be expired)
