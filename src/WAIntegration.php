@@ -21,6 +21,7 @@ class WAIntegration {
 	const IS_POST_RESTRICTED = 'wawp_is_post_restricted';
 	const ARRAY_OF_RESTRICTED_POSTS = 'wawp_array_of_restricted_posts';
 	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY = 'wawp_individual_restriction_message_key';
+	const CRON_USER_ID = 'wawp_cron_user_id';
 
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
@@ -662,8 +663,11 @@ class WAIntegration {
 			$access_token = get_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, true);
 			// Check if access token has expired (most likely will be expired)
 			$current_unix_time = time();
+			self::my_log_file($current_unix_time);
 			$expire_unix_time = get_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, true); // single value
+			self::my_log_file($expire_unix_time);
 			if ($current_unix_time >= $expire_unix_time) { // passed expiration time
+				self::my_log_file('weve passed the expiring time!');
 				// Retrieve refresh token
 				$refresh_token = get_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, true);
 				$dataEncryption = new DataEncryption();
@@ -713,7 +717,7 @@ class WAIntegration {
 					// Get value
 					$current_field_value = $field_value['Value'];
 					// Save current_field_value to user meta data
-					update_user_meta($current_user_id, 'wawp_' . preg_replace('/\s+/', '_', $journalName), maybe_serialize($current_field_value));
+					update_user_meta($current_user_id, 'wawp_' . preg_replace('/\s+/', '_', $current_field_name), maybe_serialize($current_field_value));
 				}
 			}
 		}
@@ -731,6 +735,8 @@ class WAIntegration {
 		$args = [
 			$user_id
 		];
+		// Save this user id in database
+		update_option(self::CRON_USER_ID, $user_id);
 		if (!wp_next_scheduled(self::USER_REFRESH_HOOK, $args)) {
 			wp_schedule_event(time(), 'hourly', self::USER_REFRESH_HOOK, $args);
 		}
@@ -845,14 +851,15 @@ class WAIntegration {
 				echo $current_wp_user_id->get_error_message();
 			}
 		}
-		// Now that we have the ID of the user, modify user with Wild Apricot information
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
 		add_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
 		add_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
 		// Store time that access token expires
-		add_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, time() + $time_remaining_to_refresh, true); // directly insert
+		$new_time_to_save = time() + $time_remaining_to_refresh;
+		self::my_log_file('new time: ' . $new_time_to_save);
+		add_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save, true); // directly insert
 		// Add Wild Apricot id to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
