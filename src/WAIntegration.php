@@ -685,6 +685,37 @@ class WAIntegration {
 			$wawp_api = new WAWPApi($access_token, $wa_account_id);
 			$updated_user_info = $wawp_api->get_info_on_current_user();
 			self::my_log_file($updated_user_info);
+
+			// Extract updated information into user meta data
+			// First name
+			$first_name = $updated_user_info['FirstName'];
+			$last_name = $updated_user_info['LastName'];
+			$email = $updated_user_info['Email'];
+			$display_name = $updated_user_info['DisplayName'];
+			$organization = $updated_user_info['Organization'];
+			$status = $updated_user_info['Status'];
+			$membership_level_id = $updated_user_info['MembershipLevel']['Id'];
+			$membership_level_name = $updated_user_info['MembershipLevel']['Name'];
+
+			// Check here for the custom fields that we want to sync
+			// Field Values:
+			$field_values = $updated_user_info['FieldValues'];
+			// Get field names from options table
+			$field_names = array();
+			$field_names[] = 'Group participation';
+			$field_names[] = 'Your favourite foods';
+			// Loop through field values
+			foreach ($field_values as $field_value) {
+				// Check if the current value is within the desired field names
+				$current_field_name = $field_value['FieldName'];
+				if (in_array($current_field_name, $field_names)) {
+					// We will save this field value
+					// Get value
+					$current_field_value = $field_value['Value'];
+					// Save current_field_value to user meta data
+					update_user_meta($current_user_id, 'wawp_' . preg_replace('/\s+/', '_', $journalName), maybe_serialize($current_field_value));
+				}
+			}
 		}
 		// If user is NOT logged in, then all is well because their updated Wild Apricot data will be synced with WordPress anyways when they log in again
 	}
