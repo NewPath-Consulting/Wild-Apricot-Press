@@ -22,7 +22,9 @@ class WAWPApi {
 	public static function unsetCronJob($cron_hook_name, $args = [])
     {
 		// Get the timestamp for the next event.
+		self::my_log_file($args);
 		$timestamp = wp_next_scheduled($cron_hook_name, $args);
+		self::my_log_file($timestamp);
 		if ($timestamp) {
 			self::my_log_file('we have an unschedule!');
 			wp_unschedule_event($timestamp, $cron_hook_name, $args);

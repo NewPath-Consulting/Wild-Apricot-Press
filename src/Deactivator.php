@@ -37,11 +37,11 @@ class Deactivator {
 		require_once('WAWPApi.php');
 		WAWPApi::unsetCronJob('wawp_cron_refresh_memberships_hook');
 		// Get user id
-		$user_id = get_option('wawp_cron_user_id');
-		$args = [
-			$user_id
-		];
-		WAWPApi::unsetCronJob('wawp_cron_refresh_user_hook', $args);
+		// $user_id = get_option('wawp_cron_user_id');
+		// $args = [
+		// 	$user_id
+		// ];
+		WAWPApi::unsetCronJob('wawp_cron_refresh_user_hook');
 	}
 }
 ?>

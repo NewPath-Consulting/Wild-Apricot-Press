@@ -146,11 +146,11 @@ class MySettingsPage
             $old_levels = get_option('wawp_all_levels_key');
             $old_groups = get_option('wawp_all_groups_key');
             $restricted_posts = get_option('wawp_array_of_restricted_posts');
-            self::my_log_file($old_levels);
-            self::my_log_file($old_groups);
-            self::my_log_file($restricted_posts);
-            self::my_log_file(count($updated_groups));
-            self::my_log_file(count($old_groups));
+            // self::my_log_file($old_levels);
+            // self::my_log_file($old_groups);
+            // self::my_log_file($restricted_posts);
+            // self::my_log_file(count($updated_groups));
+            // self::my_log_file(count($old_groups));
             if (!empty($restricted_posts)) {
                 self::my_log_file('not restricted pages!');
                 if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
@@ -698,7 +698,7 @@ class MySettingsPage
         if ($entered_valid) {
             require_once('WAWPApi.php');
             $valid_api = WAWPApi::is_application_valid($entered_api_key);
-            self::my_log_file($valid_api);
+            // self::my_log_file($valid_api);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
         if ($valid_api == false || !$entered_valid) {

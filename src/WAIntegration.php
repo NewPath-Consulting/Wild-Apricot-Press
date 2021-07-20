@@ -643,7 +643,7 @@ class WAIntegration {
 	/**
 	 * Updates the user's Wild Apricot information in WordPress
 	 */
-	public function refresh_user_wa_info($current_user_id) {
+	public function refresh_user_wa_info() {
 		self::my_log_file('refreshing user info!');
 		// Ensure that user is logged into a Wild Apricot synced account
 		// self::my_log_file(is_user_logged_in());
@@ -657,6 +657,9 @@ class WAIntegration {
 		// self::my_log_file($user->ID);
 		// global $current_user;
 		// self::my_log_file($current_user->ID);
+
+		$current_user_id = get_option(self::CRON_USER_ID);
+
 		$wa_account_id = get_user_meta($current_user_id, self::WA_USER_ID_KEY, true);
 		self::my_log_file($wa_account_id);
 		if (!empty($wa_account_id)) { // user is also synced with Wild Apricot
@@ -727,18 +730,18 @@ class WAIntegration {
 	/**
 	 * Schedules the hourly event to update the user's Wild Apricot information in their WordPress profile
 	 */
-	private function create_cron_for_user_refresh($user_id) {
+	private function create_cron_for_user_refresh() {
 		// Schedule event if it is not already scheduled
 		// $user = wp_get_current_user();
 		// self::my_log_file('current user id: ');
 		// self::my_log_file($user->ID);
-		$args = [
-			$user_id
-		];
+		// $args = [
+		// 	$user_id
+		// ];
 		// Save this user id in database
-		update_option(self::CRON_USER_ID, $user_id);
-		if (!wp_next_scheduled(self::USER_REFRESH_HOOK, $args)) {
-			wp_schedule_event(time(), 'hourly', self::USER_REFRESH_HOOK, $args);
+		// update_option(self::CRON_USER_ID, $user_id);
+		if (!wp_next_scheduled(self::USER_REFRESH_HOOK)) {
+			wp_schedule_event(time(), 'hourly', self::USER_REFRESH_HOOK);
 		}
 	}
 
@@ -892,7 +895,8 @@ class WAIntegration {
 		self::my_log_file($current_wp_user_id);
 
 		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
-		$this->create_cron_for_user_refresh($current_wp_user_id);
+		update_option(self::CRON_USER_ID, $current_wp_user_id);
+		$this->create_cron_for_user_refresh();
 	}
 
 	/**
@@ -944,7 +948,7 @@ class WAIntegration {
 					add_filter('the_content', array($this, 'add_login_error'));
 					return;
 				}
-				self::my_log_file($login_attempt);
+				// self::my_log_file($login_attempt);
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
 				$this->add_user_to_wp_database($login_attempt, $valid_login['email']);
 
