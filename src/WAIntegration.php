@@ -730,7 +730,7 @@ class WAIntegration {
 	/**
 	 * Schedules the hourly event to update the user's Wild Apricot information in their WordPress profile
 	 */
-	private function create_cron_for_user_refresh() {
+	public static function create_cron_for_user_refresh() {
 		// Schedule event if it is not already scheduled
 		// $user = wp_get_current_user();
 		// self::my_log_file('current user id: ');
@@ -896,7 +896,7 @@ class WAIntegration {
 
 		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
 		update_option(self::CRON_USER_ID, $current_wp_user_id);
-		$this->create_cron_for_user_refresh();
+		self::create_cron_for_user_refresh();
 	}
 
 	/**
