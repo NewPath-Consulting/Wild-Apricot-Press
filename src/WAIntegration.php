@@ -171,6 +171,9 @@ class WAIntegration {
 		return $content;
 	}
 
+	/**
+	 * Generates the URL to the WA4WP Login page on the website
+	 */
 	private function get_login_link() {
 		$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
 		// Get current page id
@@ -327,7 +330,6 @@ class WAIntegration {
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
 		// Add the 'restricted' property to this post's meta data
-		self::my_log_file('saving new page and this page should be restricted!');
 		update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true);
 
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
@@ -644,11 +646,14 @@ class WAIntegration {
 
 	/**
 	 * Updates the user's Wild Apricot information in WordPress
+	 *
+	 * @param int $current_user_id The user's WordPress ID
 	 */
-	public function refresh_user_wa_info() {
+	public function refresh_user_wa_info($current_user_id) {
 		self::my_log_file('refreshing user info!');
 
-		$current_user_id = get_option(self::CRON_USER_ID);
+		// $current_user_id = get_option(self::CRON_USER_ID);
+		self::my_log_file($current_user_id);
 
 		// Ensure that user is logged into a Wild Apricot synced account
 		$wa_account_id = get_user_meta($current_user_id, self::WA_USER_ID_KEY, true);
@@ -698,7 +703,6 @@ class WAIntegration {
 				self::my_log_file($updated_user_info);
 
 				// Extract updated information into user meta data
-				// First name
 				$first_name = $updated_user_info['FirstName'];
 				update_user_meta($current_user_id, 'first_name', $first_name);
 				$last_name = $updated_user_info['LastName'];
@@ -741,17 +745,15 @@ class WAIntegration {
 
 	/**
 	 * Schedules the hourly event to update the user's Wild Apricot information in their WordPress profile
+	 *
+	 * @param int $user_id  User's WordPress ID
 	 */
 	public static function create_cron_for_user_refresh($user_id) {
-		// Schedule event if it is not already scheduled
-		// $user = wp_get_current_user();
-		// self::my_log_file('current user id: ');
-		// self::my_log_file($user->ID);
+		// Place user id in arguments
 		$args = [
 			$user_id
 		];
-		// Save this user id in database
-		// update_option(self::CRON_USER_ID, $user_id);
+		// Schedule event if it is not already scheduled
 		if (!wp_next_scheduled(self::USER_REFRESH_HOOK, $args)) {
 			wp_schedule_event(time(), 'hourly', self::USER_REFRESH_HOOK, $args);
 		}
@@ -759,10 +761,12 @@ class WAIntegration {
 
 	/**
 	 * Syncs Wild Apricot logged in user with WordPress user database
+	 *
+	 * @param string $login_data  The login response from the API
+	 * @param string $login_email The email that the user has logged in with
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		// Get access token and refresh token
-		self::my_log_file($login_data);
 		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
@@ -870,15 +874,11 @@ class WAIntegration {
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		update_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token)); // directly insert
-		update_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token)); // directly insert
-		self::my_log_file('we are saving this refresh token: ');
-		self::my_log_file($dataEncryption->encrypt($refresh_token));
+		update_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token));
+		update_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token));
 		// Store time that access token expires
 		$new_time_to_save = time() + $time_remaining_to_refresh;
-		self::my_log_file('lets save time: ' . $new_time_to_save);
-		self::my_log_file('id were savign for: ' . $current_wp_user_id);
-		update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save); // directly insert
+		update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save);
 		// Add Wild Apricot id to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
@@ -964,7 +964,6 @@ class WAIntegration {
 					add_filter('the_content', array($this, 'add_login_error'));
 					return;
 				}
-				// self::my_log_file($login_attempt);
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
 				$this->add_user_to_wp_database($login_attempt, $valid_login['email']);
 
@@ -1009,6 +1008,11 @@ class WAIntegration {
 		return ob_get_clean();
 	}
 
+	/**
+	 * Removes the CRON update when the user logs out
+	 *
+	 * @param int $user_id The user's WordPress ID
+	 */
 	public function remove_user_wa_update(int $user_id) {
 		self::my_log_file($user_id);
 		// Remove this user's CRON update

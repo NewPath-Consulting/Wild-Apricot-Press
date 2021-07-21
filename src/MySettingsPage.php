@@ -24,7 +24,7 @@ class MySettingsPage
     private $options;
 
     /**
-     * Start up
+     * Adds actions and includes files
      */
     public function __construct()
     {
@@ -51,6 +51,14 @@ class MySettingsPage
         require_once('WAWPApi.php');
     }
 
+    /**
+     * Removes the invalid, now deleted groups and levels after the membership levels and groups are updated
+     * Please note that, while this function refers to "levels", this function works for both levels and groups
+     *
+     * @param $updated_levels        is an array of the new levels obtained from refresh
+     * @param $old_levels            is an array of the previous levels before refresh
+     * @param $restricted_levels_key is the key of the restricted levels to be saved
+     */
     private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key) {
         $restricted_posts = get_option('wawp_array_of_restricted_posts');
 
@@ -62,7 +70,6 @@ class MySettingsPage
         foreach ($old_levels as $old_level) {
             if (!in_array($old_level, $updated_levels)) { // old level is NOT in the updated levels
                 // This is a deleted level! ($old_level)
-                self::my_log_file('The deleted level: ' . $old_level);
                 $level_to_delete = $old_level;
                 // Remove this level from restricted posts
                 // Loop through each restricted post and check if its post meta data contains this level
@@ -70,17 +77,13 @@ class MySettingsPage
                     // Get post's list of restricted levels
                     $post_restricted_levels = get_post_meta($restricted_post, $restricted_levels_key);
                     $post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
-                    self::my_log_file($post_restricted_levels);
                     // See line 230 on WAIntegration.php
                     if (in_array($level_to_delete, $post_restricted_levels)) {
                         // Remove this updated level from post restricted levels
-                        self::my_log_file('lets remove this level ' . $level_to_delete);
                         $post_restricted_levels = array_diff($post_restricted_levels, array($level_to_delete));
-                        self::my_log_file($post_restricted_levels);
                     }
                     // Save new restricted levels to post meta data
                     $post_restricted_levels = maybe_serialize($post_restricted_levels);
-                    self::my_log_file($post_restricted_levels);
                     // Delete past value
                     // $old_post_levels = get_post_meta($restricted_post);
                     update_post_meta($restricted_post, $restricted_levels_key, $post_restricted_levels); // single value
@@ -93,7 +96,6 @@ class MySettingsPage
      * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
      */
     public function cron_update_wa_memberships() {
-        self::my_log_file('updating wa memberships...');
 
         $dataEncryption = new DataEncryption();
 
@@ -146,11 +148,6 @@ class MySettingsPage
             $old_levels = get_option('wawp_all_levels_key');
             $old_groups = get_option('wawp_all_groups_key');
             $restricted_posts = get_option('wawp_array_of_restricted_posts');
-            // self::my_log_file($old_levels);
-            // self::my_log_file($old_groups);
-            // self::my_log_file($restricted_posts);
-            // self::my_log_file(count($updated_groups));
-            // self::my_log_file(count($old_groups));
             if (!empty($restricted_posts)) {
                 self::my_log_file('not restricted pages!');
                 if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
@@ -169,19 +166,6 @@ class MySettingsPage
             update_option('wawp_all_groups_key', $updated_groups);
 
         }
-
-        // // Create WAWP Api instance
-        // $wawp_api = new WAWPApi($access_token, $wa_account_id);
-
-        // // Get membership levels
-		// $updated_levels = $wawp_api->get_membership_levels();
-		// // Save updated levels to options table
-		// update_option('wawp_all_levels_key', $updated_levels);
-
-		// // Get membership groups
-		// $updated_groups = $wawp_api->get_membership_levels(true);
-		// // Save updated groups to options table
-		// update_option('wawp_all_groups_key', $updated_groups);
     }
 
     // Debugging
@@ -619,14 +603,7 @@ class MySettingsPage
     /**
 	 * Setups up CRON job
 	 */
-	public static function setup_cron_job()
-    {
-        // Create arguments
-        // $args = array($access_token, $wa_account_id);
-
-        //Use wp_next_scheduled to check if the event is already scheduled
-        // $timestamp = wp_next_scheduled(self::CRON_HOOK, $args);
-
+	public static function setup_cron_job() {
         //If $timestamp === false schedule the event since it hasn't been done previously
         if (!wp_next_scheduled(self::CRON_HOOK)) {
             //Schedule the event for right now, then to repeat daily using the hook

@@ -22,11 +22,9 @@ class WAWPApi {
 	public static function unsetCronJob($cron_hook_name, $args = [])
     {
 		// Get the timestamp for the next event.
-		// self::my_log_file($args);
 		$timestamp = wp_next_scheduled($cron_hook_name, $args);
-		// self::my_log_file($timestamp);
+		// Check that event is already scheduled
 		if ($timestamp) {
-			self::my_log_file('we have an unschedule!');
 			wp_unschedule_event($timestamp, $cron_hook_name, $args);
 		}
     }
@@ -135,8 +133,6 @@ class WAWPApi {
         // Get details of current WA user with API request
 		// Get user's contact ID
         $args = $this->request_data_args();
-		self::my_log_file('wa user id: ' . $this->wa_user_id);
-		self::my_log_file('wa access token: ' . $this->access_token);
 		$contact_info = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
         self::my_log_file($contact_info);
 		$contact_info = self::response_to_data($contact_info);
@@ -171,7 +167,6 @@ class WAWPApi {
 
         // Return membership levels
         $membership_levels_response = self::response_to_data($membership_levels_response);
-		// self::my_log_file($membership_levels_response);
 
 		// Extract membership levels into array
 		$membership_levels = array();
@@ -184,7 +179,6 @@ class WAWPApi {
 				$membership_levels[$current_key] = $current_level;
 			}
 		}
-		// self::my_log_file($membership_levels);
         return $membership_levels;
     }
 

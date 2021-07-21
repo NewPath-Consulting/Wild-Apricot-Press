@@ -56,7 +56,8 @@ class Activator {
 			// Check if user profile ID is set in database -> if so, then trigger user update cron event
 			if (get_option('wawp_cron_user_id')) { // user has been logged into Wild Apricot
 				require_once('WAIntegration.php');
-				WAIntegration::create_cron_for_user_refresh();
+				$user_id = get_option('wawp_cron_user_id');
+				WAIntegration::create_cron_for_user_refresh($user_id);
 			}
 		}
 	}
