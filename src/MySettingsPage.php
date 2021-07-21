@@ -112,8 +112,6 @@ class MySettingsPage
             $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
             // Get new access token
             $new_response = WAWPApi::get_new_access_token($refresh_token);
-            self::my_log_file('getting new access token: ');
-            self::my_log_file($new_response);
             // Get variables from response
             $new_access_token = $new_response['access_token'];
             $new_expiring_time = $new_response['expires_in'];
@@ -124,8 +122,6 @@ class MySettingsPage
             // Update values
             $access_token = $new_access_token;
             $wa_account_id = $new_account_id;
-            self::my_log_file($access_token);
-            self::my_log_file($wa_account_id);
         }
 
         if (!empty($access_token) && !empty($wa_account_id)) {
@@ -149,13 +145,10 @@ class MySettingsPage
             $old_groups = get_option('wawp_all_groups_key');
             $restricted_posts = get_option('wawp_array_of_restricted_posts');
             if (!empty($restricted_posts)) {
-                self::my_log_file('not restricted pages!');
                 if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
-                    self::my_log_file('level has been removed!');
                     $this->remove_invalid_groups_levels($updated_levels, $old_levels, 'wawp_restricted_levels');
                 }
                 if (!empty($old_groups) && !empty($updated_groups) && (count($updated_groups) < count($old_groups))) {
-                    self::my_log_file('group has been removed!');
                     $this->remove_invalid_groups_levels($updated_groups, $old_groups, 'wawp_restricted_groups');
                 }
             }
@@ -675,7 +668,6 @@ class MySettingsPage
         if ($entered_valid) {
             require_once('WAWPApi.php');
             $valid_api = WAWPApi::is_application_valid($entered_api_key);
-            // self::my_log_file($valid_api);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
         if ($valid_api == false || !$entered_valid) {

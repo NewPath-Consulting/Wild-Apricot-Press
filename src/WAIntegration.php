@@ -650,11 +650,6 @@ class WAIntegration {
 	 * @param int $current_user_id The user's WordPress ID
 	 */
 	public function refresh_user_wa_info($current_user_id) {
-		self::my_log_file('refreshing user info!');
-
-		// $current_user_id = get_option(self::CRON_USER_ID);
-		self::my_log_file($current_user_id);
-
 		// Ensure that user is logged into a Wild Apricot synced account
 		$wa_account_id = get_user_meta($current_user_id, self::WA_USER_ID_KEY, true);
 		if (!empty($wa_account_id)) { // user is also synced with Wild Apricot
@@ -664,24 +659,15 @@ class WAIntegration {
 			$access_token = $dataEncryption->decrypt($access_token);
 			// Check if access token has expired (most likely will be expired)
 			$current_unix_time = time();
-			self::my_log_file('Current time: ' . $current_unix_time);
-			$expire_unix_time = get_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, true); // single value
-			self::my_log_file('Expire time: ' . $expire_unix_time);
+			$expire_unix_time = get_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, true);
 
 			// Get new access token and update data if expire time has been exceeded
 			if ($current_unix_time > $expire_unix_time) { // passed expiration time
-				self::my_log_file('weve passed the expiring time!');
 				// Retrieve refresh token
 				$refresh_token = get_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, true);
-				self::my_log_file('this is the original refresh token: ');
-				self::my_log_file($refresh_token);
 				$refresh_token = $dataEncryption->decrypt($refresh_token);
-				self::my_log_file('this is the refresh token: ');
-				self::my_log_file($refresh_token);
 				// Get new access token
 				$new_response = WAWPApi::get_new_access_token($refresh_token);
-				self::my_log_file('new response: ');
-				self::my_log_file($new_response);
 				// Retrieve values from response
 				$new_access_token = $new_response['access_token'];
 				$new_refresh_token = $new_response['refresh_token'];
@@ -692,15 +678,12 @@ class WAIntegration {
 				update_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($new_access_token));
 				update_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($new_refresh_token));
 				$updated_new_expiry_time = time() + $new_expires_in;
-				self::my_log_file('we are saving this expire time! ');
-				self::my_log_file($updated_new_expiry_time);
 				update_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, $updated_new_expiry_time);
 
 				// Update rest of data
 				// Get updated fields of user's Wild Apricot information
 				$wawp_api = new WAWPApi($access_token, $wa_account_id);
 				$updated_user_info = $wawp_api->get_info_on_current_user();
-				self::my_log_file($updated_user_info);
 
 				// Extract updated information into user meta data
 				$first_name = $updated_user_info['FirstName'];
@@ -908,7 +891,6 @@ class WAIntegration {
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
-		self::my_log_file($current_wp_user_id);
 
 		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
 		update_option(self::CRON_USER_ID, $current_wp_user_id);
@@ -1014,7 +996,6 @@ class WAIntegration {
 	 * @param int $user_id The user's WordPress ID
 	 */
 	public function remove_user_wa_update(int $user_id) {
-		self::my_log_file($user_id);
 		// Remove this user's CRON update
 		$args = [
 			$user_id

@@ -103,7 +103,6 @@ class WAWPApi {
 	 * https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
 	 */
 	public static function get_new_access_token($refresh_token) {
-		self::my_log_file('were getting a new access token!');
 		// Get decrypted credentials
 		$decrypted_credentials = self::load_user_credentials();
 		// Encode API key
@@ -119,7 +118,6 @@ class WAWPApi {
 			'body' => 'grant_type=refresh_token&refresh_token=' . $refresh_token
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-		self::my_log_file($response);
 		$data = self::response_to_data($response);
 		return $data;
 	}
@@ -134,7 +132,6 @@ class WAWPApi {
 		// Get user's contact ID
         $args = $this->request_data_args();
 		$contact_info = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
-        self::my_log_file($contact_info);
 		$contact_info = self::response_to_data($contact_info);
 		// Get if user is administrator or not
 		$is_administrator = $contact_info['IsAccountAdministrator'];
