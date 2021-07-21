@@ -665,6 +665,9 @@ class WAIntegration {
 		self::my_log_file($wa_account_id);
 		if (!empty($wa_account_id)) { // user is also synced with Wild Apricot
 			$access_token = get_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, true);
+			// Decrypt access token
+			$dataEncryption = new DataEncryption();
+			$access_token = $dataEncryption->decrypt($access_token);
 			// Check if access token has expired (most likely will be expired)
 			$current_unix_time = time();
 			self::my_log_file('Current time: ' . $current_unix_time);
@@ -676,7 +679,6 @@ class WAIntegration {
 				$refresh_token = get_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, true);
 				self::my_log_file('this is the original refresh token: ');
 				self::my_log_file($refresh_token);
-				$dataEncryption = new DataEncryption();
 				$refresh_token = $dataEncryption->decrypt($refresh_token);
 				self::my_log_file('this is the refresh token: ');
 				self::my_log_file($refresh_token);
@@ -868,8 +870,8 @@ class WAIntegration {
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		add_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
-		add_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		update_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token)); // directly insert
+		update_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token)); // directly insert
 		self::my_log_file('we are saving this refresh token: ');
 		self::my_log_file($dataEncryption->encrypt($refresh_token));
 		// Store time that access token expires

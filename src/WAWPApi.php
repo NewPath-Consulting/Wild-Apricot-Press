@@ -134,9 +134,12 @@ class WAWPApi {
     public function get_info_on_current_user() {
         // Get details of current WA user with API request
 		// Get user's contact ID
-        $args = $this->request_data_args($this->access_token);
+        $args = $this->request_data_args();
+		self::my_log_file('wa user id: ' . $this->wa_user_id);
+		self::my_log_file('wa access token: ' . $this->access_token);
 		$contact_info = wp_remote_get('https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
-        $contact_info = self::response_to_data($contact_info);
+        self::my_log_file($contact_info);
+		$contact_info = self::response_to_data($contact_info);
 		// Get if user is administrator or not
 		$is_administrator = $contact_info['IsAccountAdministrator'];
 		// Perform API call based on if user is administrator or not
