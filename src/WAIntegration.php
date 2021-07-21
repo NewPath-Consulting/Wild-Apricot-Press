@@ -58,6 +58,8 @@ class WAIntegration {
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
+		// Action for when the user logs out
+		add_action('wp_logout', array($this, 'remove_user_wa_update'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -645,24 +647,11 @@ class WAIntegration {
 	 */
 	public function refresh_user_wa_info() {
 		self::my_log_file('refreshing user info!');
-		// Ensure that user is logged into a Wild Apricot synced account
-		// self::my_log_file(is_user_logged_in());
-		// if (!function_exists('is_user_logged_in')) {
-		// 	self::my_log_file('function doesnt exist!');
-		// }
-		// if (did_action('init')) {
-		// 	self::my_log_file('init already ran!');
-		// }
-		// $user = wp_get_current_user();
-		// self::my_log_file($user->ID);
-		// global $current_user;
-		// self::my_log_file($current_user->ID);
 
 		$current_user_id = get_option(self::CRON_USER_ID);
-		self::my_log_file('are we same user id: ' . $current_user_id);
 
+		// Ensure that user is logged into a Wild Apricot synced account
 		$wa_account_id = get_user_meta($current_user_id, self::WA_USER_ID_KEY, true);
-		self::my_log_file($wa_account_id);
 		if (!empty($wa_account_id)) { // user is also synced with Wild Apricot
 			$access_token = get_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, true);
 			// Decrypt access token
@@ -673,7 +662,9 @@ class WAIntegration {
 			self::my_log_file('Current time: ' . $current_unix_time);
 			$expire_unix_time = get_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, true); // single value
 			self::my_log_file('Expire time: ' . $expire_unix_time);
-			if ($current_unix_time >= $expire_unix_time) { // passed expiration time
+
+			// Get new access token and update data if expire time has been exceeded
+			if ($current_unix_time > $expire_unix_time) { // passed expiration time
 				self::my_log_file('weve passed the expiring time!');
 				// Retrieve refresh token
 				$refresh_token = get_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, true);
@@ -699,40 +690,49 @@ class WAIntegration {
 				self::my_log_file('we are saving this expire time! ');
 				self::my_log_file($updated_new_expiry_time);
 				update_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, $updated_new_expiry_time);
-			}
-			// Get updated fields of user's Wild Apricot information
-			$wawp_api = new WAWPApi($access_token, $wa_account_id);
-			$updated_user_info = $wawp_api->get_info_on_current_user();
-			self::my_log_file($updated_user_info);
 
-			// Extract updated information into user meta data
-			// First name
-			$first_name = $updated_user_info['FirstName'];
-			$last_name = $updated_user_info['LastName'];
-			$email = $updated_user_info['Email'];
-			$display_name = $updated_user_info['DisplayName'];
-			$organization = $updated_user_info['Organization'];
-			$status = $updated_user_info['Status'];
-			$membership_level_id = $updated_user_info['MembershipLevel']['Id'];
-			$membership_level_name = $updated_user_info['MembershipLevel']['Name'];
+				// Update rest of data
+				// Get updated fields of user's Wild Apricot information
+				$wawp_api = new WAWPApi($access_token, $wa_account_id);
+				$updated_user_info = $wawp_api->get_info_on_current_user();
+				self::my_log_file($updated_user_info);
 
-			// Check here for the custom fields that we want to sync
-			// Field Values:
-			$field_values = $updated_user_info['FieldValues'];
-			// Get field names from options table
-			$field_names = array();
-			$field_names[] = 'Group participation';
-			$field_names[] = 'Your favourite foods';
-			// Loop through field values
-			foreach ($field_values as $field_value) {
-				// Check if the current value is within the desired field names
-				$current_field_name = $field_value['FieldName'];
-				if (in_array($current_field_name, $field_names)) {
-					// We will save this field value
-					// Get value
-					$current_field_value = $field_value['Value'];
-					// Save current_field_value to user meta data
-					update_user_meta($current_user_id, 'wawp_' . preg_replace('/\s+/', '_', $current_field_name), maybe_serialize($current_field_value));
+				// Extract updated information into user meta data
+				// First name
+				$first_name = $updated_user_info['FirstName'];
+				update_user_meta($current_user_id, 'first_name', $first_name);
+				$last_name = $updated_user_info['LastName'];
+				update_user_meta($current_user_id, 'last_name', $last_name);
+				// $email = $updated_user_info['Email'];
+				// $display_name = $updated_user_info['DisplayName'];
+				// update_user_meta($current_user_id, 'display_name', $display_name);
+				$organization = $updated_user_info['Organization'];
+				update_user_meta($current_user_id, self::WA_ORGANIZATION_KEY, $organization);
+				$status = $updated_user_info['Status'];
+				update_user_meta($current_user_id, self::WA_USER_STATUS_KEY, $status);
+				$membership_level_id = $updated_user_info['MembershipLevel']['Id'];
+				update_user_meta($current_user_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
+				$membership_level_name = $updated_user_info['MembershipLevel']['Name'];
+				update_user_meta($current_user_id, self::WA_MEMBERSHIP_LEVEL_KEY, $membership_level_name);
+
+				// Check here for the custom fields that we want to sync
+				// Field Values:
+				$field_values = $updated_user_info['FieldValues'];
+				// Get field names from options table
+				$field_names = array();
+				$field_names[] = 'Group participation';
+				$field_names[] = 'Your favourite foods';
+				// Loop through field values
+				foreach ($field_values as $field_value) {
+					// Check if the current value is within the desired field names
+					$current_field_name = $field_value['FieldName'];
+					if (in_array($current_field_name, $field_names)) {
+						// We will save this field value
+						// Get value
+						$current_field_value = $field_value['Value'];
+						// Save current_field_value to user meta data
+						update_user_meta($current_user_id, 'wawp_' . preg_replace('/\s+/', '_', $current_field_name), maybe_serialize($current_field_value));
+					}
 				}
 			}
 		}
@@ -742,18 +742,18 @@ class WAIntegration {
 	/**
 	 * Schedules the hourly event to update the user's Wild Apricot information in their WordPress profile
 	 */
-	public static function create_cron_for_user_refresh() {
+	public static function create_cron_for_user_refresh($user_id) {
 		// Schedule event if it is not already scheduled
 		// $user = wp_get_current_user();
 		// self::my_log_file('current user id: ');
 		// self::my_log_file($user->ID);
-		// $args = [
-		// 	$user_id
-		// ];
+		$args = [
+			$user_id
+		];
 		// Save this user id in database
 		// update_option(self::CRON_USER_ID, $user_id);
-		if (!wp_next_scheduled(self::USER_REFRESH_HOOK)) {
-			wp_schedule_event(time(), 'hourly', self::USER_REFRESH_HOOK);
+		if (!wp_next_scheduled(self::USER_REFRESH_HOOK, $args)) {
+			wp_schedule_event(time(), 'hourly', self::USER_REFRESH_HOOK, $args);
 		}
 	}
 
@@ -912,7 +912,7 @@ class WAIntegration {
 
 		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
 		update_option(self::CRON_USER_ID, $current_wp_user_id);
-		self::create_cron_for_user_refresh();
+		self::create_cron_for_user_refresh($current_wp_user_id);
 	}
 
 	/**
@@ -1007,6 +1007,18 @@ class WAIntegration {
 			</form>
 		<?php
 		return ob_get_clean();
+	}
+
+	public function remove_user_wa_update(int $user_id) {
+		self::my_log_file($user_id);
+		// Remove this user's CRON update
+		$args = [
+			$user_id
+		];
+		$timestamp = wp_next_scheduled(self::USER_REFRESH_HOOK, $args);
+		if ($timestamp) {
+			wp_unschedule_event($timestamp, self::USER_REFRESH_HOOK, $args);
+		}
 	}
 
 	/**
