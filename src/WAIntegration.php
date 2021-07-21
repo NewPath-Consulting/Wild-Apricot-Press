@@ -659,6 +659,7 @@ class WAIntegration {
 		// self::my_log_file($current_user->ID);
 
 		$current_user_id = get_option(self::CRON_USER_ID);
+		self::my_log_file('are we same user id: ' . $current_user_id);
 
 		$wa_account_id = get_user_meta($current_user_id, self::WA_USER_ID_KEY, true);
 		self::my_log_file($wa_account_id);
@@ -666,17 +667,23 @@ class WAIntegration {
 			$access_token = get_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, true);
 			// Check if access token has expired (most likely will be expired)
 			$current_unix_time = time();
-			self::my_log_file($current_unix_time);
+			self::my_log_file('Current time: ' . $current_unix_time);
 			$expire_unix_time = get_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, true); // single value
-			self::my_log_file($expire_unix_time);
+			self::my_log_file('Expire time: ' . $expire_unix_time);
 			if ($current_unix_time >= $expire_unix_time) { // passed expiration time
 				self::my_log_file('weve passed the expiring time!');
 				// Retrieve refresh token
 				$refresh_token = get_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, true);
+				self::my_log_file('this is the original refresh token: ');
+				self::my_log_file($refresh_token);
 				$dataEncryption = new DataEncryption();
 				$refresh_token = $dataEncryption->decrypt($refresh_token);
+				self::my_log_file('this is the refresh token: ');
+				self::my_log_file($refresh_token);
 				// Get new access token
 				$new_response = WAWPApi::get_new_access_token($refresh_token);
+				self::my_log_file('new response: ');
+				self::my_log_file($new_response);
 				// Retrieve values from response
 				$new_access_token = $new_response['access_token'];
 				$new_refresh_token = $new_response['refresh_token'];
@@ -686,7 +693,10 @@ class WAIntegration {
 				// Save new values in user meta data
 				update_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($new_access_token));
 				update_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($new_refresh_token));
-				update_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, time() + $new_expires_in);
+				$updated_new_expiry_time = time() + $new_expires_in;
+				self::my_log_file('we are saving this expire time! ');
+				self::my_log_file($updated_new_expiry_time);
+				update_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, $updated_new_expiry_time);
 			}
 			// Get updated fields of user's Wild Apricot information
 			$wawp_api = new WAWPApi($access_token, $wa_account_id);
@@ -750,6 +760,7 @@ class WAIntegration {
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		// Get access token and refresh token
+		self::my_log_file($login_data);
 		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
@@ -859,10 +870,13 @@ class WAIntegration {
 		$dataEncryption = new DataEncryption();
 		add_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
 		add_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		self::my_log_file('we are saving this refresh token: ');
+		self::my_log_file($dataEncryption->encrypt($refresh_token));
 		// Store time that access token expires
 		$new_time_to_save = time() + $time_remaining_to_refresh;
-		self::my_log_file('new time: ' . $new_time_to_save);
-		add_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save, true); // directly insert
+		self::my_log_file('lets save time: ' . $new_time_to_save);
+		self::my_log_file('id were savign for: ' . $current_wp_user_id);
+		update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save); // directly insert
 		// Add Wild Apricot id to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata

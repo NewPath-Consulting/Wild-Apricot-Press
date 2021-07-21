@@ -22,9 +22,9 @@ class WAWPApi {
 	public static function unsetCronJob($cron_hook_name, $args = [])
     {
 		// Get the timestamp for the next event.
-		self::my_log_file($args);
+		// self::my_log_file($args);
 		$timestamp = wp_next_scheduled($cron_hook_name, $args);
-		self::my_log_file($timestamp);
+		// self::my_log_file($timestamp);
 		if ($timestamp) {
 			self::my_log_file('we have an unschedule!');
 			wp_unschedule_event($timestamp, $cron_hook_name, $args);
@@ -121,9 +121,8 @@ class WAWPApi {
 			'body' => 'grant_type=refresh_token&refresh_token=' . $refresh_token
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-
+		self::my_log_file($response);
 		$data = self::response_to_data($response);
-
 		return $data;
 	}
 
@@ -182,7 +181,7 @@ class WAWPApi {
 				$membership_levels[$current_key] = $current_level;
 			}
 		}
-		self::my_log_file($membership_levels);
+		// self::my_log_file($membership_levels);
         return $membership_levels;
     }
 
