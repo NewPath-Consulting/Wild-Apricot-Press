@@ -122,11 +122,11 @@ class WAIntegration {
 			// Add page id to options so that it can be removed on deactivation
 			update_option('wawp_wal_page_id', $page_id);
 		}
-		
+
 		// Remove from header if it is automatically added
-		
+
 		//commented out because this isn't ever used? be aware it is an array now
-		//$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings 
+		//$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
 
 
 		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
@@ -326,7 +326,9 @@ class WAIntegration {
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
 		// Add the 'restricted' property to this post's meta data
-		update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true, true);
+		if (!empty($checked_groups_ids) || !empty($checked_levels_ids)) {
+			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true, true);
+		}
 
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
 		// Get current array of restricted post, if applicable
