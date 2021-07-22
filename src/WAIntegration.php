@@ -327,7 +327,7 @@ class WAIntegration {
 
 		// Add the 'restricted' property to this post's meta data
 		if (!empty($checked_groups_ids) || !empty($checked_levels_ids)) {
-			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true, true);
+			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true);
 		}
 
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
