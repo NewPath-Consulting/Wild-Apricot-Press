@@ -235,7 +235,7 @@ class WAIntegration {
 				$post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
 
 				// If no options are selected, then the post is unrestricted, as there cannot be a post with no viewers
-				if (!isset($post_restricted_groups) && !isset($post_restricted_levels)) {
+				if (empty($post_restricted_groups) && empty($post_restricted_levels)) {
 					update_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, false);
 					return $post_content;
 				}
