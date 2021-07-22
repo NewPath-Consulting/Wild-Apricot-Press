@@ -600,7 +600,7 @@ class MySettingsPage
         //If $timestamp === false schedule the event since it hasn't been done previously
         if (!wp_next_scheduled(self::CRON_HOOK)) {
             //Schedule the event for right now, then to repeat daily using the hook
-            wp_schedule_event(current_time('timestamp'), 'hourly', self::CRON_HOOK);
+            wp_schedule_event(current_time('timestamp'), 'daily', self::CRON_HOOK);
         }
     }
 

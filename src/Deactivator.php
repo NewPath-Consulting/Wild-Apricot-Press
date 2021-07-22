@@ -41,7 +41,7 @@ class Deactivator {
 		// $args = [
 		// 	$user_id
 		// ];
-		wp_unschedule_hook('wawp_cron_refresh_user_hook');
+		WAWPApi::unsetCronJob('wawp_cron_refresh_user_hook');
 	}
 }
 ?>

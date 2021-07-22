@@ -57,7 +57,7 @@ class Activator {
 			if (get_option('wawp_cron_user_id')) { // user has been logged into Wild Apricot
 				require_once('WAIntegration.php');
 				$user_id = get_option('wawp_cron_user_id');
-				WAIntegration::create_cron_for_user_refresh($user_id);
+				WAIntegration::create_cron_for_user_refresh();
 			}
 		}
 	}
