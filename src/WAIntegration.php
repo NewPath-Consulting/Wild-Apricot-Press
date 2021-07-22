@@ -688,10 +688,12 @@ class WAIntegration {
 			self::my_log_file($wa_users);
 
 			// Loop through each WP_User
+			$wa_user_id_array = array();
 			foreach ($wa_users as $wa_user) {
-				$user_data = $wa_user['data'];
-				$wordpress_user_id = $user_data['ID'];
+				$wordpress_user_id = $wa_user->ID;
 				// Get Wild Apricot ID
+				$wa_synced_id = get_user_meta($site_user_id, self::WA_USER_ID_KEY);
+				$wa_user_id_array[] = $wa_synced_id;
 			}
 		}
 
