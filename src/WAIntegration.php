@@ -681,11 +681,18 @@ class WAIntegration {
 
 			// Get all of the Wild Apricot users in the WordPress database
 			$users_args = array(
-				'meta_key' => WA_USER_ID_KEY,
+				'meta_key' => self::WA_USER_ID_KEY,
 			);
 			$wa_users = get_users($users_args);
 			// Get IDs of users
 			self::my_log_file($wa_users);
+
+			// Loop through each WP_User
+			foreach ($wa_users as $wa_user) {
+				$user_data = $wa_user['data'];
+				$wordpress_user_id = $user_data['ID'];
+				// Get Wild Apricot ID
+			}
 		}
 
 		// Ensure that user is logged into a Wild Apricot synced account
@@ -787,6 +794,7 @@ class WAIntegration {
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		// Get access token and refresh token
+		// self::my_log_file($login_data);
 		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
@@ -799,6 +807,7 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user();
+		self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = '';
 		$membership_level_id = '';
@@ -901,7 +910,7 @@ class WAIntegration {
 		$new_time_to_save = time() + $time_remaining_to_refresh;
 		update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save);
 		// Add Wild Apricot id to user's metadata
-		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
+		// update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
@@ -912,6 +921,7 @@ class WAIntegration {
 
 		// Get groups
 		// Loop through each field value until 'Group participation' is found
+		$wild_apricot_user_id = '';
 		$user_groups_array = array();
 		foreach ($field_values as $field_value) {
 			if ($field_value['FieldName'] == 'Group participation') { // Found
@@ -921,11 +931,17 @@ class WAIntegration {
 					$user_groups_array[$group['Id']] = $group['Label'];
 				}
 			}
+			// Find User ID
+			if ($field_value['FieldName'] == 'User ID') {
+				$wild_apricot_user_id = $field_value['Value'];
+			}
 		}
 		// Serialize the user groups array so that it can be added as user meta data
 		$user_groups_array = maybe_serialize($user_groups_array);
 		// Save to user's meta data
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
+		// Save user id
+		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wild_apricot_user_id);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
