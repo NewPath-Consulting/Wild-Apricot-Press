@@ -123,6 +123,9 @@ class WAIntegration {
 			update_option('wawp_wal_page_id', $page_id);
 		}
 
+		// Add the "Your Profile" page
+
+
 		// Remove from header if it is automatically added
 
 		//commented out because this isn't ever used? be aware it is an array now
@@ -925,6 +928,19 @@ class WAIntegration {
 		// First, check if Wild Apricot credentials are valid
 		$wa_credentials_saved = get_option('wawp_wal_name');
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
+
+			// Check if user is logged into Wild Apricot to see the page navigation
+			if (is_user_logged_in()) {
+				$current_user = wp_get_current_user();
+				$user_id = $current_user->ID;
+				$wa_user_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
+				if (!empty($wa_user_id)) {
+					$profile_page_url = esc_url(site_url() . '/index.php?pagename=wild-apricot-iframe-widget');
+					// This means that the user is logged into Wild Apricot
+					$items .= '<li id="wawp_profile_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $profile_page_url .'">Your Profile</a></li>';
+				}
+			}
+
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
 			// Get current page id
 			// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
@@ -932,17 +948,17 @@ class WAIntegration {
 			// Get login url
 			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out, now an array
-				$menus_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
-				//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
-				if(!empty($menus_to_add_button)) {
-					foreach ($menus_to_add_button as $menu_to_add_button) {
-						if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
-							$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
-						} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
-							$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $login_url .'">Log In</a></li>';
-						}
+			$menus_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
+			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
+			if(!empty($menus_to_add_button)) {
+				foreach ($menus_to_add_button as $menu_to_add_button) {
+					if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
+						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
+					} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
+						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $login_url .'">Log In</a></li>';
 					}
 				}
+			}
 			return $items;
 		}
 	}
