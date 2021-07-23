@@ -655,6 +655,7 @@ class WAIntegration {
 	 * @param int $current_user_id The user's WordPress ID
 	 */
 	public function refresh_user_wa_info() {
+		self::my_log_file('lets refresh the users!');
 		// Get all user ids of Wild Apricot logged in users
 		$dataEncryption = new DataEncryption();
 		// Get admin account ID
@@ -679,22 +680,8 @@ class WAIntegration {
             $admin_access_token = $new_access_token;
             $admin_account_id = $new_account_id;
 
-			// Get all of the Wild Apricot users in the WordPress database
-			$users_args = array(
-				'meta_key' => self::WA_USER_ID_KEY,
-			);
-			$wa_users = get_users($users_args);
-			// Get IDs of users
-			self::my_log_file($wa_users);
-
-			// Loop through each WP_User
-			$filter_string = '';
-			foreach ($wa_users as $wa_user) {
-				$wordpress_user_id = $wa_user->ID;
-				// Get Wild Apricot ID
-				$wa_synced_id = get_user_meta($site_user_id, self::WA_USER_ID_KEY);
-				$filter_string .= 'ID%20eq%20' . $wa_synced_id;
-			}
+			$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
+			$wawp_api->get_all_user_info();
 		}
 
 		// Ensure that user is logged into a Wild Apricot synced account
@@ -778,10 +765,6 @@ class WAIntegration {
 	 * @param int $user_id  User's WordPress ID
 	 */
 	public static function create_cron_for_user_refresh() {
-		// Place user id in arguments
-		$args = [
-			$user_id
-		];
 		// Schedule event if it is not already scheduled
 		if (!wp_next_scheduled(self::USER_REFRESH_HOOK)) {
 			wp_schedule_event(time(), 'daily', self::USER_REFRESH_HOOK);
@@ -809,7 +792,7 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user();
-		self::my_log_file($contact_info);
+		// self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = '';
 		$membership_level_id = '';
@@ -996,6 +979,7 @@ class WAIntegration {
 				}
 				// Send POST request to Wild Apricot API to log in if input is valid
 				$login_attempt = WAWPApi::login_email_password($valid_login);
+				// self::my_log_file($login_attempt);
 				// If login attempt is false, then the user could not log in
 				if (!$login_attempt) {
 					// Present user with log in error
