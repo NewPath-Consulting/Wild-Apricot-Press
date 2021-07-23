@@ -57,7 +57,7 @@ class WAWPApi {
 	 *
 	 * @return array $decrypted_credentials	Decrypted Wild Apricot credentials
 	 */
-	private static function load_user_credentials() {
+	public static function load_user_credentials() {
 		// Load encrypted credentials from database
 		$credentials = get_option('wawp_wal_name');
 		// Decrypt credentials
