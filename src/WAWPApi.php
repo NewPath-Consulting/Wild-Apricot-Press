@@ -110,15 +110,19 @@ class WAWPApi {
 		// Get IDs of users
 		// self::my_log_file($wa_users);
 
-		// Loop through each WP_User
+		// Loop through each WP_User and create filter
 		$filter_string = 'filter=';
 		$i = 0;
+		// Create array that stores the Wild Apricot ID associated with the WordPress ID
+		$user_ids_array = array();
 		foreach ($wa_users as $wa_user) {
 			$site_user_id = $wa_user->ID;
 			self::my_log_file($site_user_id);
 			// Get Wild Apricot ID
 			$wa_synced_id = get_user_meta($site_user_id, 'wawp_wa_user_id');
 			$wa_synced_id = $wa_synced_id[0];
+			// Save to array
+			$user_ids_array[$site_user_id] = $wa_synced_id;
 			self::my_log_file($wa_synced_id);
 			$filter_string .= 'ID%20eq%20' . $wa_synced_id;
 			if (!($i == count($wa_users) - 1)) { // not last element
@@ -126,13 +130,24 @@ class WAWPApi {
 			}
 			$i++;
 		}
-		self::my_log_file($filter_string);
+		self::my_log_file($wa_users);
 		$args = $this->request_data_args();
 		// https://api.wildapricot.org/v2.2/accounts/221748/contacts?%24async=false&%24filter=ID%20eq%2060699353
 		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
 		$all_contacts_request = wp_remote_get($url, $args);
-		$all_contacts_request = self::response_to_data($all_contacts_request);
-		self::my_log_file($all_contacts_request);
+		$all_contacts = self::response_to_data($all_contacts_request);
+		self::my_log_file($all_contacts);
+
+		// Update each user in WordPress
+		// Loop through each contact
+		foreach ($user_ids_array as $key => $user) {
+			$site_id = $key;
+			$wa_id = $user;
+			// Find this wa_id in the contacts from the API
+			foreach ($all_contacts as $contact) {
+
+			}
+		}
 	}
 
 	/**
