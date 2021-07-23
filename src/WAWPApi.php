@@ -99,6 +99,13 @@ class WAWPApi {
     }
 
 	/**
+	 * Gets user information for all Wild Apricot users in the WordPress database
+	 */
+	public function get_all_user_info() {
+
+	}
+
+	/**
 	 * Returns a new access token after it has expired
 	 * https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
 	 */
