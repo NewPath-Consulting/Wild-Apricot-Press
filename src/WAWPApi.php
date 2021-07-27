@@ -114,38 +114,66 @@ class WAWPApi {
 		$filter_string = 'filter=';
 		$i = 0;
 		// Create array that stores the Wild Apricot ID associated with the WordPress ID
-		$user_ids_array = array();
+		$user_emails_array = array();
 		foreach ($wa_users as $wa_user) {
+			// Get user's WordPress ID
 			$site_user_id = $wa_user->ID;
-			self::my_log_file($site_user_id);
+			// self::my_log_file($site_user_id);
+			// Get user email
+			$user_email = $wa_user->data->user_email;
 			// Get Wild Apricot ID
 			$wa_synced_id = get_user_meta($site_user_id, 'wawp_wa_user_id');
 			$wa_synced_id = $wa_synced_id[0];
-			// Save to array
-			$user_ids_array[$site_user_id] = $wa_synced_id;
-			self::my_log_file($wa_synced_id);
+			// Save to email to array indexed by WordPress ID
+			$user_emails_array[$site_user_id] = $user_email;
+			// self::my_log_file($wa_synced_id);
 			$filter_string .= 'ID%20eq%20' . $wa_synced_id;
+			// Combine IDs with OR
 			if (!($i == count($wa_users) - 1)) { // not last element
 				$filter_string .= '%20OR%20';
 			}
 			$i++;
 		}
-		self::my_log_file($wa_users);
+		// Make API request
+		// self::my_log_file($wa_users);
 		$args = $this->request_data_args();
 		// https://api.wildapricot.org/v2.2/accounts/221748/contacts?%24async=false&%24filter=ID%20eq%2060699353
 		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
 		$all_contacts_request = wp_remote_get($url, $args);
-		$all_contacts = self::response_to_data($all_contacts_request);
-		self::my_log_file($all_contacts);
+		// Ensure that responses are not empty
+		if (!empty($all_contacts_request)) {
+			$all_contacts = self::response_to_data($all_contacts_request);
+			if (!empty($all_contacts)) {
+				// Convert contacts object to an array
+				$all_contacts = (array) $all_contacts;
+				$all_contacts = $all_contacts['Contacts'];
+				self::my_log_file($all_contacts);
+				// self::my_log_file($user_emails_array);
 
-		// Update each user in WordPress
-		// Loop through each contact
-		foreach ($user_ids_array as $key => $user) {
-			$site_id = $key;
-			$wa_id = $user;
-			// Find this wa_id in the contacts from the API
-			foreach ($all_contacts as $contact) {
+				// Update each user in WordPress
+				// Loop through each contact
+				foreach ($user_emails_array as $key => $value) {
+					$site_id = $key;
+					$user_email = $value;
+					// Find this wa_id in the contacts from the API
+					foreach ($all_contacts as $contact) {
+						self::my_log_file('--------------------- new contact ------------------------');
+						self::my_log_file($contact);
+						// Get contact's email
+						$contact_email = $contact['Email'];
+						self::my_log_file($contact_email);
+						// Check if contact's email checks for the email we are searching for
+						if ($contact_email == $user_email) {
+							// This is the correct user
+							// Let us update this site_id with its new data
+							$updated_organization = $contact['Organization'];
+							$updated_membership_level = $contact['MembershipLevel']['Name'];
+							$updated_membership_level_id = $contact['MembershipLevel']['Id'];
+							// Get membership groups
 
+						}
+					}
+				}
 			}
 		}
 	}
