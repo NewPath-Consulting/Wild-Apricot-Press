@@ -175,6 +175,7 @@ class WAWPApi {
 								$field_name = $field['FieldName'];
 								if ($field_name == 'Group participation') {
 									// Get all membership groups
+									// $group_values = ;
 								}
 							}
 						}
