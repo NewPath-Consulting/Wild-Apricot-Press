@@ -170,7 +170,13 @@ class WAWPApi {
 							$updated_membership_level = $contact['MembershipLevel']['Name'];
 							$updated_membership_level_id = $contact['MembershipLevel']['Id'];
 							// Get membership groups
-
+							$contact_fields = $contact['FieldValues'];
+							foreach ($contact_fields as $field) {
+								$field_name = $field['FieldName'];
+								if ($field_name == 'Group participation') {
+									// Get all membership groups
+								}
+							}
 						}
 					}
 				}
