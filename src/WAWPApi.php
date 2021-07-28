@@ -211,6 +211,13 @@ class WAWPApi {
 							update_user_meta($site_id, WAIntegration::WA_ORGANIZATION_KEY, $updated_organization);
 							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $updated_membership_level);
 							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $updated_membership_level_id);
+							// Update user's role to their new membership level
+							$updated_role = 'subscriber';
+							if (!empty($updated_membership_level) && $updated_membership_level != '') {
+								$updated_role = 'wawp_' . str_replace(' ', '', $updated_membership_level);
+							}
+							$current_user = get_user_by('id', $site_id);
+							$current_user->set_role($updated_role);
 						}
 					}
 				}

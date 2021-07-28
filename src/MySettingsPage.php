@@ -88,14 +88,46 @@ class MySettingsPage
                     // $old_post_levels = get_post_meta($restricted_post);
                     update_post_meta($restricted_post, $restricted_levels_key, $post_restricted_levels); // single value
                 }
-                // If this is a deleted level, then we must remove the role associated with this level
-                if ($restricted_levels_key == 'wawp_restricted_levels') {
-                    // Remove role
-                    self::my_log_file('lets remove this role!');
-                    $level_name = $old_levels[$level_to_delete];
-                    $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
-                    self::my_log_file($role_to_remove);
-                    remove_role($role_to_remove);
+                // // If this is a deleted level, then we must remove the role associated with this level
+                // if ($restricted_levels_key == 'wawp_restricted_levels') {
+                //     // Remove role
+                //     self::my_log_file('lets remove this role!');
+                //     $level_name = $old_levels[$level_to_delete];
+                //     $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
+                //     self::my_log_file($role_to_remove);
+                //     remove_role($role_to_remove);
+                // }
+            }
+        }
+    }
+
+    /**
+     * Removes deleted roles
+     */
+    private function remove_invalid_roles($updated_levels, $old_levels) {
+        // Convert levels arrays to its keys
+        $updated_levels_keys = array_keys($updated_levels);
+        $old_levels_keys = array_keys($old_levels);
+
+        // Loop through each old level and check if it is in the updated levels
+        foreach ($old_levels_keys as $old_level_key) {
+            if (!in_array($old_level_key, $updated_levels_keys)) { // old level is NOT in the updated levels
+                // This is a deleted level! ($old_level)
+                $level_to_delete = $old_level_key;
+                self::my_log_file($level_to_delete);
+                // Remove role
+                self::my_log_file('lets remove this role!');
+                $level_name = $old_levels[$level_to_delete];
+                $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
+                self::my_log_file($role_to_remove);
+                remove_role($role_to_remove);
+                // Remove users from this role now that it is deleted
+                $delete_args = array('role' => $role_to_remove);
+                $users_with_deleted_roles = get_users($delete_args);
+                // Loop through these users and set their roles to subscriber
+                self::my_log_file($users_with_deleted_roles);
+                foreach ($users_with_deleted_roles as $user_to_modify) {
+                    $user_to_modify->set_role('subscriber');
                 }
             }
         }
@@ -105,7 +137,7 @@ class MySettingsPage
      * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
      */
     public function cron_update_wa_memberships() {
-
+        self::my_log_file('lets update memberships!');
         $dataEncryption = new DataEncryption();
 
         // Get access token and account id
@@ -160,6 +192,10 @@ class MySettingsPage
                 if (!empty($old_groups) && !empty($updated_groups) && (count($updated_groups) < count($old_groups))) {
                     $this->remove_invalid_groups_levels($updated_groups, $old_groups, 'wawp_restricted_groups');
                 }
+            }
+            // Also, removed deleted roles if one or more membership levels are removed
+            if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
+                $this->remove_invalid_roles($updated_levels, $old_levels);
             }
 
             // Save updated levels to options table
