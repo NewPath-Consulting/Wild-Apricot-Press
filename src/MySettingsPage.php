@@ -88,15 +88,6 @@ class MySettingsPage
                     // $old_post_levels = get_post_meta($restricted_post);
                     update_post_meta($restricted_post, $restricted_levels_key, $post_restricted_levels); // single value
                 }
-                // // If this is a deleted level, then we must remove the role associated with this level
-                // if ($restricted_levels_key == 'wawp_restricted_levels') {
-                //     // Remove role
-                //     self::my_log_file('lets remove this role!');
-                //     $level_name = $old_levels[$level_to_delete];
-                //     $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
-                //     self::my_log_file($role_to_remove);
-                //     remove_role($role_to_remove);
-                // }
             }
         }
     }

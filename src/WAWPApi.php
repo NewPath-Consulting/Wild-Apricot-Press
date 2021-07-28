@@ -168,6 +168,11 @@ class WAWPApi {
 						// Check if contact's email checks for the email we are searching for
 						if (strcasecmp($contact_email, $user_email) == 0) { // equal
 							// This is the correct user
+							// Check if user is an administrator -> if so, do not modify them!
+							$user_is_admin = false;
+							if (user_can($site_id, 'manage_options')) {
+								$user_is_admin = true;
+							}
 							// Let us update this site_id with its new data
 							$updated_organization = $contact['Organization'];
 							self::my_log_file($updated_organization);
@@ -212,12 +217,14 @@ class WAWPApi {
 							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $updated_membership_level);
 							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $updated_membership_level_id);
 							// Update user's role to their new membership level
-							$updated_role = 'subscriber';
-							if (!empty($updated_membership_level) && $updated_membership_level != '') {
-								$updated_role = 'wawp_' . str_replace(' ', '', $updated_membership_level);
+							if (!$user_is_admin) {
+								$updated_role = 'subscriber';
+								if (!empty($updated_membership_level) && $updated_membership_level != '') {
+									$updated_role = 'wawp_' . str_replace(' ', '', $updated_membership_level);
+								}
+								$current_user = get_user_by('id', $site_id);
+								$current_user->set_role($updated_role);
 							}
-							$current_user = get_user_by('id', $site_id);
-							$current_user->set_role($updated_role);
 						}
 					}
 				}
