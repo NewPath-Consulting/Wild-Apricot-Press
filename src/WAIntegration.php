@@ -868,8 +868,11 @@ class WAIntegration {
 				$generated_username .= $random_user_num;
 			}
 			// Get role
-			// $user_role = 'subscriber';
-			$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
+			$user_role = 'subscriber';
+			if (!empty($membership_level) && $membership_level != '') {
+				$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
+			}
+			self::my_log_file($user_role);
 			if ($is_adminstrator) {
 				$user_role = 'administrator';
 			}
