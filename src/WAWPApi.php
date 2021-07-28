@@ -14,6 +14,8 @@ class WAWPApi {
     public function __construct($access_token, $wa_user_id) {
         $this->access_token = $access_token;
         $this->wa_user_id = $wa_user_id;
+		// Include WAIntegration
+		require_once('WAIntegration.php');
     }
 
 	/**
@@ -147,7 +149,7 @@ class WAWPApi {
 				// Convert contacts object to an array
 				$all_contacts = (array) $all_contacts;
 				$all_contacts = $all_contacts['Contacts'];
-				self::my_log_file($all_contacts);
+				// self::my_log_file($all_contacts);
 				// self::my_log_file($user_emails_array);
 
 				// Update each user in WordPress
@@ -157,8 +159,8 @@ class WAWPApi {
 					$user_email = $value;
 					// Find this wa_id in the contacts from the API
 					foreach ($all_contacts as $contact) {
-						self::my_log_file('--------------------- new contact ------------------------');
-						self::my_log_file($contact);
+						// self::my_log_file('--------------------- new contact ------------------------');
+						// self::my_log_file($contact);
 						// Get contact's email
 						$contact_email = $contact['Email'];
 						self::my_log_file($contact_email);
@@ -169,15 +171,32 @@ class WAWPApi {
 							$updated_organization = $contact['Organization'];
 							$updated_membership_level = $contact['MembershipLevel']['Name'];
 							$updated_membership_level_id = $contact['MembershipLevel']['Id'];
-							// Get membership groups
+							$updated_status = $contact['Status'];
+							// Get membership groups through field values
 							$contact_fields = $contact['FieldValues'];
-							foreach ($contact_fields as $field) {
-								$field_name = $field['FieldName'];
-								if ($field_name == 'Group participation') {
-									// Get all membership groups
-									// $group_values = ;
+							if (!empty($contact_fields)) {
+								$user_groups_array = array();
+								foreach ($contact_fields as $field) {
+									$field_name = $field['FieldName'];
+									if ($field_name == 'Group participation') {
+										// Get membership groups array
+										$group_array = $field['Value'];
+										if (!empty($group_array)) {
+											// Loop through each group
+											foreach ($group_array as $group) {
+												$user_groups_array[$group['Id']] = $group['Label'];
+											}
+										}
+									}
 								}
+								// Set user's groups to meta data
+								update_user_meta($site_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 							}
+							// Update user meta data
+							update_user_meta($site_id, WAIntegration::WA_USER_STATUS_KEY, $updated_status);
+							update_user_meta($site_id, WAIntegration::WA_ORGANIZATION_KEY, $updated_organization);
+							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $updated_membership_level);
+							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $updated_membership_level_id);
 						}
 					}
 				}

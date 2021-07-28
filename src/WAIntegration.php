@@ -103,6 +103,9 @@ class WAIntegration {
 	 *
 	 */
 	public function create_login_page() {
+		// Run action to create user refresh CRON event
+		self::create_cron_for_user_refresh();
+
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
@@ -932,8 +935,8 @@ class WAIntegration {
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
 
 		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
-		update_option(self::CRON_USER_ID, $current_wp_user_id);
-		self::create_cron_for_user_refresh();
+		// update_option(self::CRON_USER_ID, $current_wp_user_id);
+		// self::create_cron_for_user_refresh();
 	}
 
 	/**
