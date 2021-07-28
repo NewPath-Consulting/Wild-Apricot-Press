@@ -157,18 +157,20 @@ class WAWPApi {
 				foreach ($user_emails_array as $key => $value) {
 					$site_id = $key;
 					$user_email = $value;
+					self::my_log_file('lets search for this email: ' . $user_email);
 					// Find this wa_id in the contacts from the API
 					foreach ($all_contacts as $contact) {
-						// self::my_log_file('--------------------- new contact ------------------------');
+						self::my_log_file('--------------------- new contact ------------------------');
 						// self::my_log_file($contact);
 						// Get contact's email
 						$contact_email = $contact['Email'];
 						self::my_log_file($contact_email);
 						// Check if contact's email checks for the email we are searching for
-						if ($contact_email == $user_email) {
+						if (strcasecmp($contact_email, $user_email) == 0) { // equal
 							// This is the correct user
 							// Let us update this site_id with its new data
 							$updated_organization = $contact['Organization'];
+							self::my_log_file($updated_organization);
 							$updated_membership_level = $contact['MembershipLevel']['Name'];
 							$updated_membership_level_id = $contact['MembershipLevel']['Id'];
 							$updated_status = $contact['Status'];
@@ -176,6 +178,7 @@ class WAWPApi {
 							$contact_fields = $contact['FieldValues'];
 							if (!empty($contact_fields)) {
 								$user_groups_array = array();
+								// Loop through the fields until 'Group participation' is found
 								foreach ($contact_fields as $field) {
 									$field_name = $field['FieldName'];
 									if ($field_name == 'Group participation') {
@@ -190,6 +193,7 @@ class WAWPApi {
 									}
 								}
 								// Set user's groups to meta data
+								self::my_log_file($user_groups_array);
 								update_user_meta($site_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 							}
 							// Update user meta data
