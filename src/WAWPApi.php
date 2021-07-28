@@ -171,9 +171,19 @@ class WAWPApi {
 							// Let us update this site_id with its new data
 							$updated_organization = $contact['Organization'];
 							self::my_log_file($updated_organization);
-							$updated_membership_level = $contact['MembershipLevel']['Name'];
-							$updated_membership_level_id = $contact['MembershipLevel']['Id'];
-							$updated_status = $contact['Status'];
+							// Get membership level, if any
+							$updated_membership_level = '';
+							$updated_membership_level_id = '';
+							// Check if the user has a membership level
+							if (array_key_exists('MembershipLevel', $contact)) {
+								$updated_membership_level = $contact['MembershipLevel']['Name'];
+								$updated_membership_level_id = $contact['MembershipLevel']['Id'];
+							}
+							// Get status, if any
+							$updated_status = '';
+							if (array_key_exists('Status', $contact)) {
+								$updated_status = $contact['Status'];
+							}
 							// Get membership groups through field values
 							$contact_fields = $contact['FieldValues'];
 							if (!empty($contact_fields)) {
