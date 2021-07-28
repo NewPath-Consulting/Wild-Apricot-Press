@@ -686,80 +686,6 @@ class WAIntegration {
 			$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
 			$wawp_api->get_all_user_info();
 		}
-
-		// Ensure that user is logged into a Wild Apricot synced account
-		// $wa_account_id = get_user_meta($current_user_id, self::WA_USER_ID_KEY, true);
-		// if (!empty($wa_account_id)) { // user is also synced with Wild Apricot
-		// 	$access_token = get_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, true);
-		// 	// Decrypt access token
-		// 	$access_token = $dataEncryption->decrypt($access_token);
-		// 	// Check if access token has expired (most likely will be expired)
-		// 	$current_unix_time = time();
-		// 	$expire_unix_time = get_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, true);
-
-		// 	// Get new access token and update data if expire time has been exceeded
-		// 	if ($current_unix_time > $expire_unix_time) { // passed expiration time
-		// 		// Retrieve refresh token
-		// 		$refresh_token = get_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, true);
-		// 		$refresh_token = $dataEncryption->decrypt($refresh_token);
-		// 		// Get new access token
-		// 		$new_response = WAWPApi::get_new_access_token($refresh_token);
-		// 		// Retrieve values from response
-		// 		$new_access_token = $new_response['access_token'];
-		// 		$new_refresh_token = $new_response['refresh_token'];
-		// 		$new_expires_in = $new_response['expires_in'];
-		// 		// Update current values
-		// 		$access_token = $new_access_token;
-		// 		// Save new values in user meta data
-		// 		update_user_meta($current_user_id, self::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($new_access_token));
-		// 		update_user_meta($current_user_id, self::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($new_refresh_token));
-		// 		$updated_new_expiry_time = time() + $new_expires_in;
-		// 		update_user_meta($current_user_id, self::TIME_TO_REFRESH_TOKEN, $updated_new_expiry_time);
-
-		// 		// Update rest of data
-		// 		// Get updated fields of user's Wild Apricot information
-		// 		$wawp_api = new WAWPApi($access_token, $wa_account_id);
-		// 		$updated_user_info = $wawp_api->get_info_on_current_user();
-
-		// 		// Extract updated information into user meta data
-		// 		$first_name = $updated_user_info['FirstName'];
-		// 		update_user_meta($current_user_id, 'first_name', $first_name);
-		// 		$last_name = $updated_user_info['LastName'];
-		// 		update_user_meta($current_user_id, 'last_name', $last_name);
-		// 		// $email = $updated_user_info['Email'];
-		// 		// $display_name = $updated_user_info['DisplayName'];
-		// 		// update_user_meta($current_user_id, 'display_name', $display_name);
-		// 		$organization = $updated_user_info['Organization'];
-		// 		update_user_meta($current_user_id, self::WA_ORGANIZATION_KEY, $organization);
-		// 		$status = $updated_user_info['Status'];
-		// 		update_user_meta($current_user_id, self::WA_USER_STATUS_KEY, $status);
-		// 		$membership_level_id = $updated_user_info['MembershipLevel']['Id'];
-		// 		update_user_meta($current_user_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
-		// 		$membership_level_name = $updated_user_info['MembershipLevel']['Name'];
-		// 		update_user_meta($current_user_id, self::WA_MEMBERSHIP_LEVEL_KEY, $membership_level_name);
-
-		// 		// Check here for the custom fields that we want to sync
-		// 		// Field Values:
-		// 		$field_values = $updated_user_info['FieldValues'];
-		// 		// Get field names from options table
-		// 		$field_names = array();
-		// 		$field_names[] = 'Group participation';
-		// 		$field_names[] = 'Your favourite foods';
-		// 		// Loop through field values
-		// 		foreach ($field_values as $field_value) {
-		// 			// Check if the current value is within the desired field names
-		// 			$current_field_name = $field_value['FieldName'];
-		// 			if (in_array($current_field_name, $field_names)) {
-		// 				// We will save this field value
-		// 				// Get value
-		// 				$current_field_value = $field_value['Value'];
-		// 				// Save current_field_value to user meta data
-		// 				update_user_meta($current_user_id, 'wawp_' . preg_replace('/\s+/', '_', $current_field_name), maybe_serialize($current_field_value));
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// If user is NOT logged in, then all is well because their updated Wild Apricot data will be synced with WordPress anyways when they log in again
 	}
 
 	/**
@@ -857,6 +783,9 @@ class WAIntegration {
 					'last_name' => $last_name
 				]);
 			}
+			// Add user's Wild Apricot membership level as another role
+			$another_role = 'wawp_' . str_replace(' ', '', $membership_level);
+			$current_wp_user->add_role($another_role);
 		} else { // email does not exist; we will create a new user
 			// Set user data
 			// Generated username is 'firstName . lastName' with a random number on the end, if necessary

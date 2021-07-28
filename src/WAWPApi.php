@@ -217,14 +217,21 @@ class WAWPApi {
 							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $updated_membership_level);
 							update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $updated_membership_level_id);
 							// Update user's role to their new membership level
-							if (!$user_is_admin) {
-								$updated_role = 'subscriber';
-								if (!empty($updated_membership_level) && $updated_membership_level != '') {
-									$updated_role = 'wawp_' . str_replace(' ', '', $updated_membership_level);
+							// Get user's current role(s)
+							$current_user_data = get_userdata($site_id);
+							$current_user_roles = $current_user_data->roles;
+							$current_user_object = get_user_by('id', $site_id);
+							// Loop through roles and remove roles
+							foreach ($current_user_roles as $current_user_role) {
+								self::my_log_file($current_user_role);
+								if (substr($current_user_role, 0, 5) == 'wawp_') {
+									// Remove this role
+									$current_user_object->remove_role($current_user_role);
 								}
-								$current_user = get_user_by('id', $site_id);
-								$current_user->set_role($updated_role);
 							}
+							// Add new membership level to user's roles
+							$updated_role = 'wawp_' . str_replace(' ', '', $updated_membership_level);
+							$current_user_object->add_role($updated_role);
 						}
 					}
 				}
