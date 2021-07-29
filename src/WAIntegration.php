@@ -328,8 +328,10 @@ class WAIntegration {
 		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids, true); // only add single value
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
-		// Add the 'restricted' property to this post's meta data
+		// Add the 'restricted' property to this post's meta data and check if page is indeed restricted
+		$this_post_is_restricted = false;
 		if (!empty($checked_groups_ids) || !empty($checked_levels_ids)) {
+			$this_post_is_restricted = true;
 			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true);
 		}
 
