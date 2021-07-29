@@ -698,7 +698,6 @@ class WAIntegration {
 			$admin_access_token = $dataEncryption->decrypt($admin_access_token);
 			$admin_account_id = $dataEncryption->decrypt($admin_account_id);
 		}
-		self::my_log_file('lets refresh the users!');
 		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
 		$wawp_api->get_all_user_info();
 	}

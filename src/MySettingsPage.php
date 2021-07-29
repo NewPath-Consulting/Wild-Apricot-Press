@@ -177,7 +177,6 @@ class MySettingsPage
                 $access_token = $dataEncryption->decrypt($access_token);
                 $wa_account_id = $dataEncryption->decrypt($wa_account_id);
             }
-            self::my_log_file('lets update memberships!');
 
             // Create WAWP Api instance
             $wawp_api = new WAWPApi($access_token, $wa_account_id);
