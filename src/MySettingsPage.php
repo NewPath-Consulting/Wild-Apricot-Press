@@ -278,8 +278,8 @@ class MySettingsPage
             <!-- Tabs for navigation -->
             <nav class="nav-tab-wrapper">
                 <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Access Options</a>
-                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='wawp_settings_fields'):?>nav-tab-active<?php endif; ?>">Synced Fields</a>
-                <a href="?page=wawp-wal-admin&tab=delete" class="nav-tab <?php if($tab==='wawp_settings_deletion'):?>nav-tab-active<?php endif; ?>">Deletion Options</a>
+                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='fields'):?>nav-tab-active<?php endif; ?>">Synced Fields</a>
+                <a href="?page=wawp-wal-admin&tab=delete" class="nav-tab <?php if($tab==='delete'):?>nav-tab-active<?php endif; ?>">Deletion Options</a>
             </nav>
             <div class="tab-content">
                 <?php switch($tab) :
@@ -675,6 +675,19 @@ class MySettingsPage
             'wawp-wal-admin', // page
             'wawp_restriction_id' // section
         );
+
+        // ------------------------- Custom fields ---------------------------
+        // Register setting
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'custom_fields_sanitize'),
+            'default' => NULL
+        );
+        register_setting(
+            'wawp_restriction_group', // group name for settings
+            'wawp_restriction_name', // name of option to sanitize and save
+            $register_args
+        );
     }
 
     /**
@@ -687,6 +700,12 @@ class MySettingsPage
             wp_schedule_event(current_time('timestamp'), 'daily', self::CRON_HOOK);
         }
     }
+
+    /**
+     * Sanitize custom fields input
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
 
     /**
      * Sanitize each setting field as needed
