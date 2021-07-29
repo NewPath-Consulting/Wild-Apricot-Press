@@ -81,8 +81,20 @@ class MySettingsPage
                     if (in_array($level_to_delete, $post_restricted_levels)) {
                         // Remove this updated level from post restricted levels
                         $post_restricted_levels = array_diff($post_restricted_levels, array($level_to_delete));
+                    }
+                    // Check if post's restricted groups and levels are now empty
+                    $other_membership_key = 'wawp_restricted_groups';
+                    if ($restricted_levels_key == 'wawp_restricted_groups') {
+                        $other_membership_key = 'wawp_restricted_levels';
+                    }
+                    $other_memberships = get_post_meta($restricted_post, $other_membership_key);
+                    $other_memberships = maybe_unserialize($other_memberships[0]);
+                    if (empty($other_memberships) && empty($post_restricted_levels)) {
+                        // This post should NOT be restricted
+                        update_post_meta($restricted_post, 'wawp_is_post_restricted', false);
                         // Remove this post from the array of restricted posts
                         $updated_restricted_posts = array_diff($restricted_posts, array($restricted_post));
+                        update_option('wawp_array_of_restricted_posts', $updated_restricted_posts);
                     }
                     // Save new restricted levels to post meta data
                     $post_restricted_levels = maybe_serialize($post_restricted_levels);
