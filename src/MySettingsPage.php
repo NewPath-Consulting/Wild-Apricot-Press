@@ -81,6 +81,8 @@ class MySettingsPage
                     if (in_array($level_to_delete, $post_restricted_levels)) {
                         // Remove this updated level from post restricted levels
                         $post_restricted_levels = array_diff($post_restricted_levels, array($level_to_delete));
+                        // Remove this post from the array of restricted posts
+                        $updated_restricted_posts = array_diff($restricted_posts, array($restricted_post));
                     }
                     // Save new restricted levels to post meta data
                     $post_restricted_levels = maybe_serialize($post_restricted_levels);
@@ -90,6 +92,7 @@ class MySettingsPage
                 }
             }
         }
+        // Check if restricted levels and groups are now empty -> post will not be restricted
     }
 
     /**
@@ -127,13 +130,13 @@ class MySettingsPage
      * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
      */
     public function cron_update_wa_memberships() {
-        self::my_log_file('lets update memberships!');
         $dataEncryption = new DataEncryption();
 
         // Get access token and account id
         $access_token = get_transient('wawp_admin_access_token');
         $wa_account_id = get_transient('wawp_admin_account_id');
 
+        // Boolean to hold if we are using the same access token (true), or if we must refresh the access token (false)
         $same_credentials = true;
 
         // Check that the transients are still valid -> if not, get new token
@@ -155,11 +158,14 @@ class MySettingsPage
             $wa_account_id = $new_account_id;
         }
 
+        // Run this update ONLY if the previous access token and client secret were expired.
+        // That way, we are only updating after a set amount of time, and not instantaneously
         if (!empty($access_token) && !empty($wa_account_id)) {
             if ($same_credentials) {
                 $access_token = $dataEncryption->decrypt($access_token);
                 $wa_account_id = $dataEncryption->decrypt($wa_account_id);
             }
+            self::my_log_file('lets update memberships!');
 
             // Create WAWP Api instance
             $wawp_api = new WAWPApi($access_token, $wa_account_id);
@@ -192,7 +198,6 @@ class MySettingsPage
             update_option('wawp_all_levels_key', $updated_levels);
             // Save updated groups to options table
             update_option('wawp_all_groups_key', $updated_groups);
-
         }
     }
 
@@ -701,7 +706,6 @@ class MySettingsPage
         // If input is valid, check if it can connect to the API
         $valid_api = '';
         if ($entered_valid) {
-            require_once('WAWPApi.php');
             $valid_api = WAWPApi::is_application_valid($entered_api_key);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered

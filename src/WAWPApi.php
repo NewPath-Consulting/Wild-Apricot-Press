@@ -109,8 +109,6 @@ class WAWPApi {
 			'meta_key' => 'wawp_wa_user_id',
 		);
 		$wa_users = get_users($users_args);
-		// Get IDs of users
-		// self::my_log_file($wa_users);
 
 		// Loop through each WP_User and create filter
 		$filter_string = 'filter=';
@@ -120,7 +118,6 @@ class WAWPApi {
 		foreach ($wa_users as $wa_user) {
 			// Get user's WordPress ID
 			$site_user_id = $wa_user->ID;
-			// self::my_log_file($site_user_id);
 			// Get user email
 			$user_email = $wa_user->data->user_email;
 			// Get Wild Apricot ID
@@ -128,7 +125,6 @@ class WAWPApi {
 			$wa_synced_id = $wa_synced_id[0];
 			// Save to email to array indexed by WordPress ID
 			$user_emails_array[$site_user_id] = $user_email;
-			// self::my_log_file($wa_synced_id);
 			$filter_string .= 'ID%20eq%20' . $wa_synced_id;
 			// Combine IDs with OR
 			if (!($i == count($wa_users) - 1)) { // not last element
@@ -137,7 +133,6 @@ class WAWPApi {
 			$i++;
 		}
 		// Make API request
-		// self::my_log_file($wa_users);
 		$args = $this->request_data_args();
 		// https://api.wildapricot.org/v2.2/accounts/221748/contacts?%24async=false&%24filter=ID%20eq%2060699353
 		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
@@ -149,22 +144,16 @@ class WAWPApi {
 				// Convert contacts object to an array
 				$all_contacts = (array) $all_contacts;
 				$all_contacts = $all_contacts['Contacts'];
-				// self::my_log_file($all_contacts);
-				// self::my_log_file($user_emails_array);
 
 				// Update each user in WordPress
 				// Loop through each contact
 				foreach ($user_emails_array as $key => $value) {
 					$site_id = $key;
 					$user_email = $value;
-					// self::my_log_file('lets search for this email: ' . $user_email);
 					// Find this wa_id in the contacts from the API
 					foreach ($all_contacts as $contact) {
-						// self::my_log_file('--------------------- new contact ------------------------');
-						// self::my_log_file($contact);
 						// Get contact's email
 						$contact_email = $contact['Email'];
-						// self::my_log_file($contact_email);
 						// Check if contact's email checks for the email we are searching for
 						if (strcasecmp($contact_email, $user_email) == 0) { // equal
 							// This is the correct user
@@ -175,7 +164,6 @@ class WAWPApi {
 							}
 							// Let us update this site_id with its new data
 							$updated_organization = $contact['Organization'];
-							// self::my_log_file($updated_organization);
 							// Get membership level, if any
 							$updated_membership_level = '';
 							$updated_membership_level_id = '';
@@ -208,7 +196,6 @@ class WAWPApi {
 									}
 								}
 								// Set user's groups to meta data
-								// self::my_log_file($user_groups_array);
 								update_user_meta($site_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 							}
 							// Update user meta data
@@ -223,7 +210,6 @@ class WAWPApi {
 							$current_user_object = get_user_by('id', $site_id);
 							// Loop through roles and remove roles
 							foreach ($current_user_roles as $current_user_role) {
-								// self::my_log_file($current_user_role);
 								if (substr($current_user_role, 0, 5) == 'wawp_') {
 									// Remove this role
 									$current_user_object->remove_role($current_user_role);

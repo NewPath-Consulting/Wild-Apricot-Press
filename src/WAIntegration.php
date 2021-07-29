@@ -330,14 +330,12 @@ class WAIntegration {
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
 		// Get current array of restricted post, if applicable
 		$site_restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
-		self::my_log_file($site_restricted_posts);
 		$updated_restricted_posts = array();
 		// Possible cases here:
 		// If this post is NOT restricted and is already in $site_restricted_posts, then remove it
 		// If the post is restricted and is NOT already in $site_restricted_posts, then add it
 		// If the post is restricted and $site_restricted_posts is empty, then create the array and add the post to it
 		if ($this_post_is_restricted) { // the post is to be restricted
-			self::my_log_file('this post should be restricted!');
 			// Check if $site_restricted_posts is empty or not
 			if (empty($site_restricted_posts)) {
 				// Add post id to the new array
@@ -350,11 +348,9 @@ class WAIntegration {
 				$updated_restricted_posts = $site_restricted_posts;
 			}
 		} else { // the post is NOT to be restricted
-			self::my_log_file('this post should NOT be restricted!');
 			// Check if this post is located in $site_restricted_posts -> if so, then remove it
 			if (!empty($site_restricted_posts)) {
 				if (in_array($post_id, $site_restricted_posts)) {
-					self::my_log_file('this post is in the array -> lets remove it!');
 					$updated_restricted_posts = array_diff($site_restricted_posts, [$post_id]);
 				} else {
 					$updated_restricted_posts = $site_restricted_posts;
@@ -673,14 +669,15 @@ class WAIntegration {
 	 * @param int $current_user_id The user's WordPress ID
 	 */
 	public function refresh_user_wa_info() {
-		self::my_log_file('lets refresh the users!');
 		// Get all user ids of Wild Apricot logged in users
 		$dataEncryption = new DataEncryption();
 		// Get admin account ID
 		$admin_account_id = get_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT);
 		$admin_access_token = get_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT);
 		// Check if transient is expired
-		if (!$admin_account_id || !$admin_access_token || true) { // true for testing
+		// Run this user update ONLY if the current access token has expired because it means that
+		// we are not instantly updating the users, but rather updating them over time
+		if (empty($admin_account_id) || empty($admin_access_token)) {
 			// Get new admin access token
 			$refresh_token = $dataEncryption->decrypt(get_option(self::ADMIN_REFRESH_TOKEN_OPTION));
             $new_response = WAWPApi::get_new_access_token($refresh_token);
@@ -697,10 +694,13 @@ class WAIntegration {
             // Update values
             $admin_access_token = $new_access_token;
             $admin_account_id = $new_account_id;
-
-			$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
-			$wawp_api->get_all_user_info();
+		} else {
+			$admin_access_token = $dataEncryption->decrypt($admin_access_token);
+			$admin_account_id = $dataEncryption->decrypt($admin_account_id);
 		}
+		self::my_log_file('lets refresh the users!');
+		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
+		$wawp_api->get_all_user_info();
 	}
 
 	/**
@@ -723,7 +723,6 @@ class WAIntegration {
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		// Get access token and refresh token
-		// self::my_log_file($login_data);
 		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
@@ -736,7 +735,6 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = $wawp_api->get_info_on_current_user();
-		// self::my_log_file($contact_info);
 		// Get membership level
 		$membership_level = '';
 		$membership_level_id = '';
@@ -816,7 +814,6 @@ class WAIntegration {
 			if (!empty($membership_level) && $membership_level != '') {
 				$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			}
-			// self::my_log_file($user_role);
 			if ($is_adminstrator) {
 				$user_role = 'administrator';
 			}
@@ -929,7 +926,6 @@ class WAIntegration {
 				}
 				// Send POST request to Wild Apricot API to log in if input is valid
 				$login_attempt = WAWPApi::login_email_password($valid_login);
-				// self::my_log_file($login_attempt);
 				// If login attempt is false, then the user could not log in
 				if (!$login_attempt) {
 					// Present user with log in error
