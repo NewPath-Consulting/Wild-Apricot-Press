@@ -16,13 +16,15 @@ use function PHPSTORM_META\map;
 
 class MySettingsPage
 {
+    const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
+
     /**
      * Holds the values to be used in the fields callbacks
      */
     private $options;
 
     /**
-     * Start up
+     * Adds actions and includes files
      */
     public function __construct()
     {
@@ -39,6 +41,174 @@ class MySettingsPage
         // Set default global page restriction message
         if (!get_option('wawp_restriction_name')) {
             add_option('wawp_restriction_name', '<h2>Restricted Content!</h2> <p>Oops! This post is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the post!</p>');
+        }
+
+        // Add actions for cron update
+        add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'));
+
+        // Include files
+        require_once('DataEncryption.php');
+        require_once('WAWPApi.php');
+    }
+
+    /**
+     * Removes the invalid, now deleted groups and levels after the membership levels and groups are updated
+     * Please note that, while this function refers to "levels", this function works for both levels and groups
+     *
+     * @param $updated_levels        is an array of the new levels obtained from refresh
+     * @param $old_levels            is an array of the previous levels before refresh
+     * @param $restricted_levels_key is the key of the restricted levels to be saved
+     */
+    private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key) {
+        $restricted_posts = get_option('wawp_array_of_restricted_posts');
+
+        // Convert levels arrays to its keys
+        $updated_levels = array_keys($updated_levels);
+        $old_levels = array_keys($old_levels);
+
+        // Loop through each old level and check if it is in the updated levels
+        foreach ($old_levels as $old_level) {
+            if (!in_array($old_level, $updated_levels)) { // old level is NOT in the updated levels
+                // This is a deleted level! ($old_level)
+                $level_to_delete = $old_level;
+                // Remove this level from restricted posts
+                // Loop through each restricted post and check if its post meta data contains this level
+                foreach ($restricted_posts as $restricted_post) {
+                    // Get post's list of restricted levels
+                    $post_restricted_levels = get_post_meta($restricted_post, $restricted_levels_key);
+                    $post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
+                    // See line 230 on WAIntegration.php
+                    if (in_array($level_to_delete, $post_restricted_levels)) {
+                        // Remove this updated level from post restricted levels
+                        $post_restricted_levels = array_diff($post_restricted_levels, array($level_to_delete));
+                    }
+                    // Check if post's restricted groups and levels are now empty
+                    $other_membership_key = 'wawp_restricted_groups';
+                    if ($restricted_levels_key == 'wawp_restricted_groups') {
+                        $other_membership_key = 'wawp_restricted_levels';
+                    }
+                    $other_memberships = get_post_meta($restricted_post, $other_membership_key);
+                    $other_memberships = maybe_unserialize($other_memberships[0]);
+                    if (empty($other_memberships) && empty($post_restricted_levels)) {
+                        // This post should NOT be restricted
+                        update_post_meta($restricted_post, 'wawp_is_post_restricted', false);
+                        // Remove this post from the array of restricted posts
+                        $updated_restricted_posts = array_diff($restricted_posts, array($restricted_post));
+                        update_option('wawp_array_of_restricted_posts', $updated_restricted_posts);
+                    }
+                    // Save new restricted levels to post meta data
+                    $post_restricted_levels = maybe_serialize($post_restricted_levels);
+                    // Delete past value
+                    // $old_post_levels = get_post_meta($restricted_post);
+                    update_post_meta($restricted_post, $restricted_levels_key, $post_restricted_levels); // single value
+                }
+            }
+        }
+        // Check if restricted levels and groups are now empty -> post will not be restricted
+    }
+
+    /**
+     * Removes deleted roles after refreshing new membership levels
+     *
+     * @param $updated_levels        is an array of the new levels obtained from refresh
+     * @param $old_levels            is an array of the previous levels before refresh
+     */
+    private function remove_invalid_roles($updated_levels, $old_levels) {
+        // Convert levels arrays to its keys
+        $updated_levels_keys = array_keys($updated_levels);
+        $old_levels_keys = array_keys($old_levels);
+
+        // Loop through each old level and check if it is in the updated levels
+        foreach ($old_levels_keys as $old_level_key) {
+            if (!in_array($old_level_key, $updated_levels_keys)) { // old level is NOT in the updated levels
+                // This is a deleted level! ($old_level)
+                $level_to_delete = $old_level_key;
+                // Remove role
+                $level_name = $old_levels[$level_to_delete];
+                $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
+                remove_role($role_to_remove);
+                // Remove users from this role now that it is deleted
+                $delete_args = array('role' => $role_to_remove);
+                $users_with_deleted_roles = get_users($delete_args);
+                // Loop through these users and set their roles to subscriber
+                foreach ($users_with_deleted_roles as $user_to_modify) {
+                    $user_to_modify->set_role('subscriber');
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
+     */
+    public function cron_update_wa_memberships() {
+        $dataEncryption = new DataEncryption();
+
+        // Get access token and account id
+        $access_token = get_transient('wawp_admin_access_token');
+        $wa_account_id = get_transient('wawp_admin_account_id');
+
+        // Boolean to hold if we are using the same access token (true), or if we must refresh the access token (false)
+        $same_credentials = true;
+
+        // Check that the transients are still valid -> if not, get new token
+        if (empty($access_token) || empty($wa_account_id)) {
+            $same_credentials = false;
+            // Retrieve refresh token from database
+            $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
+            // Get new access token
+            $new_response = WAWPApi::get_new_access_token($refresh_token);
+            // Get variables from response
+            $new_access_token = $new_response['access_token'];
+            $new_expiring_time = $new_response['expires_in'];
+            $new_account_id = $new_response['Permissions'][0]['AccountId'];
+            // Set these new values to the transients
+            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+            // Update values
+            $access_token = $new_access_token;
+            $wa_account_id = $new_account_id;
+        }
+
+        // Run this update ONLY if the previous access token and client secret were expired.
+        // That way, we are only updating after a set amount of time, and not instantaneously
+        if (!empty($access_token) && !empty($wa_account_id)) {
+            if ($same_credentials) {
+                $access_token = $dataEncryption->decrypt($access_token);
+                $wa_account_id = $dataEncryption->decrypt($wa_account_id);
+            }
+
+            // Create WAWP Api instance
+            $wawp_api = new WAWPApi($access_token, $wa_account_id);
+
+            // Get membership levels
+            $updated_levels = $wawp_api->get_membership_levels();
+
+            // Get membership groups
+            $updated_groups = $wawp_api->get_membership_levels(true);
+
+            // If the number of updated groups/levels is less than the number of old groups/levels, then this means that one or more group/level has been deleted
+            // So, we must find the deleted group/level and remove it from the restriction post meta data of a post, if applicable
+            $old_levels = get_option('wawp_all_levels_key');
+            $old_groups = get_option('wawp_all_groups_key');
+            $restricted_posts = get_option('wawp_array_of_restricted_posts');
+            if (!empty($restricted_posts)) {
+                if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
+                    $this->remove_invalid_groups_levels($updated_levels, $old_levels, 'wawp_restricted_levels');
+                }
+                if (!empty($old_groups) && !empty($updated_groups) && (count($updated_groups) < count($old_groups))) {
+                    $this->remove_invalid_groups_levels($updated_groups, $old_groups, 'wawp_restricted_groups');
+                }
+            }
+            // Also, removed deleted roles if one or more membership levels are removed
+            if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
+                $this->remove_invalid_roles($updated_levels, $old_levels);
+            }
+
+            // Save updated levels to options table
+            update_option('wawp_all_levels_key', $updated_levels);
+            // Save updated groups to options table
+            update_option('wawp_all_groups_key', $updated_groups);
         }
     }
 
@@ -476,6 +646,17 @@ class MySettingsPage
     }
 
     /**
+	 * Setups up CRON job
+	 */
+	public static function setup_cron_job() {
+        //If $timestamp === false schedule the event since it hasn't been done previously
+        if (!wp_next_scheduled(self::CRON_HOOK)) {
+            //Schedule the event for right now, then to repeat daily using the hook
+            wp_schedule_event(current_time('timestamp'), 'daily', self::CRON_HOOK);
+        }
+    }
+
+    /**
      * Sanitize each setting field as needed
      *
      * @param array $input Contains all settings fields as array keys
@@ -511,7 +692,7 @@ class MySettingsPage
         // Encrypt values if they are valid
         $entered_valid = true;
         $entered_api_key = '';
-        require_once('DataEncryption.php');
+        // require_once('DataEncryption.php');
 		$dataEncryption = new DataEncryption();
         // Check if inputs are valid
         if ($valid['wawp_wal_api_key'] !== $input['wawp_wal_api_key'] || $input['wawp_wal_api_key'] == '') { // incorrect api key
@@ -537,7 +718,6 @@ class MySettingsPage
         // If input is valid, check if it can connect to the API
         $valid_api = '';
         if ($entered_valid) {
-            require_once('WAWPApi.php');
             $valid_api = WAWPApi::is_application_valid($entered_api_key);
         }
         // Set all elements to '' if api call is invalid or invalid input has been entered
@@ -546,9 +726,16 @@ class MySettingsPage
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
         } else { // Valid input and valid response
-            // Extract access token and ID
+            // Extract access token and ID, as well as expiring time
             $access_token = $valid_api['access_token'];
             $account_id = $valid_api['Permissions'][0]['AccountId'];
+            $expiring_time = $valid_api['expires_in'];
+            $refresh_token = $valid_api['refresh_token'];
+            // Store access token and account ID as transients
+            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
+            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
+            // Store refresh token in database
+            update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
             // Get all membership levels and groups
             $wawp_api_instance = new WAWPApi($access_token, $account_id);
             $all_membership_levels = $wawp_api_instance->get_membership_levels();
@@ -569,6 +756,9 @@ class MySettingsPage
             // Save membership levels and groups to options
             update_option('wawp_all_levels_key', $all_membership_levels);
             update_option('wawp_all_groups_key', $all_membership_groups);
+
+            // Schedule CRON update for updating the available membership levels and groups
+            self::setup_cron_job();
         }
 
         // Sanitize menu dropdown

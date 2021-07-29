@@ -8,6 +8,7 @@ class WAIntegration {
 	// Constants for keys used for database management
 	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
+	const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
@@ -20,6 +21,12 @@ class WAIntegration {
 	const IS_POST_RESTRICTED = 'wawp_is_post_restricted';
 	const ARRAY_OF_RESTRICTED_POSTS = 'wawp_array_of_restricted_posts';
 	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY = 'wawp_individual_restriction_message_key';
+	const CRON_USER_ID = 'wawp_cron_user_id';
+	const ADMIN_ACCOUNT_ID_TRANSIENT = 'wawp_admin_account_id';
+	const ADMIN_ACCESS_TOKEN_TRANSIENT = 'wawp_admin_access_token';
+	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
+
+	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
 	/**
 	 * Constructs an instance of the WAIntegration class
@@ -40,8 +47,6 @@ class WAIntegration {
 		add_filter('query_vars', array($this, 'add_custom_query_vars'));
 		// Action for making profile page private
 		add_action('wawp_wal_set_login_private', array($this, 'make_login_private'));
-		// Action for scheduling token refresh
-		add_action('wawp_wal_token_refresh', array($this, 'refresh_wa_session'));
 		// Actions for displaying membership levels on user profile
 		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
 		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
@@ -54,6 +59,10 @@ class WAIntegration {
 		add_action('the_content', array($this, 'restrict_post_wa'));
 		// Action for creating 'select all' checkboxes
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
+		// Action for user refresh cron hook
+		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
+		// Action for when the user logs out
+		// add_action('wp_logout', array($this, 'remove_user_wa_update'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -94,6 +103,9 @@ class WAIntegration {
 	 *
 	 */
 	public function create_login_page() {
+		// Run action to create user refresh CRON event
+		self::create_cron_for_user_refresh();
+
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
@@ -173,6 +185,9 @@ class WAIntegration {
 		return $content;
 	}
 
+	/**
+	 * Generates the URL to the WA4WP Login page on the website
+	 */
 	private function get_login_link() {
 		$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
 		// Get current page id
@@ -312,21 +327,6 @@ class WAIntegration {
 		// Get value if index has been set to $_POST, and set to an empty array if NOT
 		$checked_groups_ids = array_key_exists('wawp_membership_groups', $_POST) ? $_POST['wawp_membership_groups'] : array();
 		$checked_levels_ids = array_key_exists('wawp_membership_levels', $_POST) ? $_POST['wawp_membership_levels'] : array();
-		// Serialize results for storage
-		$checked_groups_ids = maybe_serialize($checked_groups_ids);
-		$checked_levels_ids = maybe_serialize($checked_levels_ids);
-		// Delete past restricted groups if they exist
-		$old_groups = get_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
-		if (isset($old_groups)) {
-			delete_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
-		}
-		$old_levels = get_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
-		if (isset($old_levels)) {
-			delete_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
-		}
-		// Store these levels and groups to this post's meta data
-		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids, true); // only add single value
-		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
 		// Add the 'restricted' property to this post's meta data and check if page is indeed restricted
 		$this_post_is_restricted = false;
@@ -339,17 +339,41 @@ class WAIntegration {
 		// Get current array of restricted post, if applicable
 		$site_restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
 		$updated_restricted_posts = array();
-		// Check if restricted posts already exist
-		if (!empty($site_restricted_posts)) {
-			// Append this current post to the array if it is not already added
-			if (!in_array($post_id, $site_restricted_posts)) {
-				$site_restricted_posts[] = $post_id;
+		// Possible cases here:
+		// If this post is NOT restricted and is already in $site_restricted_posts, then remove it
+		// If the post is restricted and is NOT already in $site_restricted_posts, then add it
+		// If the post is restricted and $site_restricted_posts is empty, then create the array and add the post to it
+		if ($this_post_is_restricted) { // the post is to be restricted
+			// Check if $site_restricted_posts is empty or not
+			if (empty($site_restricted_posts)) {
+				// Add post id to the new array
+				$updated_restricted_posts[] = $post_id;
+			} else { // There are already restricted posts
+				// Check if the post id is already in the restricted posts -> if not, then add it
+				if (!in_array($post_id, $site_restricted_posts)) {
+					$site_restricted_posts[] = $post_id;
+				}
+				$updated_restricted_posts = $site_restricted_posts;
 			}
-			$updated_restricted_posts = $site_restricted_posts;
-		} else {
-			// No restricted posts yet; we must make the array from scratch
-			$updated_restricted_posts[] = $post_id;
+		} else { // the post is NOT to be restricted
+			// Check if this post is located in $site_restricted_posts -> if so, then remove it
+			if (!empty($site_restricted_posts)) {
+				if (in_array($post_id, $site_restricted_posts)) {
+					$updated_restricted_posts = array_diff($site_restricted_posts, [$post_id]);
+				} else {
+					$updated_restricted_posts = $site_restricted_posts;
+				}
+			}
 		}
+
+		// Serialize results for storage
+		$checked_groups_ids = maybe_serialize($checked_groups_ids);
+		$checked_levels_ids = maybe_serialize($checked_levels_ids);
+
+		// Store these levels and groups to this post's meta data
+		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids); // only add single value
+		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids); // only add single value
+
 		// Save updated restricted posts to options table
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
@@ -648,32 +672,61 @@ class WAIntegration {
 	}
 
 	/**
-	 * Gets refresh token after a scheduled CRON task
+	 * Updates the user's Wild Apricot information in WordPress
+	 *
+	 * @param int $current_user_id The user's WordPress ID
 	 */
-	public function refresh_wa_session($refresh_token) {
-		$new_access_token = WAWPApi::get_new_access_token($refresh_token);
-		// Save new access token in user metadata
-		add_user_meta(get_current_user_id(), WAIntegration::ACCESS_TOKEN_META_KEY, $new_access_token, true); // overwrite
+	public function refresh_user_wa_info() {
+		// Get all user ids of Wild Apricot logged in users
+		$dataEncryption = new DataEncryption();
+		// Get admin account ID
+		$admin_account_id = get_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT);
+		$admin_access_token = get_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		// Check if transient is expired
+		// Run this user update ONLY if the current access token has expired because it means that
+		// we are not instantly updating the users, but rather updating them over time
+		if (empty($admin_account_id) || empty($admin_access_token)) {
+			// Get new admin access token
+			$refresh_token = $dataEncryption->decrypt(get_option(self::ADMIN_REFRESH_TOKEN_OPTION));
+            $new_response = WAWPApi::get_new_access_token($refresh_token);
+			// Get variables from response
+            $new_access_token = $new_response['access_token'];
+            $new_expiring_time = $new_response['expires_in'];
+            $new_account_id = $new_response['Permissions'][0]['AccountId'];
+			// Get new refresh token
+			$new_refresh_token = $new_response['refresh_token'];
+			update_option(self::ADMIN_REFRESH_TOKEN_OPTION, $dataEncryption->encrypt($new_refresh_token));
+            // Set these new values to the transients
+            set_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+            set_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+            // Update values
+            $admin_access_token = $new_access_token;
+            $admin_account_id = $new_account_id;
+		} else {
+			$admin_access_token = $dataEncryption->decrypt($admin_access_token);
+			$admin_account_id = $dataEncryption->decrypt($admin_account_id);
+		}
+		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
+		$wawp_api->get_all_user_info();
 	}
 
 	/**
-	 * Schedules a single CRON event
+	 * Schedules the hourly event to update the user's Wild Apricot information in their WordPress profile
+	 *
+	 * @param int $user_id  User's WordPress ID
 	 */
-	private function schedule_refresh_event($time_seconds, $refresh_token) {
-		// Define arguments
-		$args = [
-			$refresh_token
-		];
-		// Check that event is not already scheduled
-		if (!wp_next_scheduled('wawp_wal_token_refresh', $args)) {
-			// $time_seconds = 10;
-			// Schedule single event
-			wp_schedule_single_event(time() + $time_seconds, 'wawp_wal_token_refresh', $args);
+	public static function create_cron_for_user_refresh() {
+		// Schedule event if it is not already scheduled
+		if (!wp_next_scheduled(self::USER_REFRESH_HOOK)) {
+			wp_schedule_event(time(), 'daily', self::USER_REFRESH_HOOK);
 		}
 	}
 
 	/**
 	 * Syncs Wild Apricot logged in user with WordPress user database
+	 *
+	 * @param string $login_data  The login response from the API
+	 * @param string $login_email The email that the user has logged in with
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		// Get access token and refresh token
@@ -750,6 +803,9 @@ class WAIntegration {
 					'last_name' => $last_name
 				]);
 			}
+			// Add user's Wild Apricot membership level as another role
+			$another_role = 'wawp_' . str_replace(' ', '', $membership_level);
+			$current_wp_user->add_role($another_role);
 		} else { // email does not exist; we will create a new user
 			// Set user data
 			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
@@ -762,6 +818,9 @@ class WAIntegration {
 			}
 			// Get role
 			$user_role = 'subscriber';
+			if (!empty($membership_level) && $membership_level != '') {
+				$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
+			}
 			if ($is_adminstrator) {
 				$user_role = 'administrator';
 			}
@@ -781,14 +840,16 @@ class WAIntegration {
 				echo $current_wp_user_id->get_error_message();
 			}
 		}
-		// Now that we have the ID of the user, modify user with Wild Apricot information
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		add_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token), true); // directly insert
-		add_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token), true); // directly insert
+		update_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token));
+		update_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token));
+		// Store time that access token expires
+		$new_time_to_save = time() + $time_remaining_to_refresh;
+		update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save);
 		// Add Wild Apricot id to user's metadata
-		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
+		// update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
@@ -799,6 +860,7 @@ class WAIntegration {
 
 		// Get groups
 		// Loop through each field value until 'Group participation' is found
+		$wild_apricot_user_id = '';
 		$user_groups_array = array();
 		foreach ($field_values as $field_value) {
 			if ($field_value['FieldName'] == 'Group participation') { // Found
@@ -808,17 +870,24 @@ class WAIntegration {
 					$user_groups_array[$group['Id']] = $group['Label'];
 				}
 			}
+			// Find User ID
+			if ($field_value['FieldName'] == 'User ID') {
+				$wild_apricot_user_id = $field_value['Value'];
+			}
 		}
 		// Serialize the user groups array so that it can be added as user meta data
 		$user_groups_array = maybe_serialize($user_groups_array);
 		// Save to user's meta data
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
+		// Save user id
+		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wild_apricot_user_id);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
 
-		// Schedule refresh of access token
-		// $this->schedule_refresh_event();
+		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
+		// update_option(self::CRON_USER_ID, $current_wp_user_id);
+		// self::create_cron_for_user_refresh();
 	}
 
 	/**
@@ -912,6 +981,22 @@ class WAIntegration {
 			</form>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Removes the CRON update when the user logs out
+	 *
+	 * @param int $user_id The user's WordPress ID
+	 */
+	public function remove_user_wa_update(int $user_id) {
+		// Remove this user's CRON update
+		$args = [
+			$user_id
+		];
+		$timestamp = wp_next_scheduled(self::USER_REFRESH_HOOK, $args);
+		if ($timestamp) {
+			wp_unschedule_event($timestamp, self::USER_REFRESH_HOOK, $args);
+		}
 	}
 
 	/**
