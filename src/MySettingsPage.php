@@ -93,7 +93,10 @@ class MySettingsPage
     }
 
     /**
-     * Removes deleted roles
+     * Removes deleted roles after refreshing new membership levels
+     *
+     * @param $updated_levels        is an array of the new levels obtained from refresh
+     * @param $old_levels            is an array of the previous levels before refresh
      */
     private function remove_invalid_roles($updated_levels, $old_levels) {
         // Convert levels arrays to its keys
@@ -105,18 +108,14 @@ class MySettingsPage
             if (!in_array($old_level_key, $updated_levels_keys)) { // old level is NOT in the updated levels
                 // This is a deleted level! ($old_level)
                 $level_to_delete = $old_level_key;
-                // self::my_log_file($level_to_delete);
                 // Remove role
-                // self::my_log_file('lets remove this role!');
                 $level_name = $old_levels[$level_to_delete];
                 $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
-                // self::my_log_file($role_to_remove);
                 remove_role($role_to_remove);
                 // Remove users from this role now that it is deleted
                 $delete_args = array('role' => $role_to_remove);
                 $users_with_deleted_roles = get_users($delete_args);
                 // Loop through these users and set their roles to subscriber
-                // self::my_log_file($users_with_deleted_roles);
                 foreach ($users_with_deleted_roles as $user_to_modify) {
                     $user_to_modify->set_role('subscriber');
                 }

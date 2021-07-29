@@ -365,38 +365,11 @@ class WAIntegration {
 		// Serialize results for storage
 		$checked_groups_ids = maybe_serialize($checked_groups_ids);
 		$checked_levels_ids = maybe_serialize($checked_levels_ids);
-		self::my_log_file($checked_groups_ids);
-		self::my_log_file($checked_levels_ids);
-		// // Delete past restricted groups if they exist
-		// $old_groups = get_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
-		// if (isset($old_groups)) {
-		// 	delete_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
-		// }
-		// $old_levels = get_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
-		// if (isset($old_levels)) {
-		// 	delete_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
-		// }
+
 		// Store these levels and groups to this post's meta data
 		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids); // only add single value
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids); // only add single value
 
-		// // Check if restricted posts already exist
-		// if (!empty($site_restricted_posts)) {
-		// 	// Append this current post to the array if it is not already added and this post should be restricted
-		// 	if (!in_array($post_id, $site_restricted_posts) && $this_post_is_restricted) {
-		// 		$site_restricted_posts[] = $post_id;
-		// 	}
-		// 	$updated_restricted_posts = $site_restricted_posts;
-		// } else if ($this_post_is_restricted) {
-		// 	// No restricted posts yet; we must make the array from scratch
-		// 	$updated_restricted_posts[] = $post_id;
-		// }
-		// // If this post is NOT restricted and is already in the $site_restricted_posts, then remove it
-		// if (!$this_post_is_restricted && !empty($site_restricted_posts)) {
-		// 	if (in_array($post_id, $site_restricted_posts)) {
-
-		// 	}
-		// }
 		// Save updated restricted posts to options table
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
