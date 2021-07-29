@@ -269,18 +269,50 @@ class MySettingsPage
      */
     public function create_admin_page()
     {
+        // Get active tab from $_GET param
+        $default_tab = null;
+        $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
+        self::my_log_file($tab);
         ?>
-        <form method="post" action="options.php">
-			<?php
-                // Nonce for verification
-                wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
-				// This prints out all hidden setting fields
-				settings_fields( 'wawp_restriction_group' );
-                settings_fields('wawp_restriction_status_group');
-				do_settings_sections( 'wawp-wal-admin' );
-				submit_button();
-			?>
-		</form>
+        <div class="wrap">
+            <!-- Tabs for navigation -->
+            <nav class="nav-tab-wrapper">
+                <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Access Options</a>
+                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='wawp_settings_fields'):?>nav-tab-active<?php endif; ?>">Synced Fields</a>
+                <a href="?page=wawp-wal-admin&tab=delete" class="nav-tab <?php if($tab==='wawp_settings_deletion'):?>nav-tab-active<?php endif; ?>">Deletion Options</a>
+            </nav>
+            <div class="tab-content">
+                <?php switch($tab) :
+                    case 'fields':
+                        ?>
+                            <p>Fields</p>
+                        <?php
+                        break;
+                    case 'delete':
+                        ?>
+                            <p>Delete</p>
+                        <?php
+                        break;
+                    default:
+                        // echo 'Default tab';
+                        ?>
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields( 'wawp_restriction_group' );
+                            settings_fields('wawp_restriction_status_group');
+                            do_settings_sections( 'wawp-wal-admin' );
+                            submit_button();
+                        ?>
+                        </form>
+                        <?php
+                        break;
+                    endswitch; ?>
+            </div>
+
+        </div>
         <?php
     }
 
@@ -534,13 +566,13 @@ class MySettingsPage
         );
 
         // Settings for Menu to add Login/Logout button
-        add_settings_field(   
+        add_settings_field(
             'wawp_wal_login_logout_button', // ID
             'Menu:', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
             'wawp-login', // Page // Possibly put somewhere else
             'wawp_wal_id' // Section
-            
+
         );
 
         // Registering and adding settings for the license key forms
@@ -853,16 +885,16 @@ class MySettingsPage
             // Append key to menu_items
             $menu_items[] = $key;
         }
-        
+
         //https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
         $option_group = get_option('wawp_wal_name',[]);
         $wawp_wal_login_logout_button = isset( $option_group['wawp_wal_login_logout_button'] )
         ? (array) $option_group['wawp_wal_login_logout_button'] : [];
-        
+
         foreach ($menu_items as $item) {
             echo "<div><input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . "\"" . (in_array( esc_attr($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
             echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label></div>";
-            
+
         }
     }
 
