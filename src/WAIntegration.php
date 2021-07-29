@@ -319,21 +319,6 @@ class WAIntegration {
 		// Get value if index has been set to $_POST, and set to an empty array if NOT
 		$checked_groups_ids = array_key_exists('wawp_membership_groups', $_POST) ? $_POST['wawp_membership_groups'] : array();
 		$checked_levels_ids = array_key_exists('wawp_membership_levels', $_POST) ? $_POST['wawp_membership_levels'] : array();
-		// Serialize results for storage
-		$checked_groups_ids = maybe_serialize($checked_groups_ids);
-		$checked_levels_ids = maybe_serialize($checked_levels_ids);
-		// Delete past restricted groups if they exist
-		$old_groups = get_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
-		if (isset($old_groups)) {
-			delete_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
-		}
-		$old_levels = get_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
-		if (isset($old_levels)) {
-			delete_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
-		}
-		// Store these levels and groups to this post's meta data
-		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids, true); // only add single value
-		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
 		// Add the 'restricted' property to this post's meta data and check if page is indeed restricted
 		$this_post_is_restricted = false;
@@ -345,12 +330,14 @@ class WAIntegration {
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
 		// Get current array of restricted post, if applicable
 		$site_restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
+		self::my_log_file($site_restricted_posts);
 		$updated_restricted_posts = array();
 		// Possible cases here:
 		// If this post is NOT restricted and is already in $site_restricted_posts, then remove it
 		// If the post is restricted and is NOT already in $site_restricted_posts, then add it
 		// If the post is restricted and $site_restricted_posts is empty, then create the array and add the post to it
 		if ($this_post_is_restricted) { // the post is to be restricted
+			self::my_log_file('this post should be restricted!');
 			// Check if $site_restricted_posts is empty or not
 			if (empty($site_restricted_posts)) {
 				// Add post id to the new array
@@ -363,11 +350,36 @@ class WAIntegration {
 				$updated_restricted_posts = $site_restricted_posts;
 			}
 		} else { // the post is NOT to be restricted
+			self::my_log_file('this post should NOT be restricted!');
 			// Check if this post is located in $site_restricted_posts -> if so, then remove it
-			if (in_array($post_id, $site_restricted_posts)) {
-				$updated_restricted_posts = array_diff($site_restricted_posts, [$post_id]);
+			if (!empty($site_restricted_posts)) {
+				if (in_array($post_id, $site_restricted_posts)) {
+					self::my_log_file('this post is in the array -> lets remove it!');
+					$updated_restricted_posts = array_diff($site_restricted_posts, [$post_id]);
+				} else {
+					$updated_restricted_posts = $site_restricted_posts;
+				}
 			}
 		}
+
+		// Serialize results for storage
+		$checked_groups_ids = maybe_serialize($checked_groups_ids);
+		$checked_levels_ids = maybe_serialize($checked_levels_ids);
+		self::my_log_file($checked_groups_ids);
+		self::my_log_file($checked_levels_ids);
+		// // Delete past restricted groups if they exist
+		// $old_groups = get_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
+		// if (isset($old_groups)) {
+		// 	delete_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS);
+		// }
+		// $old_levels = get_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
+		// if (isset($old_levels)) {
+		// 	delete_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS);
+		// }
+		// Store these levels and groups to this post's meta data
+		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids); // only add single value
+		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids); // only add single value
+
 		// // Check if restricted posts already exist
 		// if (!empty($site_restricted_posts)) {
 		// 	// Append this current post to the array if it is not already added and this post should be restricted
@@ -738,7 +750,7 @@ class WAIntegration {
 	 */
 	public function add_user_to_wp_database($login_data, $login_email) {
 		// Get access token and refresh token
-		self::my_log_file($login_data);
+		// self::my_log_file($login_data);
 		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
 		// Get time that token is valid
@@ -831,7 +843,7 @@ class WAIntegration {
 			if (!empty($membership_level) && $membership_level != '') {
 				$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			}
-			self::my_log_file($user_role);
+			// self::my_log_file($user_role);
 			if ($is_adminstrator) {
 				$user_role = 'administrator';
 			}

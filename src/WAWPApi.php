@@ -157,14 +157,14 @@ class WAWPApi {
 				foreach ($user_emails_array as $key => $value) {
 					$site_id = $key;
 					$user_email = $value;
-					self::my_log_file('lets search for this email: ' . $user_email);
+					// self::my_log_file('lets search for this email: ' . $user_email);
 					// Find this wa_id in the contacts from the API
 					foreach ($all_contacts as $contact) {
-						self::my_log_file('--------------------- new contact ------------------------');
+						// self::my_log_file('--------------------- new contact ------------------------');
 						// self::my_log_file($contact);
 						// Get contact's email
 						$contact_email = $contact['Email'];
-						self::my_log_file($contact_email);
+						// self::my_log_file($contact_email);
 						// Check if contact's email checks for the email we are searching for
 						if (strcasecmp($contact_email, $user_email) == 0) { // equal
 							// This is the correct user
@@ -175,7 +175,7 @@ class WAWPApi {
 							}
 							// Let us update this site_id with its new data
 							$updated_organization = $contact['Organization'];
-							self::my_log_file($updated_organization);
+							// self::my_log_file($updated_organization);
 							// Get membership level, if any
 							$updated_membership_level = '';
 							$updated_membership_level_id = '';
@@ -208,7 +208,7 @@ class WAWPApi {
 									}
 								}
 								// Set user's groups to meta data
-								self::my_log_file($user_groups_array);
+								// self::my_log_file($user_groups_array);
 								update_user_meta($site_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 							}
 							// Update user meta data
@@ -223,7 +223,7 @@ class WAWPApi {
 							$current_user_object = get_user_by('id', $site_id);
 							// Loop through roles and remove roles
 							foreach ($current_user_roles as $current_user_role) {
-								self::my_log_file($current_user_role);
+								// self::my_log_file($current_user_role);
 								if (substr($current_user_role, 0, 5) == 'wawp_') {
 									// Remove this role
 									$current_user_object->remove_role($current_user_role);
