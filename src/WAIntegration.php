@@ -335,8 +335,10 @@ class WAIntegration {
 		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids, true); // only add single value
 		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids, true); // only add single value
 
-		// Add the 'restricted' property to this post's meta data
+		// Add the 'restricted' property to this post's meta data and check if page is indeed restricted
+		$this_post_is_restricted = false;
 		if (!empty($checked_groups_ids) || !empty($checked_levels_ids)) {
+			$this_post_is_restricted = true;
 			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true);
 		}
 
@@ -344,17 +346,45 @@ class WAIntegration {
 		// Get current array of restricted post, if applicable
 		$site_restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
 		$updated_restricted_posts = array();
-		// Check if restricted posts already exist
-		if (!empty($site_restricted_posts)) {
-			// Append this current post to the array if it is not already added
-			if (!in_array($post_id, $site_restricted_posts)) {
-				$site_restricted_posts[] = $post_id;
+		// Possible cases here:
+		// If this post is NOT restricted and is already in $site_restricted_posts, then remove it
+		// If the post is restricted and is NOT already in $site_restricted_posts, then add it
+		// If the post is restricted and $site_restricted_posts is empty, then create the array and add the post to it
+		if ($this_post_is_restricted) { // the post is to be restricted
+			// Check if $site_restricted_posts is empty or not
+			if (empty($site_restricted_posts)) {
+				// Add post id to the new array
+				$updated_restricted_posts[] = $post_id;
+			} else { // There are already restricted posts
+				// Check if the post id is already in the restricted posts -> if not, then add it
+				if (!in_array($post_id, $site_restricted_posts)) {
+					$site_restricted_posts[] = $post_id;
+				}
+				$updated_restricted_posts = $site_restricted_posts;
 			}
-			$updated_restricted_posts = $site_restricted_posts;
-		} else {
-			// No restricted posts yet; we must make the array from scratch
-			$updated_restricted_posts[] = $post_id;
+		} else { // the post is NOT to be restricted
+			// Check if this post is located in $site_restricted_posts -> if so, then remove it
+			if (in_array($post_id, $site_restricted_posts)) {
+				$updated_restricted_posts = array_diff($site_restricted_posts, [$post_id]);
+			}
 		}
+		// // Check if restricted posts already exist
+		// if (!empty($site_restricted_posts)) {
+		// 	// Append this current post to the array if it is not already added and this post should be restricted
+		// 	if (!in_array($post_id, $site_restricted_posts) && $this_post_is_restricted) {
+		// 		$site_restricted_posts[] = $post_id;
+		// 	}
+		// 	$updated_restricted_posts = $site_restricted_posts;
+		// } else if ($this_post_is_restricted) {
+		// 	// No restricted posts yet; we must make the array from scratch
+		// 	$updated_restricted_posts[] = $post_id;
+		// }
+		// // If this post is NOT restricted and is already in the $site_restricted_posts, then remove it
+		// if (!$this_post_is_restricted && !empty($site_restricted_posts)) {
+		// 	if (in_array($post_id, $site_restricted_posts)) {
+
+		// 	}
+		// }
 		// Save updated restricted posts to options table
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
