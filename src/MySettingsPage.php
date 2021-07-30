@@ -366,6 +366,7 @@ class MySettingsPage
      * Displays the checkboxes for the Wild Apricot custom fields
      */
     public function field_message_callback() {
+        self::my_log_file('lets callback our field message');
         // Load in custom fields
         $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
         $checked_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
@@ -738,13 +739,13 @@ class MySettingsPage
             'wawp_fields_id', // ID
             'Custom Fields', // title
             array($this, 'print_fields_info'), // callback
-            'wawp-wal-admin&tabs=fields' // page
+            'wawp-wal-admin&tab=fields' // page
         );
         add_settings_field(
             'wawp_custom_field_id', // ID
             'Custom Fields to Include:', // title
             array($this, 'field_message_callback'), // callback
-            'wawp-wal-admin&tabs=fields', // page
+            'wawp-wal-admin&tab=fields', // page
             'wawp_fields_id' // section
         );
     }
@@ -766,7 +767,11 @@ class MySettingsPage
      * @param array $input Contains all settings fields as array keys
      */
     public function custom_fields_sanitize($input) {
-
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_field_nonce_name'], 'wawp_field_nonce_action')) {
+            wp_die('Your nonce could not be verified.');
+        }
+        return $input;
     }
 
     /**
