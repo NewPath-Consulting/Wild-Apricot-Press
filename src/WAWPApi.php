@@ -101,6 +101,51 @@ class WAWPApi {
     }
 
 	/**
+	 * Retrieves the custom fields for contacts and members
+	 */
+	public function retrieve_custom_fields() {
+		// Check if a new access token is required -> if so, refresh it
+		// $admin_access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		// $admin_account_id = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		// if (empty($admin_access_token)) { // access token is expired
+		// 	$dataEncryption = new DataEncryption();
+		// 	$refresh_token = $dataEncryption->decrypt(get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION));
+		// 	$new_response = WAWPApi::get_new_access_token($refresh_token);
+		// 	// Get variables from response
+        //     $new_access_token = $new_response['access_token'];
+        //     $new_expiring_time = $new_response['expires_in'];
+        //     $new_account_id = $new_response['Permissions'][0]['AccountId'];
+		// 	// Get new refresh token
+		// 	$new_refresh_token = $new_response['refresh_token'];
+		// 	// Save values
+		// 	update_option(self::ADMIN_REFRESH_TOKEN_OPTION, $dataEncryption->encrypt($new_refresh_token));
+        //     set_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+        //     set_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+		// 	// Set these values to variables
+		// 	$admin_access_token = $new_access_token;
+		// 	$admin_account_id = $new_account_id;
+		// }
+		// Make API request for custom fields
+		$args = $this->request_data_args();
+		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contactfields?showSectionDividers=true';
+		$response_api = wp_remote_get($url, $args);
+		$custom_field_response = self::response_to_data($response_api);
+		self::my_log_file($custom_field_response);
+
+		// Loop through custom fields and get field names with IDs
+		$custom_fields = array();
+		if (!empty($custom_field_response)) {
+			foreach ($custom_field_response as $field_response) {
+				$field_name = $field_response['FieldName'];
+				$field_id = $field_response['Id'];
+				$custom_fields[$field_id] = $field_name;
+			}
+		}
+		// Save custom fields in the options table
+		update_option(WAIntegration::LIST_OF_CUSTOM_FIELDS, $custom_fields);
+	}
+
+	/**
 	 * Gets user information for all Wild Apricot users in the WordPress database
 	 */
 	public function get_all_user_info() {
@@ -182,6 +227,7 @@ class WAWPApi {
 							if (!empty($contact_fields)) {
 								$user_groups_array = array();
 								// Loop through the fields until 'Group participation' is found
+								// Also, store each field as a custom field to be presented to the user
 								foreach ($contact_fields as $field) {
 									$field_name = $field['FieldName'];
 									if ($field_name == 'Group participation') {

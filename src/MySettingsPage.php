@@ -49,6 +49,7 @@ class MySettingsPage
         // Include files
         require_once('DataEncryption.php');
         require_once('WAWPApi.php');
+        require_once('WAIntegration.php');
     }
 
     /**
@@ -286,6 +287,16 @@ class MySettingsPage
                     case 'fields':
                         ?>
                             <p>Fields</p>
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_field_nonce_action', 'wawp_field_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields( 'wawp_fields_group' );
+                            do_settings_sections( 'wawp-wal-admin&tab=fields' );
+                            submit_button();
+                        ?>
+                        </form>
                         <?php
                         break;
                     case 'delete':
@@ -347,6 +358,25 @@ class MySettingsPage
             }
             ?>
             <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo htmlspecialchars($status_key); ?>" <?php echo($status_checked); ?>/> <?php echo htmlspecialchars($status); ?> </input><br>
+            <?php
+        }
+    }
+
+    /**
+     * Displays the checkboxes for the Wild Apricot custom fields
+     */
+    public function field_message_callback() {
+        // Load in custom fields
+        $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
+        // Display each custom field as a checkbox
+        if (!empty($custom_fields)) {
+            foreach ($custom_fields as $field) {
+
+            }
+        } else { // no custom fields
+            $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
+            ?>
+            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">WA4WP Settings -> Authorization</a></p>
             <?php
         }
     }
@@ -684,9 +714,23 @@ class MySettingsPage
             'default' => NULL
         );
         register_setting(
-            'wawp_restriction_group', // group name for settings
-            'wawp_restriction_name', // name of option to sanitize and save
+            'wawp_fields_group', // group name for settings
+            'wawp_fields_name', // name of option to sanitize and save
             $register_args
+        );
+        // Add settings section and field for selecting custom fields
+        add_settings_section(
+            'wawp_fields_id', // ID
+            'Custom Fields', // title
+            array($this, 'print_fields_info'), // callback
+            'wawp-wal-admin&tabs=fields' // page
+        );
+        add_settings_field(
+            'wawp_custom_field_id', // ID
+            'Custom Fields to Include:', // title
+            array($this, 'field_message_callback'), // callback
+            'wawp-wal-admin&tabs=fields', // page
+            'wawp_fields_id' // section
         );
     }
 
@@ -706,6 +750,9 @@ class MySettingsPage
      *
      * @param array $input Contains all settings fields as array keys
      */
+    public function custom_fields_sanitize($input) {
+
+    }
 
     /**
      * Sanitize each setting field as needed
@@ -825,6 +872,13 @@ class MySettingsPage
      */
     public function print_restriction_status_info() {
         print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts.';
+    }
+
+    /**
+     * Print the Custom Fields introductory text
+     */
+    public function print_fields_info() {
+        print 'Please select the Wild Apricot Contact Fields that you would like to sync with your WordPress site.';
     }
 
     /**

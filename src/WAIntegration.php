@@ -25,6 +25,7 @@ class WAIntegration {
 	const ADMIN_ACCOUNT_ID_TRANSIENT = 'wawp_admin_account_id';
 	const ADMIN_ACCESS_TOKEN_TRANSIENT = 'wawp_admin_access_token';
 	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
+	const LIST_OF_CUSTOM_FIELDS = 'wawp_list_of_custom_fields';
 
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
@@ -707,6 +708,8 @@ class WAIntegration {
 			$admin_account_id = $dataEncryption->decrypt($admin_account_id);
 		}
 		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
+		// Refresh custom fields first
+		$wawp_api->retrieve_custom_fields();
 		$wawp_api->get_all_user_info();
 	}
 

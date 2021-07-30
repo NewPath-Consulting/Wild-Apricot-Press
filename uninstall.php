@@ -26,6 +26,7 @@ delete_option('wawp_all_groups_key');
 delete_option('wawp_wa_credentials_valid');
 delete_option('wawp_restriction_name');
 delete_option('wawp_restriction_status_name');
+delete_option('wawp_list_of_custom_fields');
 
 // Delete the added post meta data to the restricted pages
 // Get array of restricted pages
