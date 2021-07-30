@@ -334,6 +334,10 @@ class WAIntegration {
 			$this_post_is_restricted = true;
 			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true);
 		}
+		// Set post's meta data to false if it is not restricted
+		if (!$this_post_is_restricted) {
+			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, false);
+		}
 
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
 		// Get current array of restricted post, if applicable
