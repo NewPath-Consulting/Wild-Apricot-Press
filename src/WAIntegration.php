@@ -26,7 +26,7 @@ class WAIntegration {
 	const ADMIN_ACCESS_TOKEN_TRANSIENT = 'wawp_admin_access_token';
 	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
 	const LIST_OF_CUSTOM_FIELDS = 'wawp_list_of_custom_fields';
-	const LIST_OF_CHECKED_FIELDS = 'wawp_list_of_checked_fields';
+	const LIST_OF_CHECKED_FIELDS = 'wawp_fields_name';
 
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
@@ -773,6 +773,7 @@ class WAIntegration {
 		$organization = $contact_info['Organization'];
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
+		self::my_log_file($field_values);
 		// Check if user is administator or not
 		$is_adminstrator = isset($contact_info['IsAccountAdministrator']);
 
@@ -862,6 +863,9 @@ class WAIntegration {
 		// Add Wild Apricot organization to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_ORGANIZATION_KEY, $organization);
 
+		// Get list of custom fields that user should import
+		$extra_custom_fields = get_option(self::LIST_OF_CHECKED_FIELDS);
+
 		// Get groups
 		// Loop through each field value until 'Group participation' is found
 		$wild_apricot_user_id = '';
@@ -877,6 +881,11 @@ class WAIntegration {
 			// Find User ID
 			if ($field_value['FieldName'] == 'User ID') {
 				$wild_apricot_user_id = $field_value['Value'];
+			}
+			// Get extra custom fields, if any
+			if (!empty($extra_custom_fields)) {
+				// Check if the current field value is in the extra custom fields
+
 			}
 		}
 		// Serialize the user groups array so that it can be added as user meta data

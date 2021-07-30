@@ -133,12 +133,15 @@ class WAWPApi {
 		// self::my_log_file($custom_field_response);
 
 		// Loop through custom fields and get field names with IDs
+		// Do not add 'Group participation' or 'User ID' because those are already used by default
 		$custom_fields = array();
 		if (!empty($custom_field_response)) {
 			foreach ($custom_field_response as $field_response) {
 				$field_name = $field_response['FieldName'];
 				$field_id = $field_response['Id'];
-				$custom_fields[$field_id] = $field_name;
+				if ($field_name != 'Group participation' && $field_name != 'User ID') {
+					$custom_fields[$field_id] = $field_name;
+				}
 			}
 		}
 		// Save custom fields in the options table
