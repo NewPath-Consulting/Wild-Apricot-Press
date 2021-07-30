@@ -286,7 +286,6 @@ class MySettingsPage
                 <?php switch($tab) :
                     case 'fields':
                         ?>
-                            <p>Fields</p>
                         <form method="post" action="options.php">
                         <?php
                             // Nonce for verification
@@ -369,24 +368,20 @@ class MySettingsPage
         self::my_log_file('lets callback our field message');
         // Load in custom fields
         $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
-        $checked_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
-        // self::my_log_file($custom_fields);
-        $is_checked = false;
+        $checked_fields = get_option('wawp_fields_name');
         // Display each custom field as a checkbox
         if (!empty($custom_fields)) {
             foreach ($custom_fields as $field_id => $field_name) {
                 // Check if this field is in the list of checked fields
+                $is_checked = '';
                 if (!empty($checked_fields)) {
                     if (in_array($field_id, $checked_fields)) {
                         // This field should be checked
-                        $is_checked = true;
+                        $is_checked = 'checked';
                     }
                 }
-                self::my_log_file('lets add checkbox!');
                 ?>
-					<li>
-						<input type="checkbox" name="wawp_custom_fields[]" class='wawp_case_field' value="<?php echo htmlspecialchars($field_id); ?>" <?php echo($is_checked); ?>/> <?php echo htmlspecialchars($field_name); ?> </input>
-					</li>
+					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php echo htmlspecialchars($field_id); ?>" <?php echo($is_checked); ?>/> <?php echo htmlspecialchars($field_name); ?> </input><br>
 				<?php
             }
         } else { // no custom fields
