@@ -368,10 +368,25 @@ class MySettingsPage
     public function field_message_callback() {
         // Load in custom fields
         $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
+        $checked_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
+        // self::my_log_file($custom_fields);
+        $is_checked = false;
         // Display each custom field as a checkbox
         if (!empty($custom_fields)) {
-            foreach ($custom_fields as $field) {
-
+            foreach ($custom_fields as $field_id => $field_name) {
+                // Check if this field is in the list of checked fields
+                if (!empty($checked_fields)) {
+                    if (in_array($field_id, $checked_fields)) {
+                        // This field should be checked
+                        $is_checked = true;
+                    }
+                }
+                self::my_log_file('lets add checkbox!');
+                ?>
+					<li>
+						<input type="checkbox" name="wawp_custom_fields[]" class='wawp_case_field' value="<?php echo htmlspecialchars($field_id); ?>" <?php echo($is_checked); ?>/> <?php echo htmlspecialchars($field_name); ?> </input>
+					</li>
+				<?php
             }
         } else { // no custom fields
             $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');

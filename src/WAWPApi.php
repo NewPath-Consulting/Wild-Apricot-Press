@@ -130,7 +130,7 @@ class WAWPApi {
 		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contactfields?showSectionDividers=true';
 		$response_api = wp_remote_get($url, $args);
 		$custom_field_response = self::response_to_data($response_api);
-		self::my_log_file($custom_field_response);
+		// self::my_log_file($custom_field_response);
 
 		// Loop through custom fields and get field names with IDs
 		$custom_fields = array();

@@ -26,6 +26,7 @@ class WAIntegration {
 	const ADMIN_ACCESS_TOKEN_TRANSIENT = 'wawp_admin_access_token';
 	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
 	const LIST_OF_CUSTOM_FIELDS = 'wawp_list_of_custom_fields';
+	const LIST_OF_CHECKED_FIELDS = 'wawp_list_of_checked_fields';
 
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
