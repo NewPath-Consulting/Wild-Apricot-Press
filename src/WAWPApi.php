@@ -138,7 +138,7 @@ class WAWPApi {
 		if (!empty($custom_field_response)) {
 			foreach ($custom_field_response as $field_response) {
 				$field_name = $field_response['FieldName'];
-				$field_id = $field_response['Id'];
+				$field_id = $field_response['SystemCode'];
 				if ($field_name != 'Group participation' && $field_name != 'User ID') {
 					$custom_fields[$field_id] = $field_name;
 				}

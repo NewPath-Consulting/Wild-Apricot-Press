@@ -773,6 +773,7 @@ class WAIntegration {
 		$organization = $contact_info['Organization'];
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
+		// self::my_log_file('these are field values:')
 		self::my_log_file($field_values);
 		// Check if user is administator or not
 		$is_adminstrator = isset($contact_info['IsAccountAdministrator']);
@@ -871,7 +872,9 @@ class WAIntegration {
 		$wild_apricot_user_id = '';
 		$user_groups_array = array();
 		foreach ($field_values as $field_value) {
-			if ($field_value['FieldName'] == 'Group participation') { // Found
+			$field_name = $field_value['FieldName'];
+			$system_code = $field_value['SystemCode'];
+			if ($field_name == 'Group participation') { // Found
 				$group_array = $field_value['Value'];
 				// Loop through each group
 				foreach ($group_array as $group) {
@@ -879,13 +882,18 @@ class WAIntegration {
 				}
 			}
 			// Find User ID
-			if ($field_value['FieldName'] == 'User ID') {
+			if ($field_name == 'User ID') {
 				$wild_apricot_user_id = $field_value['Value'];
 			}
 			// Get extra custom fields, if any
 			if (!empty($extra_custom_fields)) {
 				// Check if the current field value is in the extra custom fields
-
+				if (in_array($system_code, $extra_custom_fields)) {
+					// This field is in the custom fields array and thus should be added to the user's meta data
+					$custom_meta_key = 'wawp_' . str_replace(' ', '', $system_code);
+					$custom_field_value = $field_value['Value'];
+					update_user_meta($current_wp_user_id, $custom_meta_key, $custom_field_value);
+				}
 			}
 		}
 		// Serialize the user groups array so that it can be added as user meta data
