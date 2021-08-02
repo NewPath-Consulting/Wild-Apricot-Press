@@ -594,19 +594,29 @@ class WAIntegration {
 		$string_result = '';
 		if (!empty($array_values)) {
 			// Add comma after each value, unless it is the last value
-			$i = 0;
-			$len = count($array_values);
+			// $i = 0;
+			// $len = count($array_values);
 			foreach ($array_values as $key => $value) {
-				// Check if index is NOT the last index
-				if (!($i == $len - 1)) { // NOT last
-					$string_result .= $value . ', ';
-				} else {
-					$string_result .= $value;
+				// Check if there is another array
+				if (!is_array($value)) {
+					if ($key != 'Id') {
+						$string_result .= $value . ', ';
+					}
+					// // Check if index is NOT the last index
+					// if (!($i == $len - 1)) { // NOT last
+					// } else {
+					// 	$string_result .= $value;
+					// }
+					// // Increment counter
+					// $i++;
+				} else { // is another array
+					$string_result .= self::convert_array_values_to_string($value);
 				}
-				// Increment counter
-				$i++;
+				self::my_log_file('loop!');
 			}
 		}
+		// Remove last comma
+		$string_result = rtrim($string_result, ',');
 		return $string_result;
 	}
 
@@ -705,10 +715,12 @@ class WAIntegration {
 						$field_meta_key = 'wawp_' . str_replace(' ', '' , $custom_field);
 						self::my_log_file($field_meta_key);
 						$field_saved_value = get_user_meta($user->ID, $field_meta_key);
+						$field_saved_value = $field_saved_value[0];
 						// $field_saved_value = maybe_unserialize($field_saved_value);
 						self::my_log_file($field_saved_value);
 						// Check if value is an array
 						if (is_array($field_saved_value)) {
+							self::my_log_file('this is an array!');
 							// Convert array to string
 							$field_saved_value = self::convert_array_values_to_string($field_saved_value);
 						}
@@ -949,9 +961,11 @@ class WAIntegration {
 					// This field is in the custom fields array and thus should be added to the user's meta data
 					$custom_meta_key = 'wawp_' . str_replace(' ', '', $system_code);
 					$custom_field_value = $field_value['Value'];
-					$custom_field_value = $custom_field_value[0];
+					self::my_log_file($custom_field_value);
+					// $custom_field_value = $custom_field_value[0];
 					// Maybe serialize value if it is an array
 					// $custom_field_value = maybe_serialize($custom_field_value);
+					self::my_log_file($custom_field_value);
 					update_user_meta($current_wp_user_id, $custom_meta_key, $custom_field_value);
 				}
 			}
