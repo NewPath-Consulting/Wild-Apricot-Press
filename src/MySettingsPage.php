@@ -273,7 +273,7 @@ class MySettingsPage
         // Get active tab from $_GET param
         $default_tab = null;
         $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
-        self::my_log_file($tab);
+        // self::my_log_file($tab);
         ?>
         <div class="wrap">
             <!-- Tabs for navigation -->
@@ -365,7 +365,7 @@ class MySettingsPage
      * Displays the checkboxes for the Wild Apricot custom fields
      */
     public function field_message_callback() {
-        self::my_log_file('lets callback our field message');
+        // self::my_log_file('lets callback our field message');
         // Load in custom fields
         $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
         $checked_fields = get_option('wawp_fields_name');
