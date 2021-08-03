@@ -28,7 +28,6 @@ delete_option('wawp_restriction_name');
 delete_option('wawp_restriction_status_name');
 delete_option('wawp_list_of_custom_fields');
 delete_option('wawp_fields_name');
-delete_option('wawp_delete_name');
 
 // Delete the added post meta data to the restricted pages
 // Get array of restricted pages
@@ -53,5 +52,102 @@ delete_transient('wawp_admin_account_id');
 
 Addon::instance()::delete();
 
+// Debugging
+function my_log_file( $msg, $name = '' )
+{
+	// Print the name of the calling function if $name is left empty
+	$trace=debug_backtrace();
+	$name = ( '' == $name ) ? $trace[1]['function'] : $name;
+
+	$error_dir = '/Applications/MAMP/logs/php_error.log';
+	$msg = print_r( $msg, true );
+	$log = $name . "  |  " . $msg . "\n";
+	error_log( $log, 3, $error_dir );
+}
+
+// Get plugin deletion options and check if users and/or roles should be deleted
+$delete_options = get_option('wawp_delete_name');
+if (!empty($delete_options)) {
+	// Get roles in WordPress user database
+	$all_roles = wp_roles();
+	$all_roles = (array) $all_roles;
+	// my_log_file($all_roles);
+	// Get role names
+	$plugin_roles = array();
+	if (!empty($all_roles) && array_key_exists('role_names', $all_roles)) {
+		$all_role_names = $all_roles['role_names'];
+		foreach ($all_role_names as $role_key => $role_name) {
+			// Check if the role name starts with the prefix (wawp_)
+			$prefix_role = substr($role_key, 0, 5);
+			if ($prefix_role == 'wawp_') {
+				// Add this level to the plugin roles (roles created by this plugin)
+				$plugin_roles[] = $role_key;
+			}
+		}
+	}
+	my_log_file($plugin_roles);
+	// Check if roles should be deleted
+	$roles_delete = in_array('wawp_delete_checkbox_1', $delete_options);
+	$users_delete = in_array('wawp_delete_checkbox_0', $delete_options);
+	if ($roles_delete || $users_delete) {
+		// Get Wild Apricot users by looping through each plugin role
+		foreach ($plugin_roles as $plugin_role) {
+			$args = array('role' => $plugin_role);
+			$wa_users_by_role = get_users($args);
+			// Remove plugin role from each of these users
+			my_log_file($wa_users_by_role);
+			if (!empty($wa_users_by_role)) {
+				foreach ($wa_users_by_role as $user) {
+					// Get current user's roles
+					$user_id = $user->ID;
+					$user_meta = get_userdata($user_id);
+					$user_roles = $user_meta->roles;
+					// Check if user has 2 roles
+					$number_of_user_roles = count($user_roles);
+					// If user has only 1 role, then we can delete it because it only has the Wild Apricot membership as a role
+					// Then if user wants to delete the user, they can do so.
+					// However, if user does not want to delete the user, then we can check if they want to remove the role from the user
+					// If user has 2 roles, then it cannot be deleted because it has a pre-existing role in WordPress (e.g. administrator)
+					// If user has 2 roles, then
+					if ($number_of_user_roles == 1) {
+						// Ensure that this one role is indeed the Wild Apricot role
+						if (in_array($plugin_role, $user_roles)) {
+							if ($users_delete) {
+								wp_delete_user($user_id);
+							} else {
+								if ($roles_delete) {
+									$user->remove_role($plugin_role);
+									// User now has no roles; set subscriber as default
+									$user->set_role('subscriber');
+								}
+							}
+						}
+					} else { // user has 2 or more roles; we cannot delete this user but we can remove their Wild Apricot role
+						if ($roles_delete) {
+							$user->remove_role($plugin_role);
+						}
+					}
+					// // Remove role
+					// $user::remove_role($plugin_role);
+					// // Check if user has 0 roles now (meaning they only had 1 role initially)
+					// if (empty($user_roles)) {
+					// 	// Check if user should also be deleted
+					// 	if ($users_delete) {
+					// 		wp_delete_user($user_id);
+					// 	} else { // we are NOT deleting the user
+					// 		// Just set user to subscriber
+					// 		$user::set_role('subscriber');
+					// 	}
+					// }
+				}
+			}
+			// Check if we should delete this role entirely
+			if ($roles_delete) {
+				remove_role($plugin_role);
+			}
+		}
+	}
+}
+delete_option('wawp_delete_name');
 
 ?>
