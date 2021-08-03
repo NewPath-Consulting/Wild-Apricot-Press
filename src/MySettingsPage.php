@@ -766,7 +766,14 @@ class MySettingsPage
         if (!wp_verify_nonce($_POST['wawp_field_nonce_name'], 'wawp_field_nonce_action')) {
             wp_die('Your nonce could not be verified.');
         }
-        return $input;
+        // Sanitize checkboxes
+        $valid = array();
+        if (!empty($input)) {
+            foreach ($input as $key => $checkbox) {
+                $valid[$key] = sanitize_key($checkbox);
+            }
+        }
+        return $valid;
     }
 
     /**

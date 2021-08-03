@@ -746,6 +746,7 @@ class WAIntegration {
 	 * @param int $current_user_id The user's WordPress ID
 	 */
 	public function refresh_user_wa_info() {
+		self::my_log_file('refresh user info!');
 		// Get all user ids of Wild Apricot logged in users
 		$dataEncryption = new DataEncryption();
 		// Get admin account ID

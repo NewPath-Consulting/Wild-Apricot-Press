@@ -230,12 +230,16 @@ class WAWPApi {
 							}
 							// Get membership groups through field values
 							$contact_fields = $contact['FieldValues'];
+							self::my_log_file($contact_fields);
+							$checked_custom_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
+							$all_custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
 							if (!empty($contact_fields)) {
 								$user_groups_array = array();
 								// Loop through the fields until 'Group participation' is found
 								// Also, store each field as a custom field to be presented to the user
 								foreach ($contact_fields as $field) {
 									$field_name = $field['FieldName'];
+									$system_code = $field['SystemCode'];
 									if ($field_name == 'Group participation') {
 										// Get membership groups array
 										$group_array = $field['Value'];
@@ -244,6 +248,17 @@ class WAWPApi {
 											foreach ($group_array as $group) {
 												$user_groups_array[$group['Id']] = $group['Label'];
 											}
+										}
+									}
+									// Get other custom fields, if any
+									if (!empty($checked_custom_fields)) {
+										// Check if current system code is in the checked custom fields
+										if (in_array($system_code, $checked_custom_fields)) {
+											// We must extract this value and save it to the user meta data
+											$custom_meta_key = 'wawp_' . str_replace(' ', '', $system_code);
+											$custom_field_to_save = $all_custom_fields[$system_code];
+											// Save to user meta data
+											update_user_meta($site_id, $custom_meta_key, $custom_field_to_save);
 										}
 									}
 								}
