@@ -104,33 +104,11 @@ class WAWPApi {
 	 * Retrieves the custom fields for contacts and members
 	 */
 	public function retrieve_custom_fields() {
-		// Check if a new access token is required -> if so, refresh it
-		// $admin_access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
-		// $admin_account_id = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
-		// if (empty($admin_access_token)) { // access token is expired
-		// 	$dataEncryption = new DataEncryption();
-		// 	$refresh_token = $dataEncryption->decrypt(get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION));
-		// 	$new_response = WAWPApi::get_new_access_token($refresh_token);
-		// 	// Get variables from response
-        //     $new_access_token = $new_response['access_token'];
-        //     $new_expiring_time = $new_response['expires_in'];
-        //     $new_account_id = $new_response['Permissions'][0]['AccountId'];
-		// 	// Get new refresh token
-		// 	$new_refresh_token = $new_response['refresh_token'];
-		// 	// Save values
-		// 	update_option(self::ADMIN_REFRESH_TOKEN_OPTION, $dataEncryption->encrypt($new_refresh_token));
-        //     set_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-        //     set_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-		// 	// Set these values to variables
-		// 	$admin_access_token = $new_access_token;
-		// 	$admin_account_id = $new_account_id;
-		// }
 		// Make API request for custom fields
 		$args = $this->request_data_args();
 		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contactfields?showSectionDividers=true';
 		$response_api = wp_remote_get($url, $args);
 		$custom_field_response = self::response_to_data($response_api);
-		// self::my_log_file($custom_field_response);
 
 		// Loop through custom fields and get field names with IDs
 		// Array that holds default fields
@@ -230,7 +208,6 @@ class WAWPApi {
 							}
 							// Get membership groups through field values
 							$contact_fields = $contact['FieldValues'];
-							self::my_log_file($contact_fields);
 							$checked_custom_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
 							$all_custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
 							if (!empty($contact_fields)) {
@@ -256,7 +233,7 @@ class WAWPApi {
 										if (in_array($system_code, $checked_custom_fields)) {
 											// We must extract this value and save it to the user meta data
 											$custom_meta_key = 'wawp_' . str_replace(' ', '', $system_code);
-											$custom_field_to_save = $all_custom_fields[$system_code];
+											$custom_field_to_save = $field['Value'];
 											// Save to user meta data
 											update_user_meta($site_id, $custom_meta_key, $custom_field_to_save);
 										}

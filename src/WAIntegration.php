@@ -63,8 +63,8 @@ class WAIntegration {
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
-		// Action for when the user logs out
-		// add_action('wp_logout', array($this, 'remove_user_wa_update'));
+		// Action for when the custom fields are saved to refresh the users
+		add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -605,13 +605,8 @@ class WAIntegration {
 				} else { // is another array
 					$string_result .= self::convert_array_values_to_string($value);
 				}
-				// self::my_log_file('loop!');
 			}
 		}
-		// Remove last comma
-		// self::my_log_file($string_result);
-		// $string_result = rtrim($string_result, ", ");
-		// self::my_log_file($string_result);
 		return $string_result;
 	}
 
@@ -708,16 +703,12 @@ class WAIntegration {
 					foreach ($checked_custom_fields as $custom_key => $custom_field) {
 						// Load in field from user's meta data
 						$field_meta_key = 'wawp_' . str_replace(' ', '' , $custom_field);
-						// self::my_log_file($field_meta_key);
 						$field_saved_value = get_user_meta($user->ID, $field_meta_key);
 						if (!empty($field_saved_value)) {
 							$field_saved_value = $field_saved_value[0];
 						}
-						// $field_saved_value = maybe_unserialize($field_saved_value);
-						// self::my_log_file($field_saved_value);
 						// Check if value is an array
 						if (is_array($field_saved_value)) {
-							// self::my_log_file('this is an array!');
 							// Convert array to string
 							$field_saved_value = self::convert_array_values_to_string($field_saved_value);
 							$field_saved_value = rtrim($field_saved_value, ', ');
@@ -746,7 +737,6 @@ class WAIntegration {
 	 * @param int $current_user_id The user's WordPress ID
 	 */
 	public function refresh_user_wa_info() {
-		self::my_log_file('refresh user info!');
 		// Get all user ids of Wild Apricot logged in users
 		$dataEncryption = new DataEncryption();
 		// Get admin account ID
@@ -841,8 +831,6 @@ class WAIntegration {
 		$organization = $contact_info['Organization'];
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
-		// self::my_log_file('these are field values:')
-		// self::my_log_file($field_values);
 		// Check if user is administator or not
 		$is_adminstrator = isset($contact_info['IsAccountAdministrator']);
 
@@ -960,11 +948,6 @@ class WAIntegration {
 					// This field is in the custom fields array and thus should be added to the user's meta data
 					$custom_meta_key = 'wawp_' . str_replace(' ', '', $system_code);
 					$custom_field_value = $field_value['Value'];
-					// self::my_log_file($custom_field_value);
-					// $custom_field_value = $custom_field_value[0];
-					// Maybe serialize value if it is an array
-					// $custom_field_value = maybe_serialize($custom_field_value);
-					// self::my_log_file($custom_field_value);
 					update_user_meta($current_wp_user_id, $custom_meta_key, $custom_field_value);
 				}
 			}
@@ -978,10 +961,6 @@ class WAIntegration {
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
-
-		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
-		// update_option(self::CRON_USER_ID, $current_wp_user_id);
-		// self::create_cron_for_user_refresh();
 	}
 
 	/**
