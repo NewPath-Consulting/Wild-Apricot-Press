@@ -277,9 +277,9 @@ class MySettingsPage
         <div class="wrap">
             <!-- Tabs for navigation -->
             <nav class="nav-tab-wrapper">
-                <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Access Options</a>
-                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='fields'):?>nav-tab-active<?php endif; ?>">Synced Fields</a>
-                <a href="?page=wawp-wal-admin&tab=delete" class="nav-tab <?php if($tab==='delete'):?>nav-tab-active<?php endif; ?>">Deletion Options</a>
+                <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Content Restriction Options</a>
+                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='fields'):?>nav-tab-active<?php endif; ?>">Synchronization Options</a>
+                <a href="?page=wawp-wal-admin&tab=plugin" class="nav-tab <?php if($tab==='plugin'):?>nav-tab-active<?php endif; ?>">Plugin Options</a>
             </nav>
             <div class="tab-content">
                 <?php switch($tab) :
@@ -297,9 +297,18 @@ class MySettingsPage
                         </form>
                         <?php
                         break;
-                    case 'delete':
+                    case 'plugin':
                         ?>
-                            <p>Delete</p>
+                            <form method="post" action="options.php">
+                            <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_delete_nonce_action', 'wawp_delete_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields( 'wawp_delete_group' );
+                            do_settings_sections( 'wawp-wal-admin&tab=plugin' );
+                            submit_button();
+                            ?>
+                        </form>
                         <?php
                         break;
                     default:
@@ -356,6 +365,29 @@ class MySettingsPage
             }
             ?>
             <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo htmlspecialchars($status_key); ?>" <?php echo($status_checked); ?>/> <?php echo htmlspecialchars($status); ?> </input><br>
+            <?php
+        }
+    }
+
+    /**
+     * Displays the options for deleting the plugin, including if the Wild Apricot synced users should be retained, etc.
+     */
+    public function plugin_delete_callback() {
+        // Store each checkbox description in array
+        $synced_info = array('wawp_delete_checkbox_0' => 'Delete synced users', 'wawp_delete_checkbox_1' => 'Delete synced roles');
+        // Load in saved checkboxes
+        $saved_synced_info = get_option('wawp_delete_name');
+        // Display checkboxes
+        foreach ($synced_info as $key => $attribute) {
+            $checked = '';
+            // Check if this attribute has already been checked
+            if (!empty($saved_synced_info)) {
+                if (in_array($key, $saved_synced_info)) {
+                    $checked = 'checked';
+                }
+            }
+            ?>
+            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo htmlspecialchars($key); ?>" <?php echo($checked); ?>/> <?php echo htmlspecialchars($attribute); ?> </input><br>
             <?php
         }
     }
@@ -637,7 +669,7 @@ class MySettingsPage
         // Render the WAWP license form
         add_settings_field(
             'wawp_license_form', // ID
-            'Wild Apricot for Wordpress', // title
+            'Wild Apricot for WordPress', // title
             array($this, 'license_key_input'), // callback
             'wawp_licensing', // page
             'wawp_license', // section
@@ -741,6 +773,33 @@ class MySettingsPage
             'wawp-wal-admin&tab=fields', // page
             'wawp_fields_id' // section
         );
+
+        // ------------------------------ Deletion Options ---------------------------
+        // Register setting
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'plugin_options_sanitize'),
+            'default' => NULL
+        );
+        register_setting(
+            'wawp_delete_group', // group name for settings
+            'wawp_delete_name', // name of option to sanitize and save
+            $register_args
+        );
+        // Add settings section and field for selecting custom fields
+        add_settings_section(
+            'wawp_delete_id', // ID
+            'Deletion Options', // title
+            array($this, 'print_delete_info'), // callback
+            'wawp-wal-admin&tab=plugin' // page
+        );
+        add_settings_field(
+            'wawp_delete_options_id', // ID
+            'Attributes to Remove Upon Plugin Deletion:', // title
+            array($this, 'plugin_delete_callback'), // callback
+            'wawp-wal-admin&tab=plugin', // page
+            'wawp_delete_id' // section
+        );
     }
 
     /**
@@ -771,6 +830,21 @@ class MySettingsPage
                 $valid[$key] = sanitize_text_field($checkbox);
             }
         }
+        return $valid;
+    }
+
+    /**
+     * Sanitize the plugin options
+     */
+    public function plugin_options_sanitize($input) {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_delete_nonce_name'], 'wawp_delete_nonce_action')) {
+            wp_die('Your nonce could not be verified.');
+        }
+        $valid = array();
+        // Sanitize input
+        $valid = $input;
+        // Return valid input
         return $valid;
     }
 
@@ -888,6 +962,17 @@ class MySettingsPage
     }
 
     /**
+     * Print description of the plugin options
+     */
+    public function print_delete_info() {
+        print 'If you delete the WAWP plugin, you can choose if you would like the synced Wild Apricot information to be deleted from your WordPress site.
+        By default, upon deletion of the WAWP plugin, the synced Wild Apricot users and roles are retained (not deleted), however you can change that by checking the checkboxes below.
+        Any checkbox that you check off will then delete the associated property from your WordPress site.
+        <b>Please note that this information will never be deleted from your Wild Apricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your Wild Apricot site.
+        So, don\'t worry - you are not permanently deleting information that you cannot recover later!</b>';
+    }
+
+    /**
      * Print instructions on how to use the restriction status checkboxes
      */
     public function print_restriction_status_info() {
@@ -920,7 +1005,8 @@ class MySettingsPage
      * Print the licensing settings section text
      */
     public function license_print_info() {
-        print 'Enter your license key(s) here.';
+        $link_address = "https://newpathconsulting.com/wild-apricot-for-wordpress/";
+        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for WAWP is 100% free, and we never share your information with any third party!";
     }
 
     /**
