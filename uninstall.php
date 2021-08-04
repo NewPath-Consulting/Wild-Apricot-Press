@@ -139,7 +139,7 @@ if (!empty($delete_options)) {
 			'meta_value' => '1'
 		);
 		$users_added_by_plugin = get_users($added_by_plugin_args);
-		my_log_file($users_added_by_plugin);
+		// my_log_file($users_added_by_plugin);
 		// Loop through each user added by plugin
 		foreach ($users_added_by_plugin as $user_plugin) {
 			// Check that user has 1 or less roles
