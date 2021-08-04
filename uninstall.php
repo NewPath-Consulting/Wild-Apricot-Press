@@ -68,6 +68,32 @@ function my_log_file( $msg, $name = '' )
 // Get plugin deletion options and check if users and/or roles should be deleted
 $delete_options = get_option('wawp_delete_name');
 if (!empty($delete_options)) {
+	// Check if we should delete all of the user meta data associated with each Wild Apricot synced user
+	if (in_array('wawp_delete_checkbox_2', $delete_options)) {
+		// Get users with Wild Apricot ID
+		$users_args = array(
+			'meta_key' => 'wawp_wa_user_id',
+		);
+		$wa_users = get_users($users_args);
+		// Loop through each user and remove their Wild Apricot associated meta data
+		if (!empty($wa_users)) {
+			foreach ($wa_users as $wa_user) {
+				// Get ID
+				$wa_user_id = $wa_user->ID;
+				// Get user meta data
+				$wa_user_meta_data = get_user_meta($wa_user_id);
+				// Find meta data starting with 'wawp_'
+				my_log_file($wa_user_meta_data);
+				foreach ($wa_user_meta_data as $meta_data_entry => $meta_data_value) {
+					if (substr($meta_data_entry, 0, 5) == 'wawp_') { // starts with 'wawp_'
+						// Delete this user meta entry
+						delete_user_meta($wa_user_id, $meta_data_entry);
+					}
+				}
+			}
+		}
+	}
+
 	// Get roles in WordPress user database
 	$all_roles = wp_roles();
 	$all_roles = (array) $all_roles;
@@ -85,7 +111,7 @@ if (!empty($delete_options)) {
 			}
 		}
 	}
-	my_log_file($plugin_roles);
+	// my_log_file($plugin_roles);
 	// Check if roles should be deleted
 	$roles_delete = in_array('wawp_delete_checkbox_1', $delete_options);
 	$users_delete = in_array('wawp_delete_checkbox_0', $delete_options);
@@ -95,7 +121,7 @@ if (!empty($delete_options)) {
 			$args = array('role' => $plugin_role);
 			$wa_users_by_role = get_users($args);
 			// Remove plugin role from each of these users
-			my_log_file($wa_users_by_role);
+			// my_log_file($wa_users_by_role);
 			if (!empty($wa_users_by_role)) {
 				foreach ($wa_users_by_role as $user) {
 					// Get current user's roles
@@ -118,7 +144,7 @@ if (!empty($delete_options)) {
 								if ($roles_delete) {
 									$user->remove_role($plugin_role);
 									// User now has no roles; set subscriber as default
-									$user->set_role('subscriber');
+									// $user->set_role('subscriber');
 								}
 							}
 						}

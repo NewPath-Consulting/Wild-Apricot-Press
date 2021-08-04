@@ -374,7 +374,7 @@ class MySettingsPage
      */
     public function plugin_delete_callback() {
         // Store each checkbox description in array
-        $synced_info = array('wawp_delete_checkbox_0' => 'Delete synced users', 'wawp_delete_checkbox_1' => 'Delete synced roles');
+        $synced_info = array('wawp_delete_checkbox_1' => 'Delete synced roles', 'wawp_delete_checkbox_2' => 'Delete users\' synced Wild Apricot data', 'wawp_delete_checkbox_0' => 'Delete synced users\' WordPress accounts');
         // Load in saved checkboxes
         $saved_synced_info = get_option('wawp_delete_name');
         // Display checkboxes
