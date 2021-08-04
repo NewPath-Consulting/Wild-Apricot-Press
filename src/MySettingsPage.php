@@ -374,7 +374,7 @@ class MySettingsPage
      */
     public function plugin_delete_callback() {
         // Store each checkbox description in array
-        $synced_info = array('wawp_delete_checkbox_1' => 'Delete synced roles', 'wawp_delete_checkbox_2' => 'Delete users\' synced Wild Apricot data', 'wawp_delete_checkbox_0' => 'Delete synced users\' WordPress accounts');
+        $synced_info = array('wawp_delete_checkbox' => 'Delete all Wild Apricot information from my WordPress site');
         // Load in saved checkboxes
         $saved_synced_info = get_option('wawp_delete_name');
         // Display checkboxes
@@ -388,6 +388,8 @@ class MySettingsPage
             }
             ?>
             <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo htmlspecialchars($key); ?>" <?php echo($checked); ?>/> <?php echo htmlspecialchars($attribute); ?> </input><br>
+            <p><b><br>Please note that this information will never be deleted from your Wild Apricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your Wild Apricot site.
+            So, don't worry - you are not permanently deleting information that you cannot recover later!</b></p>
             <?php
         }
     }
@@ -789,7 +791,7 @@ class MySettingsPage
         // Add settings section and field for selecting custom fields
         add_settings_section(
             'wawp_delete_id', // ID
-            'Deletion Options', // title
+            'Plugin Deletion Options', // title
             array($this, 'print_delete_info'), // callback
             'wawp-wal-admin&tab=plugin' // page
         );
@@ -965,11 +967,7 @@ class MySettingsPage
      * Print description of the plugin options
      */
     public function print_delete_info() {
-        print 'If you delete the WAWP plugin, you can choose if you would like the synced Wild Apricot information to be deleted from your WordPress site.
-        By default, upon deletion of the WAWP plugin, the synced Wild Apricot users and roles are retained (not deleted), however you can change that by checking the checkboxes below.
-        Any checkbox that you check off will then delete the associated property from your WordPress site.
-        <b>Please note that this information will never be deleted from your Wild Apricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your Wild Apricot site.
-        So, don\'t worry - you are not permanently deleting information that you cannot recover later!</b>';
+        print 'By default, upon deletion of the WAWP plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the WAWP plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the WAWP plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
     }
 
     /**
