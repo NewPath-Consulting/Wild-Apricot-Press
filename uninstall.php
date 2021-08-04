@@ -1,6 +1,7 @@
 <?php
 require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/Addon.php';
+require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
 
 use WAWP\Activator;
 use WAWP\Addon;
@@ -83,7 +84,7 @@ if (!empty($delete_options)) {
 				// Get user meta data
 				$wa_user_meta_data = get_user_meta($wa_user_id);
 				// Find meta data starting with 'wawp_'
-				my_log_file($wa_user_meta_data);
+				// my_log_file($wa_user_meta_data);
 				foreach ($wa_user_meta_data as $meta_data_entry => $meta_data_value) {
 					if (substr($meta_data_entry, 0, 5) == 'wawp_') { // starts with 'wawp_'
 						// Delete this user meta entry
@@ -115,7 +116,7 @@ if (!empty($delete_options)) {
 	// Check if roles should be deleted
 	$roles_delete = in_array('wawp_delete_checkbox_1', $delete_options);
 	$users_delete = in_array('wawp_delete_checkbox_0', $delete_options);
-	if ($roles_delete || $users_delete) {
+	if ($roles_delete) {
 		// Get Wild Apricot users by looping through each plugin role
 		foreach ($plugin_roles as $plugin_role) {
 			$args = array('role' => $plugin_role);
@@ -124,35 +125,37 @@ if (!empty($delete_options)) {
 			// my_log_file($wa_users_by_role);
 			if (!empty($wa_users_by_role)) {
 				foreach ($wa_users_by_role as $user) {
+					// Remove role fro this user
+					$user->remove_role($plugin_role);
 					// Get current user's roles
-					$user_id = $user->ID;
-					$user_meta = get_userdata($user_id);
-					$user_roles = $user_meta->roles;
+					// $user_id = $user->ID;
+					// $user_meta = get_userdata($user_id);
+					// $user_roles = $user_meta->roles;
 					// Check if user has 2 roles
-					$number_of_user_roles = count($user_roles);
+					// $number_of_user_roles = count($user_roles);
 					// If user has only 1 role, then we can delete it because it only has the Wild Apricot membership as a role
 					// Then if user wants to delete the user, they can do so.
 					// However, if user does not want to delete the user, then we can check if they want to remove the role from the user
 					// If user has 2 roles, then it cannot be deleted because it has a pre-existing role in WordPress (e.g. administrator)
-					// If user has 2 roles, then
-					if ($number_of_user_roles == 1) {
-						// Ensure that this one role is indeed the Wild Apricot role
-						if (in_array($plugin_role, $user_roles)) {
-							if ($users_delete) {
-								wp_delete_user($user_id);
-							} else {
-								if ($roles_delete) {
-									$user->remove_role($plugin_role);
-									// User now has no roles; set subscriber as default
-									// $user->set_role('subscriber');
-								}
-							}
-						}
-					} else { // user has 2 or more roles; we cannot delete this user but we can remove their Wild Apricot role
-						if ($roles_delete) {
-							$user->remove_role($plugin_role);
-						}
-					}
+					// if ($number_of_user_roles == 1) {
+					// 	// If the user was added by the plugin, then we can delete this user
+					// 	$user_was_added_by_plugin = get_user_meta($user_id, WAWP\WAIntegration::USER_ADDED_BY_PLUGIN);
+					// 	if ($user_was_added_by_plugin) {
+					// 		if ($users_delete) {
+					// 			wp_delete_user($user_id);
+					// 		} else {
+					// 			if ($roles_delete) {
+					// 				$user->remove_role($plugin_role);
+					// 				// User now has no roles; set subscriber as default
+					// 				// $user->set_role('subscriber');
+					// 			}
+					// 		}
+					// 	}
+					// } else { // user has 2 or more roles; we cannot delete this user but we can remove their Wild Apricot role
+					// 	if ($roles_delete) {
+					// 		$user->remove_role($plugin_role);
+					// 	}
+					// }
 					// // Remove role
 					// $user::remove_role($plugin_role);
 					// // Check if user has 0 roles now (meaning they only had 1 role initially)
@@ -167,9 +170,28 @@ if (!empty($delete_options)) {
 					// }
 				}
 			}
-			// Check if we should delete this role entirely
-			if ($roles_delete) {
-				remove_role($plugin_role);
+			// delete this role entirely
+			remove_role($plugin_role);
+		}
+	}
+	// Delete users that the plugin originally created
+	if ($users_delete) {
+		// Find users that have 'wawp_user_added_by_plugin' set to true
+		$added_by_plugin_args = array(
+			'meta_key' => WAWP\WAIntegration::USER_ADDED_BY_PLUGIN,
+			'meta_value' => '1'
+		);
+		$users_added_by_plugin = get_users($added_by_plugin_args);
+		my_log_file($users_added_by_plugin);
+		// Loop through each user added by plugin
+		foreach ($users_added_by_plugin as $user_plugin) {
+			// Check that user has 1 or less roles
+			$user_id = $user_plugin->ID;
+			$user_meta = get_userdata($user_id);
+			$user_roles = $user_meta->roles;
+			if (count($user_roles) <= 1) {
+				// We can delete this user
+				wp_delete_user($user_id);
 			}
 		}
 	}

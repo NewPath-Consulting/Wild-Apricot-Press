@@ -27,6 +27,7 @@ class WAIntegration {
 	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
 	const LIST_OF_CUSTOM_FIELDS = 'wawp_list_of_custom_fields';
 	const LIST_OF_CHECKED_FIELDS = 'wawp_fields_name';
+	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
 
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
@@ -868,6 +869,8 @@ class WAIntegration {
 			// Add user's Wild Apricot membership level as another role
 			$another_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			$current_wp_user->add_role($another_role);
+			// Set user's status of being added by the plugin to FALSE
+			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, false);
 		} else { // email does not exist; we will create a new user
 			// Set user data
 			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
@@ -901,6 +904,8 @@ class WAIntegration {
 			if (is_wp_error($current_wp_user_id)) {
 				echo $current_wp_user_id->get_error_message();
 			}
+			// Set user's status of being added by the plugin to true
+			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, true);
 		}
 
 		// Add access token and secret token to user's metadata
