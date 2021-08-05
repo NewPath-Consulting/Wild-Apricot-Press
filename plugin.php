@@ -42,7 +42,6 @@ require_once plugin_dir_path(__FILE__) . 'src/MySettingsPage.php';
 require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
 
 $activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot for Wordpress (WAWP)');
-
 // Enqueue stylesheet
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {
@@ -52,8 +51,13 @@ function wawp_enqueue_admin_script($hook) {
 // Create settings page
 $my_settings_page = new WAWP\MySettingsPage();
 
-// Create WA Integration instance
-$wa_integration_instance = new WAWP\WAIntegration();
+$licenses = get_option('wawp_license_keys');
+// don't do any WA integration if there is no license key
+if ($licenses && array_key_exists('wawp', $licenses)) {
+    // Create WA Integration instance
+    $wa_integration_instance = new WAWP\WAIntegration();
+}
+
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
