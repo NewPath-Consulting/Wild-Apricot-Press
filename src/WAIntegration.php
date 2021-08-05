@@ -66,6 +66,8 @@ class WAIntegration {
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
 		// Action for when the custom fields are saved to refresh the users
 		add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
+		// Action for hiding admin bar for non-admin users
+		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -82,6 +84,15 @@ class WAIntegration {
 		$msg = print_r( $msg, true );
 		$log = $name . "  |  " . $msg . "\n";
 		error_log( $log, 3, $error_dir );
+	}
+
+	/**
+	 * Hides the WordPress admin bar for non-admin users
+	 */
+	public function hide_admin_bar() {
+		if (!current_user_can('administrator') && !is_admin()) {
+			show_admin_bar(false);
+		}
 	}
 
 	/**

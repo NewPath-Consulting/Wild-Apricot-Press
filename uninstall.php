@@ -31,17 +31,32 @@ delete_option('wawp_list_of_custom_fields');
 delete_option('wawp_fields_name');
 
 // Delete the added post meta data to the restricted pages
-// Get array of restricted pages
-$restricted_pages = get_option('wawp_array_of_restricted_posts');
-// Loop through each page and delete our extra post meta
-if (!empty($restricted_pages)) {
-	foreach ($restricted_pages as $restricted_page_id) {
-		delete_post_meta($restricted_page_id, 'wawp_restricted_groups');
-		delete_post_meta($restricted_page_id, 'wawp_restricted_levels');
-		delete_post_meta($restricted_page_id, 'wawp_is_post_restricted');
-		delete_post_meta($restricted_page_id, 'wawp_individual_restriction_message_key');
+// Get posts that contain the 'wawp_' post meta data
+$wawp_find_posts_args = array('meta_key' => 'wawp_is_post_restricted', 'post_type' => 'any');
+$wawp_posts_with_meta = get_posts($wawp_find_posts_args);
+my_log_file($wawp_posts_with_meta);
+// Loop through each post and delete the associated 'wawp_' meta data from it
+if (!empty($wawp_posts_with_meta)) {
+	foreach ($wawp_posts_with_meta as $wawp_post) {
+		// Get post ID
+		$wawp_post_id = $wawp_post->ID;
+		delete_post_meta($wawp_post_id, 'wawp_restricted_groups');
+		delete_post_meta($wawp_post_id, 'wawp_restricted_levels');
+		delete_post_meta($wawp_post_id, 'wawp_is_post_restricted');
+		delete_post_meta($wawp_post_id, 'wawp_individual_restriction_message_key');
 	}
 }
+// // Get array of restricted pages
+// $restricted_pages = get_option('wawp_array_of_restricted_posts');
+// // Loop through each page and delete our extra post meta
+// if (!empty($restricted_pages)) {
+// 	foreach ($restricted_pages as $restricted_page_id) {
+// 		delete_post_meta($restricted_page_id, 'wawp_restricted_groups');
+// 		delete_post_meta($restricted_page_id, 'wawp_restricted_levels');
+// 		delete_post_meta($restricted_page_id, 'wawp_is_post_restricted');
+// 		delete_post_meta($restricted_page_id, 'wawp_individual_restriction_message_key');
+// 	}
+// }
 // Delete restricted pages option value
 delete_option('wawp_array_of_restricted_posts');
 delete_option('wawp_cron_user_id');
@@ -67,49 +82,24 @@ function my_log_file( $msg, $name = '' )
 }
 
 // Get plugin deletion options and check if users and/or roles should be deleted
-$delete_options = get_option('wawp_delete_name');
-if (!empty($delete_options)) {
+$wawp_delete_options = get_option('wawp_delete_name');
+if (!empty($wawp_delete_options)) {
 	// Check if checkbox is checked
-	if (in_array('wawp_delete_checkbox', $delete_options)) {
-		// Delete user meta data associated with each Wild Apricot user
-		// Get users with Wild Apricot ID
-		$users_args = array(
-			'meta_key' => 'wawp_wa_user_id',
-		);
-		$wa_users = get_users($users_args);
-		// Loop through each user and remove their Wild Apricot associated meta data
-		if (!empty($wa_users)) {
-			foreach ($wa_users as $wa_user) {
-				// Get ID
-				$wa_user_id = $wa_user->ID;
-				// Get user meta data
-				$wa_user_meta_data = get_user_meta($wa_user_id);
-				// Find meta data starting with 'wawp_'
-				// my_log_file($wa_user_meta_data);
-				foreach ($wa_user_meta_data as $meta_data_entry => $meta_data_value) {
-					if (substr($meta_data_entry, 0, 5) == 'wawp_') { // starts with 'wawp_'
-						// Delete this user meta entry
-						delete_user_meta($wa_user_id, $meta_data_entry);
-					}
-				}
-			}
-		}
-
-
+	if (in_array('wawp_delete_checkbox', $wawp_delete_options)) {
 		// Get roles in WordPress user database
-		$all_roles = wp_roles();
-		$all_roles = (array) $all_roles;
+		$wawp_all_roles = wp_roles();
+		$wawp_all_roles = (array) $wawp_all_roles;
 		// my_log_file($all_roles);
 		// Get role names
-		$plugin_roles = array();
-		if (!empty($all_roles) && array_key_exists('role_names', $all_roles)) {
-			$all_role_names = $all_roles['role_names'];
-			foreach ($all_role_names as $role_key => $role_name) {
+		$wawp_plugin_roles = array();
+		if (!empty($wawp_all_roles) && array_key_exists('role_names', $wawp_all_roles)) {
+			$wawp_all_role_names = $wawp_all_roles['role_names'];
+			foreach ($wawp_all_role_names as $wawp_role_key => $wawp_role_name) {
 				// Check if the role name starts with the prefix (wawp_)
-				$prefix_role = substr($role_key, 0, 5);
-				if ($prefix_role == 'wawp_') {
+				$wawp_prefix_role = substr($wawp_role_key, 0, 5);
+				if ($wawp_prefix_role == 'wawp_') {
 					// Add this level to the plugin roles (roles created by this plugin)
-					$plugin_roles[] = $role_key;
+					$wawp_plugin_roles[] = $wawp_role_key;
 				}
 			}
 		}
@@ -118,37 +108,61 @@ if (!empty($delete_options)) {
 		// $roles_delete = in_array('wawp_delete_checkbox_1', $delete_options);
 		// $users_delete = in_array('wawp_delete_checkbox_0', $delete_options);
 			// Get Wild Apricot users by looping through each plugin role
-		foreach ($plugin_roles as $plugin_role) {
-			$args = array('role' => $plugin_role);
-			$wa_users_by_role = get_users($args);
+		foreach ($wawp_plugin_roles as $wawp_plugin_role) {
+			$wawp_plugin_args = array('role' => $wawp_plugin_role);
+			$wawp_users_by_role = get_users($wawp_plugin_args);
 			// Remove plugin role from each of these users
 			// my_log_file($wa_users_by_role);
-			if (!empty($wa_users_by_role)) {
-				foreach ($wa_users_by_role as $user) {
+			if (!empty($wawp_users_by_role)) {
+				foreach ($wawp_users_by_role as $wawp_user) {
 					// Remove role fro this user
-					$user->remove_role($plugin_role);
+					$wawp_user->remove_role($wawp_plugin_role);
 				}
 			}
 			// delete this role entirely
-			remove_role($plugin_role);
+			remove_role($wawp_plugin_role);
 		}
 
 		// Find users that have 'wawp_user_added_by_plugin' set to true
-		$added_by_plugin_args = array(
+		$wawp_added_by_plugin_args = array(
 			'meta_key' => WAWP\WAIntegration::USER_ADDED_BY_PLUGIN,
 			'meta_value' => '1'
 		);
-		$users_added_by_plugin = get_users($added_by_plugin_args);
+		$wawp_users_added_by_plugin = get_users($wawp_added_by_plugin_args);
 		// my_log_file($users_added_by_plugin);
 		// Loop through each user added by plugin
-		foreach ($users_added_by_plugin as $user_plugin) {
+		foreach ($wawp_users_added_by_plugin as $wawp_user_plugin) {
 			// Check that user has 1 or less roles
-			$user_id = $user_plugin->ID;
-			$user_meta = get_userdata($user_id);
-			$user_roles = $user_meta->roles;
-			if (count($user_roles) <= 1) {
+			$wawp_user_id = $wawp_user_plugin->ID;
+			$wawp_user_meta = get_userdata($wawp_user_id);
+			$wawp_user_roles = $wawp_user_meta->roles;
+			if (count($wawp_user_roles) <= 1) {
 				// We can delete this user
-				wp_delete_user($user_id);
+				wp_delete_user($wawp_user_id);
+			}
+		}
+
+		// Delete user meta data associated with each remaining Wild Apricot user
+		// Get users with Wild Apricot ID
+		$wawp_users_args = array(
+			'meta_key' => 'wawp_wa_user_id',
+		);
+		$wawp_users = get_users($wawp_users_args);
+		// Loop through each user and remove their Wild Apricot associated meta data
+		if (!empty($wawp_users)) {
+			foreach ($wawp_users as $wawp_user) {
+				// Get ID
+				$wawp_user_id = $wawp_user->ID;
+				// Get user meta data
+				$wawp_user_meta_data = get_user_meta($wawp_user_id);
+				// Find meta data starting with 'wawp_'
+				// my_log_file($wa_user_meta_data);
+				foreach ($wawp_user_meta_data as $wawp_meta_data_entry => $wawp_meta_data_value) {
+					if (substr($wawp_meta_data_entry, 0, 5) == 'wawp_') { // starts with 'wawp_'
+						// Delete this user meta entry
+						delete_user_meta($wawp_user_id, $wawp_meta_data_entry);
+					}
+				}
 			}
 		}
 	}

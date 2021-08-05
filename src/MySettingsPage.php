@@ -641,7 +641,7 @@ class MySettingsPage
         // Settings for Menu to add Login/Logout button
         add_settings_field(
             'wawp_wal_login_logout_button', // ID
-            'Menu:', // Title
+            'Menu Location(s):', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
             'wawp-login', // Page // Possibly put somewhere else
             'wawp_wal_id' // Section
