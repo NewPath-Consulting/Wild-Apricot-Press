@@ -46,17 +46,6 @@ if (!empty($wawp_posts_with_meta)) {
 		delete_post_meta($wawp_post_id, 'wawp_individual_restriction_message_key');
 	}
 }
-// // Get array of restricted pages
-// $restricted_pages = get_option('wawp_array_of_restricted_posts');
-// // Loop through each page and delete our extra post meta
-// if (!empty($restricted_pages)) {
-// 	foreach ($restricted_pages as $restricted_page_id) {
-// 		delete_post_meta($restricted_page_id, 'wawp_restricted_groups');
-// 		delete_post_meta($restricted_page_id, 'wawp_restricted_levels');
-// 		delete_post_meta($restricted_page_id, 'wawp_is_post_restricted');
-// 		delete_post_meta($restricted_page_id, 'wawp_individual_restriction_message_key');
-// 	}
-// }
 // Delete restricted pages option value
 delete_option('wawp_array_of_restricted_posts');
 delete_option('wawp_cron_user_id');

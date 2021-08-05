@@ -105,6 +105,16 @@ class Activator {
 		}
 
 		delete_site_option($this->license_req_option_name);
+
+		// Check if valid Wild Apricot credentials have been entered -> if not, output an alert
+		$entered_wa_credentials = get_option('wawp_wal_name');
+		if (empty($entered_wa_credentials)) {
+			// Wild Apricot has not been configured -> output alert
+			echo "<div class='notice notice-warning'><p>";
+			echo "Please enter your Wild Apricot credentials for <strong>" . $this->plugin_name . "</strong> in ";
+			echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">WA4WP > Authorization</a>.";
+			echo "</p></div>";
+		}
 	}
 
 	public function force_deactivate() {
