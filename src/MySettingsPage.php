@@ -541,6 +541,8 @@ class MySettingsPage
         <div class="wrap">
             <form method="post" action="options.php">
             <?php
+            // Nonce for verification
+            wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
             settings_fields('wawp_license_keys');
             do_settings_sections('wawp_licensing');
             submit_button('Save', 'primary');
@@ -1082,7 +1084,12 @@ class MySettingsPage
     public function license_key_input(array $args) {
         $slug = $args['slug'];
         $license = Addon::instance()::get_licenses();
-        echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $license[$slug] . "'  />" ;
+        // Check that slug is valid
+        $input_value = '';
+        if (!empty($license) && array_key_exists($slug, $license)) {
+            $input_value = $license[$slug];
+        }
+        echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $input_value . "'  />" ;
     }
 
     /**
@@ -1093,8 +1100,13 @@ class MySettingsPage
      * @param array $input settings form input array mapping addon slugs to license keys
      */
     public function validate_license_form($input) {
-        $slug = array_key_first($input);
-        $license = $input[$slug];
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
+            wp_die('Your nonce for the license keys could not be verified.');
+        }
+
+        // $slug = array_key_first($input);
+        // $license = $input[$slug];
         $valid = array();
 
         foreach($input as $slug => $license) {
