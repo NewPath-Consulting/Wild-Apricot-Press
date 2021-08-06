@@ -24,6 +24,10 @@
 	#wawp_restricted_message_textarea {
 		width: 100%;
 	}
+
+	.loginChild {
+		clear: left;
+	}
 }
 
 /* Indent for checkboxes */

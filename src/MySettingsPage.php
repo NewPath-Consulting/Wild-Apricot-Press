@@ -468,33 +468,33 @@ class MySettingsPage
 					   </li>
 					   <li>
 					      On the Application details screen, the following options should be set:
-					      <ul>
+					      <ul class="wawp_list">
 						 <li>
 						    <b>Application name</b>
-						    <ul>
+						    <ul class="wawp_list">
 						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site"
 						       </li>
 						    </ul>
 						 </li>
 						 <li>
-						    Access Level
-						    <ul>
+						    <b>Access Level</b>
+						    <ul class="wawp_list">
 						       <li>Choose full access as the WAWP plugin requires ability to read and write to your Wild Apricot database.
 						       </li>
 						    </ul>
 						 </li>
 						 <li>
-						    Client Secret
-						    <ul>
+						    <b>Client Secret</b>
+						    <ul class="wawp_list">
 						       <li>If there is no Client secret value displayed, click the green Generate client secret button. To delete the client secret, click the red X beside the value.
 						       </li>
 						    </ul>
 					      </ul>
 					   </li>
 					   <li>
-					      Click the Save button to save your changes.
+					      Click the <b>Save</b> button to save your changes.
 					   </li>
-					   <li>From the Application details screen, copy the API key, Client ID, and Client secret (the blue boxes). Input these values into their respective locations in WordPress, to the rights of these instructions. <br><br>
+					   <li>From the Application details screen, copy the <b>API key</b>, <b>Client ID</b>, and <b>Client secret</b> (the blue boxes). Input these values into their respective locations in WordPress, to the right of these instructions. <br><br>
 					      <img src="https://raw.githubusercontent.com/kendrakleber/files/master/values.png" alt="Authorized application button" width="500">  <br>
 					   </li>
 					   <br>
