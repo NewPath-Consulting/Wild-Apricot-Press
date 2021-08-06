@@ -157,5 +157,6 @@ if (!empty($wawp_delete_options)) {
 	}
 }
 delete_option('wawp_delete_name');
+delete_option('wawp_menu_location_name');
 
 ?>

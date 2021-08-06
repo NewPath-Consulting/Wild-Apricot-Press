@@ -261,8 +261,6 @@ class MySettingsPage
             'wawp-licensing',
             array($this, 'wawp_licensing_page')
         );
-
-        // Add new submenu here
     }
 
     /**
@@ -503,6 +501,7 @@ class MySettingsPage
 					</ol>
 				</div>
 				<div class="loginChild">
+                    <!-- Wild Apricot credentials form -->
 					<form method="post" action="options.php">
 					<?php
                         // Nonce for verification
@@ -529,6 +528,17 @@ class MySettingsPage
                             do_action('wawp_wal_credentials_obtained');
 						}
 					?>
+                    <!-- Menu Locations for Login/Logout button -->
+                    <form method="post" action="options.php">
+					<?php
+                        // Nonce for verification
+                        wp_nonce_field('wawp_menu_location_nonce_action', 'wawp_menu_location_nonce_name');
+						// This prints out all hidden setting fields
+						settings_fields( 'wawp_menu_location_group' );
+						do_settings_sections( 'wawp-login-menu-location' );
+						submit_button();
+					?>
+					</form>
 				</div>
 			</div>
         </div>
@@ -640,16 +650,48 @@ class MySettingsPage
             'wawp_wal_id' // Section
         );
 
-        // Settings for Menu to add Login/Logout button
+        // // Settings for Menu to add Login/Logout button
+        // add_settings_field(
+        //     'wawp_wal_login_logout_button', // ID
+        //     'Menu Location(s):', // Title
+        //     array( $this, 'login_logout_menu_callback' ), // Callback
+        //     'wawp-login', // Page // Possibly put somewhere else
+        //     'wawp_wal_id' // Section
+
+        // );
+
+        // ---------------------------- Login/Logout button location ------------------------------
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'menu_location_sanitize'),
+            'default' => NULL
+        );
+
+		// Register setting
+        register_setting(
+            'wawp_menu_location_group', // Option group
+            'wawp_menu_location_name', // Option name
+            $register_args // Sanitize
+        );
+
+		// Create settings section
+        add_settings_section(
+            'wawp_menu_location_id', // ID
+            'Login/Logout Button Location', // Title
+            array( $this, 'menu_location_print_section_info' ), // Callback
+            'wawp-login-menu-location' // Page
+        );
+
+		// Settings for Menu to add Login/Logout button
         add_settings_field(
             'wawp_wal_login_logout_button', // ID
             'Menu Location(s):', // Title
             array( $this, 'login_logout_menu_callback' ), // Callback
-            'wawp-login', // Page // Possibly put somewhere else
-            'wawp_wal_id' // Section
-
+            'wawp-login-menu-location', // Page // Possibly put somewhere else
+            'wawp_menu_location_id' // Section
         );
 
+        // -------------------------- License Keys -------------------------
         // Registering and adding settings for the license key forms
         $register_args = array(
             'type' => 'string',
@@ -818,6 +860,28 @@ class MySettingsPage
     }
 
     /**
+     * Sanitize the login/logout menu location checkboxes
+     *
+     * @param array $input Contains all checkboxes in an array
+     */
+    public function menu_location_sanitize($input) {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['wawp_menu_location_nonce_name'], 'wawp_menu_location_nonce_action')) {
+            wp_die('Your nonce for the menu location(s) could not be verified.');
+        }
+
+        // Create valid array that will hold valid inputs
+        $valid = array();
+        // Sanitize each element
+        if (!empty($input)) {
+            foreach ($input as $menu_key => $menu_value) {
+                $valid[$menu_key] = sanitize_text_field($menu_value);
+            }
+        }
+        return $valid;
+    }
+
+    /**
      * Sanitize custom fields input
      *
      * @param array $input Contains all settings fields as array keys
@@ -959,7 +1023,7 @@ class MySettingsPage
 
         // Sanitize menu dropdown
         //sanatize array https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
-        $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
+        // $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
 
 		// Return array of valid inputs
 		return $valid;
@@ -991,6 +1055,13 @@ class MySettingsPage
      */
     public function print_restriction_info() {
         print 'The "Global Restriction Message" is the message that is shown to users who are not members of the Wild Apricot membership level(s) or group(s) required to access a restricted post. Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
+    }
+
+    /**
+     * Print the menu location description text
+     */
+    public function menu_location_print_section_info() {
+        print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their Wild Apricot account on your WordPress site!';
     }
 
     /**
@@ -1066,14 +1137,14 @@ class MySettingsPage
         }
 
         //https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
-        $option_group = get_option('wawp_wal_name',[]);
-        $wawp_wal_login_logout_button = isset( $option_group['wawp_wal_login_logout_button'] )
-        ? (array) $option_group['wawp_wal_login_logout_button'] : [];
+        // $option_group = get_option('wawp_menu_location_name',[]);
+        // $wawp_wal_login_logout_button = !empty( $option_group )
+        // ? (array) $option_group : [];
+        $wawp_wal_login_logout_button = get_option('wawp_menu_location_name',[]);
 
         foreach ($menu_items as $item) {
-            echo "<div><input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_wal_name[wawp_wal_login_logout_button][]\" value=\"" . esc_attr($item) . "\"" . (in_array( esc_attr($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
+            echo "<div><input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_menu_location_name[]\" value=\"" . esc_attr($item) . "\"" . (in_array( esc_attr($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
             echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label></div>";
-
         }
     }
 

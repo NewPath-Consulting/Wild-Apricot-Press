@@ -28,6 +28,7 @@ class WAIntegration {
 	const LIST_OF_CUSTOM_FIELDS = 'wawp_list_of_custom_fields';
 	const LIST_OF_CHECKED_FIELDS = 'wawp_fields_name';
 	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
+	const MENU_LOCATIONS_KEY = 'wawp_menu_location_name';
 
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
@@ -1124,7 +1125,7 @@ class WAIntegration {
 			// Get login url
 			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out, now an array
-			$menus_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
+			$menus_to_add_button = get_option(self::MENU_LOCATIONS_KEY);
 			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
 			if(!empty($menus_to_add_button)) {
 				foreach ($menus_to_add_button as $menu_to_add_button) {
