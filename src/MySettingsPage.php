@@ -449,28 +449,28 @@ class MySettingsPage
 			<div class="waSettings">
 				<div class="loginChild">
 					<p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account:</p>
-					<ul>
+					<ul class="wawp_list">
 					   <li>API key</li>
 					   <li>Client ID</li>
 					   <li>Client secret</li>
 					</ul>
 					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
 					<ol>
-					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select Settings. On the Global settings screen, select the Authorized applications option (under Integration). <br><br>
+					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
 					      <img src="https://user-images.githubusercontent.com/458134/122569603-e8e44a80-d018-11eb-86b9-0386c6d23a5f.png" alt="Settings > Integration > Authorized applications" width="500"> <br>
 					   </li>
-					   <li>On the Authorized applications screen, click the Authorize application button in the top left corner.
+					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
 					      <br><br>
 					      <img src="https://user-images.githubusercontent.com/458134/122569583-e2ee6980-d018-11eb-879a-bbbcbecbc349.png" alt="Authorized application button" width="500"> <br>
 					   </li>
-					   <li> On the Application authorization screen, click the Server application option then click the Continue button. <br><br>
+					   <li> On the Application authorization screen, click the <b>Server application</b> option then click the <b>Continue</b> button. <br><br>
 					      <img src="https://raw.githubusercontent.com/kendrakleber/files/master/server.png" alt="Authorized application button" width="500"><br>
 					   </li>
 					   <li>
 					      On the Application details screen, the following options should be set:
 					      <ul>
 						 <li>
-						    Application name
+						    <b>Application name</b>
 						    <ul>
 						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site"
 						       </li>
@@ -494,7 +494,7 @@ class MySettingsPage
 					   <li>
 					      Click the Save button to save your changes.
 					   </li>
-					   <li>From the Application details screen, copy the API key, Client ID, and Client secret (the blue boxes). Input these values into their respective locations in Wordpress, to the rights of these instructions. <br><br>
+					   <li>From the Application details screen, copy the API key, Client ID, and Client secret (the blue boxes). Input these values into their respective locations in WordPress, to the rights of these instructions. <br><br>
 					      <img src="https://raw.githubusercontent.com/kendrakleber/files/master/values.png" alt="Authorized application button" width="500">  <br>
 					   </li>
 					   <br>
