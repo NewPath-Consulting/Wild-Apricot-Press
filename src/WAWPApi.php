@@ -101,6 +101,35 @@ class WAWPApi {
     }
 
 	/**
+	 * Retrieves the custom fields for contacts and members
+	 */
+	public function retrieve_custom_fields() {
+		// Make API request for custom fields
+		$args = $this->request_data_args();
+		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id . '/contactfields?showSectionDividers=true';
+		$response_api = wp_remote_get($url, $args);
+		$custom_field_response = self::response_to_data($response_api);
+
+		// Loop through custom fields and get field names with IDs
+		// Array that holds default fields
+		$default_fields = array('Group participation', 'User ID', 'Organization', 'Membership status');
+		// Do not add 'Group participation' or 'User ID' because those are already used by default
+		$custom_fields = array();
+		if (!empty($custom_field_response)) {
+			foreach ($custom_field_response as $field_response) {
+				$field_name = $field_response['FieldName'];
+				$field_id = $field_response['SystemCode'];
+				// Ensure that we are not displaying default options
+				if (!in_array($field_name, $default_fields)) {
+					$custom_fields[$field_id] = $field_name;
+				}
+			}
+		}
+		// Save custom fields in the options table
+		update_option(WAIntegration::LIST_OF_CUSTOM_FIELDS, $custom_fields);
+	}
+
+	/**
 	 * Gets user information for all Wild Apricot users in the WordPress database
 	 */
 	public function get_all_user_info() {
@@ -179,11 +208,15 @@ class WAWPApi {
 							}
 							// Get membership groups through field values
 							$contact_fields = $contact['FieldValues'];
+							$checked_custom_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
+							$all_custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
 							if (!empty($contact_fields)) {
 								$user_groups_array = array();
 								// Loop through the fields until 'Group participation' is found
+								// Also, store each field as a custom field to be presented to the user
 								foreach ($contact_fields as $field) {
 									$field_name = $field['FieldName'];
+									$system_code = $field['SystemCode'];
 									if ($field_name == 'Group participation') {
 										// Get membership groups array
 										$group_array = $field['Value'];
@@ -192,6 +225,17 @@ class WAWPApi {
 											foreach ($group_array as $group) {
 												$user_groups_array[$group['Id']] = $group['Label'];
 											}
+										}
+									}
+									// Get other custom fields, if any
+									if (!empty($checked_custom_fields)) {
+										// Check if current system code is in the checked custom fields
+										if (in_array($system_code, $checked_custom_fields)) {
+											// We must extract this value and save it to the user meta data
+											$custom_meta_key = 'wawp_' . str_replace(' ', '', $system_code);
+											$custom_field_to_save = $field['Value'];
+											// Save to user meta data
+											update_user_meta($site_id, $custom_meta_key, $custom_field_to_save);
 										}
 									}
 								}

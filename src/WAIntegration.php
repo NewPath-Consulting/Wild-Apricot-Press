@@ -25,6 +25,10 @@ class WAIntegration {
 	const ADMIN_ACCOUNT_ID_TRANSIENT = 'wawp_admin_account_id';
 	const ADMIN_ACCESS_TOKEN_TRANSIENT = 'wawp_admin_access_token';
 	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
+	const LIST_OF_CUSTOM_FIELDS = 'wawp_list_of_custom_fields';
+	const LIST_OF_CHECKED_FIELDS = 'wawp_fields_name';
+	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
+	const MENU_LOCATIONS_KEY = 'wawp_menu_location_name';
 
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 
@@ -61,8 +65,10 @@ class WAIntegration {
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
-		// Action for when the user logs out
-		// add_action('wp_logout', array($this, 'remove_user_wa_update'));
+		// Action for when the custom fields are saved to refresh the users
+		add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
+		// Action for hiding admin bar for non-admin users
+		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -79,6 +85,15 @@ class WAIntegration {
 		$msg = print_r( $msg, true );
 		$log = $name . "  |  " . $msg . "\n";
 		error_log( $log, 3, $error_dir );
+	}
+
+	/**
+	 * Hides the WordPress admin bar for non-admin users
+	 */
+	public function hide_admin_bar() {
+		if (!current_user_can('administrator') && !is_admin()) {
+			show_admin_bar(false);
+		}
 	}
 
 	/**
@@ -587,6 +602,32 @@ class WAIntegration {
 	}
 
 	/**
+	 * Converts an array of member values to a string for displaying on the user's profile
+	 *
+	 * @param  array  $array_values is the array of values to convert to a string
+	 * @return string $string_result is a string of each value separated by a comma
+	 */
+	private static function convert_array_values_to_string($array_values) {
+		$string_result = '';
+		if (!empty($array_values)) {
+			// Add comma after each value, unless it is the last value
+			// $i = 0;
+			// $len = count($array_values);
+			foreach ($array_values as $key => $value) {
+				// Check if there is another array
+				if (!is_array($value)) {
+					if ($key != 'Id') {
+						$string_result .= $value . ', ';
+					}
+				} else { // is another array
+					$string_result .= self::convert_array_values_to_string($value);
+				}
+			}
+		}
+		return $string_result;
+	}
+
+	/**
 	 * Show membership levels on user profile
 	 *
 	 * @param WP_User $user is the user of the current profile
@@ -621,6 +662,9 @@ class WAIntegration {
 		}
 		// Check if user has valid Wild Apricot credentials, and if so, display them
 		if (isset($membership_level) && isset($user_status) && isset($wa_account_id) && isset($organization) && isset($user_groups)) { // valid
+			// Get custom fields
+			$checked_custom_fields = get_option(self::LIST_OF_CHECKED_FIELDS);
+			$all_custom_fields = get_option(self::LIST_OF_CUSTOM_FIELDS);
 			// Display Wild Apricot parameters
 			?>
 			<h2>Wild Apricot Membership Details</h2>
@@ -670,6 +714,35 @@ class WAIntegration {
 					?>
 					</td>
 				</tr>
+				<?php
+				// Display extra custom fields here
+				if (!empty($checked_custom_fields)) {
+					foreach ($checked_custom_fields as $custom_key => $custom_field) {
+						// Load in field from user's meta data
+						$field_meta_key = 'wawp_' . str_replace(' ', '' , $custom_field);
+						$field_saved_value = get_user_meta($user->ID, $field_meta_key);
+						if (!empty($field_saved_value)) {
+							$field_saved_value = $field_saved_value[0];
+						}
+						// Check if value is an array
+						if (is_array($field_saved_value)) {
+							// Convert array to string
+							$field_saved_value = self::convert_array_values_to_string($field_saved_value);
+							$field_saved_value = rtrim($field_saved_value, ', ');
+						}
+						?>
+						<tr>
+							<th><label><?php echo($all_custom_fields[$custom_field]); ?></label></th>
+							<td>
+							<?php
+								echo '<label>' . $field_saved_value . '</label>';
+							?>
+							</td>
+						</tr>
+						<?php
+					}
+				}
+				?>
 			</table>
 			<?php
 		}
@@ -711,6 +784,8 @@ class WAIntegration {
 			$admin_account_id = $dataEncryption->decrypt($admin_account_id);
 		}
 		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
+		// Refresh custom fields first
+		$wawp_api->retrieve_custom_fields();
 		$wawp_api->get_all_user_info();
 	}
 
@@ -774,7 +849,7 @@ class WAIntegration {
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
 		// Check if user is administator or not
-		$is_adminstrator = isset($contact_info['IsAccountAdministrator']);
+		// $is_adminstrator = isset($contact_info['IsAccountAdministrator']);
 
 		// Wild Apricot contact details
 		// membership groups - one member can be in 0 or more groups
@@ -810,6 +885,8 @@ class WAIntegration {
 			// Add user's Wild Apricot membership level as another role
 			$another_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			$current_wp_user->add_role($another_role);
+			// Set user's status of being added by the plugin to FALSE
+			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, false);
 		} else { // email does not exist; we will create a new user
 			// Set user data
 			// Generated username is 'firstName . lastName' with a random number on the end, if necessary
@@ -825,9 +902,9 @@ class WAIntegration {
 			if (!empty($membership_level) && $membership_level != '') {
 				$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			}
-			if ($is_adminstrator) {
-				$user_role = 'administrator';
-			}
+			// if ($is_adminstrator) {
+			// 	$user_role = 'administrator';
+			// }
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
@@ -843,6 +920,8 @@ class WAIntegration {
 			if (is_wp_error($current_wp_user_id)) {
 				echo $current_wp_user_id->get_error_message();
 			}
+			// Set user's status of being added by the plugin to true
+			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, true);
 		}
 
 		// Add access token and secret token to user's metadata
@@ -862,12 +941,17 @@ class WAIntegration {
 		// Add Wild Apricot organization to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_ORGANIZATION_KEY, $organization);
 
+		// Get list of custom fields that user should import
+		$extra_custom_fields = get_option(self::LIST_OF_CHECKED_FIELDS);
+
 		// Get groups
 		// Loop through each field value until 'Group participation' is found
 		$wild_apricot_user_id = '';
 		$user_groups_array = array();
 		foreach ($field_values as $field_value) {
-			if ($field_value['FieldName'] == 'Group participation') { // Found
+			$field_name = $field_value['FieldName'];
+			$system_code = $field_value['SystemCode'];
+			if ($field_name == 'Group participation') { // Found
 				$group_array = $field_value['Value'];
 				// Loop through each group
 				foreach ($group_array as $group) {
@@ -875,8 +959,18 @@ class WAIntegration {
 				}
 			}
 			// Find User ID
-			if ($field_value['FieldName'] == 'User ID') {
+			if ($field_name == 'User ID') {
 				$wild_apricot_user_id = $field_value['Value'];
+			}
+			// Get extra custom fields, if any
+			if (!empty($extra_custom_fields)) {
+				// Check if the current field value is in the extra custom fields
+				if (in_array($system_code, $extra_custom_fields)) {
+					// This field is in the custom fields array and thus should be added to the user's meta data
+					$custom_meta_key = 'wawp_' . str_replace(' ', '', $system_code);
+					$custom_field_value = $field_value['Value'];
+					update_user_meta($current_wp_user_id, $custom_meta_key, $custom_field_value);
+				}
 			}
 		}
 		// Serialize the user groups array so that it can be added as user meta data
@@ -888,10 +982,6 @@ class WAIntegration {
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
-
-		// Schedule refresh of user's Wild Apricot credentials every hour (maybe day)
-		// update_option(self::CRON_USER_ID, $current_wp_user_id);
-		// self::create_cron_for_user_refresh();
 	}
 
 	/**
@@ -1012,8 +1102,6 @@ class WAIntegration {
 	 */
 	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
-
-
 	public function create_wa_login_logout($items, $args) {
 		// Get login url based on user's Wild Apricot site
 		// First, check if Wild Apricot credentials are valid
@@ -1039,7 +1127,7 @@ class WAIntegration {
 			// Get login url
 			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out, now an array
-			$menus_to_add_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button'];
+			$menus_to_add_button = get_option(self::MENU_LOCATIONS_KEY);
 			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
 			if(!empty($menus_to_add_button)) {
 				foreach ($menus_to_add_button as $menu_to_add_button) {
@@ -1050,8 +1138,8 @@ class WAIntegration {
 					}
 				}
 			}
-			return $items;
 		}
+		return $items;
 	}
 }
 ?>

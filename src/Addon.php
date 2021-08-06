@@ -54,7 +54,10 @@ class Addon {
 
     public static function get_license($slug) {
         $licenses = self::get_licenses();
-        return $licenses[$slug];
+        if (!empty($licenses) && array_key_exists($slug, $licenses)) {
+            return $licenses[$slug];
+        }
+        return '';
     }
 
     public static function has_license($slug) {
