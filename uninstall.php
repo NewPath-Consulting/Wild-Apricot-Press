@@ -77,7 +77,6 @@ if (!empty($wawp_delete_options)) {
 		// Get roles in WordPress user database
 		$wawp_all_roles = wp_roles();
 		$wawp_all_roles = (array) $wawp_all_roles;
-		// my_log_file($all_roles);
 		// Get role names
 		$wawp_plugin_roles = array();
 		if (!empty($wawp_all_roles) && array_key_exists('role_names', $wawp_all_roles)) {
@@ -91,16 +90,11 @@ if (!empty($wawp_delete_options)) {
 				}
 			}
 		}
-		// my_log_file($plugin_roles);
-		// Check if roles should be deleted
-		// $roles_delete = in_array('wawp_delete_checkbox_1', $delete_options);
-		// $users_delete = in_array('wawp_delete_checkbox_0', $delete_options);
-			// Get Wild Apricot users by looping through each plugin role
+		// Get Wild Apricot users by looping through each plugin role
 		foreach ($wawp_plugin_roles as $wawp_plugin_role) {
 			$wawp_plugin_args = array('role' => $wawp_plugin_role);
 			$wawp_users_by_role = get_users($wawp_plugin_args);
 			// Remove plugin role from each of these users
-			// my_log_file($wa_users_by_role);
 			if (!empty($wawp_users_by_role)) {
 				foreach ($wawp_users_by_role as $wawp_user) {
 					// Remove role fro this user
@@ -117,7 +111,6 @@ if (!empty($wawp_delete_options)) {
 			'meta_value' => '1'
 		);
 		$wawp_users_added_by_plugin = get_users($wawp_added_by_plugin_args);
-		// my_log_file($users_added_by_plugin);
 		// Loop through each user added by plugin
 		foreach ($wawp_users_added_by_plugin as $wawp_user_plugin) {
 			// Check that user has 1 or less roles
@@ -144,7 +137,6 @@ if (!empty($wawp_delete_options)) {
 				// Get user meta data
 				$wawp_user_meta_data = get_user_meta($wawp_user_id);
 				// Find meta data starting with 'wawp_'
-				// my_log_file($wa_user_meta_data);
 				foreach ($wawp_user_meta_data as $wawp_meta_data_entry => $wawp_meta_data_value) {
 					if (substr($wawp_meta_data_entry, 0, 5) == 'wawp_') { // starts with 'wawp_'
 						// Delete this user meta entry

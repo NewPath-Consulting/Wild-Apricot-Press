@@ -910,8 +910,12 @@ class MySettingsPage
             wp_die('Your nonce could not be verified.');
         }
         $valid = array();
-        // Sanitize input
-        $valid = $input;
+        // Loop through input array and sanitize each value
+        if (!empty($input)) {
+            foreach ($input as $in_key => $in_value) {
+                $valid[$in_key] = sanitize_text_field($in_value);
+            }
+        }
         // Return valid input
         return $valid;
     }

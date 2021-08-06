@@ -1124,7 +1124,6 @@ class WAIntegration {
 			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out, now an array
 			$menus_to_add_button = get_option(self::MENU_LOCATIONS_KEY);
-			self::my_log_file($menus_to_add_button);
 			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
 			if(!empty($menus_to_add_button)) {
 				foreach ($menus_to_add_button as $menu_to_add_button) {
