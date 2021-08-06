@@ -845,7 +845,7 @@ class WAIntegration {
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
 		// Check if user is administator or not
-		$is_adminstrator = isset($contact_info['IsAccountAdministrator']);
+		// $is_adminstrator = isset($contact_info['IsAccountAdministrator']);
 
 		// Wild Apricot contact details
 		// membership groups - one member can be in 0 or more groups
@@ -898,9 +898,9 @@ class WAIntegration {
 			if (!empty($membership_level) && $membership_level != '') {
 				$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			}
-			if ($is_adminstrator) {
-				$user_role = 'administrator';
-			}
+			// if ($is_adminstrator) {
+			// 	$user_role = 'administrator';
+			// }
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
@@ -1098,8 +1098,6 @@ class WAIntegration {
 	 */
 	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
-
-
 	public function create_wa_login_logout($items, $args) {
 		// Get login url based on user's Wild Apricot site
 		// First, check if Wild Apricot credentials are valid
@@ -1126,6 +1124,7 @@ class WAIntegration {
 			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out, now an array
 			$menus_to_add_button = get_option(self::MENU_LOCATIONS_KEY);
+			self::my_log_file($menus_to_add_button);
 			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
 			if(!empty($menus_to_add_button)) {
 				foreach ($menus_to_add_button as $menu_to_add_button) {
@@ -1136,8 +1135,8 @@ class WAIntegration {
 					}
 				}
 			}
-			return $items;
 		}
+		return $items;
 	}
 }
 ?>

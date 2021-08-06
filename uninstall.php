@@ -34,7 +34,6 @@ delete_option('wawp_fields_name');
 // Get posts that contain the 'wawp_' post meta data
 $wawp_find_posts_args = array('meta_key' => 'wawp_is_post_restricted', 'post_type' => 'any');
 $wawp_posts_with_meta = get_posts($wawp_find_posts_args);
-my_log_file($wawp_posts_with_meta);
 // Loop through each post and delete the associated 'wawp_' meta data from it
 if (!empty($wawp_posts_with_meta)) {
 	foreach ($wawp_posts_with_meta as $wawp_post) {
