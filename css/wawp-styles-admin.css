@@ -1,5 +1,8 @@
-.waSettings {
-	display: flex;
+/* For computer desktop screen */
+@media only screen and (min-width: 600px) {
+	.waSettings {
+		display: flex;
+	}
 }
 
 .loginChild {
@@ -26,7 +29,7 @@
 	}
 
 	.loginChild {
-		clear: left;
+		width: 100%;
 	}
 }
 
