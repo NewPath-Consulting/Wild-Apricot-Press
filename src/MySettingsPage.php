@@ -457,14 +457,14 @@ class MySettingsPage
 					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
 					<ol>
 					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
-					      <img src="https://user-images.githubusercontent.com/458134/122569603-e8e44a80-d018-11eb-86b9-0386c6d23a5f.png" alt="Settings > Integration > Authorized applications" width="500"> <br>
+					      <img src="https://user-images.githubusercontent.com/458134/122569603-e8e44a80-d018-11eb-86b9-0386c6d23a5f.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
 					   </li>
 					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
 					      <br><br>
-					      <img src="https://user-images.githubusercontent.com/458134/122569583-e2ee6980-d018-11eb-879a-bbbcbecbc349.png" alt="Authorized application button" width="500"> <br>
+					      <img src="https://user-images.githubusercontent.com/458134/122569583-e2ee6980-d018-11eb-879a-bbbcbecbc349.png" alt="Authorized application button" class="wawp_authorization_img"> <br>
 					   </li>
 					   <li> On the Application authorization screen, click the <b>Server application</b> option then click the <b>Continue</b> button. <br><br>
-					      <img src="https://raw.githubusercontent.com/kendrakleber/files/master/server.png" alt="Authorized application button" width="500"><br>
+					      <img src="https://raw.githubusercontent.com/kendrakleber/files/master/server.png" alt="Authorized application button" class="wawp_authorization_img"><br>
 					   </li>
 					   <li>
 					      On the Application details screen, the following options should be set:

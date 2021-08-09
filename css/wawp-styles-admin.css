@@ -1,5 +1,5 @@
 /* For computer desktop screen */
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 960px) {
 	.waSettings {
 		display: flex;
 	}
@@ -44,4 +44,40 @@
 ul.wawp_list {
 	list-style-type: disc;
 	margin-left: 5%;
+}
+
+/* Formatting for the API Key, Client ID, and Client Secret inputs */
+#wawp_wal_api_key {
+	width: 80%;
+}
+
+#wawp_wal_client_id {
+	width: 80%;
+}
+
+#wawp_wal_client_secret {
+	width: 80%;
+}
+
+@media only screen and (max-width: 1200px) {
+	#wawp_wal_api_key {
+		width: 100%;
+	}
+
+	#wawp_wal_client_id {
+		width: 100%;
+	}
+
+	#wawp_wal_client_secret {
+		width: 100%;
+	}
+}
+
+.wawp_authorization_img {
+	max-width: 500px;
+	width: 100%;
+}
+
+.form-table th {
+	width: 100px;
 }
