@@ -6,6 +6,7 @@ namespace WAWP;
  */
 class WAIntegration {
 	// Constants for keys used for database management
+	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
 	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
 	const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
@@ -69,6 +70,8 @@ class WAIntegration {
 		add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
+		// Action for when Wild Apricot credentials are updated -> ensure that they are valid
+		add_action('update_option_' . self::WA_CREDENTIALS_KEY, array($this, 'check_updated_credentials'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -85,6 +88,14 @@ class WAIntegration {
 		$msg = print_r( $msg, true );
 		$log = $name . "  |  " . $msg . "\n";
 		error_log( $log, 3, $error_dir );
+	}
+
+	/**
+	 * Checks that updated Wild Apricot credentials match the registered site on the license key
+	 */
+	public function check_updated_credentials() {
+		// Extract credentials
+		self::my_log_file('credentials have been updated!');
 	}
 
 	/**

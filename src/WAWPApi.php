@@ -75,11 +75,15 @@ class WAWPApi {
 	public static function load_user_credentials() {
 		// Load encrypted credentials from database
 		$credentials = get_option('wawp_wal_name');
-		// Decrypt credentials
-		$dataEncryption = new DataEncryption();
-		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
-		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
-		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
+		$decrypted_credentials = array();
+		// Ensure that credentials are not empty
+		if (!empty($credentials)) {
+			// Decrypt credentials
+			$dataEncryption = new DataEncryption();
+			$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
+			$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
+			$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
+		}
 
 		return $decrypted_credentials;
 	}
@@ -99,6 +103,29 @@ class WAWPApi {
 		);
         return $args;
     }
+
+	/**
+	 * Retrieves url and id for the account
+	 */
+	public function get_account_url_and_id() {
+		$args = $this->request_data_args();
+		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id;
+		$response_api = wp_remote_get($url, $args);
+		$details_response = self::response_to_data($response_api);
+
+		// Extract values
+		$wild_apricot_values = array();
+		if (array_key_exists('Id', $details_response)) {
+			$wild_apricot_values['Id'] = $details_response['Id'];
+		}
+		$wild_apricot_url = '';
+		if (array_key_exists('PrimaryDomainName', $details_response)) {
+			$wild_apricot_values['Url'] = $details_response['PrimaryDomainName'];
+		}
+
+		// Return values
+		return $wild_apricot_values;
+	}
 
 	/**
 	 * Retrieves the custom fields for contacts and members
@@ -272,6 +299,8 @@ class WAWPApi {
 	/**
 	 * Returns a new access token after it has expired
 	 * https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
+	 *
+	 * @return array $data holds the response for refreshing the token
 	 */
 	public static function get_new_access_token($refresh_token) {
 		// Get decrypted credentials
