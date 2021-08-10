@@ -8,91 +8,27 @@ Version 2.0 - May 19, 2021
 
 In the left menu, navigate to to Plugins > Add New. Upload the [wa4wp.zip](tobeadded) plugin and activate.
 
-Note: This will automatically install and activate the Wild Apricot Login and Advanced Custom Fields plugins if these were not there previously. It will also import a ACF configuration file with 3 field groups.
+[Add instructions on Wild Apricot credentials and license key]
 
 To configuring the WAWP plugin, the Wild Apricot API settings must be set.
 
 ### Create an Authorized Application in Wild Apricot
 
-Using a full Wild Apricot administrator account, create your WordPress site as an external application using the [detailed instructions on authorization external applications are.](https://www.google.com/url?q=https://gethelp.wildapricot.com/en/articles/199-integrating-with-wordpress%23authorizing&sa=D&source=editors&ust=1615306111122000&usg=AOvVaw2021mFF2bb930o6DAXmylq)
-
-In the Wild Apricot web administration settings, view authorized applications as shown in Figure 1.
-
-![image7](https://user-images.githubusercontent.com/458134/110492511-4125bb00-80c0-11eb-9d74-2c89befc392e.png)
-
-
-Figure 1. Click Settings  (1) in the administration menu to display a settings menu. Click Authorized (2) applications  to display the list of authorized applications.
-
-Start the authorization process as shown in Figure 2.
-
-![image15](https://user-images.githubusercontent.com/458134/110492565-4e42aa00-80c0-11eb-8ccb-4566f3c19fa6.png)
-
-
-Figure 2. Click Authorized application  (1) to begin the authorization process.
-
-Select the Server application  type as shown in Figure 3.
-
-![image12](https://user-images.githubusercontent.com/458134/110492648-6286a700-80c0-11eb-82af-f28bd0d684bf.png)
-
-
-Figure 3. Select WordPress  (1),Click Continue  (2) to advance to the next form.
-
-Fill in the application details form as shown in Figure 4. Copy the API key for the plugin configuration. Save the new authorized application.
-
-![image5](https://user-images.githubusercontent.com/458134/110492722-73cfb380-80c0-11eb-89ed-5c41d6468479.png)
-
-
-Figure 4. Enter an application name (1). Copy the API key (2). Select WordPress access  to allow the WAWP plugin to connect to Wild Apricot. (3) and (4) Copy the Client ID and Client Secret keys.
-
-***
-
-Continue the configuration in Figure 5 to allow WordPress logins via the single sign on (SSO) service:
-
-![image9](https://user-images.githubusercontent.com/458134/110493016-88ac4700-80c0-11eb-8be8-844fb80542ec.png)
-
-
-Figure 5. Check the Authorize user via Wild Apricot SSO service (1).Identify the organization name to be shown on the SSO screen for user signing  (2). If you'd like to include some introductory text, enter it in this text box (3) and (4) add the formal fully qualified domain names of your WordPress website(s) that will allow SSO.  Click Save  (5) to save the application authorization.
+In WordPress, using the left-hand menu, navigate to WAWP > WAWP and on the page select the Content Restriction Options tab. Follow the instructions there to acquire the credentials.
 
 ### Add API keys into WAWP Plugin
 
 Once you have created an API key, Client ID and Client secret, copy and paste these strings into the configuration screen in your WAWP configuration.
 
-![image17](https://user-images.githubusercontent.com/458134/110493303-9b268080-80c0-11eb-9628-d0cb5bd43a9f.png)
+[NEW IMAGE]
 
 
 The WordPress administrators can now manage access to pages and posts based on Wild Apricot membership level and membership group.
 
-**Important Note: If your WordPress site shares an email address with your Wild Apricot site, you MUST change the email address of the existing WordPress user. You can do this in the Users menu in the WordPress dashboard. You can login with your Wild Apricot email, and then you can elevate that user to an administrator in WordPress if required.**
+Below, you can specify which menu(s) you would like to add this button to by selecting the checkboxes. A login/logout button will appear on thesemenu(s) on your WordPress site, which will allow the user to login/logout to their Wild Apricot account on the WordPress site. 
 
-Having the same email will cause "an unknown error has occurred" to display when trying to login on the website.
+[Insert screenshot here]
 
-## Updating functions.php
-
-Modify `functions.php` by adding these lines near the end. It is recommended that this is done within a child theme to ensure that the code is preserved if a theme is updated.
-
-```
-function get_user_role() {
-    global $current_user;
-    $user_roles = $current_user->roles;
-    $user_role = array_shift($user_roles);
-    return $user_role;
-    }
-
-//Add role in body class
-add_filter('body_class','my_class_names');
-function my_class_names($classes) {
-    $classes[] = get_user_role();
-    return $classes;
-    }
-
-//Hide admin bar for all users except administrators
-add_action('after_setup_theme', 'remove_admin_bar');
-function remove_admin_bar() {
-if (!current_user_can('administrator') && !is_admin()) {
-       show_admin_bar(false);
-       }
-  }
-```
 
 ***
 
