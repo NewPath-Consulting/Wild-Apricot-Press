@@ -1,4 +1,4 @@
-Wild Apricot for Wordpress (WA4WP) Documentation
+Wild Apricot for Wordpress (WAWP) Documentation
 
 Version 2.0 - May 19, 2021
 

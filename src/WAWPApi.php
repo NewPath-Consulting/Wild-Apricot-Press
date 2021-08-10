@@ -68,7 +68,7 @@ class WAWPApi {
     }
 
     /**
-	 * Load Wild Apricot credentials that user has input in the WA4WP settings
+	 * Load Wild Apricot credentials that user has input in the WAWP settings
 	 *
 	 * @return array $decrypted_credentials	Decrypted Wild Apricot credentials
 	 */

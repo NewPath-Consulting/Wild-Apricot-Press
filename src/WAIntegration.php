@@ -140,7 +140,7 @@ class WAIntegration {
 			// Create details of page
 			// See: https://wordpress.stackexchange.com/questions/222810/add-a-do-action-to-post-content-of-wp-insert-post
 			$post_details = array(
-				'post_title' => 'WA4WP Wild Apricot Login',
+				'post_title' => 'WAWP Wild Apricot Login',
 				'post_status' => 'publish',
 				'post_type' => 'page',
 				'post_content' => '[wawp_custom_login_form]' // shortcode
@@ -201,7 +201,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Generates the URL to the WA4WP Login page on the website
+	 * Generates the URL to the WAWP Login page on the website
 	 */
 	private function get_login_link() {
 		$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
@@ -452,7 +452,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WA4WP Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WAWP Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data

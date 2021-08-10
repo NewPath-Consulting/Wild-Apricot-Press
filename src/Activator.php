@@ -36,7 +36,7 @@ class Activator {
 	}
 
 	/**
-	 * Activates the WA4WP plugin.
+	 * Activates the WAWP plugin.
 	 *
 	 * Write the full details of what happens here.
 	 */
@@ -92,7 +92,7 @@ class Activator {
 		} else if ($option == 'false') { // missing license key
 			echo "<div class='notice notice-warning'><p>";
 			echo "Please enter a valid license key for <strong>" . $this->plugin_name . "</strong> in ";
-			echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . ">WA4WP > Licensing</a>.";
+			echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . ">WAWP > Licensing</a>.";
 			echo "</p></div>";
 			unset($_GET['activate']); // prevents printing "Plugin activated" message
 		} else if ($option == 'invalid') { // invalid license entered
@@ -112,7 +112,7 @@ class Activator {
 			// Wild Apricot has not been configured -> output alert
 			echo "<div class='notice notice-warning'><p>";
 			echo "Please enter your Wild Apricot credentials for <strong>" . $this->plugin_name . "</strong> in ";
-			echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">WA4WP > Authorization</a>.";
+			echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">WAWP > Authorization</a>.";
 			echo "</p></div>";
 		}
 	}
