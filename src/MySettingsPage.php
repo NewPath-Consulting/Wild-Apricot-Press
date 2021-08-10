@@ -518,14 +518,14 @@ class MySettingsPage
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
                             // Save that wawp credentials are not fully activated
-                            update_option('wawp_wa_credentials_valid', false);
+                            // update_option('wawp_wa_credentials_valid', false);
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
 							echo '<p style="color:green">Valid Wild Apricot credentials saved!</p>';
                             // Save that wawp credentials have been fully activated
-                            update_option('wawp_wa_credentials_valid', true);
+                            // update_option('wawp_wa_credentials_valid', true);
                             // Implement hook here to tell Wild Apricot to connect to these credentials
-                            do_action('wawp_wal_credentials_obtained');
+                            // do_action('wawp_wal_credentials_obtained');
 						}
 					?>
                     <!-- Menu Locations for Login/Logout button -->
@@ -549,14 +549,27 @@ class MySettingsPage
     public function wawp_licensing_page() {
         ?>
         <div class="wrap">
-            <form method="post" action="options.php">
             <?php
-            // Nonce for verification
-            wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
-            settings_fields('wawp_license_keys');
-            do_settings_sections('wawp_licensing');
-            submit_button('Save', 'primary');
-            ?> </form>
+            // Check if Wild Apricot credentials have been entered
+            $wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
+            // If credentials have been entered (not empty), then we can present the license page
+            if (!empty($wa_credentials)) {
+                ?>
+                <form method="post" action="options.php">
+                    <?php
+                    // Nonce for verification
+                    wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
+                    settings_fields('wawp_license_keys');
+                    do_settings_sections('wawp_licensing');
+                    submit_button('Save', 'primary');
+                    ?>
+                </form>
+                <?php
+            } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
+                $link_address = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
+                echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
+            }
+            ?>
         </div>
         <?php
     }

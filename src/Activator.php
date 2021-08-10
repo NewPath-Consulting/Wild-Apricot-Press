@@ -47,7 +47,7 @@ class Activator {
 		$stored_wa_credentials = get_option('wawp_wal_name');
 		if (isset($stored_wa_credentials) && $stored_wa_credentials != '') {
 			// Set valid Wild Apricot credentials to true
-			update_option('wawp_wa_credentials_valid', true);
+			// update_option('wawp_wa_credentials_valid', true);
 			// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
 			do_action('wawp_wal_credentials_obtained');
 			// Also create CRON event to refresh the membership levels/groups

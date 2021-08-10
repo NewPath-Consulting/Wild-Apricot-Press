@@ -237,10 +237,11 @@ class WAIntegration {
 		// Get ID of current post
 		$current_post_ID = get_queried_object_id();
 		// Check if valid Wild Apricot credentials have been entered
-		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
+		// $valid_wa_credentials = get_option('wawp_wa_credentials_valid');
+		$valid_wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
 
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
-		if (is_singular() && isset($valid_wa_credentials) && $valid_wa_credentials) {
+		if (is_singular() && !empty($valid_wa_credentials)) {
 			// Check that this current post is restricted
 			$is_post_restricted = get_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, true); // return single value
 			if (isset($is_post_restricted) && $is_post_restricted) {
@@ -605,8 +606,9 @@ class WAIntegration {
 	 */
 	public function post_access_meta_boxes_setup() {
 		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
-		$valid_wa_credentials = get_option('wawp_wa_credentials_valid');
-		if (isset($valid_wa_credentials) && $valid_wa_credentials) {
+		// $valid_wa_credentials = get_option('wawp_wa_credentials_valid');
+		$valid_wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
+		if (!empty($valid_wa_credentials)) {
 			// Add meta boxes on the 'add_meta_boxes' hook
 			add_action('add_meta_boxes', array($this, 'post_access_add_post_meta_boxes'));
 		}

@@ -202,11 +202,10 @@ class Addon {
 
             // Compare license key information with current site
             if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { // valid
-
+                // This is valid! We can now 'activate' the WAWP functionality
+                do_action('wawp_wal_credentials_obtained');
             }
-        } else { // wild apricot credentials have not been entered yet
-            self::my_log_file('credentials have not been entered yet!');
-        }
+        } // Wild Apricot credentials are guaranteed to be added because the licensing page only appears when they have been entered!
 
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
         // else return the valid license key

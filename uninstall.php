@@ -24,7 +24,7 @@ delete_option('wawp_wal_page_id');
 delete_option('wawp_license_form_nonce');
 delete_option('wawp_all_levels_key');
 delete_option('wawp_all_groups_key');
-delete_option('wawp_wa_credentials_valid');
+// delete_option('wawp_wa_credentials_valid');
 delete_option('wawp_restriction_name');
 delete_option('wawp_restriction_status_name');
 delete_option('wawp_list_of_custom_fields');
