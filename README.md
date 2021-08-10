@@ -48,7 +48,7 @@ You can show a default restricted message to visitors who are trying to access p
 
 [Updated Screenshot]
 
-## Per Page and Post Settings<br>
+## Per Page and Post Settings
 
 ### Setting a custom page/post restricted message
 
@@ -93,10 +93,14 @@ See the Additional Plugins section
 
 ***
 
-# WAWP - Add On
+# WAWP - Add Ons
 Wild Apricot for WordPress - Custom Directory Plugin
 
 This plugin makes it easy to integrate Wild Apricot member directories into a WordPress site.
+
+Something something iframe plugin
+Iframe can be used to add member profiles, events, and more!
+
 
 # Version Control
 - v1.0 - initial version
