@@ -240,6 +240,17 @@ class WAIntegration {
 		// $valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 		$valid_wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
 
+		// Let's check if cache is valid across posts/pages
+		// Does the cache exist?
+		// $found = null;
+		// $cache_val = wp_cache_get('wawp_test_cache', '', false, $found);
+		// self::my_log_file($cache_val);
+		// if ($found === false) { // no key
+		// 	self::my_log_file('this key does not exist!');
+		// 	wp_cache_set('wawp_test_cache', 'hello');
+		// 	self::my_log_file('setting new value...');
+		// }
+
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
 		if (is_singular() && !empty($valid_wa_credentials)) {
 			// Check that this current post is restricted

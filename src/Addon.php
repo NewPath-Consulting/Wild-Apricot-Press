@@ -159,6 +159,21 @@ class Addon {
         $response = self::post_request($data);
         self::my_log_file($response);
 
+        // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
+        // else return the valid license key
+        $filename = self::get_filename($addon_slug);
+        if (array_key_exists('license-error', $response)) {
+            if (is_plugin_active($filename)) {
+                deactivate_plugins($filename);
+            }
+            return NULL;
+        } else {
+            if (!is_plugin_active($filename)) {
+                activate_plugin($filename);
+            }
+            return $license_key;
+        }
+
         // Get authorized Wild Apricot URL and ID
         $licensed_wa_urls = array();
         if (array_key_exists('Licensed Wild Apricot URLs', $response)) {
@@ -204,23 +219,10 @@ class Addon {
             if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { // valid
                 // This is valid! We can now 'activate' the WAWP functionality
                 do_action('wawp_wal_credentials_obtained');
+            } else { // This key is invalid!
+
             }
         } // Wild Apricot credentials are guaranteed to be added because the licensing page only appears when they have been entered!
-
-        // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
-        // else return the valid license key
-        $filename = self::get_filename($addon_slug);
-        if (array_key_exists('license-error', $response)) {
-            if (is_plugin_active($filename)) {
-                deactivate_plugins($filename);
-            }
-            return NULL;
-        } else {
-            if (!is_plugin_active($filename)) {
-                activate_plugin($filename);
-            }
-            return $license_key;
-        }
 
         // Get licensed Wild Apricot entries
     }
