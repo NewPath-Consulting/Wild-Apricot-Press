@@ -14,7 +14,7 @@ To configuring the WAWP plugin, the Wild Apricot API settings must be set.
 
 ### Create an Authorized Application in Wild Apricot
 
-In WordPress, using the left-hand menu, navigate to WAWP > WAWP and on the page select the Content Restriction Options tab. Follow the instructions there to acquire the credentials.
+On the WordPress admin dashboard, using the left-hand menu, navigate to WAWP > Authorization, and follow the instructions there to acquire the Wild Apricot credentials.
 
 ### Add API keys into WAWP Plugin
 
@@ -22,13 +22,11 @@ Once you have created an API key, Client ID and Client secret, copy and paste th
 
 [NEW IMAGE]
 
-
-The WordPress administrators can now manage access to pages and posts based on Wild Apricot membership level and membership group.
-
-Below, you can specify which menu(s) you would like to add this button to by selecting the checkboxes. A login/logout button will appear on thesemenu(s) on your WordPress site, which will allow the user to login/logout to their Wild Apricot account on the WordPress site. 
+Below, ou can specify which menu(s) you would like to add the login/logout button to be added to by selecting the checkboxes. Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site.
 
 [Insert screenshot here]
 
+The WordPress administrators can now manage access to pages and posts based on Wild Apricot membership levels and membership groups.
 
 ***
 
@@ -36,28 +34,19 @@ Below, you can specify which menu(s) you would like to add this button to by sel
 
 ### Setting Membership Status Restrictions
 
-To set which membership status can access pages and posts, use the Global Access menu under the WAWP dashboard icon.
-
-![image18](https://user-images.githubusercontent.com/458134/110493489-a7aad900-80c0-11eb-8f17-90701491afeb.png)
-
+To set which membership status can access pages and posts, navigate to WAWP in the left-hand menu, the select the Content Restriction Options tab.
 
 Set the membership statuses that will be allowed to view restricted posts or pages.
 
 ![image10](https://user-images.githubusercontent.com/458134/110493595-c4471100-80c0-11eb-879c-598b7c9db7a4.png)
 
+If no boxes are checked, members with any status will be able to view resticted posts.
 
 ### Set Global Restriction Message
 
 You can show a default restricted message to visitors who are trying to access pages which they do not have access to. This message will be displayed to logged in members who do not have access to a restricted page.
 
-![image11](https://user-images.githubusercontent.com/458134/110493644-cf9a3c80-80c0-11eb-8210-26380f967b83.png)
-
-Be sure to include the shortcode below to the bottom of your message:
-
-```
-[wa_login login_label="Login/Reset Password" logout_label="Logout" redirect_page="/membership/member-hub/"]
-```
-
+[Updated Screenshot]
 
 ## Per Page and Post Settings<br>
 
@@ -86,41 +75,15 @@ The levels and groups are set inclusively -- that means that if a member is in o
 
 ***
 
-## Website Menu Management
-
-### Showing Member-only menus
-
-To turn on the CSS Classes box, go to Screen option at the top of the page and check the CSS classes checkbox:
-
-![image13](https://user-images.githubusercontent.com/458134/110493874-0708e900-80c1-11eb-904d-e92e5f844725.png)
-
-
-With the CSS Classes administrators can control which menus are displayed for members by adding the class: wawp-menu-hide  to each menu's CSS class.
-
-![image19](https://user-images.githubusercontent.com/458134/110493939-16883200-80c1-11eb-80e1-4f708e7b1397.png)
-
-
 ## Membership Level Sync
 
 The membership levels that have been added, modified or deleted will be synced into WordPress automatically. During each member login, the membership meta data (eg status and membership level) will be updated.
 
+[More]
+
 ## Embedding Content from Wild Apricot into WordPress
 
-The page "Membership Profile" (/member-profile/) contains a Wild Apricot "widget" that is inserted from Wild Apricot using "widget" code. [Detailed documentation on widgets available to be embedded is available on the Wild Apricot help website.](https://gethelp.wildapricot.com/en/articles/222)
-
-Edit the member-profile page to reveal the member profile "widget" embed code. Using this HTML you can resize the width and height of this code. Any changes made in the Wild Apricot database will be automatically reflected on this page and all other Wild Apricot widgets embedded into a WordPress page or post.
-
-![image2](https://user-images.githubusercontent.com/458134/110494055-391a4b00-80c1-11eb-9e31-9994ff624be7.png)
-
-The code is displayed below so that you may copy and paste it into your site. Please note that the `src` values are specific to your Wild Apricot website. The code below is for the `https://members-digitalnovascotia.wildapricot.org` website. If this is not the URL of your Wild Apricot website, please replace `https://members-digitalnovascotia.wildapricot.org` in both `src` tags with the URL of your Wild Apricot website. For example, if your Wild Apricot website is `https://kendra76548.wildapricot.org/`, then the first `src` tag would become `https://kendra76548.wildapricot.org/widget/Sys/profile` and the second `src` tag would be `https://kendra76548.wildapricot.org/Common/EnableCookies.js`.
-```
-<!-- wp:html -->
-<p><iframe src="https://members-digitalnovascotia.wildapricot.org/widget/Sys/profile" width="1250px" height="600px" frameborder="no">
-</iframe></p>
-<p><script type="text/javascript" language="javascript" src="https://members-digitalnovascotia.wildapricot.org/Common/EnableCookies.js">
-</script></p>
-<!-- /wp:html -->
-```
+See the Additional Plugins section
 
 ***
 
@@ -143,15 +106,14 @@ Step 3 If you are logged in successfully you will see a Your Profile link to the
 
 ***
 
-## Accessing Your Profile
-
-Click Your Profile button to view your Wild Apricot Profile. You will have full access to your profile from this page including editing functions.
-
 # WAWP - Add On
 Wild Apricot for WordPress - Custom Directory Plugin
 
 This plugin makes it easy to integrate Wild Apricot member directories into a WordPress site.
 
 # Version Control
-- v0.10.6 - Fix search bar bug when using php 7.4
-- v0.10.5 - initial version
+- v1.0 - initial version
+
+# License
+[explanation here?]
+
