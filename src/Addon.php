@@ -163,66 +163,69 @@ class Addon {
         // else return the valid license key
         $filename = self::get_filename($addon_slug);
         if (array_key_exists('license-error', $response)) {
-            if (is_plugin_active($filename)) {
+            // Error is happening here!
+            self::my_log_file($filename);
+            // Ensure that we are not trying to deactivate the wawp plugin
+            if (is_plugin_active($filename) && $filename != 'wawp/plugin.php') {
                 deactivate_plugins($filename);
             }
             return NULL;
-        } else {
+        } else { // no error
             if (!is_plugin_active($filename)) {
                 activate_plugin($filename);
             }
-            return $license_key;
-        }
-
-        // Get authorized Wild Apricot URL and ID
-        $licensed_wa_urls = array();
-        if (array_key_exists('Licensed Wild Apricot URLs', $response)) {
-            $licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
-        }
-        $licensed_wa_ids = array();
-        if (array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
-            $licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
-        }
-        // Compare these licensed urls and ids with the current site's urls/ids
-        // Check if Wild Apricot credentials have been entered.
-        // If so, then we can check if the plugin will be activated.
-        // If not, then the plugin cannot be activated
-        $user_credentials = WAWPApi::load_user_credentials();
-        if (!empty($user_credentials)) { // Credentials have been entered
-            $dataEncryption = new DataEncryption();
-            // Check if access token is still valid
-            $access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
-            $wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
-            if (!$access_token || !$wa_account_id) { // access token is expired
-                // Refresh access token
-                $refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
-                $new_response = WAWPApi::get_new_access_token($refresh_token);
-                // Get variables from response
-                $new_access_token = $new_response['access_token'];
-                $new_expiring_time = $new_response['expires_in'];
-                $new_account_id = $new_response['Permissions'][0]['AccountId'];
-                // Set these new values to the transients
-                set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-                set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-                // Update values
-                $access_token = $new_access_token;
-                $wa_account_id = $new_account_id;
-            } else {
-                $access_token = $dataEncryption->decrypt($access_token);
-                $wa_account_id = $dataEncryption->decrypt($wa_account_id);
+            // Ensure that this license key is valid for the associated Wild Apricot ID and website
+            // Get authorized Wild Apricot URL and ID
+            $licensed_wa_urls = array();
+            if (array_key_exists('Licensed Wild Apricot URLs', $response)) {
+                $licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
             }
-            // Get account url from API
-            $wawp_api = new WAWPApi($access_token, $wa_account_id);
-            $wild_apricot_info = $wawp_api->get_account_url_and_id();
-
-            // Compare license key information with current site
-            if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { // valid
-                // This is valid! We can now 'activate' the WAWP functionality
-                do_action('wawp_wal_credentials_obtained');
-            } else { // This key is invalid!
-
+            $licensed_wa_ids = array();
+            if (array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
+                $licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
             }
-        } // Wild Apricot credentials are guaranteed to be added because the licensing page only appears when they have been entered!
+            // Compare these licensed urls and ids with the current site's urls/ids
+            // Check if Wild Apricot credentials have been entered.
+            // If so, then we can check if the plugin will be activated.
+            // If not, then the plugin cannot be activated
+            $user_credentials = WAWPApi::load_user_credentials();
+            if (!empty($user_credentials)) { // Credentials have been entered
+                $dataEncryption = new DataEncryption();
+                // Check if access token is still valid
+                $access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+                $wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
+                if (!$access_token || !$wa_account_id) { // access token is expired
+                    // Refresh access token
+                    $refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+                    $new_response = WAWPApi::get_new_access_token($refresh_token);
+                    // Get variables from response
+                    $new_access_token = $new_response['access_token'];
+                    $new_expiring_time = $new_response['expires_in'];
+                    $new_account_id = $new_response['Permissions'][0]['AccountId'];
+                    // Set these new values to the transients
+                    set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+                    set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+                    // Update values
+                    $access_token = $new_access_token;
+                    $wa_account_id = $new_account_id;
+                } else {
+                    $access_token = $dataEncryption->decrypt($access_token);
+                    $wa_account_id = $dataEncryption->decrypt($wa_account_id);
+                }
+                // Get account url from API
+                $wawp_api = new WAWPApi($access_token, $wa_account_id);
+                $wild_apricot_info = $wawp_api->get_account_url_and_id();
+
+                // Compare license key information with current site
+                if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { // valid
+                    // This is valid! We can now 'activate' the WAWP functionality
+                    do_action('wawp_wal_credentials_obtained');
+                    return $license_key;
+                } else { // This key is invalid!
+                    return NULL;
+                }
+            } // Wild Apricot credentials are guaranteed to be added because the licensing page only appears when they have been entered!
+        }
 
         // Get licensed Wild Apricot entries
     }
