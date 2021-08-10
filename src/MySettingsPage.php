@@ -231,10 +231,10 @@ class MySettingsPage
      */
     public function add_settings_page()
     {
-        // Create WA4WP admin page
+        // Create WAWP admin page
         add_menu_page(
-            'WA4WP Settings',
-            'WA4WP Settings',
+            'WAWP Settings',
+            'WAWP Settings',
             'manage_options',
             'wawp-wal-admin',
             array( $this, 'create_admin_page' ),
@@ -242,7 +242,7 @@ class MySettingsPage
 			6
         );
 
-		// Create Login sub-menu under WA4WP
+		// Create Login sub-menu under WAWP
 		add_submenu_page(
 			'wawp-wal-admin',
 			'Wild Apricot Authorization',
@@ -417,7 +417,7 @@ class MySettingsPage
         } else { // no custom fields
             $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
             ?>
-            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">WA4WP Settings -> Authorization</a></p>
+            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">WAWP Settings -> Authorization</a></p>
             <?php
         }
     }
@@ -448,7 +448,7 @@ class MySettingsPage
 			<h1>Connect Wild Apricot with WordPress!</h1>
 			<div class="waSettings">
 				<div class="loginChild">
-					<p>In order to connect your Wild Apricot with your WordPress website, WA4WP requires the following credentials from your Wild Apricot account:</p>
+					<p>In order to connect your Wild Apricot with your WordPress website, WAWP requires the following credentials from your Wild Apricot account:</p>
 					<ul class="wawp_list">
 					   <li>API key</li>
 					   <li>Client ID</li>

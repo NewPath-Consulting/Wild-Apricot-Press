@@ -2,7 +2,7 @@
 
 // namespace WAWP;
 /**
- * Plugin Name:       Wild Apricot for WordPress (WA4WP)
+ * Plugin Name:       Wild Apricot for WordPress (WAWP)
  * Plugin URI:        https://newpathconsulting.com/wild-apricot-for-wordpress
  * Description:       Integrates your Wild Apricot account with your WordPress website!
  * Version:           1.0.0
@@ -34,6 +34,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+For further inquires, contact NewPath Consulting at support@newpathconsulting.com
+or at 5000 Yonge Street, Suite 1901, Toronto, Ontario, M2N 7E9, Canada.
 */
 
 require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
