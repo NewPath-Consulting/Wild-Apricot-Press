@@ -164,7 +164,7 @@ class Addon {
         $filename = self::get_filename($addon_slug);
         if (array_key_exists('license-error', $response)) {
             // Error is happening here!
-            self::my_log_file($filename);
+            // self::my_log_file($filename);
             // Ensure that we are not trying to deactivate the wawp plugin
             if (is_plugin_active($filename) && $filename != 'wawp/plugin.php') {
                 deactivate_plugins($filename);

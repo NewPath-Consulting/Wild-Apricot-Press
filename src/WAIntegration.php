@@ -7,6 +7,7 @@ namespace WAWP;
 class WAIntegration {
 	// Constants for keys used for database management
 	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
+	const WAWP_LICENSES_KEY = 'wawp_license_keys';
 	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
 	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
 	const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
@@ -252,7 +253,8 @@ class WAIntegration {
 		// }
 
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
-		if (is_singular() && !empty($valid_wa_credentials)) {
+		$wawp_licenses = get_option(self::WAWP_LICENSES_KEY);
+		if (is_singular() && !empty($valid_wa_credentials) && !empty($wawp_licenses) && array_key_exists('wawp', $wawp_licenses)) {
 			// Check that this current post is restricted
 			$is_post_restricted = get_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, true); // return single value
 			if (isset($is_post_restricted) && $is_post_restricted) {
@@ -497,6 +499,9 @@ class WAIntegration {
 	 * @param WP_Post $post is the current post being edited
 	 */
 	public function post_access_display($post) {
+		// INCLUDE A MESSAGE TO DESCRIBE IF ACCESS LEVELS ARE CHECKED OFF
+		// INCLUDE CHECKBOX FOR 'ALL MEMBERS AND CONTACTS'
+		// if no boxes are checked, then this post is available to everyone, including logged out users
 		// Load in saved membership levels
 		$all_membership_levels = get_option('wawp_all_levels_key');
 		$all_membership_groups = get_option('wawp_all_groups_key');
