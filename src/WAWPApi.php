@@ -121,9 +121,22 @@ class WAWPApi {
 		$wild_apricot_url = '';
 		if (array_key_exists('PrimaryDomainName', $details_response)) {
 			$wild_apricot_values['Url'] = $details_response['PrimaryDomainName'];
+			// Lowercase
+			$wild_apricot_values['Url'] = strtolower($wild_apricot_values['Url']);
+			// Remove https:// or http:// or www. if necessary
+			if (strpos($wild_apricot_values['Url'], 'https://') !== false) { // contains 'https://www.'
+				// Remove 'https://'
+				$wild_apricot_values['Url'] = str_replace('https://', '', $wild_apricot_values['Url']);
+			} else if (strpos($wild_apricot_values['Url'], 'http://') !== false) {
+				$wild_apricot_values['Url'] = str_replace('http://', '', $wild_apricot_values['Url']);
+			}
+			if (strpos($wild_apricot_values['Url'], 'www.') !== false) {
+				$wild_apricot_values['Url'] = str_replace('www.', '', $wild_apricot_values['Url']);
+			}
 		}
 
 		// Return values
+		self::my_log_file($wild_apricot_values);
 		return $wild_apricot_values;
 	}
 
