@@ -229,6 +229,10 @@ class WAIntegration {
 	}
 
 	/**
+	 * Disables the WAWP functionality of the plugin if invalid credentials are found
+	 */
+
+	/**
 	 * Determines whether or not to restrict the post to the current user based on the user's levels/groups and the post's list of restricted levels/groups
 	 *
 	 * @param string $post_content holds the post content in HTML form
@@ -1134,7 +1138,7 @@ class WAIntegration {
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
 	public function create_wa_login_logout($items, $args) {
 		// Get login url based on user's Wild Apricot site
-		// First, check if Wild Apricot credentials are valid
+		// First, check if Wild Apricot credentials and the license is valid
 		$wa_credentials_saved = get_option('wawp_wal_name');
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
 
