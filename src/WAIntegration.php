@@ -130,6 +130,7 @@ class WAIntegration {
 	 *
 	 */
 	public function create_login_page() {
+		self::my_log_file('creating login page');
 		// Run action to create user refresh CRON event
 		self::create_cron_for_user_refresh();
 

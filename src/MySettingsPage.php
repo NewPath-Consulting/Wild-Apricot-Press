@@ -521,7 +521,7 @@ class MySettingsPage
                             // update_option('wawp_wa_credentials_valid', false);
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
-							echo '<p style="color:green">Valid Wild Apricot credentials saved!</p>';
+							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
                             // Save that wawp credentials have been fully activated
                             // update_option('wawp_wa_credentials_valid', true);
                             // Implement hook here to tell Wild Apricot to connect to these credentials
@@ -539,6 +539,18 @@ class MySettingsPage
 						submit_button();
 					?>
 					</form>
+                    <!-- Check if menu location(s) have been submitted -->
+                    <?php
+                        // Check menu locations in options table
+                        $menu_location_saved = get_option('wawp_menu_location_name');
+                        // If menu locations is not empty, then it has been saved
+                        if (!empty($menu_location_saved)) {
+                            // Display success statement
+                            echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
+                        } else {
+                            echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
+                        }
+                    ?>
 				</div>
 			</div>
         </div>
@@ -1093,7 +1105,7 @@ class MySettingsPage
      * Print the licensing settings section text
      */
     public function license_print_info() {
-        $link_address = "https://newpathconsulting.com/wild-apricot-for-wordpress/";
+        $link_address = "https://newpathconsulting.com/wawp/";
         print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for WAWP is 100% free, and we never share your information with any third party!";
     }
 

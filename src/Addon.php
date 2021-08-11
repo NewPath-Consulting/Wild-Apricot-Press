@@ -239,6 +239,7 @@ class Addon {
                 // Compare license key information with current site
                 if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { // valid
                     // This is valid! We can now 'activate' the WAWP functionality
+                    self::my_log_file('valid license key! :)');
                     do_action('wawp_wal_credentials_obtained');
                     return $license_key;
                 } else { // This key is invalid!
