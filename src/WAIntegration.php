@@ -72,10 +72,14 @@ class WAIntegration {
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 		// Action for when Wild Apricot credentials are updated -> ensure that they are valid
-		add_action('update_option_' . self::WA_CREDENTIALS_KEY, array($this, 'check_updated_credentials'));
+		// add_action('update_option_' . self::WA_CREDENTIALS_KEY, array($this, 'check_updated_credentials'));
+		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
+		$page_hook = 'settings_page_wawp';
+		add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
+		require_once('Addon.php');
 	}
 
 	// Debugging
@@ -95,8 +99,23 @@ class WAIntegration {
 	 * Checks that updated Wild Apricot credentials match the registered site on the license key
 	 */
 	public function check_updated_credentials() {
-		// Extract credentials
-		self::my_log_file('credentials have been updated!');
+		self::my_log_file('checking credentials again!');
+		// Ensure that credentials have been already entered
+		$wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
+		$license_credentials = get_option(self::WAWP_LICENSES_KEY);
+		if (!empty($wa_credentials) && !empty($license_credentials) && array_key_exists('wawp', $license_credentials)) {
+			// Verify that the license still matches the Wild Apricot credentials
+			$current_license_key = $license_credentials['wawp'];
+			$validated_license_key = Addon::validate_license_key($current_license_key, 'wawp');
+			// If license key is null, then that means that it is not valid
+			if (is_null($validated_license_key)) {
+				// Disable WAWP functionality
+				do_action('wawp_wal_set_login_private');
+				// Clear WAWP credentials and license
+				update_option(self::WA_CREDENTIALS_KEY, '');
+				update_option(self::WAWP_LICENSES_KEY, '');
+			}
+		}
 	}
 
 	/**
@@ -259,7 +278,7 @@ class WAIntegration {
 
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
 		$wawp_licenses = get_option(self::WAWP_LICENSES_KEY);
-		if (is_singular() && !empty($valid_wa_credentials) && !empty($wawp_licenses) && array_key_exists('wawp', $wawp_licenses)) {
+		if (is_singular() && !empty($valid_wa_credentials) && !empty($wawp_licenses) && array_key_exists('wawp', $wawp_licenses) && $wawp_licenses['wawp'] != '') {
 			// Check that this current post is restricted
 			$is_post_restricted = get_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, true); // return single value
 			if (isset($is_post_restricted) && $is_post_restricted) {
@@ -629,7 +648,8 @@ class WAIntegration {
 		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
 		// $valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 		$valid_wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
-		if (!empty($valid_wa_credentials)) {
+		$valid_license = get_option(self::WAWP_LICENSES_KEY);
+		if (!empty($valid_wa_credentials) && !empty($valid_license) && array_key_exists('wawp', $valid_license) && $valid_license['wawp'] != '') {
 			// Add meta boxes on the 'add_meta_boxes' hook
 			add_action('add_meta_boxes', array($this, 'post_access_add_post_meta_boxes'));
 		}
@@ -1139,8 +1159,9 @@ class WAIntegration {
 	public function create_wa_login_logout($items, $args) {
 		// Get login url based on user's Wild Apricot site
 		// First, check if Wild Apricot credentials and the license is valid
-		$wa_credentials_saved = get_option('wawp_wal_name');
-		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '') {
+		$wa_credentials_saved = get_option(self::WA_CREDENTIALS_KEY);
+		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
+		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
 
 			// Check if user is logged into Wild Apricot to see the page navigation
 			if (is_user_logged_in()) {

@@ -14,8 +14,9 @@ class WAWPApi {
     public function __construct($access_token, $wa_user_id) {
         $this->access_token = $access_token;
         $this->wa_user_id = $wa_user_id;
-		// Include WAIntegration
+		// Include WAIntegration and DataEncryption
 		require_once('WAIntegration.php');
+		require_once('DataEncryption.php');
     }
 
 	/**
@@ -103,6 +104,41 @@ class WAWPApi {
 		);
         return $args;
     }
+
+	/**
+	 * Checks if a new admin access token is required and returns a valid access token
+	 *
+	 * @return array $verified_data holds the verified access token and account ID
+	 */
+	public static function verify_valid_access_token() {
+		$dataEncryption = new DataEncryption();
+        // Check if access token is still valid
+		$access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		$wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
+		if (!$access_token || !$wa_account_id) { // access token is expired
+			// Refresh access token
+			$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+			$new_response = self::get_new_access_token($refresh_token);
+			// Get variables from response
+			$new_access_token = $new_response['access_token'];
+			$new_expiring_time = $new_response['expires_in'];
+			$new_account_id = $new_response['Permissions'][0]['AccountId'];
+			// Set these new values to the transients
+			set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+			set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+			// Update values
+			$access_token = $new_access_token;
+			$wa_account_id = $new_account_id;
+		} else {
+			$access_token = $dataEncryption->decrypt($access_token);
+			$wa_account_id = $dataEncryption->decrypt($wa_account_id);
+		}
+		// Return array of access token and account id
+		$verified_data = array();
+		$verified_data['access_token'] = $access_token;
+		$verified_data['wa_account_id'] = $wa_account_id;
+		return $verified_data;
+	}
 
 	/**
 	 * Retrieves url and id for the account

@@ -157,14 +157,12 @@ class Addon {
 
         // send request, receive response in $response
         $response = self::post_request($data);
-        self::my_log_file($response);
+        // self::my_log_file($response);
 
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
         // else return the valid license key
         $filename = self::get_filename($addon_slug);
         if (array_key_exists('license-error', $response)) {
-            // Error is happening here!
-            // self::my_log_file($filename);
             // Ensure that we are not trying to deactivate the wawp plugin
             if (is_plugin_active($filename) && $filename != 'wawp/plugin.php') {
                 deactivate_plugins($filename);
@@ -198,7 +196,7 @@ class Addon {
                         }
                     }
                 }
-                self::my_log_file($licensed_wa_urls);
+                // self::my_log_file($licensed_wa_urls);
             }
             $licensed_wa_ids = array();
             if (array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
@@ -210,28 +208,32 @@ class Addon {
             // If not, then the plugin cannot be activated
             $user_credentials = WAWPApi::load_user_credentials();
             if (!empty($user_credentials)) { // Credentials have been entered
-                $dataEncryption = new DataEncryption();
-                // Check if access token is still valid
-                $access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
-                $wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
-                if (!$access_token || !$wa_account_id) { // access token is expired
-                    // Refresh access token
-                    $refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
-                    $new_response = WAWPApi::get_new_access_token($refresh_token);
-                    // Get variables from response
-                    $new_access_token = $new_response['access_token'];
-                    $new_expiring_time = $new_response['expires_in'];
-                    $new_account_id = $new_response['Permissions'][0]['AccountId'];
-                    // Set these new values to the transients
-                    set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-                    set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-                    // Update values
-                    $access_token = $new_access_token;
-                    $wa_account_id = $new_account_id;
-                } else {
-                    $access_token = $dataEncryption->decrypt($access_token);
-                    $wa_account_id = $dataEncryption->decrypt($wa_account_id);
-                }
+                // $dataEncryption = new DataEncryption();
+                // // Check if access token is still valid
+                // $access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+                // $wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
+                // if (!$access_token || !$wa_account_id) { // access token is expired
+                //     // Refresh access token
+                //     $refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+                //     $new_response = WAWPApi::get_new_access_token($refresh_token);
+                //     // Get variables from response
+                //     $new_access_token = $new_response['access_token'];
+                //     $new_expiring_time = $new_response['expires_in'];
+                //     $new_account_id = $new_response['Permissions'][0]['AccountId'];
+                //     // Set these new values to the transients
+                //     set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+                //     set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+                //     // Update values
+                //     $access_token = $new_access_token;
+                //     $wa_account_id = $new_account_id;
+                // } else {
+                //     $access_token = $dataEncryption->decrypt($access_token);
+                //     $wa_account_id = $dataEncryption->decrypt($wa_account_id);
+                // }
+                // Get access token and account id
+                $access_and_account = WAWPApi::verify_valid_access_token();
+                $access_token = $access_and_account['access_token'];
+                $wa_account_id = $access_and_account['wa_account_id'];
                 // Get account url from API
                 $wawp_api = new WAWPApi($access_token, $wa_account_id);
                 $wild_apricot_info = $wawp_api->get_account_url_and_id();
@@ -239,10 +241,11 @@ class Addon {
                 // Compare license key information with current site
                 if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { // valid
                     // This is valid! We can now 'activate' the WAWP functionality
-                    // self::my_log_file('valid license key! :)');
+                    self::my_log_file('valid license key! :)');
                     do_action('wawp_wal_credentials_obtained');
                     return $license_key;
                 } else { // This key is invalid!
+                    self::my_log_file('invalid license key! :(');
                     do_action('wawp_wal_set_login_private');
                     return NULL;
                 }
