@@ -514,7 +514,7 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
-                        // $successful_credentials_entered = get_option('wawp_wal_success');
+                        // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
                             // Save that wawp credentials are not fully activated
@@ -579,6 +579,7 @@ class MySettingsPage
                 <?php
             } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
                 $link_address = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
+                echo "<h2>License Keys</h2>";
                 echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
             }
             ?>
@@ -1054,6 +1055,9 @@ class MySettingsPage
         //sanatize array https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
         // $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
 
+        // Delete all licenses because they are invalid now and user must insert them again
+        delete_option(WAIntegration::WAWP_LICENSES_KEY);
+
 		// Return array of valid inputs
 		return $valid;
     }
@@ -1228,7 +1232,6 @@ class MySettingsPage
                 }
             }
         }
-        self::my_log_file($valid);
         return $valid;
     }
 }
