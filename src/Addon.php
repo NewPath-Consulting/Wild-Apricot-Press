@@ -139,6 +139,7 @@ class Addon {
      * @param addon_slug Respective add-on for the key.
      */
     public static function validate_license_key($license_key_input, $addon_slug) {
+        self::my_log_file('we are validating license key...');
         // if license key is empty, do nothing
         if (empty($license_key_input)) return NULL;
 
@@ -183,8 +184,6 @@ class Addon {
                         // Lowercase url
                         $licensed_wa_urls[$url_key] = strtolower($url_value);
                         // Remove https:// or http:// if necessary
-                        self::my_log_file('does it contain http: ');
-                        self::my_log_file($url_value);
                         if (strpos($url_value, 'https://') !== false) { // contains 'https://'
                             // Remove 'https://'
                             $licensed_wa_urls[$url_key] = str_replace('https://', '', $url_value);
@@ -196,7 +195,6 @@ class Addon {
                         }
                     }
                 }
-                // self::my_log_file($licensed_wa_urls);
             }
             $licensed_wa_ids = array();
             if (array_key_exists('Licensed Wild Apricot Account IDs', $response)) {

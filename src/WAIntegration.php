@@ -104,9 +104,11 @@ class WAIntegration {
 		$wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
 		$license_credentials = get_option(self::WAWP_LICENSES_KEY);
 		if (!empty($wa_credentials) && !empty($license_credentials) && array_key_exists('wawp', $license_credentials)) {
+			self::my_log_file('we are actually checking again!');
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = $license_credentials['wawp'];
 			$validated_license_key = Addon::validate_license_key($current_license_key, 'wawp');
+			self::my_log_file($validated_license_key);
 			// If license key is null, then that means that it is not valid
 			if (is_null($validated_license_key)) {
 				// Disable WAWP functionality
