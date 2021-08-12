@@ -141,7 +141,32 @@ class WAWPApi {
 	}
 
 	/**
+	 * Lowercases and removes prefix to url for easy comparison between the license url and Wild Apricot url
+	 *
+	 * @param string  $original_url is the url to modify
+	 *
+	 * @return string $modified_url is the url that is all lowercase and has the prefix removed
+	 */
+	public static function create_consistent_url($original_url) {
+		// Lowercase
+		$modified_url = strtolower($original_url);
+		// Remove https:// or http:// or www. if necessary
+		if (strpos($modified_url, 'https://') !== false) { // contains 'https://www.'
+			// Remove 'https://'
+			$modified_url = str_replace('https://', '', $modified_url);
+		} else if (strpos($modified_url, 'http://') !== false) {
+			$modified_url = str_replace('http://', '', $modified_url);
+		}
+		if (strpos($modified_url, 'www.') !== false) {
+			$modified_url = str_replace('www.', '', $modified_url);
+		}
+		return $modified_url;
+	}
+
+	/**
 	 * Retrieves url and id for the account
+	 *
+	 * @return array $wild_apricot_values holds the Wild Apricot URL, indexed by 'Url', and the Wild Apricot ID, indexed by 'Id'
 	 */
 	public function get_account_url_and_id() {
 		$args = $this->request_data_args();
@@ -157,18 +182,19 @@ class WAWPApi {
 		$wild_apricot_url = '';
 		if (array_key_exists('PrimaryDomainName', $details_response)) {
 			$wild_apricot_values['Url'] = $details_response['PrimaryDomainName'];
-			// Lowercase
-			$wild_apricot_values['Url'] = strtolower($wild_apricot_values['Url']);
-			// Remove https:// or http:// or www. if necessary
-			if (strpos($wild_apricot_values['Url'], 'https://') !== false) { // contains 'https://www.'
-				// Remove 'https://'
-				$wild_apricot_values['Url'] = str_replace('https://', '', $wild_apricot_values['Url']);
-			} else if (strpos($wild_apricot_values['Url'], 'http://') !== false) {
-				$wild_apricot_values['Url'] = str_replace('http://', '', $wild_apricot_values['Url']);
-			}
-			if (strpos($wild_apricot_values['Url'], 'www.') !== false) {
-				$wild_apricot_values['Url'] = str_replace('www.', '', $wild_apricot_values['Url']);
-			}
+			// // Lowercase
+			// $wild_apricot_values['Url'] = strtolower($wild_apricot_values['Url']);
+			// // Remove https:// or http:// or www. if necessary
+			// if (strpos($wild_apricot_values['Url'], 'https://') !== false) { // contains 'https://www.'
+			// 	// Remove 'https://'
+			// 	$wild_apricot_values['Url'] = str_replace('https://', '', $wild_apricot_values['Url']);
+			// } else if (strpos($wild_apricot_values['Url'], 'http://') !== false) {
+			// 	$wild_apricot_values['Url'] = str_replace('http://', '', $wild_apricot_values['Url']);
+			// }
+			// if (strpos($wild_apricot_values['Url'], 'www.') !== false) {
+			// 	$wild_apricot_values['Url'] = str_replace('www.', '', $wild_apricot_values['Url']);
+			// }
+			$wild_apricot_values['Url'] = self::create_consistent_url($wild_apricot_values['Url']);
 		}
 
 		// Return values

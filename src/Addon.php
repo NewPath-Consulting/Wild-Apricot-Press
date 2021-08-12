@@ -178,21 +178,22 @@ class Addon {
             $licensed_wa_urls = array();
             if (array_key_exists('Licensed Wild Apricot URLs', $response)) {
                 $licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
-                // Sanitize url, if necessary
+                // Sanitize urls, if necessary
                 if (!empty($licensed_wa_urls)) {
                     foreach ($licensed_wa_urls as $url_key => $url_value) {
                         // Lowercase url
-                        $licensed_wa_urls[$url_key] = strtolower($url_value);
-                        // Remove https:// or http:// if necessary
-                        if (strpos($url_value, 'https://') !== false) { // contains 'https://'
-                            // Remove 'https://'
-                            $licensed_wa_urls[$url_key] = str_replace('https://', '', $url_value);
-                        } else if (strpos($url_value, 'http://') !== false) {
-                            $licensed_wa_urls[$url_key] = str_replace('http://', '', $url_value);
-                        }
-                        if (strpos($url_value, 'www.') !== false) {
-                            $licensed_wa_urls[$url_key] = str_replace('www.', '', $url_value);
-                        }
+                        // $licensed_wa_urls[$url_key] = strtolower($url_value);
+                        // // Remove https:// or http:// if necessary
+                        // if (strpos($url_value, 'https://') !== false) { // contains 'https://'
+                        //     // Remove 'https://'
+                        //     $licensed_wa_urls[$url_key] = str_replace('https://', '', $url_value);
+                        // } else if (strpos($url_value, 'http://') !== false) {
+                        //     $licensed_wa_urls[$url_key] = str_replace('http://', '', $url_value);
+                        // }
+                        // if (strpos($url_value, 'www.') !== false) {
+                        //     $licensed_wa_urls[$url_key] = str_replace('www.', '', $url_value);
+                        // }
+                        $licensed_wa_urls[$url_key] = WAWPApi::create_consistent_url($url_value);
                     }
                 }
             }

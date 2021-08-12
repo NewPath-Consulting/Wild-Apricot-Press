@@ -107,7 +107,58 @@ class WAIntegration {
 			self::my_log_file('we are actually checking again!');
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = $license_credentials['wawp'];
-			$validated_license_key = Addon::validate_license_key($current_license_key, 'wawp');
+			// // Ensure there is a valid access token
+			// $access_options = WAWPApi::verify_valid_access_token();
+			// $access_token = $access_options['access_token'];
+			// $wa_account_id = $access_options['wa_account_id'];
+			// $wawp_api_instance = new WAWPApi($access_token, $wa_account_id);
+			// // Get site's Wild Apricot URL and ID
+			// $url_and_id = $wawp_api_instance->get_account_url_and_id();
+			// $wa_url = $url_and_id['Url'];
+			// $wa_id = $url_and_id['Id'];
+			// Get Wild Apricot URL and ID from license key response
+			$wa_data = array('key' => $current_license_key, 'json' => '1');
+			// send request, receive response in $response
+			$integromat_response = self::post_request($wa_data);
+			// Check for error; if not, then extract Wild Apricot URL and ID
+			$validated_license_key = $current_license_key;
+			if (array_key_exists('license-error', $integromat_response)) { // error
+				// An invalid license key exists! Deactivate the WAWP functionality!
+				$validated_license_key = null;
+			} else { // no error
+				// Extract URL(s)
+				$licensed_wa_urls = array();
+				if (array_key_exists('Licensed Wild Apricot URLs', $integromat_response)) {
+					// Get urls
+					$licensed_wa_urls = $integromat_response['Licensed Wild Apricot URLs'];
+					// Sanitize urls by removing prefix and lowercasing each letter
+					if (!empty($licensed_wa_urls)) {
+						foreach ($licensed_wa_urls as $url_key => $url_value) {
+							$licensed_wa_urls[$url_key] = WAWPApi::create_consistent_url($url_value);
+						}
+					}
+				}
+				// Extract ID(s)
+				$licensed_wa_ids = array();
+				if (array_key_exists('Licensed Wild Apricot IDs', $integromat_response)) {
+					$licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
+				}
+				// Get Wild Apricot Urls and Ids from Wild Apricot API
+				// Ensure there is a valid access token
+				$access_options = WAWPApi::verify_valid_access_token();
+				$access_token = $access_options['access_token'];
+				$wa_account_id = $access_options['wa_account_id'];
+				$wawp_api_instance = new WAWPApi($access_token, $wa_account_id);
+				// Get site's Wild Apricot URL and ID
+				$url_and_id = $wawp_api_instance->get_account_url_and_id();
+				$wa_url = $url_and_id['Url'];
+				$wa_id = $url_and_id['Id'];
+				// Now, compare the urls and ids from the license key and the Wild Apricot API
+				if (!(in_array($wa_url, $licensed_wa_urls) && in_array($wa_id, $licensed_wa_ids))) { // invalid license!
+					$validated_license_key = null;
+				}
+			}
+			// $validated_license_key = Addon::validate_license_key($current_license_key, 'wawp');
 			self::my_log_file($validated_license_key);
 			// If license key is null, then that means that it is not valid
 			if (is_null($validated_license_key)) {
