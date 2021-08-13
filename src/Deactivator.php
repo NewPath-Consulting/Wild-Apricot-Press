@@ -2,6 +2,10 @@
 
 namespace WAWP;
 
+require_once __DIR__ . '/WAWPApi.php';
+require_once __DIR__ . '/WAIntegration.php';
+require_once __DIR__ . '/MySettingsPage.php';
+
 class Deactivator {
 
 	public static function deactivate() {
@@ -30,18 +34,10 @@ class Deactivator {
 		// update_option('wawp_wa_credentials_valid', false);
 
 		// Unschedule the CRON events
-		// $next_event_timestamp = wp_next_scheduled('wawp_check_for_new_wa_data');
-		// if ($next_event_timestamp) {
-		// 	wp_unschedule_event($next_event_timestamp, 'wawp_check_for_new_wa_data');
-		// }
-		require_once('WAWPApi.php');
-		WAWPApi::unsetCronJob('wawp_cron_refresh_memberships_hook');
-		// Get user id
-		// $user_id = get_option('wawp_cron_user_id');
-		// $args = [
-		// 	$user_id
-		// ];
-		WAWPApi::unsetCronJob('wawp_cron_refresh_user_hook');
+		// require_once('WAWPApi.php');
+		WAWPApi::unsetCronJob(MySettingsPage::CRON_HOOK);
+		WAWPApi::unsetCronJob(WAIntegration::USER_REFRESH_HOOK);
+		WAWPApi::unsetCronJob(WAIntegration::LICENSE_CHECK_HOOK);
 	}
 }
 ?>

@@ -198,7 +198,6 @@ class WAWPApi {
 		}
 
 		// Return values
-		self::my_log_file($wild_apricot_values);
 		return $wild_apricot_values;
 	}
 

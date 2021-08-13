@@ -51,17 +51,8 @@ function wawp_enqueue_admin_script($hook) {
 // Create settings page
 $my_settings_page = new WAWP\MySettingsPage();
 
-// $licenses = get_option('wawp_license_keys');
-// don't do any WA integration if there is no license key
-// WAWP\WAIntegration::my_log_file(did_action('wawp_wal_credentials_obtained'));
-// if (did_action('wawp_wal_credentials_obtained') > 0) {
-    // WAWP\WAIntegration::my_log_file('creating wa integration');
 // Create WA Integration instance
 $wa_integration_instance = new WAWP\WAIntegration();
-// } else {
-//     WAWP\WAIntegration::my_log_file('no wa');
-// }
-
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {

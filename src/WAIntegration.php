@@ -23,7 +23,6 @@ class WAIntegration {
 	const IS_POST_RESTRICTED = 'wawp_is_post_restricted';
 	const ARRAY_OF_RESTRICTED_POSTS = 'wawp_array_of_restricted_posts';
 	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY = 'wawp_individual_restriction_message_key';
-	const CRON_USER_ID = 'wawp_cron_user_id';
 	const ADMIN_ACCOUNT_ID_TRANSIENT = 'wawp_admin_account_id';
 	const ADMIN_ACCESS_TOKEN_TRANSIENT = 'wawp_admin_access_token';
 	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
@@ -31,8 +30,9 @@ class WAIntegration {
 	const LIST_OF_CHECKED_FIELDS = 'wawp_fields_name';
 	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
 	const MENU_LOCATIONS_KEY = 'wawp_menu_location_name';
-
+	// Hooks
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
+	const LICENSE_CHECK_HOOK = 'wawp_cron_refresh_license_check';
 
 	/**
 	 * Constructs an instance of the WAIntegration class
@@ -76,6 +76,8 @@ class WAIntegration {
 		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
 		$page_hook = 'settings_page_wawp';
 		add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
+		// Action for Cron job that refreshes the license check
+		add_action(self::LICENSE_CHECK_HOOK, array($this, 'check_updated_credentials'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -107,19 +109,10 @@ class WAIntegration {
 			self::my_log_file('we are actually checking again!');
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = $license_credentials['wawp'];
-			// // Ensure there is a valid access token
-			// $access_options = WAWPApi::verify_valid_access_token();
-			// $access_token = $access_options['access_token'];
-			// $wa_account_id = $access_options['wa_account_id'];
-			// $wawp_api_instance = new WAWPApi($access_token, $wa_account_id);
-			// // Get site's Wild Apricot URL and ID
-			// $url_and_id = $wawp_api_instance->get_account_url_and_id();
-			// $wa_url = $url_and_id['Url'];
-			// $wa_id = $url_and_id['Id'];
 			// Get Wild Apricot URL and ID from license key response
 			$wa_data = array('key' => $current_license_key, 'json' => '1');
 			// send request, receive response in $response
-			$integromat_response = self::post_request($wa_data);
+			$integromat_response = Addon::post_request($wa_data);
 			// Check for error; if not, then extract Wild Apricot URL and ID
 			$validated_license_key = $current_license_key;
 			if (array_key_exists('license-error', $integromat_response)) { // error
@@ -140,8 +133,8 @@ class WAIntegration {
 				}
 				// Extract ID(s)
 				$licensed_wa_ids = array();
-				if (array_key_exists('Licensed Wild Apricot IDs', $integromat_response)) {
-					$licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
+				if (array_key_exists('Licensed Wild Apricot Account IDs', $integromat_response)) {
+					$licensed_wa_ids = $integromat_response['Licensed Wild Apricot Account IDs'];
 				}
 				// Get Wild Apricot Urls and Ids from Wild Apricot API
 				// Ensure there is a valid access token
@@ -158,15 +151,13 @@ class WAIntegration {
 					$validated_license_key = null;
 				}
 			}
-			// $validated_license_key = Addon::validate_license_key($current_license_key, 'wawp');
-			self::my_log_file($validated_license_key);
 			// If license key is null, then that means that it is not valid
 			if (is_null($validated_license_key)) {
 				// Disable WAWP functionality
 				do_action('wawp_wal_set_login_private');
 				// Clear WAWP credentials and license
-				update_option(self::WA_CREDENTIALS_KEY, '');
-				update_option(self::WAWP_LICENSES_KEY, '');
+				delete_option(self::WA_CREDENTIALS_KEY, '');
+				delete_option(self::WAWP_LICENSES_KEY, '');
 			}
 		}
 	}
@@ -195,6 +186,16 @@ class WAIntegration {
 	}
 
 	/**
+     * Creates a daily CRON job to check that the license matches
+     */
+    public static function setup_license_check_cron() {
+        $license_hook_name = WAIntegration::LICENSE_CHECK_HOOK;
+        if (!wp_next_scheduled($license_hook_name)) {
+            wp_schedule_event(time(), 'daily', $license_hook_name);
+        }
+    }
+
+	/**
 	 * Creates login page that allows user to enter their email and password credentials for Wild Apricot
 	 *
 	 * See: https://stackoverflow.com/questions/32314278/how-to-create-a-new-wordpress-page-programmatically
@@ -202,9 +203,10 @@ class WAIntegration {
 	 *
 	 */
 	public function create_login_page() {
-		self::my_log_file('creating login page');
 		// Run action to create user refresh CRON event
 		self::create_cron_for_user_refresh();
+		// Create event for checking license
+		self::setup_license_check_cron();
 
 		// Check if Login page exists first
 		$login_page_id = get_option('wawp_wal_page_id');
@@ -317,17 +319,6 @@ class WAIntegration {
 		// Check if valid Wild Apricot credentials have been entered
 		// $valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 		$valid_wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
-
-		// Let's check if cache is valid across posts/pages
-		// Does the cache exist?
-		// $found = null;
-		// $cache_val = wp_cache_get('wawp_test_cache', '', false, $found);
-		// self::my_log_file($cache_val);
-		// if ($found === false) { // no key
-		// 	self::my_log_file('this key does not exist!');
-		// 	wp_cache_set('wawp_test_cache', 'hello');
-		// 	self::my_log_file('setting new value...');
-		// }
 
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
 		$wawp_licenses = get_option(self::WAWP_LICENSES_KEY);
@@ -588,6 +579,7 @@ class WAIntegration {
 		?>
 			<!-- Membership Levels -->
 			<ul>
+			<p>If you would like everyone (including non Wild Apricot users) to see the current post, then leave all the checkboxes blank! You can restrict this post to specific Wild Apricot groups and levels by selecting the checkboxes below!</p>
 			<li style="margin:0;font-weight: 600;">
                 <label for="wawp_check_all_levels"><input type="checkbox" value="wawp_check_all_levels" id='wawp_check_all_levels' name="wawp_check_all_levels" /> Select All Membership Levels</label>
             </li>
@@ -1217,6 +1209,7 @@ class WAIntegration {
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
 
 			// Check if user is logged into Wild Apricot to see the page navigation
+			// TODO: Do we want this?
 			if (is_user_logged_in()) {
 				$current_user = wp_get_current_user();
 				$user_id = $current_user->ID;

@@ -47,7 +47,6 @@ if (!empty($wawp_posts_with_meta)) {
 }
 // Delete restricted pages option value
 delete_option('wawp_array_of_restricted_posts');
-delete_option('wawp_cron_user_id');
 delete_option('wawp_admin_refresh_token');
 
 // Delete transients, even if they have not expired yet

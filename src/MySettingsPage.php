@@ -1217,7 +1217,6 @@ class MySettingsPage
             $key = Addon::instance()::validate_license_key($license, $slug);
             $option_name = 'license-check-' . $slug;
             if (is_null($key)) {
-                self::my_log_file('invalid license!');
                 update_option($option_name, 'invalid');
                 // $valid[$slug] = '';
                 // add errors here okay.
