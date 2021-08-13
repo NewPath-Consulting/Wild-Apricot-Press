@@ -156,6 +156,7 @@ class Addon {
 
         // send request, receive response in $response
         $response = self::post_request($data);
+        self::my_log_file($response);
 
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
         // else return the valid license key
@@ -170,6 +171,15 @@ class Addon {
             if (!is_plugin_active($filename)) {
                 activate_plugin($filename);
             }
+            // Check that this license is valid for the addon_slug name
+            if (array_key_exists('Products', $response)) {
+                // Get list of product(s) that this license is valid for
+                $valid_products = $response['Products'];
+                // Check if
+            } else {
+                // No pro
+            }
+
             // Ensure that this license key is valid for the associated Wild Apricot ID and website
             // Get authorized Wild Apricot URL and ID
             $licensed_wa_urls = array();

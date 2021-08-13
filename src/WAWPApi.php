@@ -117,7 +117,9 @@ class WAWPApi {
 		$wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
 		if (!$access_token || !$wa_account_id) { // access token is expired
 			// Refresh access token
+			// self::my_log_file('refreshing access token...');
 			$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+			$refresh_token = $dataEncryption->decrypt($refresh_token);
 			$new_response = self::get_new_access_token($refresh_token);
 			// Get variables from response
 			$new_access_token = $new_response['access_token'];
@@ -182,18 +184,7 @@ class WAWPApi {
 		$wild_apricot_url = '';
 		if (array_key_exists('PrimaryDomainName', $details_response)) {
 			$wild_apricot_values['Url'] = $details_response['PrimaryDomainName'];
-			// // Lowercase
-			// $wild_apricot_values['Url'] = strtolower($wild_apricot_values['Url']);
-			// // Remove https:// or http:// or www. if necessary
-			// if (strpos($wild_apricot_values['Url'], 'https://') !== false) { // contains 'https://www.'
-			// 	// Remove 'https://'
-			// 	$wild_apricot_values['Url'] = str_replace('https://', '', $wild_apricot_values['Url']);
-			// } else if (strpos($wild_apricot_values['Url'], 'http://') !== false) {
-			// 	$wild_apricot_values['Url'] = str_replace('http://', '', $wild_apricot_values['Url']);
-			// }
-			// if (strpos($wild_apricot_values['Url'], 'www.') !== false) {
-			// 	$wild_apricot_values['Url'] = str_replace('www.', '', $wild_apricot_values['Url']);
-			// }
+			// Lowercase and remove https, http, or www from url
 			$wild_apricot_values['Url'] = self::create_consistent_url($wild_apricot_values['Url']);
 		}
 
