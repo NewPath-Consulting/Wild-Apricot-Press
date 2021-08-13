@@ -521,7 +521,14 @@ class MySettingsPage
                             // update_option('wawp_wa_credentials_valid', false);
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
+                            // Get Wild Apricot URL
+                            $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
+                            if ($wild_apricot_url) {
+                                $dataEncryption = new DataEncryption();
+                                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
+                            }
 							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
+                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
                             // Save that wawp credentials have been fully activated
                             // update_option('wawp_wa_credentials_valid', true);
                             // Implement hook here to tell Wild Apricot to connect to these credentials
@@ -1016,6 +1023,7 @@ class MySettingsPage
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
         } else { // Valid input and valid response
+            // self::my_log_file($valid_api);
             // Extract access token and ID, as well as expiring time
             $access_token = $valid_api['access_token'];
             $account_id = $valid_api['Permissions'][0]['AccountId'];
@@ -1046,6 +1054,12 @@ class MySettingsPage
             // Save membership levels and groups to options
             update_option('wawp_all_levels_key', $all_membership_levels);
             update_option('wawp_all_groups_key', $all_membership_groups);
+
+            // Get Wild Apricot URL
+            $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
+            $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
+            // Save URL
+            update_option(WAIntegration::WA_URL_KEY, $dataEncryption->encrypt($wild_apricot_url));
 
             // Schedule CRON update for updating the available membership levels and groups
             self::setup_cron_job();

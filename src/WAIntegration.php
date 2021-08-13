@@ -30,6 +30,7 @@ class WAIntegration {
 	const LIST_OF_CHECKED_FIELDS = 'wawp_fields_name';
 	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
 	const MENU_LOCATIONS_KEY = 'wawp_menu_location_name';
+	const WA_URL_KEY = 'wawp_wa_url_key';
 	// Hooks
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 	const LICENSE_CHECK_HOOK = 'wawp_cron_refresh_license_check';
@@ -906,7 +907,7 @@ class WAIntegration {
 	 * @param string $login_data  The login response from the API
 	 * @param string $login_email The email that the user has logged in with
 	 */
-	public function add_user_to_wp_database($login_data, $login_email) {
+	public function add_user_to_wp_database($login_data, $login_email, $remember_user = true) {
 		// Get access token and refresh token
 		$access_token = $login_data['access_token'];
 		$refresh_token = $login_data['refresh_token'];
@@ -1080,7 +1081,7 @@ class WAIntegration {
 		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wild_apricot_user_id);
 
 		// Log user into WP account
-		wp_set_auth_cookie($current_wp_user_id, 1, is_ssl());
+		wp_set_auth_cookie($current_wp_user_id, $remember_user, is_ssl());
 	}
 
 	/**
@@ -1092,9 +1093,10 @@ class WAIntegration {
 		if (is_page($login_page_id)) {
 			// Get id of last page from url
 			// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
-			if (isset($_POST['wawp_login_submit'])) {
+			if (!empty(wp_unslash($_POST['wawp_login_submit']))) {
+				// self::my_log_file($_POST['wawp_login_submit']);
 				// Check that nonce is valid
-				if (!wp_verify_nonce($_POST['wawp_login_nonce_name'], 'wawp_login_nonce_action')) {
+				if (!wp_verify_nonce(wp_unslash($_POST['wawp_login_nonce_name']), 'wawp_login_nonce_action')) {
 					wp_die('Your nonce for login could not be verified.');
 				}
 
@@ -1102,7 +1104,7 @@ class WAIntegration {
 				$valid_login = array();
 
 				// Check email form
-				$email_input = $_POST['wawp_login_email'];
+				$email_input = wp_unslash($_POST['wawp_login_email']);
 				if (!empty($email_input) && is_email($email_input)) { // email is well-formed
 					// Sanitize email
 					$valid_login['email'] = sanitize_email($email_input);
@@ -1115,7 +1117,7 @@ class WAIntegration {
 				// Check password form
 				// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
 				// Any combination of letters, numbers, and characters (except spaces)
-				$password_input = $_POST['wawp_login_password'];
+				$password_input = wp_unslash($_POST['wawp_login_password']);
 				// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
 				if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
 					// Sanitize password
@@ -1125,6 +1127,14 @@ class WAIntegration {
 					add_filter('the_content', array($this, 'add_login_error'));
 					return;
 				}
+
+				// Sanitize 'Remember Me?' checkbox
+				$remember_me_input = sanitize_text_field(wp_unslash($_POST['wawp_remember_me']));
+				$remember_user = false;
+				if ($remember_me_input == 'on') { // should remember user
+					$remember_user = true;
+				}
+
 				// Send POST request to Wild Apricot API to log in if input is valid
 				$login_attempt = WAWPApi::login_email_password($valid_login);
 				// If login attempt is false, then the user could not log in
@@ -1134,7 +1144,7 @@ class WAIntegration {
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
-				$this->add_user_to_wp_database($login_attempt, $valid_login['email']);
+				$this->add_user_to_wp_database($login_attempt, $valid_login['email'], $remember_user);
 
 				// Redirect user to previous page, or home page if there is no previous page
 				$last_page_id = get_query_var('redirectId', false);
@@ -1162,6 +1172,12 @@ class WAIntegration {
 	 * @return string Holds the HTML content of the form
 	 */
 	public function custom_login_form_shortcode() {
+		// Get Wild Apricot URL
+		$wild_apricot_url = get_option(self::WA_URL_KEY);
+		if ($wild_apricot_url) {
+			$dataEncryption = new DataEncryption();
+			$wild_apricot_url =	esc_url($dataEncryption->decrypt($wild_apricot_url));
+		}
 		// Create page content -> login form
 		ob_start(); ?>
 			<div id="login-wrap">
@@ -1172,27 +1188,16 @@ class WAIntegration {
 					<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
 					<br><label for="wawp_login_password">Password:</label>
 					<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********" autocomplete="new-password">
+					<!-- Remember Me -->
+					<br><label for="wawp_remember_me">Remember me?</label>
+					<input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
+					<!-- Forgot password -->
+					<br><label><a href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank" rel="noopener noreferrer">Forgot Password?</a></label>
 					<br><input type="submit" name="wawp_login_submit" value="Submit">
 				</form>
 			</div>
 		<?php
 		return ob_get_clean();
-	}
-
-	/**
-	 * Removes the CRON update when the user logs out
-	 *
-	 * @param int $user_id The user's WordPress ID
-	 */
-	public function remove_user_wa_update(int $user_id) {
-		// Remove this user's CRON update
-		$args = [
-			$user_id
-		];
-		$timestamp = wp_next_scheduled(self::USER_REFRESH_HOOK, $args);
-		if ($timestamp) {
-			wp_unschedule_event($timestamp, self::USER_REFRESH_HOOK, $args);
-		}
 	}
 
 	/**
@@ -1213,16 +1218,16 @@ class WAIntegration {
 
 			// Check if user is logged into Wild Apricot to see the page navigation
 			// TODO: Do we want this?
-			if (is_user_logged_in()) {
-				$current_user = wp_get_current_user();
-				$user_id = $current_user->ID;
-				$wa_user_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
-				if (!empty($wa_user_id)) {
-					$profile_page_url = esc_url(site_url() . '/index.php?pagename=wild-apricot-iframe-widget');
-					// This means that the user is logged into Wild Apricot
-					$items .= '<li id="wawp_profile_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $profile_page_url .'">Your Profile</a></li>';
-				}
-			}
+			// if (is_user_logged_in()) {
+			// 	$current_user = wp_get_current_user();
+			// 	$user_id = $current_user->ID;
+			// 	$wa_user_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
+			// 	if (!empty($wa_user_id)) {
+			// 		$profile_page_url = esc_url(site_url() . '/index.php?pagename=wild-apricot-iframe-widget');
+			// 		// This means that the user is logged into Wild Apricot
+			// 		$items .= '<li id="wawp_profile_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $profile_page_url .'">Your Profile</a></li>';
+			// 	}
+			// }
 
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
 			// Get current page id
