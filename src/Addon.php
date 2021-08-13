@@ -175,9 +175,14 @@ class Addon {
             if (array_key_exists('Products', $response)) {
                 // Get list of product(s) that this license is valid for
                 $valid_products = $response['Products'];
-                // Check if
+                // Check if the addon_slug in in the valid products
+                if (!in_array($addon_slug, $valid_products)) {
+                    // Not Valid!
+                    return NULL;
+                }
             } else {
-                // No pro
+                // No products; invalid key
+                return NULL;
             }
 
             // Ensure that this license key is valid for the associated Wild Apricot ID and website
