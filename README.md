@@ -8,7 +8,7 @@ Version 2.0 - May 19, 2021
 
 On the WordPress admin dashboard, using the left menu, navigate to to Plugins > Add New. Upload the plugin [add link to zip] and activate.
 
-[Add instructions on Wild Apricot credentials and license key]
+ [Add instructions on Wild Apricot credentials and license key. note that new site requires a new license]
 
 To configuring the WAWP plugin, the Wild Apricot API settings must be set.
 
@@ -22,7 +22,7 @@ Once you have created an API key, Client ID and Client secret, copy and paste th
 
 [NEW IMAGE]
 
-Below, ou can specify which menu(s) you would like to add the login/logout button to be added to by selecting the checkboxes. Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site.
+Below, you can specify which menu(s) you would like to add the login/logout button to be added to by selecting the checkboxes. Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site.
 
 [Insert screenshot here]
 
