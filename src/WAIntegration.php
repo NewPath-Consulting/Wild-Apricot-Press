@@ -1093,6 +1093,11 @@ class WAIntegration {
 			// Get id of last page from url
 			// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
 			if (isset($_POST['wawp_login_submit'])) {
+				// Check that nonce is valid
+				if (!wp_verify_nonce($_POST['wawp_login_nonce_name'], 'wawp_login_nonce_action')) {
+					wp_die('Your nonce for login could not be verified.');
+				}
+
 				// Create array to hold the valid input
 				$valid_login = array();
 
@@ -1119,10 +1124,6 @@ class WAIntegration {
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
 					return;
-				}
-				// Check that nonce is valid
-				if (!wp_verify_nonce($_POST['wawp_login_nonce_name'], 'wawp_login_nonce_action')) {
-					wp_die('Your nonce could not be verified.');
 				}
 				// Send POST request to Wild Apricot API to log in if input is valid
 				$login_attempt = WAWPApi::login_email_password($valid_login);
@@ -1163,15 +1164,17 @@ class WAIntegration {
 	public function custom_login_form_shortcode() {
 		// Create page content -> login form
 		ob_start(); ?>
-			<p>Log into your Wild Apricot account here:</p>
-			<form method="post" action="">
-				<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
-				<label for="wawp_login_email">Email:</label>
-				<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
-				<br><label for="wawp_login_password">Password:</label>
-				<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********">
-				<br><input type="submit" name="wawp_login_submit" value="Submit">
-			</form>
+			<div id="login-wrap">
+				<p>Log into your Wild Apricot account here:</p>
+				<form method="post" action="">
+					<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
+					<label for="wawp_login_email">Email:</label>
+					<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
+					<br><label for="wawp_login_password">Password:</label>
+					<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********" autocomplete="new-password">
+					<br><input type="submit" name="wawp_login_submit" value="Submit">
+				</form>
+			</div>
 		<?php
 		return ob_get_clean();
 	}
