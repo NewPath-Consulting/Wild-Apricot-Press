@@ -47,6 +47,11 @@ add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {
     wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
 }
+// Enqueue stylesheet for shortcode
+add_action('wp_enqueue_scripts', 'wawp_enqueue_shortcode_css');
+function wawp_enqueue_shortcode_css() {
+	wp_enqueue_style('wawp-styles-shortcode', plugin_dir_url(__FILE__) . 'css/wawp-styles-shortcode.css', array(), '1.0');
+}
 
 // Create settings page
 $my_settings_page = new WAWP\MySettingsPage();

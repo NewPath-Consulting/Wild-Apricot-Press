@@ -1093,7 +1093,7 @@ class WAIntegration {
 		if (is_page($login_page_id)) {
 			// Get id of last page from url
 			// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
-			if (!empty(wp_unslash($_POST['wawp_login_submit']))) {
+			if (!empty($_POST['wawp_login_submit'])) {
 				// self::my_log_file($_POST['wawp_login_submit']);
 				// Check that nonce is valid
 				if (!wp_verify_nonce(wp_unslash($_POST['wawp_login_nonce_name']), 'wawp_login_nonce_action')) {
@@ -1172,6 +1172,8 @@ class WAIntegration {
 	 * @return string Holds the HTML content of the form
 	 */
 	public function custom_login_form_shortcode() {
+		// Load CSS
+		wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
 		// Get Wild Apricot URL
 		$wild_apricot_url = get_option(self::WA_URL_KEY);
 		if ($wild_apricot_url) {
@@ -1180,7 +1182,8 @@ class WAIntegration {
 		}
 		// Create page content -> login form
 		ob_start(); ?>
-			<div id="login-wrap">
+			<link rel="stylesheet" href="<?php echo plugins_url('css/wawp-styles-admin.css'); ?>">
+			<div id="wawp_login-wrap">
 				<p>Log into your Wild Apricot account here:</p>
 				<form method="post" action="">
 					<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>

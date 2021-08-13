@@ -1,0 +1,13 @@
+#wawp_login-wrap {
+	position: relative;
+}
+
+#wawp_login_email {
+	margin-left: 10%;
+	margin-bottom: 10px;
+}
+
+#wawp_login_password {
+	margin-left: 5%;
+	margin-bottom: 10px;
+}
