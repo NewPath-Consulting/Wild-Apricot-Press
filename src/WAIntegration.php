@@ -1184,19 +1184,19 @@ class WAIntegration {
 		ob_start(); ?>
 			<link rel="stylesheet" href="<?php echo plugins_url('css/wawp-styles-admin.css'); ?>">
 			<div id="wawp_login-wrap">
-				<p>Log into your Wild Apricot account here:</p>
+				<p id="wawp_wa_login_direction">Log into your Wild Apricot account here to access content exclusive to Wild Apricot members!</p>
 				<form method="post" action="">
 					<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
 					<label for="wawp_login_email">Email:</label>
-					<input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
+					<br><input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
 					<br><label for="wawp_login_password">Password:</label>
-					<input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********" autocomplete="new-password">
+					<br><input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********" autocomplete="new-password">
 					<!-- Remember Me -->
 					<br><label for="wawp_remember_me">Remember me?</label>
 					<input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
 					<!-- Forgot password -->
 					<br><label><a href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank" rel="noopener noreferrer">Forgot Password?</a></label>
-					<br><input type="submit" name="wawp_login_submit" value="Submit">
+					<br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
 				</form>
 			</div>
 		<?php

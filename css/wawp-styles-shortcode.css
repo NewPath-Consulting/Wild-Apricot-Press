@@ -1,15 +1,32 @@
 #wawp_login-wrap {
-	/* position: absolute; */
+	display: flex;
+	justify-content: center;
+  	align-items: center;
+	width: 100%;
+	flex-direction: column;
 }
 
 #wawp_login_email {
-	/* margin-left: 10%; */
-	margin-bottom: 10px;
-	left: 100px;
+	/* display: flex; */
+	margin-bottom: 20px;
 }
 
 #wawp_login_password {
-	/* margin-left: 5%; */
-	margin-bottom: 10px;
-	left: 100px;
+	/* display: flex; */
+	margin-bottom: 20px;
+}
+
+#wawp_remember_me {
+	/* display: flex; */
+	margin-bottom: 20px;
+}
+
+#wawp_login_submit {
+	/* display: flex; */
+	margin-top: 20px;
+	margin-left: 25%;
+}
+
+#wawp_wa_login_direction {
+	text-align: center;
 }
