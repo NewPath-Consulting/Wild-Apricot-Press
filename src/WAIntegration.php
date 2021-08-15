@@ -1192,10 +1192,12 @@ class WAIntegration {
 					<br><label for="wawp_login_password">Password:</label>
 					<br><input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********" autocomplete="new-password">
 					<!-- Remember Me -->
-					<br><label for="wawp_remember_me">Remember me?</label>
-					<input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
+					<div id="wawp_remember_me_div">
+						<br><label id="wawp_remember_me_label" for="wawp_remember_me">Remember me?</label>
+						<input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
+					</div>
 					<!-- Forgot password -->
-					<br><label><a href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank" rel="noopener noreferrer">Forgot Password?</a></label>
+					<br><label id="wawp_forgot_password"><a href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank" rel="noopener noreferrer">Forgot Password?</a></label>
 					<br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
 				</form>
 			</div>

@@ -7,23 +7,36 @@
 }
 
 #wawp_login_email {
-	/* display: flex; */
-	margin-bottom: 20px;
+	margin-bottom: 1em;
+	width: 25em;
 }
 
 #wawp_login_password {
-	/* display: flex; */
-	margin-bottom: 20px;
+	margin-bottom: 1em;
+	width: 25em;
+}
+
+#wawp_remember_me_div {
+	margin-bottom: 1em;
 }
 
 #wawp_remember_me {
-	/* display: flex; */
-	margin-bottom: 20px;
+	float: left;
+	width: 1em;
+	height: 1em;
+}
+
+#wawp_remember_me_label {
+	float: left;
+	margin-right: 1em;
+}
+
+#wawp_forgot_password {
+	margin-top: 1.5em;
 }
 
 #wawp_login_submit {
-	/* display: flex; */
-	margin-top: 20px;
+	margin-top: 1em;
 	margin-left: 25%;
 }
 
