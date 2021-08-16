@@ -1,6 +1,6 @@
-Wild Apricot for Wordpress (WAWP) Documentation
+Wild Apricot for WordPress (WAWP) Documentation
 
-Version 2.0 - May 19, 2021
+Version 1.0 - September 1, 2021
 
 # WordPress Administrators Guide
 
@@ -46,7 +46,7 @@ If no boxes are checked, members with any status will be able to view resticted 
 
 You can show a default restricted message to visitors who are trying to access pages which they do not have access to.
 
-[Updated Screenshot]
+[Updated Screenshot]<img width="1127" alt="Screen Shot 2021-08-16 at 1 16 20 PM" src="https://user-images.githubusercontent.com/8737691/129611817-cd5c0503-3dad-49d2-938a-d1bab977f082.png">
 
 ## Per Page and Post Settings
 
