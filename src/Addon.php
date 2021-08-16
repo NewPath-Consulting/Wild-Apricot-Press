@@ -156,7 +156,6 @@ class Addon {
 
         // send request, receive response in $response
         $response = self::post_request($data);
-        self::my_log_file($response);
 
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
         // else return the valid license key

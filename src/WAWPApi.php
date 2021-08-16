@@ -117,7 +117,6 @@ class WAWPApi {
 		$wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
 		if (!$access_token || !$wa_account_id) { // access token is expired
 			// Refresh access token
-			// self::my_log_file('refreshing access token...');
 			$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
 			$refresh_token = $dataEncryption->decrypt($refresh_token);
 			$new_response = self::get_new_access_token($refresh_token);
@@ -278,11 +277,6 @@ class WAWPApi {
 						// Check if contact's email checks for the email we are searching for
 						if (strcasecmp($contact_email, $user_email) == 0) { // equal
 							// This is the correct user
-							// Check if user is an administrator -> if so, do not modify them!
-							$user_is_admin = false;
-							if (user_can($site_id, 'manage_options')) {
-								$user_is_admin = true;
-							}
 							// Let us update this site_id with its new data
 							$updated_organization = $contact['Organization'];
 							// Get membership level, if any

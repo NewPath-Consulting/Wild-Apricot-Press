@@ -1023,7 +1023,6 @@ class MySettingsPage
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
         } else { // Valid input and valid response
-            // self::my_log_file($valid_api);
             // Extract access token and ID, as well as expiring time
             $access_token = $valid_api['access_token'];
             $account_id = $valid_api['Permissions'][0]['AccountId'];

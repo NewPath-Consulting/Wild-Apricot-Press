@@ -72,13 +72,13 @@ class WAIntegration {
 		add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
-		// Action for when Wild Apricot credentials are updated -> ensure that they are valid
-		// add_action('update_option_' . self::WA_CREDENTIALS_KEY, array($this, 'check_updated_credentials'));
 		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
 		$page_hook = 'settings_page_wawp';
 		add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
 		// Action for Cron job that refreshes the license check
 		add_action(self::LICENSE_CHECK_HOOK, array($this, 'check_updated_credentials'));
+		// Action for when user tries to access admin page
+		add_action('admin_page_access_denied', array($this, 'tell_user_to_logout'));
 		// Include any required files
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
@@ -102,12 +102,10 @@ class WAIntegration {
 	 * Checks that updated Wild Apricot credentials match the registered site on the license key
 	 */
 	public function check_updated_credentials() {
-		self::my_log_file('checking credentials again!');
 		// Ensure that credentials have been already entered
 		$wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
 		$license_credentials = get_option(self::WAWP_LICENSES_KEY);
 		if (!empty($wa_credentials) && !empty($license_credentials) && array_key_exists('wawp', $license_credentials)) {
-			self::my_log_file('we are actually checking again!');
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = $license_credentials['wawp'];
 			// Get Wild Apricot URL and ID from license key response
@@ -169,6 +167,22 @@ class WAIntegration {
 	public function hide_admin_bar() {
 		if (!current_user_can('administrator') && !is_admin()) {
 			show_admin_bar(false);
+		}
+	}
+
+	/**
+	 * Tell user to logout of Wild Apricot if they are trying to access the admin menu
+	 */
+	public function tell_user_to_logout() {
+		// Check if user is logged into Wild Apricot
+		if (is_user_logged_in()) {
+			$user_id = get_current_user_id();
+			// Check if user has Wild Apricot ID
+			$wild_apricot_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
+			if (!empty($wild_apricot_id)) {
+				// User is still logged into Wild Apricot
+				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, go back to your website, and ensure that you are logged out of your Wild Apricot account by clicking "Log Out" in your site\'s menu! Then, you will be able to log into your WordPress administrator account!';
+			}
 		}
 	}
 
@@ -948,8 +962,6 @@ class WAIntegration {
 		$organization = $contact_info['Organization'];
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
-		// Check if user is administator or not
-		// $is_adminstrator = isset($contact_info['IsAccountAdministrator']);
 
 		// Wild Apricot contact details
 		// membership groups - one member can be in 0 or more groups
@@ -1002,9 +1014,6 @@ class WAIntegration {
 			if (!empty($membership_level) && $membership_level != '') {
 				$user_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			}
-			// if ($is_adminstrator) {
-			// 	$user_role = 'administrator';
-			// }
 			$user_data = array(
 				'user_email' => $login_email,
 				'user_pass' => wp_generate_password(),
@@ -1094,7 +1103,6 @@ class WAIntegration {
 			// Get id of last page from url
 			// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
 			if (!empty($_POST['wawp_login_submit'])) {
-				// self::my_log_file($_POST['wawp_login_submit']);
 				// Check that nonce is valid
 				if (!wp_verify_nonce(wp_unslash($_POST['wawp_login_nonce_name']), 'wawp_login_nonce_action')) {
 					wp_die('Your nonce for login could not be verified.');
@@ -1173,7 +1181,7 @@ class WAIntegration {
 	 */
 	public function custom_login_form_shortcode() {
 		// Load CSS
-		wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
+		// wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
 		// Get Wild Apricot URL
 		$wild_apricot_url = get_option(self::WA_URL_KEY);
 		if ($wild_apricot_url) {
