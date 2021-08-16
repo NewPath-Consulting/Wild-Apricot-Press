@@ -104,24 +104,35 @@ Now, the extra fields can be seen in each user's WordPress profile.
 
 ![Screen Shot 2021-08-16 at 2 19 45 PM (1)](https://user-images.githubusercontent.com/8737691/129625837-ca418263-a0d2-4bf9-b397-5daa055935f8.png)
 
+## Plugin Options
+
+You can specify the options upon deleting the plugin by navigating to WAWP Settings and clicking on the “Plugin Options” tab. (Even though you will never want to delete this plugin!) :) Navigate over to WAWP Settings and click on the "Plugin Options" tab to configure the plugin deletion settings.
+
+![Screen Shot 2021-08-16 at 5 47 23 PM](https://user-images.githubusercontent.com/8737691/129634935-88f84c17-f2a1-40e8-989b-2c4d78fd8ed9.png)
+
+By selecting the “Delete all Wild Apricot information from my WordPress site”, then you will remove all synced Wild Apricot data from your WordPress site upon deletion of the WAWP plugin. You can also leave this option unchecked if you would like to keep the synced users and roles on your WordPress site even after deleting the plugin!
+
+<img width="544" alt="Screen Shot 2021-08-16 at 6 07 21 PM" src="https://user-images.githubusercontent.com/8737691/129635421-3f80bb44-3c03-4659-8b28-2ce2c02125e6.png">
+
 ## Embedding Content from Wild Apricot into WordPress
 
-See the Additional Plugins section
+Wild Apricot content can be embedded into WordPress using a number of WAWP add-ons; see the Additional Plugins section for more.
 
 ***
 
 # WAWP - Add Ons
-Wild Apricot for WordPress - Custom Directory Plugin
+NewPath Consulting has developed several add-ons to the WAWP plugin that further enrich your experience with your Wild Apricot account in WordPress! Read more about them below:
 
-This plugin makes it easy to integrate Wild Apricot member directories into a WordPress site.
+## Wild Apricot IFrame Add-on
+Embed a system page from Wild Apricot directly in your WordPress site! Fundamental Wild Apricot features including member profiles, events, and more can be displayed in an IFrame (Inline Frame) in a WordPress post with just the click of a button! Check out the Wild Apricot IFrame at https://newpathconsulting.com/wawp. 
 
-Something something iframe plugin
-Iframe can be used to add member profiles, events, and more!
+## Member Directory Add-on
+Want to display a directory of your Wild Apricot users in WordPress? Look no further! The Member Directory Add-on for WAWP allows you to show your Wild Apricot users directly in your WordPress site. Learn more at https://newpathconsulting.com/wawp. 
+
 
 
 # Version Control
-- v1.0 - initial version
+- v1.0 - Initial version
 
 # License
-[explanation here?]
-
+The License for WAWP is completely free, and is used to verify that your Wild Apricot website is connected to your WordPress website. Please visit https://newpathconsulting.com/wawp/ to get your free license key or to inquire further about the WAWP plugin!
