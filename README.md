@@ -26,7 +26,7 @@ Below, you can specify which menu(s) you would like to add the login/logout butt
 
 <img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://user-images.githubusercontent.com/8737691/129612544-ff19e86c-5395-4bc4-b82b-a1fa914f4057.png">
 
-Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website.
+Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner.
 
 <img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
 
@@ -62,29 +62,29 @@ Each page and post has a restricted message in a box called "Individual Restrict
 
 IMPORTANT: To save the custom restricted message, make sure to save or publish the page or post.
 
-### Setting per Page or Post Access Control
+### Page or Post Access Control
 
-On every page, you can select which member levels can view the content of the page. Access control is set by the box on the right side of the page's or post's edit screen.
+On every page, you can select which membership levels and groups can view the content of the page. Access control is set by the box on the right side of the page or post's "Edit" screen, as seen in the screenshot below.
 
-If you do not select any boxes, then thr post is not restricted, and can be seen by all users, logged in and logged-out.
+<img width="583" alt="Screen Shot 2021-08-16 at 1 36 31 PM" src="https://user-images.githubusercontent.com/8737691/129618750-3ed1f127-f084-452a-b9a4-296718424062.png">
 
-You can select one or more membership levels to restrict which levels have access. 
+You can select one or more membership levels to restrict which levels have access to the post. For each membership level that you check off, the Wild Apricot members who have this membership level will be able to access the post once it is saved. 
 
-[eveyone button]
+Likewise, you can also set access to one or more membership groups. You can select zero or more membership groups, which will allow members in those Wild Apricot membership groups to access the page. Selecting a group will allow all users of that group to view the page, even if their membership level was not explicitly checked.
 
-[New image]
+The levels and groups are set inclusively -- that means that if a member is in one of the configured levels OR they are in a configured membership group then they can see the page. If they don't fit one of the criteria, they will not be able to see the page. 
 
-### Membership Groups
-
-You can also set access to one or more membership groups using the Select All Group Levels options. You can select zero or more membership groups which will allow members in those WIld Apricot membership groups to access the page. Selecting a group will allow all users of that group to view the page, even if their membership level was not explicitly checked.
-
-The levels and groups are set inclusively -- that means that if a member is in one of the configured levels OR they are in a configured membership group they can see the page. If they don't fit one of the criteria they will not be able to see the page. 
+Finally, if you do not select any boxes, then the post is not restricted, and can be seen by all users, both logged-in and logged-out of Wild Apricot.
 
 ***
 
-## Membership Level Sync
+## Memberships and User Data Synchronization
 
-The membership levels that have been added, modified or deleted will be synced into WordPress automatically on user login and every 24 hours. During each member login, the membership meta data (eg status and membership level) will be updated.
+The membership levels that have been added, modified or deleted will be synced into WordPress from Wild Apricot automatically on user login and every 24 hours. During each member login, the membership meta data (e.g. status and membership level) will be updated from Wild Apricot. So, after syncing your WordPress site with the WAWP plugin, any updates you make on Wild Apricot will be automatically reflected on your WordPress site as well within 24 hours.
+
+On each user login and daily user refresh, several Wild Apricot attributes are synced to the user's WordPress profile. You can view these attributes by viewing the metadata added to the user's WordPress profile under "Wild Apricot Membership Details". The default Wild Apricot attributes can be viewed in the screenshot below. PS: Can you guess who this member might be? :) 
+
+![Screen Shot 2021-08-16 at 2 16 45 PM](https://user-images.githubusercontent.com/8737691/129620414-f7f3042a-1063-4bbf-b0b6-a3c47084980a.png)
 
 [More]
 
