@@ -22,9 +22,13 @@ Once you have created an API key, Client ID and Client secret, copy and paste th
 
 [NEW IMAGE]
 
-Below, you can specify which menu(s) you would like to add the login/logout button to be added to by selecting the checkboxes. Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site.
+Below, you can specify which menu(s) you would like to add the login/logout button to be added to by selecting the checkboxes.
 
-[Insert screenshot here]
+<img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://user-images.githubusercontent.com/8737691/129612544-ff19e86c-5395-4bc4-b82b-a1fa914f4057.png">
+
+Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website.
+
+<img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
 
 The WordPress administrators can now manage access to pages and posts based on Wild Apricot membership levels and membership groups.
 
@@ -46,7 +50,7 @@ If no boxes are checked, members with any status will be able to view resticted 
 
 You can show a default restricted message to visitors who are trying to access pages which they do not have access to.
 
-[Updated Screenshot]<img width="1127" alt="Screen Shot 2021-08-16 at 1 16 20 PM" src="https://user-images.githubusercontent.com/8737691/129611817-cd5c0503-3dad-49d2-938a-d1bab977f082.png">
+<img width="1241" alt="Screen Shot 2021-08-16 at 1 05 20 PM" src="https://user-images.githubusercontent.com/8737691/129612116-5666ef23-8c5c-4ead-b60a-9e26b78a8e5c.png">
 
 ## Per Page and Post Settings
 
@@ -54,7 +58,7 @@ You can show a default restricted message to visitors who are trying to access p
 
 Each page and post has a restricted message in a box called "Individual Restriction Message". This box appears under the main content and can float down the page depending on what page builder is in use, if any. Modify as desired.
 
-[NEW IMAGE]
+<img width="1127" alt="Screen Shot 2021-08-16 at 1 16 20 PM" src="https://user-images.githubusercontent.com/8737691/129611817-cd5c0503-3dad-49d2-938a-d1bab977f082.png">
 
 IMPORTANT: To save the custom restricted message, make sure to save or publish the page or post.
 
