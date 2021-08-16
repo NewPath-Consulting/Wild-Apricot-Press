@@ -78,18 +78,31 @@ Finally, if you do not select any boxes, then the post is not restricted, and ca
 
 ***
 
-## Memberships and User Data Synchronization
+## Memberships and User Data Refresh
 
 The membership levels that have been added, modified or deleted will be synced into WordPress from Wild Apricot automatically on user login and every 24 hours. During each member login, the membership meta data (e.g. status and membership level) will be updated from Wild Apricot. So, after syncing your WordPress site with the WAWP plugin, any updates you make on Wild Apricot will be automatically reflected on your WordPress site as well within 24 hours.
 
-On each user login and daily user refresh, several Wild Apricot attributes are synced to the user's WordPress profile. You can view these attributes by viewing the metadata added to the user's WordPress profile under "Wild Apricot Membership Details". The default Wild Apricot attributes can be viewed in the screenshot below. PS: Can you guess who this member might be? :) 
+On each user login and daily user refresh, several Wild Apricot member fields are synced to the user's WordPress profile. You can view these fields by viewing the metadata added to the user's WordPress profile under "Wild Apricot Membership Details". The default Wild Apricot fields can be viewed in the screenshot below. 
+
+PS: Can you guess who this member might be? :) 
 
 ![Screen Shot 2021-08-16 at 2 16 45 PM](https://user-images.githubusercontent.com/8737691/129620414-f7f3042a-1063-4bbf-b0b6-a3c47084980a.png)
 
 [More]
 
-[Synchronization tab explanation
-You can select custom fields that can be automatically synced from your Wild Apricot account to your WordPress account. Navigate to WAWP Settings and click on the Synchronization tab. There, you will see all of the custom fields from your Wild Apricot workspace. By selecting a field, that field will then be imported to each user. ]
+## Data Synchronization
+
+You can extend the default Wild Apricot fields beyond the five fields shown above through the "Synchronization" tab under "WAWP Settings". See the screenshot below for an illustration.
+
+<img width="802" alt="Screen Shot 2021-08-16 at 1 52 31 PM" src="https://user-images.githubusercontent.com/8737691/129623578-5e025faa-5064-47bc-a731-2e4dcdad4c14.png">
+
+For each checkbox that you check off, the membership field will be synced to each Wild Apricot user on the WordPress site. The screenshot below shows some of the extra fields being checked off and thus imported into each user in WordPress:
+
+![Screen Shot 2021-08-16 at 4 28 36 PM](https://user-images.githubusercontent.com/8737691/129625564-fabce129-a64d-497b-99bd-b5e1230778cb.png)
+
+Now, the extra fields can be seen in each user's WordPress profile.
+
+![Screen Shot 2021-08-16 at 2 19 45 PM (1)](https://user-images.githubusercontent.com/8737691/129625837-ca418263-a0d2-4bf9-b397-5daa055935f8.png)
 
 ## Embedding Content from Wild Apricot into WordPress
 
