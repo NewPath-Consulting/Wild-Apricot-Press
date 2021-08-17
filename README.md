@@ -8,8 +8,6 @@ Version 1.0 - September 1, 2021
 
 On the WordPress admin dashboard, using the left menu, navigate to to Plugins > Add New. Upload the plugin [add link to zip] and activate.
 
- [Add instructions on Wild Apricot credentials and license key. note that new site requires a new license]
-
 To configure the WAWP plugin, the Wild Apricot API settings must be set.
 
 ### Create an Authorized Application in Wild Apricot
