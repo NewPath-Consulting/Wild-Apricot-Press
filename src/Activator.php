@@ -104,7 +104,7 @@ class Activator {
 		// Check if valid Wild Apricot credentials have been entered -> if not, output an alert
 		$entered_wa_credentials = get_option('wawp_wal_name');
 		$entered_license_keys = get_option(WAIntegration::WAWP_LICENSES_KEY);
-		if (empty($entered_wa_credentials)) {
+		if (empty($entered_wa_credentials) || $entered_wa_credentials['wawp_wal_api_key'] == '') {
 			// Wild Apricot has not been configured -> output alert
 			echo "<div class='notice notice-warning'><p>";
 			echo "Please enter your Wild Apricot credentials for <strong>" . $this->plugin_name . "</strong> in ";

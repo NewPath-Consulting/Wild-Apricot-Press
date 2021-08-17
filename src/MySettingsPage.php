@@ -572,7 +572,7 @@ class MySettingsPage
             // Check if Wild Apricot credentials have been entered
             $wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
             // If credentials have been entered (not empty), then we can present the license page
-            if (!empty($wa_credentials)) {
+            if (!empty($wa_credentials) && $wa_credentials['wawp_wal_api_key'] != '') {
                 ?>
                 <form method="post" action="options.php">
                     <?php
