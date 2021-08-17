@@ -2,7 +2,7 @@ Wild Apricot for WordPress (WAWP) Documentation
 
 Version 1.0 - September 1, 2021
 
-# WordPress Administrators Guide
+# WordPress Administrator's Guide
 
 ## Installing and Configuring the WAWP Plugin
 
@@ -14,21 +14,27 @@ To configuring the WAWP plugin, the Wild Apricot API settings must be set.
 
 ### Create an Authorized Application in Wild Apricot
 
-Navigate to WAWP > Authorization, and follow the instructions there to acquire the Wild Apricot credentials.
+Navigate to WAWP Settings > Authorization, and follow the instructions there to acquire the Wild Apricot credentials.
+
+![Screen Shot 2021-08-16 at 7 12 35 PM](https://user-images.githubusercontent.com/8737691/129640741-615b3128-30f7-47af-8bb9-a82f3bbbdfdc.png)
 
 ### Add API keys into WAWP Plugin
 
 Once you have created an API key, Client ID and Client secret, copy and paste these strings into the configuration screen in your WAWP configuration.
 
-[NEW IMAGE]
+<img width="540" alt="Screen Shot 2021-08-16 at 7 20 41 PM" src="https://user-images.githubusercontent.com/8737691/129640967-bbfc72e8-a9d4-4a1e-aa1e-990c45f1539f.png">
 
-Below, you can specify which menu(s) you would like to add the login/logout button to be added to by selecting the checkboxes.
+After entering these credentials and pressing "Save Changes", you will see a green success message that notifies you of the Wild Apricot website that you have connected to! You can ensure that this matches your Wild Apricot URL. If you do not see this green success message, then please make sure that you have the correct credentials and re-enter them.
+
+Below, you can specify which menu(s) you would like to add the login/logout button to by selecting the checkboxes.
 
 <img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://user-images.githubusercontent.com/8737691/129612544-ff19e86c-5395-4bc4-b82b-a1fa914f4057.png">
 
 Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner.
 
 <img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
+
+Finally, please enter your WAWP license key to enable the WAWP plugin's functionality! The WAWP license is 100% free, with no credit card or payment ever required! If you do not already have a WAWP license key, please visit https://newpathconsulting.com/wawp/, and see [Licenses](#license) for more information.
 
 The WordPress administrators can now manage access to pages and posts based on Wild Apricot membership levels and membership groups.
 
@@ -129,7 +135,8 @@ Embed a system page from Wild Apricot directly in your WordPress site! Fundament
 ## Member Directory Add-on
 Want to display a directory of your Wild Apricot users in WordPress? Look no further! The Member Directory Add-on for WAWP allows you to show your Wild Apricot users directly in your WordPress site. Learn more at https://newpathconsulting.com/wawp. 
 
-
+## HUEnique Theme
+Derived from GeneratePress, the HUEnique theme works directly with the WAWP plugin! HUEnique automatically finds the dominant colors in your company’s logo within seconds, thus customizing the colors in the theme to complement your company’s logo perfectly! Learn more at https://newpathconsulting.com/wawp. 
 
 # Version Control
 - v1.0 - Initial version
