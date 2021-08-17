@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       Wild Apricot for WordPress (WAWP)
  * Plugin URI:        https://newpathconsulting.com/wawp
- * Description:       Integrates your Wild Apricot account with your WordPress website!
+ * Description:       Integrates your Wild Apricot account with your WordPress website! Powered by Wild Apricot.
  * Version:           1.0.0
  * Requires at least: 5.3
  * Requires PHP:      5.6
