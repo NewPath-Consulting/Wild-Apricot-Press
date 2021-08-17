@@ -1086,7 +1086,8 @@ class MySettingsPage
      * Print instructions on how to use the restriction status checkboxes
      */
     public function print_restriction_status_info() {
-        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts. If no statuses are selected, then all membership statuses can view the restricted posts!';
+        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts.';
+        print '<br>If no statuses are selected, then all membership statuses can view the restricted posts!';
     }
 
     /**
