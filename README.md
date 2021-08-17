@@ -10,7 +10,7 @@ On the WordPress admin dashboard, using the left menu, navigate to to Plugins > 
 
  [Add instructions on Wild Apricot credentials and license key. note that new site requires a new license]
 
-To configuring the WAWP plugin, the Wild Apricot API settings must be set.
+To configure the WAWP plugin, the Wild Apricot API settings must be set.
 
 ### Create an Authorized Application in Wild Apricot
 
@@ -34,7 +34,13 @@ Once saved, a login/logout button will appear on these menu(s) automatically on 
 
 <img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
 
-Finally, please enter your WAWP license key to enable the WAWP plugin's functionality! The WAWP license is 100% free, with no credit card or payment ever required! If you do not already have a WAWP license key, please visit https://newpathconsulting.com/wawp/, and see [Licenses](#license) for more information.
+Finally, please enter your WAWP license key to enable the WAWP plugin's functionality! This can be done on the "Licensing" page, found under WAWP Settings > Licensing.
+
+<img width="490" alt="Screen Shot 2021-08-16 at 9 46 18 PM" src="https://user-images.githubusercontent.com/8737691/129650584-290c90ea-e845-4060-b642-d6eaa1d725b7.png">
+
+The WAWP license is 100% free, with no credit card or payment ever required! If you do not already have a WAWP license key, please visit https://newpathconsulting.com/wawp/, and see [Licenses](#license) for more information. Once you enter your license key and click "Save", then you're good to go!
+
+<img width="421" alt="Screen Shot 2021-08-16 at 10 06 00 PM" src="https://user-images.githubusercontent.com/8737691/129652733-0287702b-c3f5-4b1c-a342-bec6c1579ba6.png">
 
 The WordPress administrators can now manage access to pages and posts based on Wild Apricot membership levels and membership groups.
 
@@ -44,11 +50,13 @@ The WordPress administrators can now manage access to pages and posts based on W
 
 ### Setting Membership Status Restrictions
 
-To set which membership status can access pages and posts, navigate to WAWP in the left-hand menu, then select the Content Restriction Options tab.
+To set which membership status can access pages and posts, navigate to WAWP in the left-hand menu, then select the "Content Restriction Options" tab.
+
+<img width="734" alt="Screen Shot 2021-08-16 at 11 34 51 PM (1)" src="https://user-images.githubusercontent.com/8737691/129659939-ea29697c-19f0-4237-b332-bfbac606d485.png">
 
 Set the membership statuses that will be allowed to view restricted posts or pages.
 
-![image10](https://user-images.githubusercontent.com/458134/110493595-c4471100-80c0-11eb-879c-598b7c9db7a4.png)
+<img width="648" alt="Screen Shot 2021-08-16 at 12 48 01 PM" src="https://user-images.githubusercontent.com/8737691/129658641-7b02705b-fa62-4541-b76f-31462a127c4c.png">
 
 If no boxes are checked, members with any status will be able to view resticted posts.
 
@@ -122,7 +130,7 @@ By selecting the â€œDelete all Wild Apricot information from my WordPress siteâ€
 
 ## Embedding Content from Wild Apricot into WordPress
 
-Wild Apricot content can be embedded into WordPress using a number of WAWP add-ons; see the Additional Plugins section for more.
+Wild Apricot content can be embedded into WordPress using a number of WAWP add-ons; see the [WAWP - Add Ons](#wawp-add-ons) section for more.
 
 ***
 
@@ -143,3 +151,7 @@ Derived from GeneratePress, the HUEnique theme works directly with the WAWP plug
 
 # License
 The License for WAWP is completely free, and is used to verify that your Wild Apricot website is connected to your WordPress website. Please visit https://newpathconsulting.com/wawp/ to get your free license key or to inquire further about the WAWP plugin!
+
+After installing each add-on, you can enter the license key for the WAWP plugin and each add-on on the same Licensing page, under WAWP Settings > Licensing.
+
+![Screen Shot 2021-08-16 at 10 34 33 PM](https://user-images.githubusercontent.com/8737691/129655211-a7f4e36f-397e-41d5-9208-1493a4b9b95c.png)
