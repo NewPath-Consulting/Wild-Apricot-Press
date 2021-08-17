@@ -1,9 +1,8 @@
 <?php
 
-// namespace WAWP;
 /**
  * Plugin Name:       Wild Apricot for WordPress (WAWP)
- * Plugin URI:        https://newpathconsulting.com/wild-apricot-for-wordpress
+ * Plugin URI:        https://newpathconsulting.com/wawp
  * Description:       Integrates your Wild Apricot account with your WordPress website!
  * Version:           1.0.0
  * Requires at least: 5.3
@@ -44,7 +43,7 @@ require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
 require_once plugin_dir_path(__FILE__) . 'src/MySettingsPage.php';
 require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
 
-$activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot for Wordpress (WAWP)');
+$activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot for WordPress (WAWP)');
 // Enqueue stylesheet
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {

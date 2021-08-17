@@ -306,7 +306,7 @@ class WAIntegration {
 	 * Generates the URL to the WAWP Login page on the website
 	 */
 	private function get_login_link() {
-		$login_url = esc_url(site_url() . '/index.php?pagename=wa4wp-wild-apricot-login');
+		$login_url = esc_url(site_url() . '/index.php?pagename=wawp-wild-apricot-login');
 		// Get current page id
 		// https://wordpress.stackexchange.com/questions/161711/how-to-get-current-page-id-outside-the-loop
 		$current_page_id = get_queried_object_id();
