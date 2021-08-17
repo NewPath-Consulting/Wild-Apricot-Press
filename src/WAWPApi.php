@@ -14,8 +14,9 @@ class WAWPApi {
     public function __construct($access_token, $wa_user_id) {
         $this->access_token = $access_token;
         $this->wa_user_id = $wa_user_id;
-		// Include WAIntegration
+		// Include WAIntegration and DataEncryption
 		require_once('WAIntegration.php');
+		require_once('DataEncryption.php');
     }
 
 	/**
@@ -75,11 +76,15 @@ class WAWPApi {
 	public static function load_user_credentials() {
 		// Load encrypted credentials from database
 		$credentials = get_option('wawp_wal_name');
-		// Decrypt credentials
-		$dataEncryption = new DataEncryption();
-		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
-		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
-		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
+		$decrypted_credentials = array();
+		// Ensure that credentials are not empty
+		if (!empty($credentials)) {
+			// Decrypt credentials
+			$dataEncryption = new DataEncryption();
+			$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
+			$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
+			$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
+		}
 
 		return $decrypted_credentials;
 	}
@@ -99,6 +104,92 @@ class WAWPApi {
 		);
         return $args;
     }
+
+	/**
+	 * Checks if a new admin access token is required and returns a valid access token
+	 *
+	 * @return array $verified_data holds the verified access token and account ID
+	 */
+	public static function verify_valid_access_token() {
+		$dataEncryption = new DataEncryption();
+        // Check if access token is still valid
+		$access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		$wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
+		if (!$access_token || !$wa_account_id) { // access token is expired
+			// Refresh access token
+			$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+			$refresh_token = $dataEncryption->decrypt($refresh_token);
+			$new_response = self::get_new_access_token($refresh_token);
+			// Get variables from response
+			$new_access_token = $new_response['access_token'];
+			$new_expiring_time = $new_response['expires_in'];
+			$new_account_id = $new_response['Permissions'][0]['AccountId'];
+			// Set these new values to the transients
+			set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+			set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+			// Update values
+			$access_token = $new_access_token;
+			$wa_account_id = $new_account_id;
+		} else {
+			$access_token = $dataEncryption->decrypt($access_token);
+			$wa_account_id = $dataEncryption->decrypt($wa_account_id);
+		}
+		// Return array of access token and account id
+		$verified_data = array();
+		$verified_data['access_token'] = $access_token;
+		$verified_data['wa_account_id'] = $wa_account_id;
+		return $verified_data;
+	}
+
+	/**
+	 * Lowercases and removes prefix to url for easy comparison between the license url and Wild Apricot url
+	 *
+	 * @param string  $original_url is the url to modify
+	 *
+	 * @return string $modified_url is the url that is all lowercase and has the prefix removed
+	 */
+	public static function create_consistent_url($original_url) {
+		// Lowercase
+		$modified_url = strtolower($original_url);
+		// Remove https:// or http:// or www. if necessary
+		if (strpos($modified_url, 'https://') !== false) { // contains 'https://www.'
+			// Remove 'https://'
+			$modified_url = str_replace('https://', '', $modified_url);
+		} else if (strpos($modified_url, 'http://') !== false) {
+			$modified_url = str_replace('http://', '', $modified_url);
+		}
+		if (strpos($modified_url, 'www.') !== false) {
+			$modified_url = str_replace('www.', '', $modified_url);
+		}
+		return $modified_url;
+	}
+
+	/**
+	 * Retrieves url and id for the account
+	 *
+	 * @return array $wild_apricot_values holds the Wild Apricot URL, indexed by 'Url', and the Wild Apricot ID, indexed by 'Id'
+	 */
+	public function get_account_url_and_id() {
+		$args = $this->request_data_args();
+		$url = 'https://api.wildapricot.org/v2.2/accounts/' . $this->wa_user_id;
+		$response_api = wp_remote_get($url, $args);
+		$details_response = self::response_to_data($response_api);
+
+		// Extract values
+		$wild_apricot_values = array();
+		if (array_key_exists('Id', $details_response)) {
+			$wild_apricot_values['Id'] = $details_response['Id'];
+		}
+		$wild_apricot_url = '';
+		if (array_key_exists('PrimaryDomainName', $details_response)) {
+			$wild_apricot_values['Url'] = $details_response['PrimaryDomainName'];
+			// Lowercase and remove https, http, or www from url
+			$wild_apricot_values['Url'] = self::create_consistent_url($wild_apricot_values['Url']);
+		}
+
+		// Return values
+		return $wild_apricot_values;
+	}
 
 	/**
 	 * Retrieves the custom fields for contacts and members
@@ -186,11 +277,6 @@ class WAWPApi {
 						// Check if contact's email checks for the email we are searching for
 						if (strcasecmp($contact_email, $user_email) == 0) { // equal
 							// This is the correct user
-							// Check if user is an administrator -> if so, do not modify them!
-							$user_is_admin = false;
-							if (user_can($site_id, 'manage_options')) {
-								$user_is_admin = true;
-							}
 							// Let us update this site_id with its new data
 							$updated_organization = $contact['Organization'];
 							// Get membership level, if any
@@ -272,6 +358,8 @@ class WAWPApi {
 	/**
 	 * Returns a new access token after it has expired
 	 * https://gethelp.wildapricot.com/en/articles/484#:~:text=for%20this%20access_token-,How%20to%20refresh%20tokens,-To%20refresh%20the
+	 *
+	 * @return array $data holds the response for refreshing the token
 	 */
 	public static function get_new_access_token($refresh_token) {
 		// Get decrypted credentials

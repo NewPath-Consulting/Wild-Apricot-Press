@@ -24,7 +24,7 @@ delete_option('wawp_wal_page_id');
 delete_option('wawp_license_form_nonce');
 delete_option('wawp_all_levels_key');
 delete_option('wawp_all_groups_key');
-delete_option('wawp_wa_credentials_valid');
+// delete_option('wawp_wa_credentials_valid');
 delete_option('wawp_restriction_name');
 delete_option('wawp_restriction_status_name');
 delete_option('wawp_list_of_custom_fields');
@@ -47,7 +47,6 @@ if (!empty($wawp_posts_with_meta)) {
 }
 // Delete restricted pages option value
 delete_option('wawp_array_of_restricted_posts');
-delete_option('wawp_cron_user_id');
 delete_option('wawp_admin_refresh_token');
 
 // Delete transients, even if they have not expired yet
@@ -149,5 +148,6 @@ if (!empty($wawp_delete_options)) {
 }
 delete_option('wawp_delete_name');
 delete_option('wawp_menu_location_name');
+delete_option('wawp_wa_url_key');
 
 ?>

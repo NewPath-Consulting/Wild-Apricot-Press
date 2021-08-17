@@ -514,18 +514,25 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
-                        // $successful_credentials_entered = get_option('wawp_wal_success');
+                        // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
                             // Save that wawp credentials are not fully activated
-                            update_option('wawp_wa_credentials_valid', false);
+                            // update_option('wawp_wa_credentials_valid', false);
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
-							echo '<p style="color:green">Valid Wild Apricot credentials saved!</p>';
+                            // Get Wild Apricot URL
+                            $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
+                            if ($wild_apricot_url) {
+                                $dataEncryption = new DataEncryption();
+                                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
+                            }
+							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
+                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
                             // Save that wawp credentials have been fully activated
-                            update_option('wawp_wa_credentials_valid', true);
+                            // update_option('wawp_wa_credentials_valid', true);
                             // Implement hook here to tell Wild Apricot to connect to these credentials
-                            do_action('wawp_wal_credentials_obtained');
+                            // do_action('wawp_wal_credentials_obtained');
 						}
 					?>
                     <!-- Menu Locations for Login/Logout button -->
@@ -539,6 +546,18 @@ class MySettingsPage
 						submit_button();
 					?>
 					</form>
+                    <!-- Check if menu location(s) have been submitted -->
+                    <?php
+                        // Check menu locations in options table
+                        $menu_location_saved = get_option('wawp_menu_location_name');
+                        // If menu locations is not empty, then it has been saved
+                        if (!empty($menu_location_saved)) {
+                            // Display success statement
+                            echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
+                        } else {
+                            echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
+                        }
+                    ?>
 				</div>
 			</div>
         </div>
@@ -549,14 +568,28 @@ class MySettingsPage
     public function wawp_licensing_page() {
         ?>
         <div class="wrap">
-            <form method="post" action="options.php">
             <?php
-            // Nonce for verification
-            wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
-            settings_fields('wawp_license_keys');
-            do_settings_sections('wawp_licensing');
-            submit_button('Save', 'primary');
-            ?> </form>
+            // Check if Wild Apricot credentials have been entered
+            $wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
+            // If credentials have been entered (not empty), then we can present the license page
+            if (!empty($wa_credentials)) {
+                ?>
+                <form method="post" action="options.php">
+                    <?php
+                    // Nonce for verification
+                    wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
+                    settings_fields('wawp_license_keys');
+                    do_settings_sections('wawp_licensing');
+                    submit_button('Save', 'primary');
+                    ?>
+                </form>
+                <?php
+            } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
+                $link_address = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
+                echo "<h2>License Keys</h2>";
+                echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
+            }
+            ?>
         </div>
         <?php
     }
@@ -1021,6 +1054,12 @@ class MySettingsPage
             update_option('wawp_all_levels_key', $all_membership_levels);
             update_option('wawp_all_groups_key', $all_membership_groups);
 
+            // Get Wild Apricot URL
+            $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
+            $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
+            // Save URL
+            update_option(WAIntegration::WA_URL_KEY, $dataEncryption->encrypt($wild_apricot_url));
+
             // Schedule CRON update for updating the available membership levels and groups
             self::setup_cron_job();
         }
@@ -1028,6 +1067,9 @@ class MySettingsPage
         // Sanitize menu dropdown
         //sanatize array https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
         // $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
+
+        // Delete all licenses because they are invalid now and user must insert them again
+        delete_option(WAIntegration::WAWP_LICENSES_KEY);
 
 		// Return array of valid inputs
 		return $valid;
@@ -1044,7 +1086,7 @@ class MySettingsPage
      * Print instructions on how to use the restriction status checkboxes
      */
     public function print_restriction_status_info() {
-        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts.';
+        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts. If no statuses are selected, then all membership statuses can view the restricted posts!';
     }
 
     /**
@@ -1080,7 +1122,7 @@ class MySettingsPage
      * Print the licensing settings section text
      */
     public function license_print_info() {
-        $link_address = "https://newpathconsulting.com/wild-apricot-for-wordpress/";
+        $link_address = "https://newpathconsulting.com/wawp/";
         print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for WAWP is 100% free, and we never share your information with any third party!";
     }
 
@@ -1189,6 +1231,7 @@ class MySettingsPage
             $option_name = 'license-check-' . $slug;
             if (is_null($key)) {
                 update_option($option_name, 'invalid');
+                // $valid[$slug] = '';
                 // add errors here okay.
             } else {
                 // delete_option($option_name);

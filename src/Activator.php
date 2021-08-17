@@ -3,6 +3,7 @@
 namespace WAWP;
 
 require_once __DIR__ . '/Addon.php';
+require_once __DIR__ . '/WAIntegration.php';
 
 // use WAWP\Addon;
 
@@ -47,18 +48,12 @@ class Activator {
 		$stored_wa_credentials = get_option('wawp_wal_name');
 		if (isset($stored_wa_credentials) && $stored_wa_credentials != '') {
 			// Set valid Wild Apricot credentials to true
-			update_option('wawp_wa_credentials_valid', true);
+			// update_option('wawp_wa_credentials_valid', true);
 			// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
 			do_action('wawp_wal_credentials_obtained');
 			// Also create CRON event to refresh the membership levels/groups
 			require_once('MySettingsPage.php');
 			MySettingsPage::setup_cron_job();
-			// Check if user profile ID is set in database -> if so, then trigger user update cron event
-			if (get_option('wawp_cron_user_id')) { // user has been logged into Wild Apricot
-				require_once('WAIntegration.php');
-				$user_id = get_option('wawp_cron_user_id');
-				WAIntegration::create_cron_for_user_refresh();
-			}
 		}
 	}
 
@@ -108,11 +103,18 @@ class Activator {
 
 		// Check if valid Wild Apricot credentials have been entered -> if not, output an alert
 		$entered_wa_credentials = get_option('wawp_wal_name');
+		$entered_license_keys = get_option(WAIntegration::WAWP_LICENSES_KEY);
 		if (empty($entered_wa_credentials)) {
 			// Wild Apricot has not been configured -> output alert
 			echo "<div class='notice notice-warning'><p>";
 			echo "Please enter your Wild Apricot credentials for <strong>" . $this->plugin_name . "</strong> in ";
 			echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">WAWP > Authorization</a>.";
+			echo "</p></div>";
+		} else if (empty($entered_license_keys)) { // WAWP credentials have been entered but the license key has not
+			echo "<div class='notice notice-warning'><p>";
+			echo "Don't forget to enter the license key for <strong>" . $this->plugin_name . "</strong> in ";
+			echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . ">WA4WP > Licensing</a> ";
+			echo "in order to activate the plugin's functionality!";
 			echo "</p></div>";
 		}
 	}
