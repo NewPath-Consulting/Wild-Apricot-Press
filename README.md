@@ -30,10 +30,6 @@ Below, you can specify which menu(s) you would like to add the login/logout butt
 
 <img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://user-images.githubusercontent.com/8737691/129612544-ff19e86c-5395-4bc4-b82b-a1fa914f4057.png">
 
-Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner.
-
-<img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
-
 Finally, please enter your WAWP license key to enable the WAWP plugin's functionality! This can be done on the "Licensing" page, found under WAWP Settings > Licensing.
 
 <img width="490" alt="Screen Shot 2021-08-16 at 9 46 18 PM" src="https://user-images.githubusercontent.com/8737691/129650584-290c90ea-e845-4060-b642-d6eaa1d725b7.png">
@@ -41,6 +37,12 @@ Finally, please enter your WAWP license key to enable the WAWP plugin's function
 The WAWP license is 100% free, with no credit card or payment ever required! If you do not already have a WAWP license key, please visit https://newpathconsulting.com/wawp/, and see [Licenses](#license) for more information. Once you enter your license key and click "Save", then you're good to go!
 
 <img width="421" alt="Screen Shot 2021-08-16 at 10 06 00 PM" src="https://user-images.githubusercontent.com/8737691/129652733-0287702b-c3f5-4b1c-a342-bec6c1579ba6.png">
+
+Once saved, a login/logout button will appear on these menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner.
+
+<img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
+
+When users are logged out and click on the "Log In" button, they are directed to log into their Wild Apricot account. Once completed, a WordPress account is created for them (if it does not exist already), and their Wild Apricot data is synced to the WordPress account. If the user already has a WordPress account on the site, then no problem - their Wild Apricot information is synced with the existing WordPress account.
 
 The WordPress administrators can now manage access to pages and posts based on Wild Apricot membership levels and membership groups.
 
@@ -50,7 +52,7 @@ The WordPress administrators can now manage access to pages and posts based on W
 
 ### Setting Membership Status Restrictions
 
-To set which membership status can access pages and posts, navigate to WAWP in the left-hand menu, then select the "Content Restriction Options" tab.
+To set which membership status can access restricted pages and posts, navigate to WAWP in the left-hand menu, then select the "Content Restriction Options" tab.
 
 <img width="734" alt="Screen Shot 2021-08-16 at 11 34 51 PM (1)" src="https://user-images.githubusercontent.com/8737691/129659939-ea29697c-19f0-4237-b332-bfbac606d485.png">
 
@@ -58,7 +60,7 @@ Set the membership statuses that will be allowed to view restricted posts or pag
 
 <img width="648" alt="Screen Shot 2021-08-16 at 12 48 01 PM" src="https://user-images.githubusercontent.com/8737691/129658641-7b02705b-fa62-4541-b76f-31462a127c4c.png">
 
-If no boxes are checked, members with any status will be able to view resticted posts.
+If no boxes are checked, then all members (regardless of status) will be able to view resticted posts.
 
 ### Set Global Restriction Message
 
@@ -67,6 +69,7 @@ You can show a default restricted message to visitors who are trying to access p
 <img width="1241" alt="Screen Shot 2021-08-16 at 1 05 20 PM" src="https://user-images.githubusercontent.com/8737691/129612116-5666ef23-8c5c-4ead-b60a-9e26b78a8e5c.png">
 
 ## Per Page and Post Settings
+The user restrictions can be specific to each individual post or page, allowing different sets of users to see different pages. These restrictions are set on the "Edit" view of each post/page so that you can specify the restrictions as you write your post. So start editing a post or page and let's start controlling which Wild Apricot users can view each post!
 
 ### Setting a custom page/post restricted message
 
@@ -106,7 +109,7 @@ PS: Can you guess who this member might be? :)
 
 ## Data Synchronization
 
-You can extend the default Wild Apricot fields beyond the five fields shown above through the "Synchronization" tab under "WAWP Settings". See the screenshot below for an illustration.
+You can extend the default Wild Apricot fields beyond the five fields shown above through the "Synchronization Options" tab under "WAWP Settings". See the screenshot below for an illustration.
 
 <img width="802" alt="Screen Shot 2021-08-16 at 1 52 31 PM" src="https://user-images.githubusercontent.com/8737691/129623578-5e025faa-5064-47bc-a731-2e4dcdad4c14.png">
 
