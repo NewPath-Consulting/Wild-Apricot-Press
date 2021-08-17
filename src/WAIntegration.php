@@ -8,9 +8,9 @@ class WAIntegration {
 	// Constants for keys used for database management
 	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
 	const WAWP_LICENSES_KEY = 'wawp_license_keys';
-	const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
-	const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
-	const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
+	// const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
+	// const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
+	// const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
@@ -69,7 +69,7 @@ class WAIntegration {
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
 		// Action for when the custom fields are saved to refresh the users
-		add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
+		// add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
@@ -869,34 +869,38 @@ class WAIntegration {
 	 */
 	public function refresh_user_wa_info() {
 		// Get all user ids of Wild Apricot logged in users
-		$dataEncryption = new DataEncryption();
+		// $dataEncryption = new DataEncryption();
 		// Get admin account ID
-		$admin_account_id = get_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT);
-		$admin_access_token = get_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		// $admin_account_id = get_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT);
+		// $admin_access_token = get_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT);
 		// Check if transient is expired
 		// Run this user update ONLY if the current access token has expired because it means that
 		// we are not instantly updating the users, but rather updating them over time
-		if (empty($admin_account_id) || empty($admin_access_token)) {
-			// Get new admin access token
-			$refresh_token = $dataEncryption->decrypt(get_option(self::ADMIN_REFRESH_TOKEN_OPTION));
-            $new_response = WAWPApi::get_new_access_token($refresh_token);
-			// Get variables from response
-            $new_access_token = $new_response['access_token'];
-            $new_expiring_time = $new_response['expires_in'];
-            $new_account_id = $new_response['Permissions'][0]['AccountId'];
-			// Get new refresh token
-			$new_refresh_token = $new_response['refresh_token'];
-			update_option(self::ADMIN_REFRESH_TOKEN_OPTION, $dataEncryption->encrypt($new_refresh_token));
-            // Set these new values to the transients
-            set_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-            set_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-            // Update values
-            $admin_access_token = $new_access_token;
-            $admin_account_id = $new_account_id;
-		} else {
-			$admin_access_token = $dataEncryption->decrypt($admin_access_token);
-			$admin_account_id = $dataEncryption->decrypt($admin_account_id);
-		}
+		// if (empty($admin_account_id) || empty($admin_access_token)) {
+		// 	// Get new admin access token
+		// 	$refresh_token = $dataEncryption->decrypt(get_option(self::ADMIN_REFRESH_TOKEN_OPTION));
+        //     $new_response = WAWPApi::get_new_access_token($refresh_token);
+		// 	// Get variables from response
+        //     $new_access_token = $new_response['access_token'];
+        //     $new_expiring_time = $new_response['expires_in'];
+        //     $new_account_id = $new_response['Permissions'][0]['AccountId'];
+		// 	// Get new refresh token
+		// 	$new_refresh_token = $new_response['refresh_token'];
+		// 	update_option(self::ADMIN_REFRESH_TOKEN_OPTION, $dataEncryption->encrypt($new_refresh_token));
+        //     // Set these new values to the transients
+        //     set_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+        //     set_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+        //     // Update values
+        //     $admin_access_token = $new_access_token;
+        //     $admin_account_id = $new_account_id;
+		// } else {
+		// 	$admin_access_token = $dataEncryption->decrypt($admin_access_token);
+		// 	$admin_account_id = $dataEncryption->decrypt($admin_account_id);
+		// }
+		// Create WAWPApi with valid credentials
+		$verified_data = WAWPApi::verify_valid_access_token();
+		$admin_access_token = $verified_data['access_token'];
+		$admin_account_id = $verified_data['wa_account_id'];
 		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
 		// Refresh custom fields first
 		$wawp_api->retrieve_custom_fields();
@@ -1035,11 +1039,11 @@ class WAIntegration {
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		update_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token));
-		update_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token));
+		// update_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token));
+		// update_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token));
 		// Store time that access token expires
-		$new_time_to_save = time() + $time_remaining_to_refresh;
-		update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save);
+		// $new_time_to_save = time() + $time_remaining_to_refresh;
+		// update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save);
 		// Add Wild Apricot id to user's metadata
 		// update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata

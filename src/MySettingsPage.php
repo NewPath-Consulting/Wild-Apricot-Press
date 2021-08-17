@@ -143,41 +143,45 @@ class MySettingsPage
      * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
      */
     public function cron_update_wa_memberships() {
-        $dataEncryption = new DataEncryption();
+        // $dataEncryption = new DataEncryption();
 
-        // Get access token and account id
-        $access_token = get_transient('wawp_admin_access_token');
-        $wa_account_id = get_transient('wawp_admin_account_id');
+        // // Get access token and account id
+        // $access_token = get_transient('wawp_admin_access_token');
+        // $wa_account_id = get_transient('wawp_admin_account_id');
 
-        // Boolean to hold if we are using the same access token (true), or if we must refresh the access token (false)
-        $same_credentials = true;
+        // // Boolean to hold if we are using the same access token (true), or if we must refresh the access token (false)
+        // $same_credentials = true;
 
-        // Check that the transients are still valid -> if not, get new token
-        if (empty($access_token) || empty($wa_account_id)) {
-            $same_credentials = false;
-            // Retrieve refresh token from database
-            $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
-            // Get new access token
-            $new_response = WAWPApi::get_new_access_token($refresh_token);
-            // Get variables from response
-            $new_access_token = $new_response['access_token'];
-            $new_expiring_time = $new_response['expires_in'];
-            $new_account_id = $new_response['Permissions'][0]['AccountId'];
-            // Set these new values to the transients
-            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-            // Update values
-            $access_token = $new_access_token;
-            $wa_account_id = $new_account_id;
-        }
+        // // Check that the transients are still valid -> if not, get new token
+        // if (empty($access_token) || empty($wa_account_id)) {
+        //     $same_credentials = false;
+        //     // Retrieve refresh token from database
+        //     $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
+        //     // Get new access token
+        //     $new_response = WAWPApi::get_new_access_token($refresh_token);
+        //     // Get variables from response
+        //     $new_access_token = $new_response['access_token'];
+        //     $new_expiring_time = $new_response['expires_in'];
+        //     $new_account_id = $new_response['Permissions'][0]['AccountId'];
+        //     // Set these new values to the transients
+        //     set_transient('wawp_admin_access_token', $dataEncryption->encrypt($new_access_token), $new_expiring_time);
+        //     set_transient('wawp_admin_account_id', $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+        //     // Update values
+        //     $access_token = $new_access_token;
+        //     $wa_account_id = $new_account_id;
+        // }
 
-        // Run this update ONLY if the previous access token and client secret were expired.
-        // That way, we are only updating after a set amount of time, and not instantaneously
+        // Ensure that access token is valid
+        $valid_access_credentials = WAWPApi::verify_valid_access_token();
+        $access_token = $valid_access_credentials['access_token'];
+        $wa_account_id = $valid_access_credentials['wa_account_id'];
+
+        // Ensure that access token and account id exist
         if (!empty($access_token) && !empty($wa_account_id)) {
-            if ($same_credentials) {
-                $access_token = $dataEncryption->decrypt($access_token);
-                $wa_account_id = $dataEncryption->decrypt($wa_account_id);
-            }
+            // if ($same_credentials) {
+            //     $access_token = $dataEncryption->decrypt($access_token);
+            //     $wa_account_id = $dataEncryption->decrypt($wa_account_id);
+            // }
 
             // Create WAWP Api instance
             $wawp_api = new WAWPApi($access_token, $wa_account_id);
