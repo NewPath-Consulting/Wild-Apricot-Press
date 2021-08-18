@@ -332,7 +332,6 @@ class WAIntegration {
 		// Get ID of current post
 		$current_post_ID = get_queried_object_id();
 		// Check if valid Wild Apricot credentials have been entered
-		// $valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 		$valid_wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
 
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
@@ -348,9 +347,11 @@ class WAIntegration {
 				if (!empty($individual_restriction_message) && $individual_restriction_message != '') { // this post has an individual restriction message
 					$restriction_message = $individual_restriction_message;
 				}
-				// Append 'Log In' button to the restriction message
+				// Append 'Log In' button and the styling div to the restriction message
 				$login_url = $this->get_login_link();
+				$restriction_message = '<div class="wawp_restriction_content_div">' . $restriction_message;
 				$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
+				$restriction_message .= '</div>';
 				// Automatically restrict the post if user is not logged in
 				if (!is_user_logged_in()) {
 					return $restriction_message;
@@ -505,7 +506,7 @@ class WAIntegration {
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
 		// Save individual restriction message to post meta data
-		$individual_message = $_POST['wawp_individual_post_restricted_message_textarea'];
+		$individual_message = wp_unslash($_POST['wawp_individual_post_restricted_message_textarea']);
 		if (!empty($individual_message)) {
 			// Filter restriction message
 			$individual_message = wp_kses_post($individual_message);
