@@ -143,42 +143,13 @@ class MySettingsPage
      * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
      */
     public function cron_update_wa_memberships() {
-        $dataEncryption = new DataEncryption();
+        // Ensure that access token is valid
+        $valid_access_credentials = WAWPApi::verify_valid_access_token();
+        $access_token = $valid_access_credentials['access_token'];
+        $wa_account_id = $valid_access_credentials['wa_account_id'];
 
-        // Get access token and account id
-        $access_token = get_transient('wawp_admin_access_token');
-        $wa_account_id = get_transient('wawp_admin_account_id');
-
-        // Boolean to hold if we are using the same access token (true), or if we must refresh the access token (false)
-        $same_credentials = true;
-
-        // Check that the transients are still valid -> if not, get new token
-        if (empty($access_token) || empty($wa_account_id)) {
-            $same_credentials = false;
-            // Retrieve refresh token from database
-            $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
-            // Get new access token
-            $new_response = WAWPApi::get_new_access_token($refresh_token);
-            // Get variables from response
-            $new_access_token = $new_response['access_token'];
-            $new_expiring_time = $new_response['expires_in'];
-            $new_account_id = $new_response['Permissions'][0]['AccountId'];
-            // Set these new values to the transients
-            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-            // Update values
-            $access_token = $new_access_token;
-            $wa_account_id = $new_account_id;
-        }
-
-        // Run this update ONLY if the previous access token and client secret were expired.
-        // That way, we are only updating after a set amount of time, and not instantaneously
+        // Ensure that access token and account id exist
         if (!empty($access_token) && !empty($wa_account_id)) {
-            if ($same_credentials) {
-                $access_token = $dataEncryption->decrypt($access_token);
-                $wa_account_id = $dataEncryption->decrypt($wa_account_id);
-            }
-
             // Create WAWP Api instance
             $wawp_api = new WAWPApi($access_token, $wa_account_id);
 
@@ -312,14 +283,27 @@ class MySettingsPage
                     default:
                         // echo 'Default tab';
                         ?>
+                        <!-- Form for Restriction Status(es) -->
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_restriction_status_nonce_action', 'wawp_restriction_status_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields('wawp_restriction_status_group');
+                            // settings_fields( 'wawp_restriction_group' );
+                            do_settings_sections( 'wawp-wal-admin' );
+                            submit_button();
+                        ?>
+                        </form>
+                        <!-- Form for global restriction message -->
                         <form method="post" action="options.php">
                         <?php
                             // Nonce for verification
                             wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
                             // This prints out all hidden setting fields
-                            settings_fields( 'wawp_restriction_group' );
-                            settings_fields('wawp_restriction_status_group');
-                            do_settings_sections( 'wawp-wal-admin' );
+                            settings_fields('wawp_restriction_group');
+                            // settings_fields( 'wawp_restriction_group' );
+                            do_settings_sections( 'wawp-wal-admin-message' );
                             submit_button();
                         ?>
                         </form>
@@ -595,11 +579,15 @@ class MySettingsPage
     }
 
     /**
-     * Sanitize restriction
+     * Sanitize restriction status checkboxes
      *
      * @param array $input Contains all settings fields as array keys
      */
     public function restriction_status_sanitize($input) {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['wawp_restriction_status_nonce_name'], 'wawp_restriction_status_nonce_action')) {
+            wp_die('Your nonce for the restriction status(es) could not be verified.');
+        }
         $valid = array();
         // Loop through each checkbox and sanitize
         if (!empty($input)) {
@@ -815,14 +803,14 @@ class MySettingsPage
             'wawp_restriction_id', // ID
             'Global Restriction Message', // title
             array($this, 'print_restriction_info'), // callback
-            'wawp-wal-admin' // page
+            'wawp-wal-admin-message' // page
         );
         // Field for restriction message
         add_settings_field(
             'wawp_restriction_field_id', // ID
             'Restriction Message:', // title
             array($this, 'restriction_message_callback'), // callback
-            'wawp-wal-admin', // page
+            'wawp-wal-admin-message', // page
             'wawp_restriction_id' // section
         );
 
