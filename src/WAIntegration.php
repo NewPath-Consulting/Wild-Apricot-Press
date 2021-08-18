@@ -506,7 +506,7 @@ class WAIntegration {
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
 		// Save individual restriction message to post meta data
-		$individual_message = wp_unslash($_POST['wawp_individual_post_restricted_message_textarea']);
+		$individual_message = $_POST['wawp_individual_post_restricted_message_textarea'];
 		if (!empty($individual_message)) {
 			// Filter restriction message
 			$individual_message = wp_kses_post($individual_message);

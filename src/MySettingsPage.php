@@ -316,14 +316,27 @@ class MySettingsPage
                     default:
                         // echo 'Default tab';
                         ?>
+                        <!-- Form for Restriction Status(es) -->
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_restriction_status_nonce_action', 'wawp_restriction_status_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields('wawp_restriction_status_group');
+                            // settings_fields( 'wawp_restriction_group' );
+                            do_settings_sections( 'wawp-wal-admin' );
+                            submit_button();
+                        ?>
+                        </form>
+                        <!-- Form for global restriction message -->
                         <form method="post" action="options.php">
                         <?php
                             // Nonce for verification
                             wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
                             // This prints out all hidden setting fields
-                            settings_fields( 'wawp_restriction_group' );
-                            settings_fields('wawp_restriction_status_group');
-                            do_settings_sections( 'wawp-wal-admin' );
+                            settings_fields('wawp_restriction_group');
+                            // settings_fields( 'wawp_restriction_group' );
+                            do_settings_sections( 'wawp-wal-admin-message' );
                             submit_button();
                         ?>
                         </form>
@@ -599,11 +612,15 @@ class MySettingsPage
     }
 
     /**
-     * Sanitize restriction
+     * Sanitize restriction status checkboxes
      *
      * @param array $input Contains all settings fields as array keys
      */
     public function restriction_status_sanitize($input) {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['wawp_restriction_status_nonce_name'], 'wawp_restriction_status_nonce_action')) {
+            wp_die('Your nonce for the restriction status(es) could not be verified.');
+        }
         $valid = array();
         // Loop through each checkbox and sanitize
         if (!empty($input)) {
@@ -621,6 +638,7 @@ class MySettingsPage
      * @param array $input Contains all settings fields as array keys
      */
     public function restriction_sanitize($input) {
+        self::my_log_file('lets sanitize the restriction!');
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
             wp_die('Your nonce for the restriction message could not be verified.');
@@ -628,8 +646,10 @@ class MySettingsPage
 		// Create valid variable that will hold the valid input
         // Sanitize wp editor
         // https://wordpress.stackexchange.com/questions/262796/sanitize-content-from-wp-editor
+        self::my_log_file($input);
 		$valid = wp_kses_post($input);
         // Return valid input
+        self::my_log_file($valid);
         return $valid;
     }
 
@@ -819,14 +839,14 @@ class MySettingsPage
             'wawp_restriction_id', // ID
             'Global Restriction Message', // title
             array($this, 'print_restriction_info'), // callback
-            'wawp-wal-admin' // page
+            'wawp-wal-admin-message' // page
         );
         // Field for restriction message
         add_settings_field(
             'wawp_restriction_field_id', // ID
             'Restriction Message:', // title
             array($this, 'restriction_message_callback'), // callback
-            'wawp-wal-admin', // page
+            'wawp-wal-admin-message', // page
             'wawp_restriction_id' // section
         );
 
