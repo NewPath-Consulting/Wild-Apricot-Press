@@ -47,6 +47,7 @@
 /* Restriction page formatting */
 .wawp_restriction_content_div {
 	align-items: center;
+	margin-top: 1em;
 	margin-left: 1em;
 	margin-bottom: 1em;
 }
