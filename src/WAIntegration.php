@@ -1214,19 +1214,22 @@ class WAIntegration {
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
 
 			// Check if the user should be able to see restricted pages in their menu
-			self::my_log_file($args);
+			// self::my_log_file($args);
 			$args_menu = $args->menu;
 			$nav_items = wp_get_nav_menu_items($args_menu);
 			self::my_log_file($nav_items);
 			// Loop through each nav item, get the ID, and check if the page is restricted
 			if (!empty($nav_items)) {
 				foreach ($nav_items as $nav_item) {
+					$user_can_see = true;
 					// Get post id
-					$nav_item_id = $nav_item->ID;
+					$nav_item_id = $nav_item->object_id;
 					// Check if this post is restricted
 					$nav_item_is_restricted = get_post_meta($nav_item_id, self::IS_POST_RESTRICTED);
+					self::my_log_file('is post restricted?');
+					self::my_log_file($nav_item_is_restricted);
 					// If post is restricted, then check if the current has access to it
-					if ($nav_item_is_restricted) {
+					if (!empty($nav_item_is_restricted) && $nav_item_is_restricted[0]) {
 						if (is_user_logged_in()) { // user is logged in
 							// Check that user is synced with Wild Apricot
 							$current_users_id = get_current_user_id();
@@ -1236,9 +1239,9 @@ class WAIntegration {
 								// Now, check if the current user is allowed to see this page
 								// Get user's groups and level
 								$users_member_groups = get_user_meta($current_users_id, self::WA_MEMBER_GROUPS_KEY);
-								self::my_log_file($users_member_groups);
+								// self::my_log_file($users_member_groups);
 								$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
-								self::my_log_file($user_member_level);
+								// self::my_log_file($user_member_level);
 								// Get page's groups and level
 								$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
 								$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
@@ -1247,10 +1250,27 @@ class WAIntegration {
 								$intersect_level = in_array($user_member_level, $page_member_levels);
 								if (empty($intersect_groups) && !$intersect_level) { // the user can't see this page!
 									// Remove this element from the menu
-									wp_delete_post($nav_item_id, true);
+									$user_can_see = false;
 								}
+							} else {
+								// User has not been synced with Wild Apricot; they therefore cannot see this in the menu
+								$user_can_see = false;
 							}
+						} else {
+							// User is not logged in; page should definitely not be shown in menu
+							$user_can_see = false;
 						}
+					}
+					// If user cannot see this menu item, then delete it from the menu
+					self::my_log_file('can user see?');
+					self::my_log_file($user_can_see);
+					if (!$user_can_see) { // Menu item should be hidden
+						//wp_delete_post($nav_item->ID, true);
+						// Hide this element for this user
+						// Make sure that there is not already a hidden style in tag
+
+					} else { // Menu item should be shown
+
 					}
 				}
 			}
