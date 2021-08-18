@@ -869,35 +869,6 @@ class WAIntegration {
 	 * @param int $current_user_id The user's WordPress ID
 	 */
 	public function refresh_user_wa_info() {
-		// Get all user ids of Wild Apricot logged in users
-		// $dataEncryption = new DataEncryption();
-		// Get admin account ID
-		// $admin_account_id = get_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT);
-		// $admin_access_token = get_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT);
-		// Check if transient is expired
-		// Run this user update ONLY if the current access token has expired because it means that
-		// we are not instantly updating the users, but rather updating them over time
-		// if (empty($admin_account_id) || empty($admin_access_token)) {
-		// 	// Get new admin access token
-		// 	$refresh_token = $dataEncryption->decrypt(get_option(self::ADMIN_REFRESH_TOKEN_OPTION));
-        //     $new_response = WAWPApi::get_new_access_token($refresh_token);
-		// 	// Get variables from response
-        //     $new_access_token = $new_response['access_token'];
-        //     $new_expiring_time = $new_response['expires_in'];
-        //     $new_account_id = $new_response['Permissions'][0]['AccountId'];
-		// 	// Get new refresh token
-		// 	$new_refresh_token = $new_response['refresh_token'];
-		// 	update_option(self::ADMIN_REFRESH_TOKEN_OPTION, $dataEncryption->encrypt($new_refresh_token));
-        //     // Set these new values to the transients
-        //     set_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-        //     set_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-        //     // Update values
-        //     $admin_access_token = $new_access_token;
-        //     $admin_account_id = $new_account_id;
-		// } else {
-		// 	$admin_access_token = $dataEncryption->decrypt($admin_access_token);
-		// 	$admin_account_id = $dataEncryption->decrypt($admin_account_id);
-		// }
 		// Create WAWPApi with valid credentials
 		$verified_data = WAWPApi::verify_valid_access_token();
 		$admin_access_token = $verified_data['access_token'];
@@ -905,6 +876,7 @@ class WAIntegration {
 		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
 		// Refresh custom fields first
 		$wawp_api->retrieve_custom_fields();
+		// Get info for all Wild Apricot users
 		$wawp_api->get_all_user_info();
 	}
 

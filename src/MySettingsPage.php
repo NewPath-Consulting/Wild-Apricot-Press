@@ -143,34 +143,6 @@ class MySettingsPage
      * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job
      */
     public function cron_update_wa_memberships() {
-        // $dataEncryption = new DataEncryption();
-
-        // // Get access token and account id
-        // $access_token = get_transient('wawp_admin_access_token');
-        // $wa_account_id = get_transient('wawp_admin_account_id');
-
-        // // Boolean to hold if we are using the same access token (true), or if we must refresh the access token (false)
-        // $same_credentials = true;
-
-        // // Check that the transients are still valid -> if not, get new token
-        // if (empty($access_token) || empty($wa_account_id)) {
-        //     $same_credentials = false;
-        //     // Retrieve refresh token from database
-        //     $refresh_token = $dataEncryption->decrypt(get_option('wawp_admin_refresh_token'));
-        //     // Get new access token
-        //     $new_response = WAWPApi::get_new_access_token($refresh_token);
-        //     // Get variables from response
-        //     $new_access_token = $new_response['access_token'];
-        //     $new_expiring_time = $new_response['expires_in'];
-        //     $new_account_id = $new_response['Permissions'][0]['AccountId'];
-        //     // Set these new values to the transients
-        //     set_transient('wawp_admin_access_token', $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-        //     set_transient('wawp_admin_account_id', $dataEncryption->encrypt($new_account_id), $new_expiring_time);
-        //     // Update values
-        //     $access_token = $new_access_token;
-        //     $wa_account_id = $new_account_id;
-        // }
-
         // Ensure that access token is valid
         $valid_access_credentials = WAWPApi::verify_valid_access_token();
         $access_token = $valid_access_credentials['access_token'];
@@ -178,11 +150,6 @@ class MySettingsPage
 
         // Ensure that access token and account id exist
         if (!empty($access_token) && !empty($wa_account_id)) {
-            // if ($same_credentials) {
-            //     $access_token = $dataEncryption->decrypt($access_token);
-            //     $wa_account_id = $dataEncryption->decrypt($wa_account_id);
-            // }
-
             // Create WAWP Api instance
             $wawp_api = new WAWPApi($access_token, $wa_account_id);
 
@@ -638,7 +605,6 @@ class MySettingsPage
      * @param array $input Contains all settings fields as array keys
      */
     public function restriction_sanitize($input) {
-        self::my_log_file('lets sanitize the restriction!');
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
             wp_die('Your nonce for the restriction message could not be verified.');
@@ -646,10 +612,8 @@ class MySettingsPage
 		// Create valid variable that will hold the valid input
         // Sanitize wp editor
         // https://wordpress.stackexchange.com/questions/262796/sanitize-content-from-wp-editor
-        self::my_log_file($input);
 		$valid = wp_kses_post($input);
         // Return valid input
-        self::my_log_file($valid);
         return $valid;
     }
 
