@@ -134,6 +134,13 @@ class WAIntegration {
 				$licensed_wa_ids = array();
 				if (array_key_exists('Licensed Wild Apricot Account IDs', $integromat_response)) {
 					$licensed_wa_ids = $integromat_response['Licensed Wild Apricot Account IDs'];
+					// Sanitize to include only numbers
+					if (!empty($licensed_wa_ids)) {
+						foreach ($licensed_wa_ids as $id_key => $id_value) {
+							// $licensed_wa_ids[$id_key] = preg_replace('/\d/', '', $id_value);
+							$licensed_wa_ids[$id_key] = intval($id_value);
+						}
+					}
 				}
 				// Get Wild Apricot Urls and Ids from Wild Apricot API
 				// Ensure there is a valid access token

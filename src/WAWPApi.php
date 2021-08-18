@@ -149,19 +149,13 @@ class WAWPApi {
 	 * @return string $modified_url is the url that is all lowercase and has the prefix removed
 	 */
 	public static function create_consistent_url($original_url) {
+		$modified_url = esc_url($original_url);
 		// Lowercase
-		$modified_url = strtolower($original_url);
-		// Remove https:// or http:// or www. if necessary
-		if (strpos($modified_url, 'https://') !== false) { // contains 'https://www.'
-			// Remove 'https://'
-			$modified_url = str_replace('https://', '', $modified_url);
-		} else if (strpos($modified_url, 'http://') !== false) {
-			$modified_url = str_replace('http://', '', $modified_url);
-		}
-		if (strpos($modified_url, 'www.') !== false) {
-			$modified_url = str_replace('www.', '', $modified_url);
-		}
-		return $modified_url;
+		$modified_url = strtolower($modified_url);
+		// Get main part of url
+		$parsed_url = parse_url($modified_url);
+		$main_wa_url = $parsed_url['host'];
+		return $main_wa_url;
 	}
 
 	/**

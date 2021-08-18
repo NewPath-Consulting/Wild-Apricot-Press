@@ -201,6 +201,14 @@ class Addon {
             $licensed_wa_ids = array();
             if (array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
                 $licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
+                // Sanitize ids, if necessary
+                if (!empty($licensed_wa_ids)) {
+                    foreach ($licensed_wa_ids as $id_key => $id_value) {
+                        // Ensure that only numbers are in the ID #
+                        // $licensed_wa_ids[$id_key] = preg_replace('/\d/', '', $id_value);
+                        $licensed_wa_ids[$id_key] = intval($id_value);
+                    }
+                }
             }
             // Compare these licensed urls and ids with the current site's urls/ids
             // Check if Wild Apricot credentials have been entered.

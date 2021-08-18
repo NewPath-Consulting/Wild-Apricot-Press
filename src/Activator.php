@@ -75,6 +75,24 @@ class Activator {
 	}
 
 	public function license_admin_notices() {
+		// Check if valid Wild Apricot credentials have been entered -> if not, output an alert
+		$entered_wa_credentials = get_option('wawp_wal_name');
+		$entered_license_keys = get_option(WAIntegration::WAWP_LICENSES_KEY);
+		if (empty($entered_wa_credentials) || $entered_wa_credentials['wawp_wal_api_key'] == '') {
+			// Wild Apricot has not been configured -> output alert
+			echo "<div class='notice notice-warning'><p>";
+			echo "Please enter your Wild Apricot credentials for <strong>" . $this->plugin_name . "</strong> in ";
+			echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">WAWP > Authorization</a>.";
+			echo "</p></div>";
+		} else if (empty($entered_license_keys)) { // WAWP credentials have been entered but the license key has not
+			echo "<div class='notice notice-warning'><p>";
+			echo "Don't forget to enter the license key for <strong>" . $this->plugin_name . "</strong> in ";
+			echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . ">WAWP > Licensing</a> ";
+			echo "in order to activate the plugin's functionality!";
+			echo "</p></div>";
+		}
+
+		// Check status of license, and instruct the user what to do next
 		$option = get_option($this->license_req_option_name);
 
 		if ($option == 'true') { // if license key is valid
@@ -100,23 +118,6 @@ class Activator {
 		}
 
 		delete_site_option($this->license_req_option_name);
-
-		// Check if valid Wild Apricot credentials have been entered -> if not, output an alert
-		$entered_wa_credentials = get_option('wawp_wal_name');
-		$entered_license_keys = get_option(WAIntegration::WAWP_LICENSES_KEY);
-		if (empty($entered_wa_credentials) || $entered_wa_credentials['wawp_wal_api_key'] == '') {
-			// Wild Apricot has not been configured -> output alert
-			echo "<div class='notice notice-warning'><p>";
-			echo "Please enter your Wild Apricot credentials for <strong>" . $this->plugin_name . "</strong> in ";
-			echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">WAWP > Authorization</a>.";
-			echo "</p></div>";
-		} else if (empty($entered_license_keys)) { // WAWP credentials have been entered but the license key has not
-			echo "<div class='notice notice-warning'><p>";
-			echo "Don't forget to enter the license key for <strong>" . $this->plugin_name . "</strong> in ";
-			echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . ">WA4WP > Licensing</a> ";
-			echo "in order to activate the plugin's functionality!";
-			echo "</p></div>";
-		}
 	}
 
 	public function force_deactivate() {
