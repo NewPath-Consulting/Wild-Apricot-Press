@@ -129,6 +129,7 @@ class MySettingsPage
                 $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
                 remove_role($role_to_remove);
                 // Remove users from this role now that it is deleted
+                // CHECK THAT EDITOR/ADMIN IS NOT DOWNGRADED TO SUBSCRIBER
                 $delete_args = array('role' => $role_to_remove);
                 $users_with_deleted_roles = get_users($delete_args);
                 // Loop through these users and set their roles to subscriber

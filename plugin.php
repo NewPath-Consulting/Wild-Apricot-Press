@@ -1,18 +1,17 @@
 <?php
 
 /**
- * Plugin Name:       Wild Apricot for WordPress (WAWP)
+ * Plugin Name:       Wild Apricot Press (WAWP)
  * Plugin URI:        https://newpathconsulting.com/wawp
  * Description:       Integrates your Wild Apricot account with your WordPress website! Powered by Wild Apricot.
- * Version:           1.0.0
- * Requires at least: 5.3
- * Requires PHP:      5.6
+ * Version:           1.0.0-beta1
+ * Requires at least: 5.0
+ * Requires PHP:      7.4
  * Author:            NewPath Consulting
  * Author URI:        https://newpathconsulting.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       pdev
- * Domain Path:       /public/lang
+ * Text Domain:       wawp
  */
 
 use WAWP\Activator;

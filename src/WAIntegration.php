@@ -1089,7 +1089,8 @@ class WAIntegration {
 			if (!empty($_POST['wawp_login_submit'])) {
 				// Check that nonce is valid
 				if (!wp_verify_nonce(wp_unslash($_POST['wawp_login_nonce_name']), 'wawp_login_nonce_action')) {
-					wp_die('Your nonce for login could not be verified.');
+					// Redirect
+					wp_die('Your login failed.');
 				}
 
 				// Create array to hold the valid input
@@ -1103,13 +1104,14 @@ class WAIntegration {
 				} else { // email is NOT well-formed
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
+					// DEBUG LOG
 					return;
 				}
 
 				// Check password form
 				// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
 				// Any combination of letters, numbers, and characters (except spaces)
-				$password_input = wp_unslash($_POST['wawp_login_password']);
+				$password_input = $_POST['wawp_login_password']; // don't unslash
 				// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
 				if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
 					// Sanitize password
@@ -1214,7 +1216,7 @@ class WAIntegration {
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
 
 			// Check if the user should be able to see restricted pages in their menu
-			// self::my_log_file($args);
+			self::my_log_file($items);
 			$args_menu = $args->menu;
 			$nav_items = wp_get_nav_menu_items($args_menu);
 			self::my_log_file($nav_items);
@@ -1268,7 +1270,10 @@ class WAIntegration {
 						//wp_delete_post($nav_item->ID, true);
 						// Hide this element for this user
 						// Make sure that there is not already a hidden style in tag
+						if (!(strpos() !== false)) { // not already in string
+							// Add in style=display:none
 
+						}
 					} else { // Menu item should be shown
 
 					}
