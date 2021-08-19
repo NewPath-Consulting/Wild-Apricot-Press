@@ -1,6 +1,9 @@
 <?php
 namespace WAWP;
 
+// For iterating through menu HTML
+use DOMDocument;
+
 /**
  * Class for managing the user's Wild Apricot account
  */
@@ -1105,6 +1108,7 @@ class WAIntegration {
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
 					// DEBUG LOG
+					error_log('Invalid email entered on Wild Apricot login!');
 					return;
 				}
 
@@ -1119,6 +1123,7 @@ class WAIntegration {
 				} else { // password is NOT valid
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
+					error_log('Invalid password entered on Wild Apricot login!');
 					return;
 				}
 
@@ -1135,6 +1140,7 @@ class WAIntegration {
 				if (!$login_attempt) {
 					// Present user with log in error
 					add_filter('the_content', array($this, 'add_login_error'));
+					error_log('Failed attempt on Wild Apricot login!');
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
@@ -1219,7 +1225,7 @@ class WAIntegration {
 			self::my_log_file($items);
 			$args_menu = $args->menu;
 			$nav_items = wp_get_nav_menu_items($args_menu);
-			self::my_log_file($nav_items);
+			// self::my_log_file($nav_items);
 			// Loop through each nav item, get the ID, and check if the page is restricted
 			if (!empty($nav_items)) {
 				foreach ($nav_items as $nav_item) {
@@ -1270,10 +1276,20 @@ class WAIntegration {
 						//wp_delete_post($nav_item->ID, true);
 						// Hide this element for this user
 						// Make sure that there is not already a hidden style in tag
-						if (!(strpos() !== false)) { // not already in string
+						// if (!(strpos() !== false)) { // not already in string
 							// Add in style=display:none
-
+							// Iterate through HTML of menu buttons (li elements)
+						$doc_items = new DOMDocument();
+						$doc_items->loadHTML($items);
+						$li_tags = $doc_items->getElementsByTagName('li');
+						if (!empty($li_tags)) {
+							foreach ($li_tags as $li_tag) {
+								self::my_log_file($li_tag);
+								// $li_tags[$li_key] = $li_value->setAttribute('display', 'none');
+							}
 						}
+						self::my_log_file($li_tags);
+						// }
 					} else { // Menu item should be shown
 
 					}
