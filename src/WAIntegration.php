@@ -3,6 +3,7 @@ namespace WAWP;
 
 // For iterating through menu HTML
 use DOMDocument;
+use DOMAttr;
 
 /**
  * Class for managing the user's Wild Apricot account
@@ -1228,6 +1229,7 @@ class WAIntegration {
 			// self::my_log_file($nav_items);
 			// Loop through each nav item, get the ID, and check if the page is restricted
 			if (!empty($nav_items)) {
+				$nav_item_number = 0; // used for keeping track of which navigation item we are looking at
 				foreach ($nav_items as $nav_item) {
 					$user_can_see = true;
 					// Get post id
@@ -1279,20 +1281,55 @@ class WAIntegration {
 						// if (!(strpos() !== false)) { // not already in string
 							// Add in style=display:none
 							// Iterate through HTML of menu buttons (li elements)
+						self::my_log_file('time for li tags!');
 						$doc_items = new DOMDocument();
 						$doc_items->loadHTML($items);
 						$li_tags = $doc_items->getElementsByTagName('li');
+						/*
+						?>
+						<script>
+							var js_data = '<?php echo json_encode($li_tags); ?>';
+							var js_obj_data = JSON.parse(js_data );
+							alert(js_obj_data);
+						</script>
+						<?php
+						*/
+						// Cast to array
+						// $li_tags = (array) $li_tags;
+						// self::my_log_file($li_tags);
 						if (!empty($li_tags)) {
+							$tag_number = 0;
 							foreach ($li_tags as $li_tag) {
-								self::my_log_file($li_tag);
+								// Only run on the current nav number
+								if ($tag_number == $nav_item_number) {
+									self::my_log_file($li_tag); // set attribute here!
+									$li_tag_attributes = $li_tag->attributes;
+									// self::my_log_file($li_tag_attributes); // DOMNamedNodeMap Object
+									// Loop through attributes
+									// DOMElement::setAttribute();
+									if (!empty($li_tag_attributes)) {
+										foreach ($li_tag_attributes as $tag_attribute) { // these are DOMAttr
+											self::my_log_file($tag_attribute);
+											// Check if there is a style attribute
+											// $tag_attribute->setAttribute('style', 'display: none;');
+										}
+									}
+									// $li_tag_attributes->setAttribute('style', 'display: none;');
+									// Add new style attribute
+									$hidden_style_attribute = new DOMAttr('wawp_hide_button', "");
+									// $hidden_style_attribute->name = 'style';
+								}
+								// $li_tag->attributes->style = 'display:none;';
 								// $li_tags[$li_key] = $li_value->setAttribute('display', 'none');
+								$tag_number++;
 							}
 						}
-						self::my_log_file($li_tags);
+						// self::my_log_file($li_tags);
 						// }
 					} else { // Menu item should be shown
 
 					}
+					$nav_item_number++;
 				}
 			}
 			// $numbers[] = get_post_meta( $items->ID, '_menu_item_object_id', true );
