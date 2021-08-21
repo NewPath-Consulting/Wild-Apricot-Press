@@ -1226,7 +1226,14 @@ class WAIntegration {
 			self::my_log_file($items);
 			$args_menu = $args->menu;
 			$nav_items = wp_get_nav_menu_items($args_menu);
-			// self::my_log_file($nav_items);
+
+			// Get li tags from menu
+			$doc_items = new DOMDocument();
+			$doc_items->loadHTML($items); // DOMDocument
+			$li_tags = $doc_items->getElementsByTagName('li'); // DOMNodeList
+
+			// self::my_log_file($nav_items)
+			$returned_html = '';
 			// Loop through each nav item, get the ID, and check if the page is restricted
 			if (!empty($nav_items)) {
 				$nav_item_number = 0; // used for keeping track of which navigation item we are looking at
@@ -1274,64 +1281,104 @@ class WAIntegration {
 					// If user cannot see this menu item, then delete it from the menu
 					self::my_log_file('can user see?');
 					self::my_log_file($user_can_see);
-					if (!$user_can_see) { // Menu item should be hidden
-						//wp_delete_post($nav_item->ID, true);
-						// Hide this element for this user
-						// Make sure that there is not already a hidden style in tag
-						// if (!(strpos() !== false)) { // not already in string
-							// Add in style=display:none
-							// Iterate through HTML of menu buttons (li elements)
-						self::my_log_file('time for li tags!');
-						$doc_items = new DOMDocument();
-						$doc_items->loadHTML($items);
-						$li_tags = $doc_items->getElementsByTagName('li');
-						/*
-						?>
-						<script>
-							var js_data = '<?php echo json_encode($li_tags); ?>';
-							var js_obj_data = JSON.parse(js_data );
-							alert(js_obj_data);
-						</script>
-						<?php
-						*/
-						// Cast to array
-						// $li_tags = (array) $li_tags;
-						// self::my_log_file($li_tags);
-						if (!empty($li_tags)) {
-							$tag_number = 0;
-							foreach ($li_tags as $li_tag) {
-								// Only run on the current nav number
-								if ($tag_number == $nav_item_number) {
-									self::my_log_file($li_tag); // set attribute here!
-									$li_tag_attributes = $li_tag->attributes;
-									// self::my_log_file($li_tag_attributes); // DOMNamedNodeMap Object
-									// Loop through attributes
-									// DOMElement::setAttribute();
-									if (!empty($li_tag_attributes)) {
-										foreach ($li_tag_attributes as $tag_attribute) { // these are DOMAttr
-											self::my_log_file($tag_attribute);
-											// Check if there is a style attribute
-											// $tag_attribute->setAttribute('style', 'display: none;');
-										}
-									}
-									// $li_tag_attributes->setAttribute('style', 'display: none;');
-									// Add new style attribute
-									$hidden_style_attribute = new DOMAttr('wawp_hide_button', "");
-									// $hidden_style_attribute->name = 'style';
-								}
-								// $li_tag->attributes->style = 'display:none;';
-								// $li_tags[$li_key] = $li_value->setAttribute('display', 'none');
-								$tag_number++;
+
+					// Get associated HTML tag for this menu
+					$associated_html = $li_tags->item($nav_item_number);
+					// Add or remove hidden style
+					if ($associated_html->hasAttribute('style')) {
+						self::my_log_file('we have style!');
+						self::my_log_file($associated_html->getAttribute('style'));
+						// Check if style is set to display none
+						if ($associated_html->getAttribute('style') == 'display: none;' || $associated_html->getAttribute('style') == 'display:none;') {
+							// If user can see, then remove this attribute
+							if ($user_can_see) {
+								$associated_html->removeAttribute('style');
 							}
 						}
-						// self::my_log_file($li_tags);
-						// }
-					} else { // Menu item should be shown
-
+					} else {
+						// If user cannot see, then add the display: none
+						self::my_log_file('no style -> lets add the none display');
+						if (!$user_can_see) {
+							$associated_html->setAttribute('style', 'display: none;');
+						}
 					}
+
+					// Iterate through each li node
+					// if (!empty($li_tags)) {
+					// 	$tag_number = 0;
+					// 	foreach ($li_tags as $li_tag) {
+					// 		// Only run on the current nav number
+					// 		if ($tag_number == $nav_item_number) {
+					// 			// self::my_log_file($li_tag); // set attribute here!
+					// 			if ($li_tag->hasAttribute('style')) {
+					// 				// Check if style is set to display none
+					// 				if ($li_tag->getAttribute('style') == 'display: none;' || $li_tag->getAttribute('style') == 'display:none;') {
+					// 					// If user can see, then remove this attribute
+					// 					if ($user_can_see) {
+					// 						$li_tag->removeAttribute('style');
+					// 					}
+					// 				} else {
+					// 					// If user cannot see, then add the display: none
+					// 					if (!$user_can_see) {
+					// 						$li_tag->setAttribute('style', 'display: none;');
+					// 					}
+					// 				}
+					// 			}
+					// 			// if (!$user_can_see) {
+					// 			// 	$li_tag->setAttribute('style', 'display: none;');
+					// 			// } else {
+					// 			// 	$li_tag->removeAttribute('style');
+					// 			// }
+					// 			// $li_tag_attributes = $li_tag->attributes;
+					// 			// self::my_log_file($li_tag_attributes); // DOMNamedNodeMap Object
+					// 			// Loop through attributes
+					// 			// DOMElement::setAttribute();
+					// 			// if (!empty($li_tag_attributes)) {
+					// 			// 	foreach ($li_tag_attributes as $tag_attribute) { // these are DOMAttr
+					// 			// 		self::my_log_file($tag_attribute);
+					// 			// 		// Check if there is a style attribute
+					// 			// 		// $tag_attribute->setAttribute('style', 'display: none;');
+					// 			// 	}
+					// 			// }
+					// 			// $li_tag_attributes->setAttribute('style', 'display: none;');
+					// 			// Add new style attribute
+					// 			// $hidden_style_attribute = new DOMAttr('wawp_hide_button', "");
+					// 			// $hidden_style_attribute->name = 'style';
+					// 		}
+					// 		// $li_tag->attributes->style = 'display:none;';
+					// 		// $li_tags[$li_key] = $li_value->setAttribute('display', 'none');
+					// 		$tag_number++;
+					// 	}
+					// }
+
+					// Get new HTML
+					$returned_html .= $doc_items->saveHTML($doc_items->getElementsByTagName('li')->item($nav_item_number));
+
+					// if (!$user_can_see) { // Menu item should be hidden
+					// 	//wp_delete_post($nav_item->ID, true);
+					// 	// Hide this element for this user
+					// 	// Make sure that there is not already a hidden style in tag
+					// 	// if (!(strpos() !== false)) { // not already in string
+					// 		// Add in style=display:none
+					// 		// Iterate through HTML of menu buttons (li elements)
+					// 	self::my_log_file('menu should be hidden!');
+					// 	// // Get new HTML
+					// 	// $returned_html = '';
+					// 	// for ($i = 0; $i < $doc_items->getElementsByTagName('li')->length; $i++) {
+					// 	// 	$returned_html .= $doc_items->saveHTML($doc_items->getElementsByTagName('li')->item($i));
+					// 	// }
+					// 	// self::my_log_file($returned_html);
+					// 	// $items = $returned_html;
+					// 	// }
+					// } else { // Menu item should be shown
+					// 	// Make sure that style=display:none; is not shown for this menu item
+
+					// }
 					$nav_item_number++;
 				}
 			}
+			self::my_log_file($returned_html);
+			$items = $returned_html;
 			// $numbers[] = get_post_meta( $items->ID, '_menu_item_object_id', true );
 			// self::my_log_file($numbers);
 			// if (!empty($items)) {
