@@ -1222,17 +1222,25 @@ class WAIntegration {
 		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
 
-			// $items = utf8_encode($items);
+			// $items = utf8_decode($items);
 
 			// Check if the user should be able to see restricted pages in their menu
-			self::my_log_file($items);
+			// self::my_log_file($items);
 			$args_menu = $args->menu;
 			$nav_items = wp_get_nav_menu_items($args_menu);
 
 			// Get li tags from menu
-			$doc_items = new DOMDocument();
-			$doc_items->loadHTML($items); // DOMDocument
+			$items = mb_convert_encoding($items, 'HTML-ENTITIES', 'UTF-8');;
+			$doc_items = new DOMDocument('1.0', 'utf-8');
+			libxml_use_internal_errors(true);
+			$doc_items->loadHTML($items, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD); // DOMDocument
+			// $doc_items->encoding = 'utf-8';
+			libxml_clear_errors();
 			$li_tags = $doc_items->getElementsByTagName('li'); // DOMNodeList
+			// Show tags with menu
+			// foreach ($li_tags as $single_li) {
+			// 	self::my_log_file($single_li);
+			// }
 
 			// self::my_log_file($nav_items)
 			$returned_html = '';
@@ -1240,6 +1248,7 @@ class WAIntegration {
 			if (!empty($nav_items)) {
 				$nav_item_number = 0; // used for keeping track of which navigation item we are looking at
 				foreach ($nav_items as $nav_item) {
+					// self::my_log_file($nav_item);
 					$user_can_see = true;
 					// Get post id
 					$nav_item_id = $nav_item->object_id;
@@ -1298,12 +1307,14 @@ class WAIntegration {
 					}
 
 					// Get new HTML
-					$returned_html .= $doc_items->saveHTML($doc_items->getElementsByTagName('li')->item($nav_item_number));
+					// $returned_html .= $doc_items->saveHTML($doc_items->getElementsByTagName('li')->item($nav_item_number));
 					// Increment navigation item number
 					$nav_item_number++;
 				}
 			}
-			$returned_html = utf8_decode($returned_html);
+			// $returned_html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+			$returned_html .= $doc_items->saveHTML();
+			// $returned_html = utf8_encode($returned_html);
 			self::my_log_file($returned_html);
 			$items = $returned_html;
 
