@@ -1222,6 +1222,8 @@ class WAIntegration {
 		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
 
+			// $items = utf8_encode($items);
+
 			// Check if the user should be able to see restricted pages in their menu
 			self::my_log_file($items);
 			$args_menu = $args->menu;
@@ -1301,6 +1303,8 @@ class WAIntegration {
 					$nav_item_number++;
 				}
 			}
+			$returned_html = utf8_decode($returned_html);
+			self::my_log_file($returned_html);
 			$items = $returned_html;
 
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
