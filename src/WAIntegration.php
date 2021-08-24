@@ -1265,16 +1265,23 @@ class WAIntegration {
 								// Now, check if the current user is allowed to see this page
 								// Get user's groups and level
 								$users_member_groups = get_user_meta($current_users_id, self::WA_MEMBER_GROUPS_KEY);
-								// self::my_log_file($users_member_groups);
+								self::my_log_file('user values: ');
+								self::my_log_file($users_member_groups);
 								$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
-								// self::my_log_file($user_member_level);
+								self::my_log_file($user_member_level);
 								// Get page's groups and level
 								$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
+								// Unserialize
+								$page_member_groups = maybe_unserialize($page_member_groups[0]);
+								self::my_log_file('page values: ');
+								self::my_log_file($page_member_groups);
 								$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
+								$page_member_levels = maybe_unserialize($page_member_levels[0]);
+								self::my_log_file($page_member_levels);
 								// Check if user's groups/level overlap with the page's groups/level
-								$intersect_groups = array_intersect($users_member_groups, $page_member_groups);
-								$intersect_level = in_array($user_member_level, $page_member_levels);
-								if (empty($intersect_groups) && !$intersect_level) { // the user can't see this page!
+								$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
+								$intersect_level = array_intersect($user_member_level, $page_member_levels);
+								if (empty($intersect_groups) && empty($intersect_level)) { // the user can't see this page!
 									// Remove this element from the menu
 									$user_can_see = false;
 								}
@@ -1291,20 +1298,30 @@ class WAIntegration {
 					// Get associated HTML tag for this menu
 					$associated_html = $li_tags->item($nav_item_number);
 					// Add or remove hidden style
-					if ($associated_html->hasAttribute('style')) {
-						// Check if style is set to display none
-						if ($associated_html->getAttribute('style') == 'display: none;' || $associated_html->getAttribute('style') == 'display:none;') {
-							// If user can see, then remove this attribute
-							if ($user_can_see) {
-								$associated_html->removeAttribute('style');
-							}
-						}
+					// if ($associated_html->hasAttribute('style')) {
+					// 	// Check if style is set to display none
+					// 	if ($associated_html->getAttribute('style') == 'display: none;' || $associated_html->getAttribute('style') == 'display:none;') {
+					// 		// If user can see, then remove this attribute
+					// 		if ($user_can_see) {
+					// 			self::my_log_file('lets remove the display style!');
+					// 			$associated_html->removeAttribute('style');
+					// 		}
+					// 	}
+					// } else {
+					// 	self::my_log_file('html does NOT have style!');
+					// 	// If user cannot see, then add the display: none
+					// 	if (!$user_can_see) {
+					// 		$associated_html->setAttribute('style', 'display: none;');
+					// 	}
+					// }
+					self::my_log_file('can user see?');
+					self::my_log_file($user_can_see);
+					if ($user_can_see) {
+						$associated_html->removeAttribute('style');
 					} else {
-						// If user cannot see, then add the display: none
-						if (!$user_can_see) {
-							$associated_html->setAttribute('style', 'display: none;');
-						}
+						$associated_html->setAttribute('style', 'display: none;');
 					}
+					// $li_tags->item($nav_item_number) = $associated_html;
 
 					// Get new HTML
 					// $returned_html .= $doc_items->saveHTML($doc_items->getElementsByTagName('li')->item($nav_item_number));
@@ -1315,7 +1332,7 @@ class WAIntegration {
 			// $returned_html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
 			$returned_html .= $doc_items->saveHTML();
 			// $returned_html = utf8_encode($returned_html);
-			self::my_log_file($returned_html);
+			// self::my_log_file($returned_html);
 			$items = $returned_html;
 
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
