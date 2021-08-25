@@ -1,8 +1,8 @@
 Wild Apricot for WordPress (WAWP) Documentation
 
-Version 1.0 - September 1, 2021
+Version 1.0b1 - September 1, 2021
 
-# WordPress Administrator's Guide
+# Administrator's Guide
 
 ## Installing and Configuring the WAWP Plugin
 
@@ -27,6 +27,8 @@ After entering these credentials and pressing "Save Changes", you will see a gre
 Below, you can specify which menu(s) you would like to add the login/logout button to by selecting the checkboxes.
 
 <img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://user-images.githubusercontent.com/8737691/129612544-ff19e86c-5395-4bc4-b82b-a1fa914f4057.png">
+
+### Licensing WAWP
 
 Finally, please enter your WAWP license key to enable the WAWP plugin's functionality! This can be done on the "Licensing" page, found under WAWP Settings > Licensing.
 
