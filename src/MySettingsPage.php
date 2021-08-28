@@ -7,13 +7,6 @@ use WAWP\Addon;
 
 use function PHPSTORM_META\map;
 
-// Include css file
-/*?>
-<style>
-<?php include 'CSS/main.css'; ?>
-</style>
-<?php*/
-
 class MySettingsPage
 {
     const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
@@ -105,7 +98,6 @@ class MySettingsPage
                 }
             }
         }
-        // Check if restricted levels and groups are now empty -> post will not be restricted
     }
 
     /**
@@ -1064,7 +1056,7 @@ class MySettingsPage
      * Print description of the plugin options
      */
     public function print_delete_info() {
-        print 'By default, upon deletion of the WAP plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the WAP plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the WAP plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
+        print 'By default, upon deletion of the <b>Wild Apricot Press</b> plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the <b>Wild Apricot Press</b> plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>Wild Apricot Press</b> plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
     }
 
     /**
@@ -1109,7 +1101,7 @@ class MySettingsPage
      */
     public function license_print_info() {
         $link_address = "https://newpathconsulting.com/wap/";
-        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for WAP is 100% free, and we never share your information with any third party!";
+        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for <b>Wild Apricot Press</b> is 100% free, and we never share your information with any third party!";
     }
 
     /**

@@ -56,6 +56,8 @@ class WAWPApi {
 		$data = json_decode($body, true);
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
+			// LOG ERROR
+			error_log('There was an error with the Wild Apricot API! Please try again!');
 			// Update successful login as false
 			return false;
 		}
