@@ -185,19 +185,6 @@ class MySettingsPage
         }
     }
 
-    // Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
-
     /**
      * Add options page
      */
@@ -205,13 +192,22 @@ class MySettingsPage
     {
         // Create WAWP admin page
         add_menu_page(
-            'WAWP Settings',
-            'WAWP Settings',
+            'Wild Apricot Press',
+            'Wild Apricot Press',
             'manage_options',
             'wawp-wal-admin',
             array( $this, 'create_admin_page' ),
 			'dashicons-businesswoman',
 			6
+        );
+
+        // Sub-menu for settings
+        add_submenu_page(
+            'wawp-wal-admin',
+            'Settings',
+            'Settings',
+            'manage_options',
+            'wawp-wal-admin'
         );
 
 		// Create Login sub-menu under WAWP
@@ -402,7 +398,7 @@ class MySettingsPage
         } else { // no custom fields
             $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
             ?>
-            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">WAWP Settings -> Authorization</a></p>
+            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">WAP Settings -> Authorization</a></p>
             <?php
         }
     }
@@ -737,11 +733,11 @@ class MySettingsPage
         // Render the WAWP license form
         add_settings_field(
             'wawp_license_form', // ID
-            'Wild Apricot for WordPress', // title
+            'Wild Apricot Press', // title
             array($this, 'license_key_input'), // callback
             'wawp_licensing', // page
             'wawp_license', // section
-            array('slug' => 'wawp', 'title' => 'Wild Apricot for Wordpress') // args for callback
+            array('slug' => 'wawp', 'title' => 'Wild Apricot Press') // args for callback
         );
 
         // For each addon installed, render a license key form
@@ -1068,7 +1064,7 @@ class MySettingsPage
      * Print description of the plugin options
      */
     public function print_delete_info() {
-        print 'By default, upon deletion of the WAWP plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the WAWP plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the WAWP plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
+        print 'By default, upon deletion of the WAP plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the WAP plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the WAP plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
     }
 
     /**
@@ -1112,8 +1108,8 @@ class MySettingsPage
      * Print the licensing settings section text
      */
     public function license_print_info() {
-        $link_address = "https://newpathconsulting.com/wawp/";
-        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for WAWP is 100% free, and we never share your information with any third party!";
+        $link_address = "https://newpathconsulting.com/wap/";
+        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for WAP is 100% free, and we never share your information with any third party!";
     }
 
     /**
@@ -1127,7 +1123,6 @@ class MySettingsPage
 		// Check if api key has been set; if so, echo that the client secret has been set!
 		if (isset($this->options['wawp_wal_api_key']) && $this->options['wawp_wal_api_key'] != '') {
 			echo "<p>API Key is set!</p>";
-            //TODO say which WA account this is (not needed but would be nice)
 		}
     }
 

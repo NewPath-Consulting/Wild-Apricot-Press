@@ -12,9 +12,6 @@ class WAIntegration {
 	// Constants for keys used for database management
 	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
 	const WAWP_LICENSES_KEY = 'wawp_license_keys';
-	// const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
-	// const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
-	// const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
@@ -35,7 +32,7 @@ class WAIntegration {
 	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
 	const MENU_LOCATIONS_KEY = 'wawp_menu_location_name';
 	const WA_URL_KEY = 'wawp_wa_url_key';
-	// Hooks
+	// Custom hooks
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 	const LICENSE_CHECK_HOOK = 'wawp_cron_refresh_license_check';
 
@@ -72,12 +69,9 @@ class WAIntegration {
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
-		// Action for when the custom fields are saved to refresh the users
-		// add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
-		$page_hook = 'settings_page_wawp';
 		add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
 		// Action for Cron job that refreshes the license check
 		add_action(self::LICENSE_CHECK_HOOK, array($this, 'check_updated_credentials'));
@@ -87,19 +81,6 @@ class WAIntegration {
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
 		require_once('Addon.php');
-	}
-
-	// Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
 	}
 
 	/**
@@ -263,16 +244,7 @@ class WAIntegration {
 			// Add page id to options so that it can be removed on deactivation
 			update_option('wawp_wal_page_id', $page_id);
 		}
-
-		// Add the "Your Profile" page
-
-
-		// Remove from header if it is automatically added
-
-		//commented out because this isn't ever used? be aware it is an array now
-		//$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
-
-
+		// Remove new login page from menu
 		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
 		// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
 		$page_id = get_option('wawp_wal_page_id');
@@ -328,10 +300,6 @@ class WAIntegration {
 		// Return login url
 		return $login_url;
 	}
-
-	/**
-	 * Disables the WAWP functionality of the plugin if invalid credentials are found
-	 */
 
 	/**
 	 * Determines whether or not to restrict the post to the current user based on the user's levels/groups and the post's list of restricted levels/groups
@@ -573,7 +541,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WAWP Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WAP Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
@@ -1117,7 +1085,7 @@ class WAIntegration {
 				// Check password form
 				// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
 				// Any combination of letters, numbers, and characters (except spaces)
-				$password_input = $_POST['wawp_login_password']; // don't unslash
+				$password_input = $_POST['wawp_login_password']; // TODO: sanitize?
 				// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
 				if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
 					// Sanitize password

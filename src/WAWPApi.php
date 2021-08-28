@@ -5,6 +5,7 @@ class WAWPApi {
 	// Constants
 	const ADMIN_API_VERSION = 'v2.2';
 	const MEMBER_API_VERSION = 'v1';
+	const WAWP_USER_AGENT = 'WildApricotPress/1.0';
 
 	// Class variables
     private $access_token;
@@ -36,19 +37,6 @@ class WAWPApi {
 			wp_unschedule_event($timestamp, $cron_hook_name, $args);
 		}
     }
-
-	// Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
 
 	/**
 	 * Converts the API response to the body in which data can be extracted
@@ -106,7 +94,7 @@ class WAWPApi {
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $this->access_token,
 				'Accept' => 'application/json',
-				'User-Agent' => 'WildApricotForWordPress/1.0' // ABSTRACT THIS
+				'User-Agent' => self::WAWP_USER_AGENT
 			),
 		);
         return $args;
