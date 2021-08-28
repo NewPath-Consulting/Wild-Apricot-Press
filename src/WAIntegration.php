@@ -192,7 +192,8 @@ class WAIntegration {
 			$wild_apricot_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
 			if (!empty($wild_apricot_id)) {
 				// User is still logged into Wild Apricot
-				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, go back to your website, and ensure that you are logged out of your Wild Apricot account by clicking "Log Out" in your site\'s menu! Then, you will be able to log into your WordPress administrator account!';
+				$logout_link = esc_url(wp_logout_url(esc_url(site_url())));
+				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, ensure that you are logged out of your Wild Apricot account by clicking <a href="'.$logout_link.'">Log Out</a>.';
 			}
 		}
 	}
@@ -1265,9 +1266,11 @@ class WAIntegration {
 								// Now, check if the current user is allowed to see this page
 								// Get user's groups and level
 								$users_member_groups = get_user_meta($current_users_id, self::WA_MEMBER_GROUPS_KEY);
+								$users_member_groups = maybe_unserialize($users_member_groups[0]);
 								self::my_log_file('user values: ');
 								self::my_log_file($users_member_groups);
 								$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
+								$user_member_level = $user_member_level[0];
 								self::my_log_file($user_member_level);
 								// Get page's groups and level
 								$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
@@ -1280,8 +1283,8 @@ class WAIntegration {
 								self::my_log_file($page_member_levels);
 								// Check if user's groups/level overlap with the page's groups/level
 								$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
-								$intersect_level = array_intersect($user_member_level, $page_member_levels);
-								if (empty($intersect_groups) && empty($intersect_level)) { // the user can't see this page!
+								$intersect_level = in_array($user_member_level, $page_member_levels);
+								if (empty($intersect_groups) && !$intersect_level) { // the user can't see this page!
 									// Remove this element from the menu
 									$user_can_see = false;
 								}
