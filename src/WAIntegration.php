@@ -1,6 +1,10 @@
 <?php
 namespace WAWP;
 
+// For iterating through menu HTML
+use DOMDocument;
+use DOMAttr;
+
 /**
  * Class for managing the user's Wild Apricot account
  */
@@ -8,9 +12,6 @@ class WAIntegration {
 	// Constants for keys used for database management
 	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
 	const WAWP_LICENSES_KEY = 'wawp_license_keys';
-	// const ACCESS_TOKEN_META_KEY = 'wawp_wa_access_token';
-	// const REFRESH_TOKEN_META_KEY = 'wawp_wa_refresh_token';
-	// const TIME_TO_REFRESH_TOKEN = 'wawp_time_to_refresh_token';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
@@ -31,7 +32,7 @@ class WAIntegration {
 	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
 	const MENU_LOCATIONS_KEY = 'wawp_menu_location_name';
 	const WA_URL_KEY = 'wawp_wa_url_key';
-	// Hooks
+	// Custom hooks
 	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
 	const LICENSE_CHECK_HOOK = 'wawp_cron_refresh_license_check';
 
@@ -68,12 +69,9 @@ class WAIntegration {
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
-		// Action for when the custom fields are saved to refresh the users
-		// add_action('update_option_' . self::LIST_OF_CHECKED_FIELDS, array($this, 'refresh_user_wa_info'));
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
-		$page_hook = 'settings_page_wawp';
 		add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
 		// Action for Cron job that refreshes the license check
 		add_action(self::LICENSE_CHECK_HOOK, array($this, 'check_updated_credentials'));
@@ -83,19 +81,6 @@ class WAIntegration {
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
 		require_once('Addon.php');
-	}
-
-	// Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
 	}
 
 	/**
@@ -188,7 +173,8 @@ class WAIntegration {
 			$wild_apricot_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
 			if (!empty($wild_apricot_id)) {
 				// User is still logged into Wild Apricot
-				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, go back to your website, and ensure that you are logged out of your Wild Apricot account by clicking "Log Out" in your site\'s menu! Then, you will be able to log into your WordPress administrator account!';
+				$logout_link = esc_url(wp_logout_url(esc_url(site_url())));
+				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, ensure that you are logged out of your Wild Apricot account by clicking <a href="'.$logout_link.'">Log Out</a>.';
 			}
 		}
 	}
@@ -258,16 +244,7 @@ class WAIntegration {
 			// Add page id to options so that it can be removed on deactivation
 			update_option('wawp_wal_page_id', $page_id);
 		}
-
-		// Add the "Your Profile" page
-
-
-		// Remove from header if it is automatically added
-
-		//commented out because this isn't ever used? be aware it is an array now
-		//$menu_with_button = get_option('wawp_wal_name')['wawp_wal_login_logout_button']; // get this from settings
-
-
+		// Remove new login page from menu
 		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
 		// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
 		$page_id = get_option('wawp_wal_page_id');
@@ -323,10 +300,6 @@ class WAIntegration {
 		// Return login url
 		return $login_url;
 	}
-
-	/**
-	 * Disables the WAWP functionality of the plugin if invalid credentials are found
-	 */
 
 	/**
 	 * Determines whether or not to restrict the post to the current user based on the user's levels/groups and the post's list of restricted levels/groups
@@ -568,7 +541,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WAWP Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WAP Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
@@ -1019,13 +992,6 @@ class WAIntegration {
 
 		// Add access token and secret token to user's metadata
 		$dataEncryption = new DataEncryption();
-		// update_user_meta($current_wp_user_id, WAIntegration::ACCESS_TOKEN_META_KEY, $dataEncryption->encrypt($access_token));
-		// update_user_meta($current_wp_user_id, WAIntegration::REFRESH_TOKEN_META_KEY, $dataEncryption->encrypt($refresh_token));
-		// Store time that access token expires
-		// $new_time_to_save = time() + $time_remaining_to_refresh;
-		// update_user_meta($current_wp_user_id, WAIntegration::TIME_TO_REFRESH_TOKEN, $new_time_to_save);
-		// Add Wild Apricot id to user's metadata
-		// update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wa_user_id);
 		// Add Wild Apricot membership level to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
@@ -1089,7 +1055,8 @@ class WAIntegration {
 			if (!empty($_POST['wawp_login_submit'])) {
 				// Check that nonce is valid
 				if (!wp_verify_nonce(wp_unslash($_POST['wawp_login_nonce_name']), 'wawp_login_nonce_action')) {
-					wp_die('Your nonce for login could not be verified.');
+					// Redirect
+					wp_die('Your login failed.');
 				}
 
 				// Create array to hold the valid input
@@ -1103,13 +1070,15 @@ class WAIntegration {
 				} else { // email is NOT well-formed
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
+					// DEBUG LOG
+					error_log('Invalid email entered on Wild Apricot login!');
 					return;
 				}
 
 				// Check password form
 				// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
 				// Any combination of letters, numbers, and characters (except spaces)
-				$password_input = wp_unslash($_POST['wawp_login_password']);
+				$password_input = $_POST['wawp_login_password']; // TODO: sanitize?
 				// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
 				if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
 					// Sanitize password
@@ -1117,6 +1086,7 @@ class WAIntegration {
 				} else { // password is NOT valid
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
+					error_log('Invalid password entered on Wild Apricot login!');
 					return;
 				}
 
@@ -1133,6 +1103,7 @@ class WAIntegration {
 				if (!$login_attempt) {
 					// Present user with log in error
 					add_filter('the_content', array($this, 'add_login_error'));
+					error_log('Failed attempt on Wild Apricot login!');
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
@@ -1164,8 +1135,6 @@ class WAIntegration {
 	 * @return string Holds the HTML content of the form
 	 */
 	public function custom_login_form_shortcode() {
-		// Load CSS
-		// wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
 		// Get Wild Apricot URL
 		$wild_apricot_url = get_option(self::WA_URL_KEY);
 		if ($wild_apricot_url) {
@@ -1212,19 +1181,81 @@ class WAIntegration {
 		$wa_credentials_saved = get_option(self::WA_CREDENTIALS_KEY);
 		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
+			// Get navigation items
+			$args_menu = $args->menu;
+			$nav_items = wp_get_nav_menu_items($args_menu);
 
-			// Check if user is logged into Wild Apricot to see the page navigation
-			// TODO: Do we want this?
-			// if (is_user_logged_in()) {
-			// 	$current_user = wp_get_current_user();
-			// 	$user_id = $current_user->ID;
-			// 	$wa_user_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
-			// 	if (!empty($wa_user_id)) {
-			// 		$profile_page_url = esc_url(site_url() . '/index.php?pagename=wild-apricot-iframe-widget');
-			// 		// This means that the user is logged into Wild Apricot
-			// 		$items .= '<li id="wawp_profile_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $profile_page_url .'">Your Profile</a></li>';
-			// 	}
-			// }
+			// Get li tags from menu
+			$items = mb_convert_encoding($items, 'HTML-ENTITIES', 'UTF-8');;
+			$doc_items = new DOMDocument('1.0', 'utf-8');
+			libxml_use_internal_errors(true);
+			$doc_items->loadHTML($items, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD); // DOMDocument
+			libxml_clear_errors();
+			$li_tags = $doc_items->getElementsByTagName('li'); // DOMNodeList
+
+			$returned_html = '';
+			// Loop through each nav item, get the ID, and check if the page is restricted
+			if (!empty($nav_items)) {
+				$nav_item_number = 0; // used for keeping track of which navigation item we are looking at
+				foreach ($nav_items as $nav_item) {
+					$user_can_see = true;
+					// Get post id
+					$nav_item_id = $nav_item->object_id;
+					// Check if this post is restricted
+					$nav_item_is_restricted = get_post_meta($nav_item_id, self::IS_POST_RESTRICTED);
+					// If post is restricted, then check if the current has access to it
+					if (!empty($nav_item_is_restricted) && $nav_item_is_restricted[0]) {
+						if (is_user_logged_in()) { // user is logged in
+							// Check that user is synced with Wild Apricot
+							$current_users_id = get_current_user_id();
+							$users_wa_id = get_user_meta($current_users_id, self::WA_USER_ID_KEY);
+							// Check if user ID actually exists
+							if (!empty($users_wa_id) && $users_wa_id != '') { // User has been synced with Wild Apricot
+								// Now, check if the current user is allowed to see this page
+								// Get user's groups and level
+								$users_member_groups = get_user_meta($current_users_id, self::WA_MEMBER_GROUPS_KEY);
+								$users_member_groups = maybe_unserialize($users_member_groups[0]);
+								$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
+								$user_member_level = $user_member_level[0];
+								// Get page's groups and level
+								$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
+								// Unserialize if necessary
+								$page_member_groups = maybe_unserialize($page_member_groups[0]);
+								$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
+								$page_member_levels = maybe_unserialize($page_member_levels[0]);
+								// Check if user's groups/level overlap with the page's groups/level
+								$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
+								$intersect_level = in_array($user_member_level, $page_member_levels);
+								if (empty($intersect_groups) && !$intersect_level) { // the user can't see this page!
+									// Remove this element from the menu
+									$user_can_see = false;
+								}
+							} else {
+								// User has not been synced with Wild Apricot; they therefore cannot see this in the menu
+								$user_can_see = false;
+							}
+						} else {
+							// User is not logged in; page should definitely not be shown in menu
+							$user_can_see = false;
+						}
+					}
+
+					// Get associated HTML tag for this menu
+					$associated_html = $li_tags->item($nav_item_number);
+					// Add or remove hidden style
+					if ($user_can_see) {
+						$associated_html->removeAttribute('style');
+					} else {
+						$associated_html->setAttribute('style', 'display: none;');
+					}
+
+					// Increment navigation item number
+					$nav_item_number++;
+				}
+			}
+			// Get html to return
+			$returned_html .= $doc_items->saveHTML();
+			$items = $returned_html;
 
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
 			// Get current page id

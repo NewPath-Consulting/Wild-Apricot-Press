@@ -24,7 +24,6 @@ delete_option('wawp_wal_page_id');
 delete_option('wawp_license_form_nonce');
 delete_option('wawp_all_levels_key');
 delete_option('wawp_all_groups_key');
-// delete_option('wawp_wa_credentials_valid');
 delete_option('wawp_restriction_name');
 delete_option('wawp_restriction_status_name');
 delete_option('wawp_list_of_custom_fields');
@@ -54,19 +53,6 @@ delete_transient('wawp_admin_access_token');
 delete_transient('wawp_admin_account_id');
 
 Addon::instance()::delete();
-
-// Debugging
-function my_log_file( $msg, $name = '' )
-{
-	// Print the name of the calling function if $name is left empty
-	$trace=debug_backtrace();
-	$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-	$error_dir = '/Applications/MAMP/logs/php_error.log';
-	$msg = print_r( $msg, true );
-	$log = $name . "  |  " . $msg . "\n";
-	error_log( $log, 3, $error_dir );
-}
 
 // Get plugin deletion options and check if users and/or roles should be deleted
 $wawp_delete_options = get_option('wawp_delete_name');

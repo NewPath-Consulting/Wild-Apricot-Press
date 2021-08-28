@@ -7,13 +7,6 @@ use WAWP\Addon;
 
 use function PHPSTORM_META\map;
 
-// Include css file
-/*?>
-<style>
-<?php include 'CSS/main.css'; ?>
-</style>
-<?php*/
-
 class MySettingsPage
 {
     const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
@@ -105,7 +98,6 @@ class MySettingsPage
                 }
             }
         }
-        // Check if restricted levels and groups are now empty -> post will not be restricted
     }
 
     /**
@@ -129,6 +121,7 @@ class MySettingsPage
                 $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
                 remove_role($role_to_remove);
                 // Remove users from this role now that it is deleted
+                // CHECK THAT EDITOR/ADMIN IS NOT DOWNGRADED TO SUBSCRIBER
                 $delete_args = array('role' => $role_to_remove);
                 $users_with_deleted_roles = get_users($delete_args);
                 // Loop through these users and set their roles to subscriber
@@ -184,19 +177,6 @@ class MySettingsPage
         }
     }
 
-    // Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
-
     /**
      * Add options page
      */
@@ -204,13 +184,22 @@ class MySettingsPage
     {
         // Create WAWP admin page
         add_menu_page(
-            'WAWP Settings',
-            'WAWP Settings',
+            'Wild Apricot Press',
+            'Wild Apricot Press',
             'manage_options',
             'wawp-wal-admin',
             array( $this, 'create_admin_page' ),
 			'dashicons-businesswoman',
 			6
+        );
+
+        // Sub-menu for settings
+        add_submenu_page(
+            'wawp-wal-admin',
+            'Settings',
+            'Settings',
+            'manage_options',
+            'wawp-wal-admin'
         );
 
 		// Create Login sub-menu under WAWP
@@ -281,7 +270,6 @@ class MySettingsPage
                         <?php
                         break;
                     default:
-                        // echo 'Default tab';
                         ?>
                         <!-- Form for Restriction Status(es) -->
                         <form method="post" action="options.php">
@@ -290,7 +278,6 @@ class MySettingsPage
                             wp_nonce_field('wawp_restriction_status_nonce_action', 'wawp_restriction_status_nonce_name');
                             // This prints out all hidden setting fields
                             settings_fields('wawp_restriction_status_group');
-                            // settings_fields( 'wawp_restriction_group' );
                             do_settings_sections( 'wawp-wal-admin' );
                             submit_button();
                         ?>
@@ -302,7 +289,6 @@ class MySettingsPage
                             wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
                             // This prints out all hidden setting fields
                             settings_fields('wawp_restriction_group');
-                            // settings_fields( 'wawp_restriction_group' );
                             do_settings_sections( 'wawp-wal-admin-message' );
                             submit_button();
                         ?>
@@ -311,7 +297,6 @@ class MySettingsPage
                         break;
                     endswitch; ?>
             </div>
-
         </div>
         <?php
     }
@@ -401,7 +386,7 @@ class MySettingsPage
         } else { // no custom fields
             $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
             ?>
-            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">WAWP Settings -> Authorization</a></p>
+            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">WAP Settings -> Authorization</a></p>
             <?php
         }
     }
@@ -424,6 +409,8 @@ class MySettingsPage
 
 	/**
 	 * Login page callback
+     *
+     * Creates the content for the Wild Apricot login page, including instructions
 	 */
 	public function create_login_page() {
 		$this->options = get_option( 'wawp_wal_name' );
@@ -501,8 +488,7 @@ class MySettingsPage
                         // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
-                            // Save that wawp credentials are not fully activated
-                            // update_option('wawp_wa_credentials_valid', false);
+                            // Set Wild Apricot login to private
                             do_action('wawp_wal_set_login_private');
 						} else { // successful login
                             // Get Wild Apricot URL
@@ -513,10 +499,6 @@ class MySettingsPage
                             }
 							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
                             echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
-                            // Save that wawp credentials have been fully activated
-                            // update_option('wawp_wa_credentials_valid', true);
-                            // Implement hook here to tell Wild Apricot to connect to these credentials
-                            // do_action('wawp_wal_credentials_obtained');
 						}
 					?>
                     <!-- Menu Locations for Login/Logout button -->
@@ -622,7 +604,6 @@ class MySettingsPage
      */
     public function page_init()
     {
-
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'wal_sanitize'),
@@ -670,16 +651,6 @@ class MySettingsPage
             'wawp-login', // Page
             'wawp_wal_id' // Section
         );
-
-        // // Settings for Menu to add Login/Logout button
-        // add_settings_field(
-        //     'wawp_wal_login_logout_button', // ID
-        //     'Menu Location(s):', // Title
-        //     array( $this, 'login_logout_menu_callback' ), // Callback
-        //     'wawp-login', // Page // Possibly put somewhere else
-        //     'wawp_wal_id' // Section
-
-        // );
 
         // ---------------------------- Login/Logout button location ------------------------------
         $register_args = array(
@@ -736,11 +707,11 @@ class MySettingsPage
         // Render the WAWP license form
         add_settings_field(
             'wawp_license_form', // ID
-            'Wild Apricot for WordPress', // title
+            'Wild Apricot Press', // title
             array($this, 'license_key_input'), // callback
             'wawp_licensing', // page
             'wawp_license', // section
-            array('slug' => 'wawp', 'title' => 'Wild Apricot for Wordpress') // args for callback
+            array('slug' => 'wawp', 'title' => 'Wild Apricot Press') // args for callback
         );
 
         // For each addon installed, render a license key form
@@ -870,7 +841,7 @@ class MySettingsPage
     }
 
     /**
-	 * Setups up CRON job
+	 * Set-up CRON job for updating membership levels and groups
 	 */
 	public static function setup_cron_job() {
         //If $timestamp === false schedule the event since it hasn't been done previously
@@ -928,7 +899,7 @@ class MySettingsPage
     public function plugin_options_sanitize($input) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_delete_nonce_name'], 'wawp_delete_nonce_action')) {
-            wp_die('Your nonce could not be verified.');
+            wp_die('Your plugin options could not be verified.');
         }
         $valid = array();
         // Loop through input array and sanitize each value
@@ -950,7 +921,7 @@ class MySettingsPage
     {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_credentials_nonce_name'], 'wawp_credentials_nonce_action')) {
-            wp_die('Your nonce could not be verified.');
+            wp_die('Your Wild Apricot credentials could not be verified.');
         }
 		// Create valid array that will hold the valid input
 		$valid = array();
@@ -1052,10 +1023,6 @@ class MySettingsPage
             self::setup_cron_job();
         }
 
-        // Sanitize menu dropdown
-        //sanatize array https://wordpress.stackexchange.com/questions/24736/wordpress-sanitize-array
-        // $valid['wawp_wal_login_logout_button'] = array_map('esc_attr', $input['wawp_wal_login_logout_button']);
-
         // Delete all licenses because they are invalid now and user must insert them again
         delete_option(WAIntegration::WAWP_LICENSES_KEY);
 
@@ -1067,7 +1034,7 @@ class MySettingsPage
      * Print description of the plugin options
      */
     public function print_delete_info() {
-        print 'By default, upon deletion of the WAWP plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the WAWP plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the WAWP plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
+        print 'By default, upon deletion of the <b>Wild Apricot Press</b> plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the <b>Wild Apricot Press</b> plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>Wild Apricot Press</b> plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
     }
 
     /**
@@ -1086,7 +1053,7 @@ class MySettingsPage
     }
 
     /**
-     * Print the Restriction text
+     * Print the Global Restriction description
      */
     public function print_restriction_info() {
         print 'The "Global Restriction Message" is the message that is shown to users who are not members of the Wild Apricot membership level(s) or group(s) required to access a restricted post. Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
@@ -1100,7 +1067,7 @@ class MySettingsPage
     }
 
     /**
-     * Print the Section text
+     * Print the instructions text for entering your Wild Apricot credentials
      */
     public function wal_print_section_info()
     {
@@ -1111,31 +1078,28 @@ class MySettingsPage
      * Print the licensing settings section text
      */
     public function license_print_info() {
-        $link_address = "https://newpathconsulting.com/wawp/";
-        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for WAWP is 100% free, and we never share your information with any third party!";
+        $link_address = "https://newpathconsulting.com/wap/";
+        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for <b>Wild Apricot Press</b> is 100% free, and we never share your information with any third party!";
     }
 
     /**
-     * Get the api key
+     * Display text field for API key
      */
     public function api_key_callback()
     {
-        // Display the text field for api key
 		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
 			type='text' placeholder='*************' />";
 		// Check if api key has been set; if so, echo that the client secret has been set!
 		if (isset($this->options['wawp_wal_api_key']) && $this->options['wawp_wal_api_key'] != '') {
 			echo "<p>API Key is set!</p>";
-            //TODO say which WA account this is (not needed but would be nice)
 		}
     }
 
     /**
-     * Get the client id
+     * Display text field for Client ID
      */
     public function client_id_callback()
     {
-        // Display text field for client id
 		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
 			type='text' placeholder='*************' />";
 		// Check if client id has been set; if so, echo that the client secret has been set!
@@ -1145,11 +1109,10 @@ class MySettingsPage
     }
 
 	/**
-     * Get the client secret
+     * Display text field for Client Secret
      */
     public function client_secret_callback()
     {
-		// Display text field for client secret
 		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
 			type='text' placeholder='*************' />";
 		// Check if client secret has been set; if so, echo that the client secret has been set!
@@ -1159,7 +1122,7 @@ class MySettingsPage
     }
 
     /**
-     * Get the desired menu to add the login/logout button
+     * Get the desired menu to add the login/logout button to
      */
     public function login_logout_menu_callback() {
         // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
@@ -1171,10 +1134,7 @@ class MySettingsPage
             $menu_items[] = $key;
         }
 
-        //https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
-        // $option_group = get_option('wawp_menu_location_name',[]);
-        // $wawp_wal_login_logout_button = !empty( $option_group )
-        // ? (array) $option_group : [];
+        // See: https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
         $wawp_wal_login_logout_button = get_option('wawp_menu_location_name',[]);
 
         foreach ($menu_items as $item) {
@@ -1208,22 +1168,19 @@ class MySettingsPage
     public function validate_license_form($input) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
-            wp_die('Your nonce for the license keys could not be verified.');
+            wp_die('The license keys could not be verified.');
         }
 
-        // $slug = array_key_first($input);
-        // $license = $input[$slug];
         $valid = array();
 
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
             $option_name = 'license-check-' . $slug;
-            if (is_null($key)) {
+            if (is_null($key)) { // invalid key
                 update_option($option_name, 'invalid');
-                // $valid[$slug] = '';
-                // add errors here okay.
-            } else {
-                // delete_option($option_name);
+                // ERROR LOG
+                error_log('Invalid license key!');
+            } else { // valid key
                 if ($key == 'unchanged') {
                     delete_option($option_name);
                     $valid[$slug] = Addon::instance()::get_license($slug);
