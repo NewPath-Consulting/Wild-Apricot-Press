@@ -1222,11 +1222,7 @@ class WAIntegration {
 		$wa_credentials_saved = get_option(self::WA_CREDENTIALS_KEY);
 		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
-
-			// $items = utf8_decode($items);
-
-			// Check if the user should be able to see restricted pages in their menu
-			// self::my_log_file($items);
+			// Get navigation items
 			$args_menu = $args->menu;
 			$nav_items = wp_get_nav_menu_items($args_menu);
 
@@ -1235,21 +1231,14 @@ class WAIntegration {
 			$doc_items = new DOMDocument('1.0', 'utf-8');
 			libxml_use_internal_errors(true);
 			$doc_items->loadHTML($items, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD); // DOMDocument
-			// $doc_items->encoding = 'utf-8';
 			libxml_clear_errors();
 			$li_tags = $doc_items->getElementsByTagName('li'); // DOMNodeList
-			// Show tags with menu
-			// foreach ($li_tags as $single_li) {
-			// 	self::my_log_file($single_li);
-			// }
 
-			// self::my_log_file($nav_items)
 			$returned_html = '';
 			// Loop through each nav item, get the ID, and check if the page is restricted
 			if (!empty($nav_items)) {
 				$nav_item_number = 0; // used for keeping track of which navigation item we are looking at
 				foreach ($nav_items as $nav_item) {
-					// self::my_log_file($nav_item);
 					$user_can_see = true;
 					// Get post id
 					$nav_item_id = $nav_item->object_id;
@@ -1267,20 +1256,14 @@ class WAIntegration {
 								// Get user's groups and level
 								$users_member_groups = get_user_meta($current_users_id, self::WA_MEMBER_GROUPS_KEY);
 								$users_member_groups = maybe_unserialize($users_member_groups[0]);
-								self::my_log_file('user values: ');
-								self::my_log_file($users_member_groups);
 								$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
 								$user_member_level = $user_member_level[0];
-								self::my_log_file($user_member_level);
 								// Get page's groups and level
 								$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
-								// Unserialize
+								// Unserialize if necessary
 								$page_member_groups = maybe_unserialize($page_member_groups[0]);
-								self::my_log_file('page values: ');
-								self::my_log_file($page_member_groups);
 								$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
 								$page_member_levels = maybe_unserialize($page_member_levels[0]);
-								self::my_log_file($page_member_levels);
 								// Check if user's groups/level overlap with the page's groups/level
 								$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
 								$intersect_level = in_array($user_member_level, $page_member_levels);
@@ -1301,41 +1284,18 @@ class WAIntegration {
 					// Get associated HTML tag for this menu
 					$associated_html = $li_tags->item($nav_item_number);
 					// Add or remove hidden style
-					// if ($associated_html->hasAttribute('style')) {
-					// 	// Check if style is set to display none
-					// 	if ($associated_html->getAttribute('style') == 'display: none;' || $associated_html->getAttribute('style') == 'display:none;') {
-					// 		// If user can see, then remove this attribute
-					// 		if ($user_can_see) {
-					// 			self::my_log_file('lets remove the display style!');
-					// 			$associated_html->removeAttribute('style');
-					// 		}
-					// 	}
-					// } else {
-					// 	self::my_log_file('html does NOT have style!');
-					// 	// If user cannot see, then add the display: none
-					// 	if (!$user_can_see) {
-					// 		$associated_html->setAttribute('style', 'display: none;');
-					// 	}
-					// }
-					self::my_log_file('can user see?');
-					self::my_log_file($user_can_see);
 					if ($user_can_see) {
 						$associated_html->removeAttribute('style');
 					} else {
 						$associated_html->setAttribute('style', 'display: none;');
 					}
-					// $li_tags->item($nav_item_number) = $associated_html;
 
-					// Get new HTML
-					// $returned_html .= $doc_items->saveHTML($doc_items->getElementsByTagName('li')->item($nav_item_number));
 					// Increment navigation item number
 					$nav_item_number++;
 				}
 			}
-			// $returned_html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+			// Get html to return
 			$returned_html .= $doc_items->saveHTML();
-			// $returned_html = utf8_encode($returned_html);
-			// self::my_log_file($returned_html);
 			$items = $returned_html;
 
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/

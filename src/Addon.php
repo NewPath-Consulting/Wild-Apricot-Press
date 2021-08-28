@@ -7,6 +7,7 @@ require_once __DIR__ . '/DataEncryption.php';
 
 /**
  * Addon class
+ * For managing the Addon plugins for WAWP
  */
 class Addon {
     const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
@@ -17,19 +18,6 @@ class Addon {
     private static $instance = null;
 
     private function __construct() {}
-
-    // Debugging
-	static function my_log_file( $msg, $name = '' )
-	{
-		// Print the name of the calling function if $name is left empty
-		$trace=debug_backtrace();
-		$name = ( '' == $name ) ? $trace[1]['function'] : $name;
-
-		$error_dir = '/Applications/MAMP/logs/php_error.log';
-		$msg = print_r( $msg, true );
-		$log = $name . "  |  " . $msg . "\n";
-		error_log( $log, 3, $error_dir );
-	}
 
     /**
      * Returns the instance of this class (singleton)
@@ -47,28 +35,29 @@ class Addon {
     private static $addons_to_license = array();
     private static $addon_list = array();
 
-    // public static function init() {
-    //     // if there are existing licenses in the options table, initialize the list with those
-    //     $existing_licenses = get_option('wawp_license_keys');
-    //     if ($existing_licenses !== false) {
-    //         self::$addons_to_license = $existing_licenses;
-    //     }
-    // }
-
     /**
      * Returns the array of addons stored in the options table.
+     *
+     * @return array of add-ons
      */
     public static function get_addons() {
         return get_option('wawp_addons');
     }
 
     /**
-     * Retuens the array of license keys stored in the options table.
+     * Returns the array of license keys stored in the options table.
+     *
+     * @return array of license keys
      */
     public static function get_licenses() {
         return get_option('wawp_license_keys');
     }
 
+    /**
+     * Gets the license key based on the slug name
+     *
+     * @param string $slug is the slug name of the add-on
+     */
     public static function get_license($slug) {
         $licenses = self::get_licenses();
         if (!empty($licenses) && array_key_exists($slug, $licenses)) {
@@ -77,17 +66,32 @@ class Addon {
         return '';
     }
 
+    /**
+     * Checks if slug name currently has a license
+     *
+     * @param string $slug is the slug name of the add-on
+     */
     public static function has_license($slug) {
         // do_action('qm/debug', '{a} in has_license', ['a' => $slug]);
         $licenses = self::get_licenses();
         return $licenses && array_key_exists($slug, $licenses);
     }
 
+    /**
+     * Gets filename of add-on based on slug name
+     *
+     * @param string $slug is the slug name of the add-on
+     */
     public static function get_filename($slug) {
         $addons = self::get_addons();
         return $addons[$slug]['filename'];
     }
 
+    /**
+     * Gets title of add-on based on slug name
+     *
+     * @param string $slug is the slug name of the add-on
+     */
     public static function get_title($slug) {
         $addons = self::get_addons();
         return $addons[$slug]['title'];
@@ -235,8 +239,6 @@ class Addon {
                 }
             } // Wild Apricot credentials are guaranteed to be added because the licensing page only appears when they have been entered!
         }
-
-        // Get licensed Wild Apricot entries
     }
 
     /**
