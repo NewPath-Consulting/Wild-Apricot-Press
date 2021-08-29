@@ -235,10 +235,11 @@ class WAIntegration {
 			// Create details of page
 			// See: https://wordpress.stackexchange.com/questions/222810/add-a-do-action-to-post-content-of-wp-insert-post
 			$post_details = array(
-				'post_title' => 'WAWP Wild Apricot Login',
+				'post_title' => 'Login with your Wild Apricot credentials',
 				'post_status' => 'publish',
 				'post_type' => 'page',
-				'post_content' => '[wawp_custom_login_form]' // shortcode
+				'post_content' => '[wawp_custom_login_form]', // shortcode
+				'post_name' => 'wawp-wild-apricot-login'
 			);
 			$page_id = wp_insert_post($post_details, FALSE);
 			// Add page id to options so that it can be removed on deactivation
@@ -920,16 +921,6 @@ class WAIntegration {
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
 
-		// Wild Apricot contact details
-		// membership groups - one member can be in 0 or more groups
-		// membership level - one member has one level
-		// membership status
-		// not dropdowns, just text fields
-		// add membership level to "roles"
-		// support for groups and levels
-		// cron to resynchronize every hour for data from wild apricot
-		// establish session with wild apricot
-
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
 		if (email_exists($login_email)) { // email exists; we will update user
@@ -1143,7 +1134,6 @@ class WAIntegration {
 		}
 		// Create page content -> login form
 		ob_start(); ?>
-			<link rel="stylesheet" href="<?php echo plugins_url('css/wawp-styles-admin.css'); ?>">
 			<div id="wawp_login-wrap">
 				<p id="wawp_wa_login_direction">Log into your Wild Apricot account here to access content exclusive to Wild Apricot members!</p>
 				<form method="post" action="">
@@ -1176,86 +1166,101 @@ class WAIntegration {
 	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
 	public function create_wa_login_logout($items, $args) {
-		// Get login url based on user's Wild Apricot site
 		// First, check if Wild Apricot credentials and the license is valid
 		$wa_credentials_saved = get_option(self::WA_CREDENTIALS_KEY);
 		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
 		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
-			// Get navigation items
-			$args_menu = $args->menu;
-			$nav_items = wp_get_nav_menu_items($args_menu);
+			// Check the restrictions of each item in header IF the header is not blank
+			if (!empty($items)) {
+				// Get navigation items
+				$args_menu = $args->menu;
+				$nav_items = wp_get_nav_menu_items($args_menu);
 
-			// Get li tags from menu
-			$items = mb_convert_encoding($items, 'HTML-ENTITIES', 'UTF-8');;
-			$doc_items = new DOMDocument('1.0', 'utf-8');
-			libxml_use_internal_errors(true);
-			$doc_items->loadHTML($items, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD); // DOMDocument
-			libxml_clear_errors();
-			$li_tags = $doc_items->getElementsByTagName('li'); // DOMNodeList
+				// Get li tags from menu
+				$items = mb_convert_encoding($items, 'HTML-ENTITIES', 'UTF-8');;
+				$doc_items = new DOMDocument('1.0', 'utf-8');
+				libxml_use_internal_errors(true);
+				$doc_items->loadHTML($items, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD); // DOMDocument
+				libxml_clear_errors();
+				$li_tags = $doc_items->getElementsByTagName('li'); // DOMNodeList
 
-			$returned_html = '';
-			// Loop through each nav item, get the ID, and check if the page is restricted
-			if (!empty($nav_items)) {
-				$nav_item_number = 0; // used for keeping track of which navigation item we are looking at
-				foreach ($nav_items as $nav_item) {
-					$user_can_see = true;
-					// Get post id
-					$nav_item_id = $nav_item->object_id;
-					// Check if this post is restricted
-					$nav_item_is_restricted = get_post_meta($nav_item_id, self::IS_POST_RESTRICTED);
-					// If post is restricted, then check if the current has access to it
-					if (!empty($nav_item_is_restricted) && $nav_item_is_restricted[0]) {
-						if (is_user_logged_in()) { // user is logged in
-							// Check that user is synced with Wild Apricot
-							$current_users_id = get_current_user_id();
-							$users_wa_id = get_user_meta($current_users_id, self::WA_USER_ID_KEY);
-							// Check if user ID actually exists
-							if (!empty($users_wa_id) && $users_wa_id != '') { // User has been synced with Wild Apricot
-								// Now, check if the current user is allowed to see this page
-								// Get user's groups and level
-								$users_member_groups = get_user_meta($current_users_id, self::WA_MEMBER_GROUPS_KEY);
-								$users_member_groups = maybe_unserialize($users_member_groups[0]);
-								$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
-								$user_member_level = $user_member_level[0];
-								// Get page's groups and level
-								$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
-								// Unserialize if necessary
-								$page_member_groups = maybe_unserialize($page_member_groups[0]);
-								$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
-								$page_member_levels = maybe_unserialize($page_member_levels[0]);
-								// Check if user's groups/level overlap with the page's groups/level
-								$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
-								$intersect_level = in_array($user_member_level, $page_member_levels);
-								if (empty($intersect_groups) && !$intersect_level) { // the user can't see this page!
-									// Remove this element from the menu
+				$returned_html = '';
+				// Loop through each nav item, get the ID, and check if the page is restricted
+				if (!empty($nav_items)) {
+					$nav_item_number = 0; // used for keeping track of which navigation item we are looking at
+					foreach ($nav_items as $nav_item) {
+						$user_can_see = true;
+						// Get post id
+						$nav_item_id = $nav_item->object_id;
+						// Check if this post is restricted
+						$nav_item_is_restricted = get_post_meta($nav_item_id, self::IS_POST_RESTRICTED);
+						// If post is restricted, then check if the current has access to it
+						if (!empty($nav_item_is_restricted) && $nav_item_is_restricted[0]) {
+							if (is_user_logged_in()) { // user is logged in
+								// Check that user is synced with Wild Apricot
+								$current_users_id = get_current_user_id();
+								$users_wa_id = get_user_meta($current_users_id, self::WA_USER_ID_KEY);
+								// Check if user ID actually exists
+								if (!empty($users_wa_id) && $users_wa_id != '') { // User has been synced with Wild Apricot
+									// Check if user's status is within the allowed status(es)
+									$users_status = get_user_meta($current_users_id, self::WA_USER_STATUS_KEY);
+									$users_status = $users_status[0];
+									$allowed_statuses = get_option('wawp_restriction_status_name');
+									// If some statuses have been checked off, then that means that some statuses are restricted
+									$valid_status = true;
+									if (!empty($allowed_statuses) && !empty($users_status)) {
+										// check if user status is contained in the allowed statuses
+										if (!in_array($users_status, $allowed_statuses)) {
+											// user cannot see this restricted post because their status is not allowed to see restricted posts
+											$valid_status = false;
+										}
+									}
+									// Now, check if the current user is allowed to see this page
+									// Get user's groups and level
+									$users_member_groups = get_user_meta($current_users_id, self::WA_MEMBER_GROUPS_KEY);
+									$users_member_groups = maybe_unserialize($users_member_groups[0]);
+									$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
+									$user_member_level = $user_member_level[0];
+									// Get page's groups and level
+									$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
+									// Unserialize if necessary
+									$page_member_groups = maybe_unserialize($page_member_groups[0]);
+									$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
+									$page_member_levels = maybe_unserialize($page_member_levels[0]);
+									// Check if user's groups/level overlap with the page's groups/level
+									$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
+									$intersect_level = in_array($user_member_level, $page_member_levels);
+									if ((empty($intersect_groups) && !$intersect_level) || !$valid_status) { // the user can't see this page!
+										// Remove this element from the menu
+										$user_can_see = false;
+									}
+								} else {
+									// User has not been synced with Wild Apricot; they therefore cannot see this in the menu
 									$user_can_see = false;
 								}
 							} else {
-								// User has not been synced with Wild Apricot; they therefore cannot see this in the menu
+								// User is not logged in; page should definitely not be shown in menu
 								$user_can_see = false;
 							}
-						} else {
-							// User is not logged in; page should definitely not be shown in menu
-							$user_can_see = false;
 						}
-					}
 
-					// Get associated HTML tag for this menu
-					$associated_html = $li_tags->item($nav_item_number);
-					// Add or remove hidden style
-					if ($user_can_see) {
-						$associated_html->removeAttribute('style');
-					} else {
-						$associated_html->setAttribute('style', 'display: none;');
-					}
+						// Get associated HTML tag for this menu
+						$associated_html = $li_tags->item($nav_item_number);
+						// Add or remove hidden style
+						if ($user_can_see) {
+							$associated_html->removeAttribute('style');
+						} else {
+							$associated_html->setAttribute('style', 'display: none;');
+						}
 
-					// Increment navigation item number
-					$nav_item_number++;
+						// Increment navigation item number
+						$nav_item_number++;
+					}
 				}
+				// Get html to return
+				$returned_html .= $doc_items->saveHTML();
+				$items = $returned_html;
 			}
-			// Get html to return
-			$returned_html .= $doc_items->saveHTML();
-			$items = $returned_html;
 
 			// https://wp-mix.com/wordpress-difference-between-home_url-site_url/
 			// Get current page id
