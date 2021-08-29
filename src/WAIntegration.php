@@ -542,7 +542,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">WAP Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data

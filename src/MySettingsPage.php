@@ -419,11 +419,11 @@ class MySettingsPage
 			<h1>Connect Wild Apricot with WordPress!</h1>
 			<div class="waSettings">
 				<div class="loginChild">
-					<p>In order to connect your Wild Apricot with your WordPress website, WAWP requires the following credentials from your Wild Apricot account:</p>
+					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
 					<ul class="wawp_list">
-					   <li>API key</li>
+					   <li>API Key</li>
 					   <li>Client ID</li>
-					   <li>Client secret</li>
+					   <li>Client Secret</li>
 					</ul>
 					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
 					<ol>
@@ -443,14 +443,14 @@ class MySettingsPage
 						 <li>
 						    <b>Application name</b>
 						    <ul class="wawp_list">
-						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site"
+						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site".
 						       </li>
 						    </ul>
 						 </li>
 						 <li>
 						    <b>Access Level</b>
 						    <ul class="wawp_list">
-						       <li>Choose full access as the WAWP plugin requires ability to read and write to your Wild Apricot database.
+						       <li>Choose full access as the <b>Wild Apricot Press</b> plugin requires ability to read and write to your Wild Apricot database.
 						       </li>
 						    </ul>
 						 </li>
