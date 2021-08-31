@@ -1054,7 +1054,7 @@ class WAIntegration {
 				$valid_login = array();
 
 				// Check email form
-				$email_input = wp_unslash($_POST['wawp_login_email']);
+				$email_input = sanitize_text_field(wp_unslash($_POST['wawp_login_email']));
 				if (!empty($email_input) && is_email($email_input)) { // email is well-formed
 					// Sanitize email
 					$valid_login['email'] = sanitize_email($email_input);
@@ -1069,9 +1069,9 @@ class WAIntegration {
 				// Check password form
 				// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
 				// Any combination of letters, numbers, and characters (except spaces)
-				$password_input = $_POST['wawp_login_password']; // TODO: sanitize?
+				$password_input = sanitize_text_field($_POST['wawp_login_password']);
 				// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
-				if (!empty($password_input) && sanitize_text_field($password_input) == $password_input) { // not empty and valid password
+				if (!empty($password_input) && !preg_match("/\\s/", $password_input)) { // not empty and there are NOT spaces
 					// Sanitize password
 					$valid_login['password'] = sanitize_text_field($password_input);
 				} else { // password is NOT valid
