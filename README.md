@@ -1,6 +1,6 @@
 Wild Apricot Press (WAP) Documentation
 
-Version 1.0b1 - September 1, 2021
+Version 1.0b1 - September 2, 2021
 
 # Administrator's Guide
 
@@ -14,7 +14,8 @@ To configure the Wild Apricot Press, the Wild Apricot API settings must be confi
 
 Wild Apricot Press communicates with your Wild Apricot website via the Wild Apricot API using an "Authorized Application." To create a Wild Apricot authorized application, navigate to WAP Settings > Authorization, and follow the instructions there to acquire the authorized application credentials.
 
-![Screen Shot 2021-08-16 at 7 12 35 PM](https://user-images.githubusercontent.com/8737691/129640741-615b3128-30f7-47af-8bb9-a82f3bbbdfdc.png)
+<img width="946" alt="wap authorization" src="https://user-images.githubusercontent.com/458134/131910967-158c659d-9f73-4be2-b84a-4683bd6b8975.png">
+
 
 ### Add API keys into WAP
 
@@ -32,11 +33,12 @@ You can also configure specify which WordPress menu(s) you would like to add the
 
 Finally, please enter your WAP license key to unlock WAP! This can be done on the "Licensing" section under WAP Settings > Licensing.
 
-<img width="490" alt="Screen Shot 2021-08-16 at 9 46 18 PM" src="https://user-images.githubusercontent.com/8737691/129650584-290c90ea-e845-4060-b642-d6eaa1d725b7.png">
+<img width="746" alt="wap licensing" src="https://user-images.githubusercontent.com/458134/131911156-e8aab427-9a31-46f4-9e20-3cb5a3e45ebe.png">
+
 
 The WAP core plugin license is available at no cost, with no credit card or payment ever required! In the future commercials add-ons that generate revenue for your organization will have a license fee. If you do not already have a WAP license key, please visit the [WAP website](https://newpathconsulting.com/wap/), and see [Licenses](#license) for more information. Once you enter your license key and click "Save", you're good to go!
 
-<img width="421" alt="Screen Shot 2021-08-16 at 10 06 00 PM" src="https://user-images.githubusercontent.com/8737691/129652733-0287702b-c3f5-4b1c-a342-bec6c1579ba6.png">
+<img width="198" alt="wap license saved" src="https://user-images.githubusercontent.com/458134/131911442-01c4c614-2ffa-49f9-8ce9-049d322c5e51.png">
 
 Once activated, a login/logout button will appear on your configured menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner.
 
@@ -54,7 +56,7 @@ All WordPress administrators can now manage access to restricted pages and posts
 
 To set which membership status can access restricted pages and posts, navigate to WAP in the left-hand menu, then select the "Content Restriction Options" tab.
 
-<img width="734" alt="Screen Shot 2021-08-16 at 11 34 51 PM (1)" src="https://user-images.githubusercontent.com/8737691/129659939-ea29697c-19f0-4237-b332-bfbac606d485.png">
+<img width="385" alt="wap settings" src="https://user-images.githubusercontent.com/458134/131911687-00e74697-c1c7-4bf4-83f4-423e2eee2cce.png">
 
 Set the membership statuses that will be allowed to view restricted posts or pages.
 
@@ -110,7 +112,7 @@ PS: Can you guess who this member might be? :)
 
 You can extend the default Wild Apricot fields using the "Synchronization Options" tab under "WAP Settings". See the screenshot below for an illustration.
 
-<img width="802" alt="Screen Shot 2021-08-16 at 1 52 31 PM" src="https://user-images.githubusercontent.com/8737691/129623578-5e025faa-5064-47bc-a731-2e4dcdad4c14.png">
+<img width="389" alt="wa settings sync options" src="https://user-images.githubusercontent.com/458134/131911860-869f9ca0-a11e-483a-8021-8388baf7660c.png">
 
 For each checkbox that you check off, the  field will be synced to each Wild Apricot user on the WordPress site. The screenshot below shows some of the extra fields being checked off and thus imported into each user in WordPress:
 
@@ -126,7 +128,7 @@ These fields are now shared for WordPress and for other plugins, which extends t
 
 If you decide to deactivate and delete the WAP plugin, navigate to WAP Settings and click on the “Plugin Options” tab. (Even though you will never want to delete WAP, right?) :)
 
-![Screen Shot 2021-08-16 at 5 47 23 PM](https://user-images.githubusercontent.com/8737691/129634935-88f84c17-f2a1-40e8-989b-2c4d78fd8ed9.png)
+<img width="957" alt="wap settings plugin options" src="https://user-images.githubusercontent.com/458134/131911994-1954ef24-4e44-4797-9b42-a8534b1fa16c.png">
 
 By selecting the “Delete all Wild Apricot information from my WordPress site”, you will remove all synced Wild Apricot data from your WordPress site upon deletion of the WAP plugin. You can also leave this option unchecked if you would like to keep the synced users and roles on your WordPress site even after deleting WAP.
 
@@ -134,29 +136,30 @@ By selecting the “Delete all Wild Apricot information from my WordPress site�
 
 ## Embedding Content from Wild Apricot into WordPress
 
-Wild Apricot content can be embedded into WordPress using a number of WAWP add-ons; see the [WAWP - Add Ons](#wawp-add-ons) section for more.
+Wild Apricot content can be embedded into WordPress using a number of WAP add-ons; see the [WAP - Add Ons](#wap-add-ons) section for more.
 
 ***
 
-# WAWP - Add Ons
-NewPath Consulting has developed several add-ons to the WAWP plugin that further enrich your experience with your Wild Apricot account in WordPress! Read more about them below:
+# WAP - Add Ons
+NewPath Consulting has developed several add-ons for the core WAP plugin that further enrich your experience with your Wild Apricot account in WordPress! Read more about them below:
 
 ## Wild Apricot IFrame Add-on
 Embed a system page from Wild Apricot directly in your WordPress site! Fundamental Wild Apricot features including member profiles, events, and more can be displayed in an IFrame (Inline Frame) in a WordPress post with just the click of a button! [Learn more](https://newpathconsulting.com/wap).
 
 ## Member Directory Add-on
-Want to display a directory of your Wild Apricot users in WordPress? Look no further! The Member Directory Add-on for WAWP allows you to show your Wild Apricot users directly in your WordPress site. [Learn more](https://newpathconsulting.com/wap).
+Want to display a directory of your Wild Apricot users in WordPress? Look no further! The Member Directory Add-on for WAP allows you to show your Wild Apricot users directly in your WordPress site. [Learn more](https://newpathconsulting.com/wap).
 
 ## HUEnique Theme
-Derived from GeneratePress, the HUEnique theme works directly with the WAWP plugin! HUEnique automatically finds the dominant colors in your company’s logo within seconds, thus customizing the colors in the theme to complement your company’s logo perfectly! [Learn more](https://newpathconsulting.com/wap).
+Derived from GeneratePress, the HUEnique theme works directly with the WAP plugin! HUEnique automatically finds the dominant colors in your company’s logo within seconds, thus customizing the colors in the theme to complement your company’s logo perfectly! [Learn more](https://newpathconsulting.com/wap).
 
 
 # Version Control
-- v1.0 - Initial version
+- v1.0b1 - Initial version (September 2, 2021)
 
 # License
-The License for WAWP is completely free, and is used to verify that your Wild Apricot website is connected to your WordPress website. Please visit https://newpathconsulting.com/wap/ to get your free license key or to inquire further about the WAWP plugin!
+The License for WAP is completely free, and is used to verify that your Wild Apricot website is connected to your WordPress website. Please visit https://newpathconsulting.com/wap/ to get your free license key or to inquire further about the WAP plugin!
 
-After installing each add-on, you can enter the license key for the WAWP plugin and each add-on on the same Licensing page, under WAWP Settings > Licensing.
+After installing each add-on, you can enter the license key for the WAP plugin and each add-on on the same Licensing page, under WAP Settings > Licensing.
 
-![Screen Shot 2021-08-16 at 10 34 33 PM](https://user-images.githubusercontent.com/8737691/129655211-a7f4e36f-397e-41d5-9208-1493a4b9b95c.png)
+<img width="422" alt="wap licensing of add ons" src="https://user-images.githubusercontent.com/458134/131912822-42e0d808-c21f-4ea2-a612-94501254a728.png">
+
