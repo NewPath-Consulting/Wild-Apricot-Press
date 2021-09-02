@@ -136,7 +136,7 @@ By selecting the â€œDelete all Wild Apricot information from my WordPress siteâ€
 
 ## Embedding Content from Wild Apricot into WordPress
 
-Wild Apricot content can be embedded into WordPress using a number of WAP add-ons; see the [WAP - Add Ons](#wap-add-ons) section for more.
+Wild Apricot content can be embedded into WordPress using a number of WAP add-ons; see the [WAP - Add Ons](#wap---add-ons) section for more.
 
 ***
 
