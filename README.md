@@ -1,3 +1,15 @@
+=== NewPath Wild Apricot Press (WAP) ===
+Contributors: asirota
+Tags: wildapricot, wild apricot, sso, membership
+Requires at least: 5.0
+Tested up to: 5.8
+Requires PHP: 7.4
+Stable Tag: 1.0.0
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Wild Apricot Press enables WordPress websites to support the Wild Apricot membership management system.
+
 Wild Apricot Press (WAP) Documentation
 
 Version 1.0b1 - September 2, 2021
@@ -153,11 +165,11 @@ Want to display a directory of your Wild Apricot users in WordPress? Look no fur
 Derived from GeneratePress, the HUEnique theme works directly with the WAP plugin! HUEnique automatically finds the dominant colors in your company’s logo within seconds, thus customizing the colors in the theme to complement your company’s logo perfectly! [Learn more](https://newpathconsulting.com/wap).
 
 
-# Version Control
+# Changelog
 - v1.0b1 - Initial version (September 2, 2021)
 
 # License
-The License for WAP is completely free, and is used to verify that your Wild Apricot website is connected to your WordPress website. Please visit https://newpathconsulting.com/wap/ to get your free license key or to inquire further about the WAP plugin!
+The License for Wild Apricot Press is completely free, and is used to verify that your Wild Apricot website is connected to your WordPress website. Please visit https://newpathconsulting.com/wap/ to get your free license key or to inquire further about the WAP plugin!
 
 After installing each add-on, you can enter the license key for the WAP plugin and each add-on on the same Licensing page, under WAP Settings > Licensing.
 
