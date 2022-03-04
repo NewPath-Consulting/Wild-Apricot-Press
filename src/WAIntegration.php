@@ -1270,6 +1270,17 @@ class WAIntegration {
 			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out, now an array
 			$menus_to_add_button = get_option(self::MENU_LOCATIONS_KEY);
+
+			// EDIT: Feb. 17, 2021
+			// If the theme location is empty, then we will just add the login button by default
+			if (empty($args->theme_location)) {
+				if (is_user_logged_in()) {
+					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
+				} else {
+					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $login_url .'">Log In</a></li>';
+				}
+			}
+
 			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
 			if(!empty($menus_to_add_button)) {
 				foreach ($menus_to_add_button as $menu_to_add_button) {
