@@ -12,8 +12,13 @@ Wild Apricot Press enables WordPress websites to support the Wild Apricot member
 
 Wild Apricot Press (WAP) Documentation
 
-- Version 1.0b1 - September 2, 2021
-- Version 1.0b2 - February 17, 2022
+# Release History
+
+## Version 1.0b1 - September 2, 2021
+- first release
+
+## Version 1.0b2 - February 17, 2022
+- fixed support for custom themes like Avada
 
 # Administrator's Guide
 
