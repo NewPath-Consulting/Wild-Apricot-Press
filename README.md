@@ -20,7 +20,7 @@ Wild Apricot Press (WAP) Documentation
 ## Version 1.0b2 - February 17, 2022
 - fixed support for custom themes like Avada
 
-## Version 1.0b3- March 11, 2022
+## Version 1.0b4- March 11, 2022
 - fixed images in settings page
 - started to escape output text for issue #58
 
