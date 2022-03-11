@@ -23,10 +23,8 @@ Wild Apricot Press (WAP) Documentation
 
 ## Version 1.0b1 - September 2, 2021
 - first release
-
-
-
-
+- fixed images in settings page
+- started to escape output text for issue #58
 
 # Administrator's Guide
 
