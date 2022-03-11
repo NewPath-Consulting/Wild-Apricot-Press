@@ -466,7 +466,7 @@ class MySettingsPage
 					      Click the <b>Save</b> button to save your changes.
 					   </li>
 					   <li>From the Application details screen, copy the <b>API key</b>, <b>Client ID</b>, and <b>Client secret</b> (the blue boxes). Input these values into their respective locations in WordPress, to the right of these instructions. <br><br>
-					      <img src="../images/application-detatails-api-keys.png" alt="Authorized application API keys" width="500">  <br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/application-detatails-api-keys.png" alt="Authorized application API keys" width="500">  <br>
 					   </li>
 					   <br>
 					</ol>
