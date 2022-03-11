@@ -88,12 +88,12 @@ class Activator {
 		if (empty($entered_wa_credentials) || $entered_wa_credentials['wawp_wal_api_key'] == '') {
 			// Wild Apricot has not been configured -> output alert
 			echo "<div class='notice notice-warning'><p>";
-			echo "Please enter your Wild Apricot credentials for <strong>" . $this->plugin_name . "</strong> in ";
+			echo "Please enter your Wild Apricot credentials for <strong>" . esc_attr($this->plugin_name) . "</strong> in ";
 			echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">Wild Apricot Press > Authorization</a>.";
 			echo "</p></div>";
 		} else if (empty($entered_license_keys)) { // WAWP credentials have been entered but the license key has not
 			echo "<div class='notice notice-warning'><p>";
-			echo "Don't forget to enter the license key for <strong>" . $this->plugin_name . "</strong> in ";
+			echo "Don't forget to enter the license key for <strong>" . esc_attr($this->plugin_name) . "</strong> in ";
 			echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . ">Wild Apricot Press > Licensing</a> ";
 			echo "in order to activate the plugin's functionality!";
 			echo "</p></div>";
