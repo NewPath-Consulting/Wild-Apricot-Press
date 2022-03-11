@@ -14,15 +14,19 @@ Wild Apricot Press (WAP) Documentation
 
 # Release History
 
-## Version 1.0b1 - September 2, 2021
-- first release
+## Version 1.0b3 - March 11, 2022
+- fixed images in settings page
+- started to escape output text for issue #58
 
 ## Version 1.0b2 - February 17, 2022
 - fixed support for custom themes like Avada
 
-## Version 1.0b3- March 11, 2022
-- fixed images in settings page
-- started to escape output text for issue #58
+## Version 1.0b1 - September 2, 2021
+- first release
+
+
+
+
 
 # Administrator's Guide
 
