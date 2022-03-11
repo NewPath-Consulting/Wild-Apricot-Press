@@ -12,7 +12,7 @@ Wild Apricot Press enables WordPress websites to support the Wild Apricot member
 
 Wild Apricot Press (WAP) Documentation
 
-# Release History - for master branch
+# Release History
 
 ## Version 1.0b1 - September 2, 2021
 - first release
