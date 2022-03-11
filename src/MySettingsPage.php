@@ -428,14 +428,14 @@ class MySettingsPage
 					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
 					<ol>
 					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
-					      <img src="../images/authorized-applications.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
 					   </li>
 					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
 					      <br><br>
-					      <img src="../images/authorized-applications.png" alt="Authorized application button" class="wawp_authorization_img"> <br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Authorized application button" class="wawp_authorization_img"> <br>
 					   </li>
 					   <li> On the Application authorization screen, click the <b>Server application</b> option then click the <b>Continue</b> button. <br><br>
-					      <img src="../images/authorized-application-type.png" alt="Authorized application server selection" class="wawp_authorization_img"><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-application-type.png" alt="Authorized application server selection" class="wawp_authorization_img"><br>
 					   </li>
 					   <li>
 					      On the Application details screen, the following options should be set:
