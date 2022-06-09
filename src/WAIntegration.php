@@ -4,6 +4,9 @@ namespace WAWP;
 // For iterating through menu HTML
 use DOMDocument;
 use DOMAttr;
+use WAWP\Log;
+require_once __DIR__ . '/Log.php';
+
 
 /**
  * Class for managing the user's Wild Apricot account
@@ -1062,7 +1065,7 @@ class WAIntegration {
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
 					// DEBUG LOG
-					error_log('Invalid email entered on Wild Apricot login!');
+					Log::good_error_log('Invalid email entered on Wild Apricot login!');
 					return;
 				}
 
@@ -1077,7 +1080,7 @@ class WAIntegration {
 				} else { // password is NOT valid
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
-					error_log('Invalid password entered on Wild Apricot login!');
+					Log::good_error_log('Invalid password entered on Wild Apricot login!');
 					return;
 				}
 
@@ -1094,7 +1097,7 @@ class WAIntegration {
 				if (!$login_attempt) {
 					// Present user with log in error
 					add_filter('the_content', array($this, 'add_login_error'));
-					error_log('Failed attempt on Wild Apricot login!');
+					Log::good_error_log('Failed attempt on Wild Apricot login!');
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
