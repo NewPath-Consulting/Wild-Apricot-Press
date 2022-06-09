@@ -4,6 +4,11 @@ namespace WAWP;
 require_once __DIR__ . '/WAWPApi.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/DataEncryption.php';
+require_once __DIR__ . '/Log.php';
+
+
+use \DateTime; // for checking license key expiration dates
+use WAWP\Log;
 
 /**
  * Addon class
@@ -11,6 +16,7 @@ require_once __DIR__ . '/DataEncryption.php';
  */
 class Addon {
     const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
+    // const HOOK_URL = 'https://newpathconsulting.com/checkdev';
 
     const FREE_ADDONS = array(0 => 'wawp');
     const PAID_ADDONS = array(0 => 'wawp-addon-wa-iframe');
@@ -119,6 +125,7 @@ class Addon {
         $option[$slug] = $addon[$slug];
         // array_push($option, $addon);
         update_option('wawp_addons', $option);
+
     }
 
     /**
@@ -144,9 +151,7 @@ class Addon {
      */
     public static function validate_license_key($license_key_input, $addon_slug) {
         // if license key is empty, do nothing
-        if (empty($license_key_input)) return NULL;
-
-        if (self::get_license($addon_slug) == $license_key_input) return 'unchanged';
+        if (empty($license_key_input)) return 'empty';
 
         // remove non-alphanumeric, non-hyphen characters
         $license_key = preg_replace(
@@ -155,39 +160,44 @@ class Addon {
             $license_key_input
         );
 
+        Log::good_error_log('plugin ' . $addon_slug);
+        if (self::get_license($addon_slug) == $license_key) return $license_key;
+
         // construct array of data to send
         $data = array('key' => $license_key, 'json' => '1');
 
         // send request, receive response in $response
         $response = self::post_request($data);
+        Log::good_error_log('response ' . print_r($response, 1));
+        
 
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
         // else return the valid license key
         $filename = self::get_filename($addon_slug);
         if (array_key_exists('license-error', $response)) {
             // Ensure that we are not trying to deactivate the wawp plugin
-            if (is_plugin_active($filename) && $filename != 'wawp/plugin.php') {
-                deactivate_plugins($filename);
-            }
+            // if (is_plugin_active($filename) && $filename != 'wawp/plugin.php') {
+            //     deactivate_plugins($filename);
+            // }
             return NULL;
         } else { // no error
-            if (!is_plugin_active($filename)) {
-                activate_plugin($filename);
+            // check that the license owner has access to the product and support
+            if (array_key_exists('Products', $response) && array_key_exists('Support Level', $response) && array_key_exists('expiration date', $response)) {
+                // Get list of product(s) that this license is valid for
+                $valid_products = $response['Products'];
+                $support_level = $response['Support Level'];
+                $exp_date = $response['expiration date'];
+
+                
+                // Check if the addon_slug in in the valid products
+                if (!in_array('wawp', $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
+                    // Not Valid!
+                    return NULL;
+                }
+            } else {
+                // No products; invalid key
+                return NULL;
             }
-            // Check that this license is valid for the addon_slug name
-            // TODO: May comment this out if Products do not need to be checked
-            // if (array_key_exists('Products', $response)) {
-            //     // Get list of product(s) that this license is valid for
-            //     $valid_products = $response['Products'];
-            //     // Check if the addon_slug in in the valid products
-            //     if (!in_array($addon_slug, $valid_products)) {
-            //         // Not Valid!
-            //         return NULL;
-            //     }
-            // } else {
-            //     // No products; invalid key
-            //     return NULL;
-            // }
 
             // Ensure that this license key is valid for the associated Wild Apricot ID and website
             // Get authorized Wild Apricot URL and ID
@@ -237,7 +247,13 @@ class Addon {
                     do_action('wawp_wal_set_login_private');
                     return NULL;
                 }
+
+
             } // Wild Apricot credentials are guaranteed to be added because the licensing page only appears when they have been entered!
+
+            if (!is_plugin_active($filename)) {
+                activate_plugin($filename);
+            }
         }
     }
 
@@ -259,6 +275,57 @@ class Addon {
 
         return $result;
     }
+
+    public static function valid_license_key_notice($slug) {
+        $plugin_name = self::get_title($slug);
+        $filename = self::get_filename($slug);
+        echo "<div class='notice notice-success is-dismissible'><p>";
+		echo "Saved license key for <strong>" . $plugin_name . "</strong>.</p>";
+		if (!is_plugin_active($filename)) {
+			activate_plugin($filename);
+			echo "<p>Activating plugin.</p>";
+		}
+		echo "</div>";
+    }
+
+    public static function empty_license_key_notice($slug) {
+        $plugin_name = self::get_title($slug);
+        $filename = self::get_filename($slug);
+        echo "<div class='notice notice-error is-dismissible'><p>";
+        echo "Invalid key entered for <strong>" . $plugin_name . "</strong>.</p>";
+        if (is_plugin_active($filename)) {
+            echo "<p>Deactivating plugin.</p>";
+        }
+        echo "</div>";
+        deactivate_plugins($filename); 
+    }
+
+    public static function invalid_license_key_notice($slug) {
+        $plugin_name = self::get_title($slug);
+        $filename = self::get_filename($slug);
+        echo "<div class='notice notice-warning'><p>";
+        echo "Please enter a valid license key for <strong>" . $plugin_name . "</strong>. </p></div>";
+        unset($_GET['activate']); // prevents printing "Plugin activated" message
+        deactivate_plugins($filename);
+    }
+
+    /**
+     * Returns whether the license key is expired or not.
+     * @param exp_date_string the expiry date of the license from the response data
+     * @return boolean true if license is expired, false if not. 
+     */
+    private static function is_expired($exp_date_string) {
+        $now = new DateTime();
+        $exp_date = new DateTime($exp_date_string);
+
+        $now_ts = $now->getTimestamp();
+        $exp_date_ts = $exp_date->getTimestamp();
+        $is_expired = !empty($exp_date_string) && $exp_date_ts < $now_ts;
+
+        return $is_expired;
+    }
+
+
 
 } // end of Addon class
 
