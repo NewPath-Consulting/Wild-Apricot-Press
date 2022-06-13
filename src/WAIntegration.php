@@ -5,7 +5,9 @@ namespace WAWP;
 use DOMDocument;
 use DOMAttr;
 use WAWP\Log;
+use WAWP\Addon;
 require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/Addon.php';
 
 
 /**
@@ -1171,8 +1173,8 @@ class WAIntegration {
 	public function create_wa_login_logout($items, $args) {
 		// First, check if Wild Apricot credentials and the license is valid
 		$wa_credentials_saved = get_option(self::WA_CREDENTIALS_KEY);
-		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
-		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
+		Log::good_error_log(empty($license_keys_saved));
+		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && Addon::has_license('wawp')) {
 			// Check the restrictions of each item in header IF the header is not blank
 			if (!empty($items)) {
 				// Get navigation items
