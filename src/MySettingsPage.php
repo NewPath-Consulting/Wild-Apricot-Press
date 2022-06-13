@@ -2,8 +2,12 @@
 namespace WAWP;
 
 require_once __DIR__ . '/Addon.php';
+require_once __DIR__ . '/Log.php';
+
 
 use WAWP\Addon;
+use WAWP\Log;
+
 
 use function PHPSTORM_META\map;
 
@@ -602,8 +606,7 @@ class MySettingsPage
     /**
      * Register and add settings
      */
-    public function page_init()
-    {
+    public function page_init() {
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'wal_sanitize'),
@@ -917,8 +920,7 @@ class MySettingsPage
      *
      * @param array $input Contains all settings fields as array keys
      */
-    public function wal_sanitize( $input )
-    {
+    public function wal_sanitize( $input ) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_credentials_nonce_name'], 'wawp_credentials_nonce_action')) {
             wp_die('Your Wild Apricot credentials could not be verified.');
@@ -1069,8 +1071,7 @@ class MySettingsPage
     /**
      * Print the instructions text for entering your Wild Apricot credentials
      */
-    public function wal_print_section_info()
-    {
+    public function wal_print_section_info() {
         print 'Enter your Wild Apricot credentials here. Your data is encrypted for your safety!';
     }
 
@@ -1085,8 +1086,7 @@ class MySettingsPage
     /**
      * Display text field for API key
      */
-    public function api_key_callback()
-    {
+    public function api_key_callback() {
 		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
 			type='text' placeholder='*************' />";
 		// Check if api key has been set; if so, echo that the client secret has been set!
@@ -1098,8 +1098,7 @@ class MySettingsPage
     /**
      * Display text field for Client ID
      */
-    public function client_id_callback()
-    {
+    public function client_id_callback() {
 		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
 			type='text' placeholder='*************' />";
 		// Check if client id has been set; if so, echo that the client secret has been set!
@@ -1111,8 +1110,7 @@ class MySettingsPage
 	/**
      * Display text field for Client Secret
      */
-    public function client_secret_callback()
-    {
+    public function client_secret_callback() {
 		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
 			type='text' placeholder='*************' />";
 		// Check if client secret has been set; if so, echo that the client secret has been set!
@@ -1149,11 +1147,11 @@ class MySettingsPage
      */
     public function license_key_input(array $args) {
         $slug = $args['slug'];
-        $license = Addon::instance()::get_licenses();
+        $licenses = Addon::instance()::get_licenses();
         // Check that slug is valid
         $input_value = '';
-        if (!empty($license) && array_key_exists($slug, $license)) {
-            $input_value = $license[$slug];
+        if (!empty($licenses) && array_key_exists($slug, $licenses)) {
+            $input_value = $licenses[$slug];
         }
         echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $input_value . "'  />" ;
     }
@@ -1166,6 +1164,8 @@ class MySettingsPage
      * @param array $input settings form input array mapping addon slugs to license keys
      */
     public function validate_license_form($input) {
+        $data_encryption = new DataEncryption();
+        Log::good_error_log('enter');
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
             wp_die('The license keys could not be verified.');
@@ -1173,21 +1173,23 @@ class MySettingsPage
 
         $valid = array();
 
+        
+
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
-            $option_name = 'license-check-' . $slug;
             if (is_null($key)) { // invalid key
-                update_option($option_name, 'invalid');
+                Addon::update_license_check_option($slug, 'invalid');
                 // ERROR LOG
-                error_log('Invalid license key!');
-            } else { // valid key
-                if ($key == 'unchanged') {
-                    delete_option($option_name);
-                    $valid[$slug] = Addon::instance()::get_license($slug);
-                } else {
-                    update_option($option_name, 'true');
-                    $valid[$slug] = $key;
-                }
+
+            } else if ($key == 'empty') {
+                Log::good_error_log("Entered empty license for " . $slug);
+
+                Addon::update_license_check_option($slug, 'empty');
+            } 
+            else { // valid key
+                Addon::update_license_check_option($slug, 'true');
+                $valid[$slug] = $data_encryption->encrypt($key);
+
             }
         }
         return $valid;
