@@ -5,6 +5,7 @@ require_once __DIR__ . '/WAWPApi.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/DataEncryption.php';
 require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/helpers.php';
 
 
 use \DateTime; // for checking license key expiration dates
@@ -18,8 +19,16 @@ class Addon {
     const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
     // const HOOK_URL = 'https://newpathconsulting.com/checkdev';
 
-    const FREE_ADDONS = array(0 => 'wawp');
+    const FREE_ADDONS = array(0 => CORE_SLUG);
     const PAID_ADDONS = array(0 => 'wawp-addon-wa-iframe');
+
+    // option used to keep track of license key status
+    // possible values:
+        // true: license key entered
+        // false: default value, license key hasn't been entered yet
+        // empty: license key entered (meaning form has been submitted) and the field was empty
+        // invalid: invalid key entered
+    const WAWP_LICENSE_KEYS_OPTION = 'wawp_license_keys';
 
     private static $instance = null;
 
@@ -190,7 +199,7 @@ class Addon {
 
                 
                 // Check if the addon_slug in in the valid products
-                if (!in_array('wawp', $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
+                if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
                     // Not Valid!
                     return NULL;
                 }

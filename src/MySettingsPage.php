@@ -3,6 +3,7 @@ namespace WAWP;
 
 require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/helpers.php';
 
 
 use WAWP\Addon;
@@ -714,13 +715,13 @@ class MySettingsPage
             array($this, 'license_key_input'), // callback
             'wawp_licensing', // page
             'wawp_license', // section
-            array('slug' => 'wawp', 'title' => 'Wild Apricot Press') // args for callback
+            array('slug' => CORE_SLUG, 'title' => CORE_NAME) // args for callback
         );
 
         // For each addon installed, render a license key form
         $addons = Addon::instance()::get_addons();
         foreach ($addons as $slug => $addon) {
-            if ($slug == Activator::CORE) {continue;}
+            if ($slug == CORE_SLUG) {continue;}
             $title = $addon['title'];
             add_settings_field(
                 'wawp_license_form_' . $slug, // ID
