@@ -1027,7 +1027,7 @@ class MySettingsPage
         }
 
         // Delete all licenses because they are invalid now and user must insert them again
-        delete_option(WAIntegration::WAWP_LICENSES_KEY);
+        Addon::clear_licenses();
 
 		// Return array of valid inputs
 		return $valid;
@@ -1151,7 +1151,7 @@ class MySettingsPage
         $licenses = Addon::instance()::get_licenses();
         // Check that slug is valid
         $input_value = '';
-        if (!empty($licenses) && array_key_exists($slug, $licenses)) {
+        if (Addon::get_license_check_option($slug) != 'false' && !is_null($licenses) && array_key_exists($slug, $licenses)) {
             $input_value = $licenses[$slug];
         }
         echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $input_value . "'  />" ;
@@ -1180,10 +1180,12 @@ class MySettingsPage
             $key = Addon::instance()::validate_license_key($license, $slug);
             if (is_null($key)) { // invalid key
                 Addon::update_license_check_option($slug, 'invalid');
+                $valid[$slug] = '';
                 // ERROR LOG
 
             } else if ($key == 'empty') {
                 Log::good_error_log("Entered empty license for " . $slug);
+                $valid[$slug] = '';
 
                 Addon::update_license_check_option($slug, 'empty');
             } 

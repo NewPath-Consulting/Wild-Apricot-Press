@@ -32,7 +32,9 @@ class Addon {
 
     private static $instance = null;
 
-    private function __construct() {}
+        if (!get_option(self::WAWP_LICENSE_KEYS_OPTION)) {
+            add_option(self::WAWP_LICENSE_KEYS_OPTION);
+        }
 
     /**
      * Returns the instance of this class (singleton)
@@ -100,6 +102,14 @@ class Addon {
     public static function get_filename($slug) {
         $addons = self::get_addons();
         return $addons[$slug]['filename'];
+    }
+
+    public static function clear_licenses() {
+        $license_options = self::$license_check_options;
+
+        foreach($license_options as $slug) {
+            self::update_license_check_option($slug, 'false');
+        }
     }
 
     /**
