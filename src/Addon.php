@@ -355,7 +355,7 @@ class Addon {
 		echo "</div>";
     }
 
-    public static function empty_license_key_notice($slug) {
+    public static function invalid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
         echo "<div class='notice notice-error is-dismissible'><p>";
@@ -364,16 +364,26 @@ class Addon {
             echo "<p>Deactivating plugin.</p>";
         }
         echo "</div>";
-        deactivate_plugins($filename); 
+        // deactivate_plugins($filename); 
     }
 
-    public static function invalid_license_key_notice($slug) {
+    public static function empty_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
         echo "<div class='notice notice-warning'><p>";
         echo "Please enter a valid license key for <strong>" . $plugin_name . "</strong>. </p></div>";
         unset($_GET['activate']); // prevents printing "Plugin activated" message
-        deactivate_plugins($filename);
+        // deactivate_plugins($filename);
+    }
+
+    public static function license_key_prompt($slug) {
+        $plugin_name = self::get_title($slug);
+        $filename = self::get_filename($slug);
+
+        echo "<div class='notice notice-warning is-dismissable'><p>";
+        echo "Please enter your license key in <a href=" . admin_url('admin.php?page=wawp-licensing') . ">Wild Apricot Press > Licensing</a> in order to use the " . $plugin_name . " functionality.</p></div>";
+
+        unset($_GET['activate']);
     }
 
     /**
