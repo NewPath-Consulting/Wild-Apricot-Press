@@ -32,9 +32,13 @@ class Addon {
 
     private static $instance = null;
 
+    private function __construct() {
+        self::$data_encryption = new DataEncryption();
+
         if (!get_option(self::WAWP_LICENSE_KEYS_OPTION)) {
             add_option(self::WAWP_LICENSE_KEYS_OPTION);
         }
+    }
 
     /**
      * Returns the instance of this class (singleton)
@@ -67,7 +71,13 @@ class Addon {
      * @return array of license keys
      */
     public static function get_licenses() {
-        return get_option('wawp_license_keys');
+        $licenses = get_option(self::WAWP_LICENSE_KEYS_OPTION);
+        if (!$licenses) return NULL;
+        foreach ($licenses as $slug => $license) {
+            $licenses[$slug] = self::$data_encryption->decrypt($license);
+        }
+
+        return $licenses;
     }
 
     /**
@@ -77,10 +87,8 @@ class Addon {
      */
     public static function get_license($slug) {
         $licenses = self::get_licenses();
-        if (!empty($licenses) && array_key_exists($slug, $licenses)) {
-            return $licenses[$slug];
-        }
-        return '';
+
+        return $licenses[$slug];
     }
 
     /**
