@@ -18,6 +18,9 @@ class WAIntegration {
 	// Constants for keys used for database management
 	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
 	const WAWP_LICENSES_KEY = 'wawp_license_keys';
+	const WA_API_KEY_OPT = 'wawp_wal_api_key';
+	const WA_CLIENT_ID_OPT = 'wawp_wal_client_id';
+	const WA_CLIENT_SECRET_OPT = 'wawp_wal_client_secret';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
