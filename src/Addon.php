@@ -32,6 +32,12 @@ class Addon {
 
     private static $instance = null;
 
+
+    private static $addons_to_license = array();
+    private static $addon_list = array();
+    private static $license_check_options = array();
+    private static $data_encryption;
+
     private function __construct() {
         self::$data_encryption = new DataEncryption();
 
@@ -53,8 +59,42 @@ class Addon {
         return self::$instance;
     }
 
-    private static $addons_to_license = array();
-    private static $addon_list = array();
+
+    /**
+     * Adds a new add-on to the array of add-ons stored in the options table.
+     * @param $addon Add-on to be added to the DB.
+     * Is an assoc. array of addon info in the following format:
+     * slug = array(
+     *      [title] => Display title,
+     *      [filename] => Filename of main plugin file relative to plugin directory
+     * )
+     */
+    public static function new_addon($addon) {
+        $option = get_option('wawp_addons');
+        if ($option == false) {
+            $option = array();
+        }
+        if (in_array($addon, $option)) {
+            return;
+        }
+
+        $slug = array_key_first($addon);
+        $option[$slug] = $addon[$slug];
+        self::$license_check_options[$slug] = $addon[$slug]['license-check-option'];
+        self::$addon_list[] = $addon;
+
+
+    }
+
+    public static function get_license_check_option($slug) {
+
+        return get_option(self::$license_check_options[$slug]);
+    }
+
+    public static function update_license_check_option($slug, $val) {
+        update_option(self::$license_check_options[$slug], $val);
+    }
+
 
     /**
      * Returns the array of addons stored in the options table.

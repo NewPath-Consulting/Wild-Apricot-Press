@@ -30,10 +30,13 @@ class Activator {
 
 		add_action('admin_notices', array($this, 'license_admin_notices'));
 
+
 		Addon::instance()::new_addon(array($slug => array(
 			'title' => $plugin_name,
-			'filename' => $filename
+			'filename' => $filename,
+			'license-check-option' => $this->license_req_option_name
 		)));
+
 	}
 
 	/**
