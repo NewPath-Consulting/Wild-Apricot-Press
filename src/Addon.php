@@ -29,6 +29,7 @@ class Addon {
         // empty: license key entered (meaning form has been submitted) and the field was empty
         // invalid: invalid key entered
     const WAWP_LICENSE_KEYS_OPTION = 'wawp_license_keys';
+    const WAWP_ADDON_LIST_OPTION = 'wawp_addons';
 
     private static $instance = null;
 
@@ -78,10 +79,22 @@ class Addon {
             return;
         }
 
-        $slug = array_key_first($addon);
-        $option[$slug] = $addon[$slug];
-        self::$license_check_options[$slug] = $addon[$slug]['license-check-option'];
-        self::$addon_list[] = $addon;
+        $slug = $addon['slug'];
+        $option[$slug] = array(
+            'name' => $addon['name'],
+            'filename' => $addon['filename'],
+            'license_check_option' => $addon['license_check_option']
+        );
+        self::$license_check_options[$slug] = $addon['license_check_option'];
+        self::$addon_list[$slug] = $option[$slug];
+        self::update_addons($option);
+
+
+    }
+
+    public static function update_addons($new_list) {
+        update_option(self::WAWP_ADDON_LIST_OPTION, $new_list);
+    }
 
 
     }
@@ -167,26 +180,8 @@ class Addon {
      */
     public static function get_title($slug) {
         $addons = self::get_addons();
-        return $addons[$slug]['title'];
+        return $addons[$slug]['name'];
     }
-
-    /**
-     * Adds a new add-on to the array of add-ons stored in the options table.
-     * @param $addon Add-on to be added to the DB.
-     * Is an assoc. array of addon info in the following format:
-     * slug = array(
-     *      [title] => Display title,
-     *      [filename] => Filename of main plugin file relative to plugin directory
-     * )
-     */
-    public static function new_addon($addon) {
-        $option = get_option('wawp_addons');
-        if ($option == false) {
-            $option = array();
-        }
-        if (in_array($addon, $option)) {
-            return;
-        }
 
         $slug = array_key_first($addon);
         $option[$slug] = $addon[$slug];

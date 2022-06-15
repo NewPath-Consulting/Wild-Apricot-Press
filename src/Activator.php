@@ -26,18 +26,15 @@ class Activator {
 
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
 
-		$this->register_license_hooks();
-
-		add_action('admin_notices', array($this, 'license_admin_notices'));
-
-
-		Addon::instance()::new_addon(array($slug => array(
-			'title' => $plugin_name,
+		Addon::instance()::new_addon(array(
+			'slug' => $slug,
+			'name' => $plugin_name,
 			'filename' => $filename,
-			'license-check-option' => $this->license_req_option_name
-		)));
+			'license_check_option' => $this->license_req_option_name
+		));
 
 	}
+
 
 	/**
 	 * Activates the WAWP plugin.
