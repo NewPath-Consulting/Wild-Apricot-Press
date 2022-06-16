@@ -382,16 +382,12 @@ class Addon {
 		echo "</div>";
     }
 
-    public static function invalid_license_key_notice($slug) {
+    public static function invalid_license_key_notice($slug, $is_licensing_page) {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
         echo "<div class='notice notice-error is-dismissible'><p>";
-        echo "Invalid key entered for <strong>" . $plugin_name . "</strong>.</p>";
-        if (is_plugin_active($filename)) {
-            echo "<p>Deactivating plugin.</p>";
-        }
+        echo "Your license key is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>Wild Apricot for Wordpress website</a>.";
         echo "</div>";
-        // deactivate_plugins($filename); 
     }
 
     public static function empty_license_key_notice($slug) {
@@ -403,12 +399,22 @@ class Addon {
         // deactivate_plugins($filename);
     }
 
-    public static function license_key_prompt($slug) {
+    /**
+     * Prints out a message prompting the user to enter their license key.
+     * Called when user has activated the plugin but has NOT YET entered their license key.
+     * @param string $slug slug of the plugin for which to display this prompt
+     * @param boolean $is_licensing_prompt indicating whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
+     */
+    public static function license_key_prompt($slug, $is_licensing_page) {
         $plugin_name = self::get_title($slug);
-        $filename = self::get_filename($slug);
 
         echo "<div class='notice notice-warning is-dismissable'><p>";
-        echo "Please enter your license key in <a href=" . admin_url('admin.php?page=wawp-licensing') . ">Wild Apricot Press > Licensing</a> in order to use the " . $plugin_name . " functionality.</p></div>";
+        echo "Please enter your license key";
+        if (!$is_licensing_page) {
+         echo " in <a href=" . admin_url('admin.php?page=wawp-licensing') . ">Wild Apricot Press > Licensing</a>"; 
+        }
+        
+        " in order to use the " . $plugin_name . " functionality.</p></div>";
 
         unset($_GET['activate']);
     }
