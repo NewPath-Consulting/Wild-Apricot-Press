@@ -1151,8 +1151,9 @@ class MySettingsPage
         $licenses = Addon::instance()::get_licenses();
         // Check that slug is valid
         $input_value = '';
-        if (Addon::get_license_check_option($slug) != 'false' && !is_null($licenses) && array_key_exists($slug, $licenses)) {
-            $input_value = $licenses[$slug];
+        if (Addon::instance()::has_valid_license($slug)) {
+            $input_value = Addon::instance()::get_license($slug);
+        } else {
         }
         echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $input_value . "'  />" ;
     }

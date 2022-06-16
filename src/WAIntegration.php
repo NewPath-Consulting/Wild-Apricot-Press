@@ -93,12 +93,41 @@ class WAIntegration {
 	}
 
 	/**
+	 * Checks for valid Wild Apricot credentials.
+	 * @return boolean true if valid authorization creds, false if not
+	 */
+	public static function valid_wa_credentials() {
+		Log::good_error_log('checking valid wa creds');
+		$wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
+
+		// wa_credentials will be false if the option doesn't exist
+		// return here so we don't get invalid index in the lines below
+		if (!$wa_credentials) return false;
+		else if (empty($wa_credentials)) return false;
+
+		$api_key = $wa_credentials[self::WA_API_KEY_OPT];
+		$client_id = $wa_credentials[self::WA_CLIENT_ID_OPT];
+		$client_secret = $wa_credentials[self::WA_CLIENT_SECRET_OPT];
+
+		// check first that creds exist
+		return isset($wa_credentials) && !empty($wa_credentials) && !empty($api_key) && !empty($client_id) && !empty($client_secret);
+	}
+
+	/**
 	 * Checks that updated Wild Apricot credentials match the registered site on the license key
 	 */
 	public function check_updated_credentials() {
 		// Ensure that credentials have been already entered
-		$wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
-		$license_credentials = get_option(self::WAWP_LICENSES_KEY);
+		$has_valid_wa_credentials = self::valid_wa_credentials();
+		$has_valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
+
+		$credentials_valid = true;
+
+		if (!$has_valid_wa_credentials || !$has_valid_license) {
+			$credentials_valid = false;
+			// invalidate both credentials? how to do this. there IS an option for invalid credentials in the opt table. but then i would have to go back and change so much stuff. or would i?
+		}
+
 		if (!empty($wa_credentials) && !empty($license_credentials) && array_key_exists(CORE_SLUG, $license_credentials)) {
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = Addon::get_license(CORE_SLUG);
@@ -1178,7 +1207,7 @@ class WAIntegration {
 		// First, check if Wild Apricot credentials and the license is valid
 		$wa_credentials_saved = get_option(self::WA_CREDENTIALS_KEY);
 		Log::good_error_log(empty($license_keys_saved));
-		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && Addon::has_license(CORE_SLUG)) {
+		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && Addon::has_valid_license(CORE_SLUG)) {
 			// Check the restrictions of each item in header IF the header is not blank
 			if (!empty($items)) {
 				// Get navigation items

@@ -145,14 +145,18 @@ class Addon {
     }
 
     /**
-     * Checks if slug name currently has a license
+     * Checks if plugin currently has a license. License status must also be valid.
      *
      * @param string $slug is the slug name of the add-on
+     * @return boolean true if license is valid, false if not
      */
-    public static function has_license($slug) {
-        // do_action('qm/debug', '{a} in has_license', ['a' => $slug]);
-        $licenses = self::get_licenses();
-        return $licenses && array_key_exists($slug, $licenses);
+    public static function has_valid_license($slug) {
+        $license = self::get_license($slug);
+        Log::good_error_log($license);
+        
+        $license_status = self::get_license_check_option($slug);
+        Log::good_error_log($license_status);
+        return !empty($license) && $license_status == self::LICENSE_STATUS_VALID;
     }
 
     /**
