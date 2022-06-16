@@ -238,6 +238,10 @@ class MySettingsPage
         $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
         ?>
         <div class="wrap">
+            <h2>Wild Apricot Admin Settings</h2>
+            <?php 
+            // don't display settings if credentials and/or key are not valid
+            if (!WAIntegration::valid_wa_credentials() || !Addon::instance()::has_valid_license(CORE_SLUG)) { ?> </div> <?php return; } ?>
             <!-- Tabs for navigation -->
             <nav class="nav-tab-wrapper">
                 <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Content Restriction Options</a>
@@ -421,7 +425,7 @@ class MySettingsPage
 		$this->options = get_option( 'wawp_wal_name' );
 		?>
         <div class="wrap">
-			<h1>Connect Wild Apricot with WordPress!</h1>
+			<h1>Wild Apricot Authorization</h1>
 			<div class="waSettings">
 				<div class="loginChild">
 					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
@@ -558,7 +562,7 @@ class MySettingsPage
             } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
                 $link_address = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
                 echo "<h2>License Keys</h2>";
-                echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
+                // echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
             }
             ?>
         </div>
