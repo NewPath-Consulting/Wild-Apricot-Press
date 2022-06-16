@@ -1180,18 +1180,18 @@ class MySettingsPage
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
             if (is_null($key)) { // invalid key
-                Addon::update_license_check_option($slug, 'invalid');
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
                 $valid[$slug] = '';
                 // ERROR LOG
 
-            } else if ($key == 'empty') {
+            } else if ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
                 Log::good_error_log("Entered empty license for " . $slug);
                 $valid[$slug] = '';
 
-                Addon::update_license_check_option($slug, 'empty');
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
             } 
             else { // valid key
-                Addon::update_license_check_option($slug, 'true');
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
                 $valid[$slug] = $data_encryption->encrypt($key);
 
             }

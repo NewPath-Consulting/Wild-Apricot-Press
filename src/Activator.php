@@ -79,37 +79,17 @@ class Activator {
 	}
 
 	/**
-	 * Displays notices in the WordPress admin menu to remind the user to enter their Wild Apricot credentials or other license keys
+	 * Checks the status of the WA Authorization credentials and the license key. Displays appropriate admin notice messages if either one is invalid or missing. 
 	 */
-	public function license_admin_notices() {
+	public function admin_notices_creds_check() {
+		// only display these messages on wawp settings page
+		if (!is_wawp_settings()) return;
 
-		$license_status = Addon::get_license_check_option($this->slug);
-		Log::good_error_log(WAIntegration::valid_wa_credentials());
+		// print out licensing messages
+		Addon::instance()::license_admin_notices();
 
-
-		// these messages will only show directly after the license form submission
-		if (license_submitted()) {
-			Log::good_error_log('license submenu');
-			if ($license_status == 'true') {
-				Addon::valid_license_key_notice($this->slug);
-				return; // return early so plugins can be deactivated
-			} 
-		}
-			} 
-			
-			if ($license_status == 'empty') {
-				Addon::empty_license_key_notice($this->slug);
-			} else if ($license_status == 'invalid') {
-				Addon::invalid_license_key_notice($this->slug);
-			}
-		} else {
-			// show the license key prompt if it hasn't been entered yet
-			// don't show it if WA credentials haven't been entered yet
-			if ($license_status == 'false') {
-				// add_action('admin_notices', array($this, 'prompt_msg'));
-				// do_action('admin_notices', array($this, 'prompt_msg'));
-				Addon::license_key_prompt($this->slug);
-			}
+		if (!WAIntegration::valid_wa_credentials()) {
+			$this->empty_wa_message();
 		}
 	}
 

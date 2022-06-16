@@ -31,6 +31,11 @@ class Addon {
     const WAWP_LICENSE_KEYS_OPTION = 'wawp_license_keys';
     const WAWP_ADDON_LIST_OPTION = 'wawp_addons';
 
+    const LICENSE_STATUS_VALID = 'true';
+    const LICENSE_STATUS_INVALID = 'invalid';
+    const LICENSE_STATUS_ENTERED_EMPTY = 'empty';
+    const LICENSE_STATUS_NOT_ENTERED = 'false';
+
     private static $instance = null;
 
 
@@ -96,8 +101,31 @@ class Addon {
         update_option(self::WAWP_ADDON_LIST_OPTION, $new_list);
     }
 
+    public static function license_admin_notices() {
+        $is_licensing_page = is_licensing_submenu();
+        foreach(self::$addon_list as $slug => $data) {
+            $license_status = self::get_license_check_option($slug);
 
+            if (license_submitted()) {
+                Log::good_error_log('license submenu');
+                if ($license_status == self::LICENSE_STATUS_VALID) {
+                    Log::good_error_log('key valid');
+                    self::valid_license_key_notice($slug);
+                } else if ($license_status == self::LICENSE_STATUS_ENTERED_EMPTY) {
+                    self::empty_license_key_notice($slug, $is_licensing_page);
+                    self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+                }
+            } else {
+                if ($license_status == self::LICENSE_STATUS_NOT_ENTERED) {
+                    self::license_key_prompt($slug, $is_licensing_page);
+                } else if ($license_status == self::LICENSE_STATUS_INVALID) {
+                    self::invalid_license_key_notice($slug, $is_licensing_page);
+                }
+            }
+        }
     }
+
+
 
     public static function get_license_check_option($slug) {
 
@@ -173,7 +201,7 @@ class Addon {
         $license_options = self::$license_check_options;
 
         foreach($license_options as $slug) {
-            self::update_license_check_option($slug, 'false');
+            self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
         }
     }
 
