@@ -10,8 +10,14 @@ require_once __DIR__ . '/DataEncryption.php';
  * For managing the Addon plugins for WAWP
  */
 class Addon {
-    const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
+    // dev webhook for licensing
+    // const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
 
+    // prod webhook for licensing
+
+   const HOOK_URL = 'https://hook.us1.make.com/8euj9o9frkj3wz2nqm6xmcp4y1mdy5tp';
+
+   
     const FREE_ADDONS = array(0 => 'wawp');
     const PAID_ADDONS = array(0 => 'wawp-addon-wa-iframe');
 
