@@ -130,7 +130,6 @@ class Addon {
 
 
     public static function get_license_check_option($slug) {
-
         return get_option(self::$license_check_options[$slug]);
     }
 
@@ -217,14 +216,16 @@ class Addon {
     public static function get_title($slug) {
         $addons = self::get_addons();
         return $addons[$slug]['name'];
-    }
-
-        $slug = array_key_first($addon);
-        $option[$slug] = $addon[$slug];
-        // array_push($option, $addon);
-        update_option('wawp_addons', $option);
 
     }
+    
+
+    //     $slug = array_key_first($addon);
+    //     $option[$slug] = $addon[$slug];
+    //     // array_push($option, $addon);
+    //     update_option('wawp_addons', $option);
+
+    // }
 
     /**
      * Called in uninstall.php. Deletes the data stored in the options table.
@@ -242,6 +243,27 @@ class Addon {
         delete_option('wawp_license_keys');
     }
 
+    public static function escape_license($license_key_input,) {
+        // remove non-alphanumeric, non-hyphen characters
+        $license_key = preg_replace(
+            '/[^A-Za-z0-9\-]/',
+            '',
+            $license_key_input
+        );
+
+        return $license_key;
+    }
+
+    public static function check_license($license_key) {
+        // construct array of data to send
+        $data = array('key' => $license_key, 'json' => '1');
+
+        // send request, receive response in $response
+        $response = self::post_request($data);
+
+        return $response;
+    }
+
     /**
      * Validates the license key.
      * @param license_key_input license key from the input form.
@@ -251,108 +273,50 @@ class Addon {
         // if license key is empty, do nothing
         if (empty($license_key_input)) return 'empty';
 
-        // remove non-alphanumeric, non-hyphen characters
-        $license_key = preg_replace(
-            '/[^A-Za-z0-9\-]/',
-            '',
-            $license_key_input
-        );
+        $license_key = self::escape_license($license_key_input);
 
         Log::good_error_log('plugin ' . $addon_slug);
         if (self::get_license($addon_slug) == $license_key) return $license_key;
 
-        // construct array of data to send
-        $data = array('key' => $license_key, 'json' => '1');
+        $response = self::check_license($license_key);
 
-        // send request, receive response in $response
-        $response = self::post_request($data);
+
         Log::good_error_log('response ' . print_r($response, 1));
         
 
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
         // else return the valid license key
         $filename = self::get_filename($addon_slug);
-        if (array_key_exists('license-error', $response)) {
-            // Ensure that we are not trying to deactivate the wawp plugin
-            // if (is_plugin_active($filename) && $filename != 'wawp/plugin.php') {
-            //     deactivate_plugins($filename);
-            // }
+        if (array_key_exists('license-error', $response)) return NULL;
+
+        if (!(array_key_exists('Products', $response) && array_key_exists('Support Level', $response) && array_key_exists('expiration date', $response))) return NULL;
+
+        // check that the license owner has access to the product and support
+        // Get list of product(s) that this license is valid for
+        $valid_products = $response['Products'];
+        $support_level = $response['Support Level'];
+        $exp_date = $response['expiration date'];
+
+        
+        // Check if the addon_slug in in the valid products
+        if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
+            // Not Valid!
             return NULL;
-        } else { // no error
-            // check that the license owner has access to the product and support
-            if (array_key_exists('Products', $response) && array_key_exists('Support Level', $response) && array_key_exists('expiration date', $response)) {
-                // Get list of product(s) that this license is valid for
-                $valid_products = $response['Products'];
-                $support_level = $response['Support Level'];
-                $exp_date = $response['expiration date'];
-
-                
-                // Check if the addon_slug in in the valid products
-                if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
-                    // Not Valid!
-                    return NULL;
-                }
-            } else {
-                // No products; invalid key
-                return NULL;
-            }
-
-            // Ensure that this license key is valid for the associated Wild Apricot ID and website
-            // Get authorized Wild Apricot URL and ID
-            $licensed_wa_urls = array();
-            if (array_key_exists('Licensed Wild Apricot URLs', $response)) {
-                $licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
-                // Sanitize urls, if necessary
-                if (!empty($licensed_wa_urls)) {
-                    foreach ($licensed_wa_urls as $url_key => $url_value) {
-                        // Lowercase and remove https://, http://, and/or www. from url
-                        $licensed_wa_urls[$url_key] = WAWPApi::create_consistent_url($url_value);
-                    }
-                }
-            }
-            $licensed_wa_ids = array();
-            if (array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
-                $licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
-                // Sanitize ids, if necessary
-                if (!empty($licensed_wa_ids)) {
-                    foreach ($licensed_wa_ids as $id_key => $id_value) {
-                        // Ensure that only numbers are in the ID #
-                        // $licensed_wa_ids[$id_key] = preg_replace('/\d/', '', $id_value);
-                        $licensed_wa_ids[$id_key] = intval($id_value);
-                    }
-                }
-            }
-            // Compare these licensed urls and ids with the current site's urls/ids
-            // Check if Wild Apricot credentials have been entered.
-            // If so, then we can check if the plugin will be activated.
-            // If not, then the plugin cannot be activated
-            $user_credentials = WAWPApi::load_user_credentials();
-            if (!empty($user_credentials)) { // Credentials have been entered
-                // Get access token and account id
-                $access_and_account = WAWPApi::verify_valid_access_token();
-                $access_token = $access_and_account['access_token'];
-                $wa_account_id = $access_and_account['wa_account_id'];
-                // Get account url from API
-                $wawp_api = new WAWPApi($access_token, $wa_account_id);
-                $wild_apricot_info = $wawp_api->get_account_url_and_id();
-
-                // Compare license key information with current site
-                if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { // valid
-                    // This is valid! We can now 'activate' the WAWP functionality
-                    do_action('wawp_wal_credentials_obtained');
-                    return $license_key;
-                } else { // This key is invalid!
-                    do_action('wawp_wal_set_login_private');
-                    return NULL;
-                }
-
-
-            } // Wild Apricot credentials are guaranteed to be added because the licensing page only appears when they have been entered!
-
-            if (!is_plugin_active($filename)) {
-                activate_plugin($filename);
-            }
         }
+
+        // Ensure that this license key is valid for the associated Wild Apricot ID and website
+        // Compare these licensed urls and ids with the current site's urls/ids
+        // Check if Wild Apricot credentials have been entered.
+        // If so, then we can check if the plugin will be activated.
+        // If not, then the plugin cannot be activated
+        $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
+
+
+        if (!$valid_urls_and_ids) {
+            return NULL;
+        }
+
+        return $license_key;
     }
 
     /**
@@ -418,7 +382,7 @@ class Addon {
          echo " in <a href=" . admin_url('admin.php?page=wawp-licensing') . ">Wild Apricot Press > Licensing</a>"; 
         }
         
-        " in order to use the " . $plugin_name . " functionality.</p></div>";
+        echo " in order to use the " . $plugin_name . " functionality.</p></div>";
 
         unset($_GET['activate']);
     }
