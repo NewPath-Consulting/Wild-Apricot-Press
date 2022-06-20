@@ -118,9 +118,11 @@ class Addon {
             } else {
                 if ($license_status == self::LICENSE_STATUS_NOT_ENTERED) {
                     self::license_key_prompt($slug, $is_licensing_page);
-                } else if ($license_status == self::LICENSE_STATUS_INVALID) {
-                    self::invalid_license_key_notice($slug, $is_licensing_page);
                 }
+            }
+
+            if ($license_status == self::LICENSE_STATUS_INVALID) {
+                self::invalid_license_key_notice($slug, $is_licensing_page);
             }
         }
     }
