@@ -171,6 +171,8 @@ class Addon {
     public static function get_license($slug) {
         $licenses = self::get_licenses();
 
+        if (empty($licenses[$slug])) return NULL;
+
         return $licenses[$slug];
     }
 
