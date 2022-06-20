@@ -26,6 +26,8 @@ class Activator {
 
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
 
+		add_action('admin_notices', array($this, 'admin_notices_creds_check'));
+
 		Addon::instance()::new_addon(array(
 			'slug' => $slug,
 			'name' => $plugin_name,
@@ -60,7 +62,7 @@ class Activator {
 	 */
 	public function activate_plugin_callback() {
 		$this->activate();
-		$license_exists = Addon::instance()::has_license($this->slug);
+		$license_exists = Addon::instance()::has_valid_license($this->slug);
 		if (!$license_exists) {
 			update_option($this->license_req_option_name, 'false');
 		} else {
@@ -85,16 +87,24 @@ class Activator {
 		// only display these messages on wawp settings page
 		if (!is_wawp_settings()) return;
 
+		if (!WAIntegration::valid_wa_credentials()) {
+			$this->empty_wa_message();
+		} else {
+		}
+
 		// print out licensing messages
 		Addon::instance()::license_admin_notices();
 
-		if (!WAIntegration::valid_wa_credentials()) {
-			$this->empty_wa_message();
-		}
 	}
 
-		delete_site_option($this->license_req_option_name);
-	}
+	// private function empty_creds_message() {
+	// 	echo "<div class='notice notice-warning'><p>";
+	// 	echo "Please enter your ";
+	// 	echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">Wild Apricot credentials</a>";
+	// 	echo " and ";
+	// 	echo 
+	// }
+
 
 	private function empty_wa_message() {
 
