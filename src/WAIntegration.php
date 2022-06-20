@@ -102,15 +102,15 @@ class WAIntegration {
 
 		// wa_credentials will be false if the option doesn't exist
 		// return here so we don't get invalid index in the lines below
-		if (!$wa_credentials) return false;
-		else if (empty($wa_credentials)) return false;
+		if (!$wa_credentials || !isset($wa_credentials)) return false;
+		if (empty($wa_credentials)) return false;
 
 		$api_key = $wa_credentials[self::WA_API_KEY_OPT];
 		$client_id = $wa_credentials[self::WA_CLIENT_ID_OPT];
 		$client_secret = $wa_credentials[self::WA_CLIENT_SECRET_OPT];
 
 		// check first that creds exist
-		return isset($wa_credentials) && !empty($wa_credentials) && !empty($api_key) && !empty($client_id) && !empty($client_secret);
+		return !empty($api_key) && !empty($client_id) && !empty($client_secret);
 	}
 
 	/**
