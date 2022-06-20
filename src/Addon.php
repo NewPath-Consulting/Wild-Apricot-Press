@@ -145,7 +145,7 @@ class Addon {
      * @return array of add-ons
      */
     public static function get_addons() {
-        return get_option('wawp_addons');
+        return self::$addon_list;
     }
 
     /**
