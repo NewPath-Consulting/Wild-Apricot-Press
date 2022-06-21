@@ -16,8 +16,8 @@ use WAWP\Log;
  * For managing the Addon plugins for WAWP
  */
 class Addon {
-    const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
-    // const HOOK_URL = 'https://newpathconsulting.com/checkdev';
+    // const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
+    const HOOK_URL = 'https://newpathconsulting.com/checkdev';
 
     const FREE_ADDONS = array(0 => CORE_SLUG);
     const PAID_ADDONS = array(0 => 'wawp-addon-wa-iframe');
@@ -256,7 +256,7 @@ class Addon {
 
     public static function check_license($license_key) {
         // construct array of data to send
-        $data = array('key' => $license_key, 'json' => '1');
+        $data = array('key' => $license_key, 'json' => 1);
 
         // send request, receive response in $response
         $response = self::post_request($data);
