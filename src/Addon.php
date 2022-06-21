@@ -103,13 +103,12 @@ class Addon {
 
     public static function license_admin_notices() {
         $is_licensing_page = is_licensing_submenu();
+        Log::good_error_log('enter');
         foreach(self::$addon_list as $slug => $data) {
             $license_status = self::get_license_check_option($slug);
 
             if (license_submitted()) {
-                Log::good_error_log('license submenu');
                 if ($license_status == self::LICENSE_STATUS_VALID) {
-                    Log::good_error_log('key valid');
                     self::valid_license_key_notice($slug);
                 } else if ($license_status == self::LICENSE_STATUS_ENTERED_EMPTY) {
                     self::empty_license_key_notice($slug, $is_licensing_page);
@@ -122,7 +121,7 @@ class Addon {
             }
 
             if ($license_status == self::LICENSE_STATUS_INVALID) {
-                self::invalid_license_key_notice($slug, $is_licensing_page);
+                self::invalid_license_key_notice($slug);
             }
         }
     }
@@ -183,10 +182,8 @@ class Addon {
      */
     public static function has_valid_license($slug) {
         $license = self::get_license($slug);
-        Log::good_error_log($license);
         
         $license_status = self::get_license_check_option($slug);
-        Log::good_error_log($license_status);
         return !empty($license) && $license_status == self::LICENSE_STATUS_VALID;
     }
 
@@ -275,14 +272,10 @@ class Addon {
 
         $license_key = self::escape_license($license_key_input);
 
-        Log::good_error_log('plugin ' . $addon_slug);
         if (self::get_license($addon_slug) == $license_key) return $license_key;
 
         $response = self::check_license($license_key);
 
-
-        Log::good_error_log('response ' . print_r($response, 1));
-        
 
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
         // else return the valid license key
@@ -321,9 +314,20 @@ class Addon {
 
     /**
      * Sends a POST request to the license key validation hook, returns response data
-     * @param data request data containing license key and JSON flag
+     * @param array $data request data containing license key and JSON flag
+     * @return array JSON response data 
      */
     public static function post_request($data) {
+
+        // get integromat url from redirect
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, self::HOOK_URL);
+        curl_setopt($curl, CURLOPT_HEADER, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_exec($curl);
+        $url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
+
         $options = array(
                 'http' => array(
                 'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
@@ -333,7 +337,7 @@ class Addon {
         );
         $context  = stream_context_create($options);
 
-        $result = json_decode(file_get_contents(self::HOOK_URL, false, $context), 1);
+        $result = json_decode(file_get_contents($url, false, $context), 1);
 
         return $result;
     }
@@ -350,7 +354,7 @@ class Addon {
 		echo "</div>";
     }
 
-    public static function invalid_license_key_notice($slug, $is_licensing_page) {
+    public static function invalid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
         echo "<div class='notice notice-error is-dismissible'><p>";
@@ -371,7 +375,7 @@ class Addon {
      * Prints out a message prompting the user to enter their license key.
      * Called when user has activated the plugin but has NOT YET entered their license key.
      * @param string $slug slug of the plugin for which to display this prompt
-     * @param boolean $is_licensing_prompt indicating whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
+     * @param boolean $is_licensing_page indicating whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
      */
     public static function license_key_prompt($slug, $is_licensing_page) {
         $plugin_name = self::get_title($slug);
@@ -389,7 +393,7 @@ class Addon {
 
     /**
      * Returns whether the license key is expired or not.
-     * @param exp_date_string the expiry date of the license from the response data
+     * @param string $exp_date_string the expiry date of the license entered
      * @return boolean true if license is expired, false if not. 
      */
     private static function is_expired($exp_date_string) {
