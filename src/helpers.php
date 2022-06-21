@@ -29,4 +29,10 @@ function get_current_url() {
     return basename(home_url($_SERVER['REQUEST_URI']));
 }
 
+function is_plugin_page() {
+    $current_url = get_current_url();
+
+    return str_contains($current_url, 'plugins.php');
+}
+
 ?>
