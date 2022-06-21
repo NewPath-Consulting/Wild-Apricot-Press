@@ -1171,7 +1171,6 @@ class MySettingsPage
      */
     public function validate_license_form($input) {
         $data_encryption = new DataEncryption();
-        Log::good_error_log('enter');
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
             wp_die('The license keys could not be verified.');
@@ -1189,7 +1188,6 @@ class MySettingsPage
                 // ERROR LOG
 
             } else if ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
-                Log::good_error_log("Entered empty license for " . $slug);
                 $valid[$slug] = '';
 
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
