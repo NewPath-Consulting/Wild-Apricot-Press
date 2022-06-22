@@ -122,11 +122,6 @@ class WAIntegration {
 
 		$credentials_valid = true;
 
-		if (!$has_valid_wa_credentials || !$has_valid_license) {
-			$credentials_valid = false;
-			// invalidate both credentials? how to do this. there IS an option for invalid credentials in the opt table. but then i would have to go back and change so much stuff. or would i?
-		}
-
 		if ($has_valid_wa_credentials && $has_valid_license) {
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = Addon::get_license(CORE_SLUG);
