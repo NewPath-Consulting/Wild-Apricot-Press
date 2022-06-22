@@ -33,7 +33,8 @@ class Activator {
 			'slug' => $slug,
 			'name' => $plugin_name,
 			'filename' => $filename,
-			'license_check_option' => $this->license_req_option_name
+			'license_check_option' => $this->license_req_option_name,
+			'is_addon' => 0 // only core calls activator, so is_addon will always be false here
 		));
 
 	}
@@ -55,7 +56,7 @@ class Activator {
 			MySettingsPage::setup_cron_job();
 		} else {
 			update_option(self::SHOW_NOTICE_ACTIVATION, 1);
-			do_action('wawp_wal_set_login_private');
+			do_action('disable_plugin', CORE_SLUG);
 		}
 	}
 

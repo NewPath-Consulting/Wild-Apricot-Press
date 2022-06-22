@@ -144,17 +144,18 @@ class WAIntegration {
 				}
 			}
 
-			// TODO: figure out what to do for invalid WA creds
-			// deleting option is NOT an option
-			// If license key is null, then that means that it is not valid
-			if (!$credentials_valid) {
-				// Disable WAWP functionality
-				do_action('wawp_wal_set_login_private');
-				// Clear WAWP credentials and license
-				// delete_option(self::WA_CREDENTIALS_KEY, '');
-				Addon::instance()::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_INVALID);
-			}
+			// need to check if WA creds invalid
 
+
+		} else {
+			$credentials_valid = false;
+		}
+
+		// TODO: figure out what to do for invalid WA creds
+		// deleting option is NOT an option
+		// If license key is null, then that means that it is not valid
+		if (!$credentials_valid) {
+			do_action('disable_plugin', CORE_SLUG);
 		}
 	}
 
@@ -218,7 +219,7 @@ class WAIntegration {
 			return true;
 		}
 		
-		do_action('wawp_wal_set_login_private');
+		// do_action('wawp_wal_set_login_private');
 		return false;
 
 	}

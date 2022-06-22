@@ -35,4 +35,12 @@ function is_plugin_page() {
     return str_contains($current_url, 'plugins.php');
 }
 
+function is_core($slug) {
+    return $slug == CORE_SLUG;
+}
+
+function is_addon($slug) {
+    return !is_core($slug);
+}
+
 ?>

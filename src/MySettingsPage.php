@@ -498,7 +498,8 @@ class MySettingsPage
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
                             // Set Wild Apricot login to private
-                            do_action('wawp_wal_set_login_private');
+                            do_action('disable_plugin', CORE_SLUG);
+                            // do_action('wawp_wal_set_login_private');
 						} else { // successful login
                             // Get Wild Apricot URL
                             $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
@@ -1178,24 +1179,29 @@ class MySettingsPage
 
         $valid = array();
 
-        
-
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
-            if (is_null($key)) { // invalid key
+            if (is_null($key)) { 
+                // invalid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
                 $valid[$slug] = '';
-                // ERROR LOG
 
             } else if ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
+                // key was not entered -- different message will be shown
                 $valid[$slug] = '';
 
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
             } 
-            else { // valid key
+            else { 
+                // valid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
                 $valid[$slug] = $data_encryption->encrypt($key);
 
+            }
+
+            // if the key is not valid, disable plugins
+            if (is_null($key) || Addon::LICENSE_STATUS_ENTERED_EMPTY) {
+                do_action('disable_plugin', $slug);
             }
         }
         return $valid;

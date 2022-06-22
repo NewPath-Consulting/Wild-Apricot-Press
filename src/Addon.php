@@ -50,6 +50,8 @@ class Addon {
         if (!get_option(self::WAWP_LICENSE_KEYS_OPTION)) {
             add_option(self::WAWP_LICENSE_KEYS_OPTION);
         }
+
+        add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 1);
     }
 
     /**
@@ -88,8 +90,13 @@ class Addon {
         $option[$slug] = array(
             'name' => $addon['name'],
             'filename' => $addon['filename'],
-            'license_check_option' => $addon['license_check_option']
+            'license_check_option' => $addon['license_check_option'],
+            'is_addon' => $addon['is_addon']
         );
+
+        if ($addon['is_addon']) {
+            $option['blocks'] = $addon['blocks'];
+        }
         self::$license_check_options[$slug] = $addon['license_check_option'];
         self::$addon_list[$slug] = $option[$slug];
         self::update_addons($option);
@@ -262,6 +269,55 @@ class Addon {
     }
 
     /**
+     * Disables addon referred to by the slug parameter.
+     * Updates the license status to be false.
+     * Addon blocks are unregistered. 
+     * @param string $slug slug string of the plugin to be disabled. 
+     */
+    public static function disable_addon($slug) {
+        self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_INVALID);
+
+        $blocks = self::instance()::$addon_list[$slug]['blocks'];
+
+        foreach ($blocks as $block) {
+            unregister_block_type($block);
+        }
+    }
+
+    /**
+     * Disables plugins. 
+     * If the slug is the core plugin, all NewPath addons will be disabled along with the core plugin.
+     * If the slug is an addon, disable_addon will be called.
+     * @param string $slug slug string of the plugin to disable.
+     */
+    public static function disable_plugin($slug) {
+        // if slug == core
+        // loop through addon list
+        // if plugin is an addon, call disable addon
+        // for all of them, change license status to false
+        // do action make login private
+
+
+        if (is_addon($slug)) {
+            self::instance()::disable_addon($slug);
+            return;
+        }
+
+        foreach (self::instance()::$addon_list as $slug_iter => $addon) {
+            if (is_addon($slug_iter)) {
+                self::instance()::disable_addon($slug_iter);
+            } else { // disable_addon already updates license status since it can be called independent of this function
+                self::instance()::update_license_check_option($slug_iter, self::LICENSE_STATUS_INVALID);
+            }
+        }
+
+        do_action('wawp_wal_set_login_private');
+
+
+
+    }
+
+    /**
      * Validates the license key.
      * @param license_key_input license key from the input form.
      * @param addon_slug Respective add-on for the key.
@@ -355,10 +411,10 @@ class Addon {
     }
 
     public static function invalid_license_key_notice($slug) {
-        $plugin_name = self::get_title($slug);
-        $filename = self::get_filename($slug);
+        $name = self::get_title($slug);
         echo "<div class='notice notice-error is-dismissible'><p>";
-        echo "Your license key is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>Wild Apricot for Wordpress website</a>.";
+        echo "Your license key for <strong>" . $name;
+        echo "</strong> is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>Wild Apricot for Wordpress website</a>.";
         echo "</div>";
     }
 
