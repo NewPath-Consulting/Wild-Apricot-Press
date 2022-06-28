@@ -92,9 +92,6 @@ class Addon {
         if ($option == false) {
             $option = array();
         }
-        if (in_array($addon, $option)) {
-            return;
-        }
 
         $slug = $addon['slug'];
 
@@ -196,7 +193,7 @@ class Addon {
      * @return array of add-ons
      */
     public static function get_addons() {
-        return self::$addon_list;
+        return get_option(self::WAWP_ADDON_LIST_OPTION);
     }
 
     /**
@@ -269,14 +266,6 @@ class Addon {
 
     }
     
-
-    //     $slug = array_key_first($addon);
-    //     $option[$slug] = $addon[$slug];
-    //     // array_push($option, $addon);
-    //     update_option('wawp_addons', $option);
-
-    // }
-
     /**
      * Called in uninstall.php. Deletes the data stored in the options table.
      */
@@ -331,9 +320,9 @@ class Addon {
      * @param string $slug slug string of the plugin to be disabled. 
      */
     public static function disable_addon($slug) {
-        self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_INVALID);
+        self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
 
-        $blocks = self::instance()::$addon_list[$slug]['blocks'];
+        $blocks = self::instance()::get_addons()[$slug]['blocks'];
 
         foreach ($blocks as $block) {
             unregister_block_type($block);
@@ -359,11 +348,17 @@ class Addon {
             return;
         }
 
-        foreach (self::instance()::$addon_list as $slug_iter => $addon) {
+        foreach (self::instance()::get_addons() as $slug_iter => $addon) {
             if (is_addon($slug_iter)) {
                 self::instance()::disable_addon($slug_iter);
             } else { // disable_addon already updates license status since it can be called independent of this function
-                self::instance()::update_license_check_option($slug_iter, self::LICENSE_STATUS_INVALID);
+
+                // change license status only if it is currently valid
+                // this will happen when this function is called during a cron job, which means this license has expired or otherwise become invalid since it had been entered.
+                $license_status = self::instance()::get_license_check_option($slug_iter);
+                if ($license_status == self::LICENSE_STATUS_VALID) {
+                    self::instance()::update_license_check_option($slug_iter, self::LICENSE_STATUS_INVALID);
+                }
             }
         }
 
@@ -466,13 +461,8 @@ class Addon {
 
     public static function valid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
-        $filename = self::get_filename($slug);
         echo "<div class='notice notice-success is-dismissible'><p>";
 		echo "Saved license key for <strong>" . $plugin_name . "</strong>.</p>";
-		if (!is_plugin_active($filename)) {
-			activate_plugin($filename);
-			echo "<p>Activating plugin.</p>";
-		}
 		echo "</div>";
     }
 
@@ -513,21 +503,7 @@ class Addon {
         unset($_GET['activate']);
     }
 
-    /**
-     * Returns whether the license key is expired or not.
-     * @param string $exp_date_string the expiry date of the license entered
-     * @return boolean true if license is expired, false if not. 
-     */
-    private static function is_expired($exp_date_string) {
-        $now = new DateTime();
-        $exp_date = new DateTime($exp_date_string);
 
-        $now_ts = $now->getTimestamp();
-        $exp_date_ts = $exp_date->getTimestamp();
-        $is_expired = !empty($exp_date_string) && $exp_date_ts < $now_ts;
-
-        return $is_expired;
-    }
 
 
 
