@@ -30,6 +30,7 @@ class Addon {
         // invalid: invalid key entered
     const WAWP_LICENSE_KEYS_OPTION = 'wawp_license_keys';
     const WAWP_ADDON_LIST_OPTION = 'wawp_addons';
+    const WAWP_ACTIVATION_NOTICE_OPTION = 'show_activation_notice';
 
     const LICENSE_STATUS_VALID = 'true';
     const LICENSE_STATUS_INVALID = 'invalid';
@@ -67,6 +68,15 @@ class Addon {
         return self::$instance;
     }
 
+    public static function activate($slug) {
+        $license_exists = self::instance()::has_valid_license($slug);
+        if ($license_exists) return true;
+        self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        self::update_show_activation_notice_option($slug, 1);
+        return false;
+
+    }
+
 
     /**
      * Adds a new add-on to the array of add-ons stored in the options table.
@@ -87,21 +97,20 @@ class Addon {
         }
 
         $slug = $addon['slug'];
-        $option[$slug] = array(
-            'name' => $addon['name'],
-            'filename' => $addon['filename'],
-            'license_check_option' => $addon['license_check_option'],
-            'is_addon' => $addon['is_addon']
-        );
 
-        if ($addon['is_addon']) {
-            $option['blocks'] = $addon['blocks'];
+        if (in_array($slug, $option)) {
+            return;
         }
+
+        // populate 
+        foreach ($addon as $key => $value) {
+            if ($key == 'slug') continue;
+            $option[$slug][$key] = $value;
+        }
+
         self::$license_check_options[$slug] = $addon['license_check_option'];
         self::$addon_list[$slug] = $option[$slug];
         self::update_addons($option);
-
-
     }
 
     public static function update_addons($new_list) {
@@ -109,28 +118,57 @@ class Addon {
     }
 
     public static function license_admin_notices() {
-        $is_licensing_page = is_licensing_submenu();
-        Log::good_error_log('enter');
-        foreach(self::$addon_list as $slug => $data) {
-            $license_status = self::get_license_check_option($slug);
 
+        $is_licensing_page = is_licensing_submenu();
+        $core_license_status = false;
+
+        // loop through all addons
+        foreach(self::get_addons() as $slug => $data) {
+            // grab the license status from options table
+            $license_status = self::get_license_check_option($slug);
+            if (is_core($slug)) $core_license_status = $license_status;
+
+            // some messages will only be shown as a feedback message when license is entered
             if (license_submitted()) {
+                // if entered license is valid, show message
                 if ($license_status == self::LICENSE_STATUS_VALID) {
                     self::valid_license_key_notice($slug);
+                    Log::good_error_log($slug, 'valid key');
+                    continue; // skip rest of loop code because further operations will only be done on invalid licenses.
                 } else if ($license_status == self::LICENSE_STATUS_ENTERED_EMPTY) {
-                    self::empty_license_key_notice($slug, $is_licensing_page);
+                    // if entered license is empty, show message, then revert to not entered option
+                    self::empty_license_key_notice($slug);
                     self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
-                }
-            } else {
-                if ($license_status == self::LICENSE_STATUS_NOT_ENTERED) {
-                    self::license_key_prompt($slug, $is_licensing_page);
                 }
             }
 
-            if ($license_status == self::LICENSE_STATUS_INVALID) {
+            $should_show_activation_notice = self::get_show_activation_notice_option($slug);
+            // if it's the plugin page, set show notice to false so it doesn't appear every time you see the plugins page
+            // also prevent the activation message from showing
+            if (is_plugin_page()) {
+                self::update_show_activation_notice_option($slug, 0);
+                unset($_GET['activate']);
+            }
+
+            if (is_plugin_page() && !$should_show_activation_notice) continue;
+            Log::good_error_log('hello');
+
+            if ($license_status == self::LICENSE_STATUS_NOT_ENTERED) {
+                // show generic license prompt on licensing page if license has not been entered
+                self::license_key_prompt($slug, $is_licensing_page);
+            } else if ($license_status == self::LICENSE_STATUS_INVALID) {
+                // show invalid license message on any wawp settings page
                 self::invalid_license_key_notice($slug);
             }
+            
+            Log::good_error_log($license_status, $slug);
+            // if license status is not valid, disable plugins
+            if ($license_status != self::LICENSE_STATUS_VALID && is_addon($slug)) {
+                do_action('disable_plugin', $slug);
+            }
         }
+
+        if ($core_license_status != self::LICENSE_STATUS_VALID) { do_action('disable_plugin', $slug); }
     }
 
 
@@ -141,6 +179,14 @@ class Addon {
 
     public static function update_license_check_option($slug, $val) {
         update_option(self::$license_check_options[$slug], $val);
+    }
+
+    public static function get_show_activation_notice_option($slug) {
+        return get_option(self::get_addons()[$slug][self::WAWP_ACTIVATION_NOTICE_OPTION]);
+    }
+
+    public static function update_show_activation_notice_option($slug, $val) {
+        update_option(self::$addon_list[$slug][self::WAWP_ACTIVATION_NOTICE_OPTION], $val);
     }
 
 
