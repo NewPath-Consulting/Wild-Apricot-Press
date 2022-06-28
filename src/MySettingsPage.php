@@ -1191,18 +1191,14 @@ class MySettingsPage
                 $valid[$slug] = '';
 
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
-            } 
-            else { 
+            } else { 
                 // valid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
                 $valid[$slug] = $data_encryption->encrypt($key);
 
             }
 
-            // if the key is not valid, disable plugins
-            if (is_null($key) || Addon::LICENSE_STATUS_ENTERED_EMPTY) {
-                do_action('disable_plugin', $slug);
-            }
+
         }
         return $valid;
     }

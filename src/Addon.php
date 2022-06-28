@@ -293,6 +293,11 @@ class Addon {
         delete_option('wawp_license_keys');
     }
 
+    /**
+     * Removes non alphanumeric, non-hyphen characters from license key input.
+     * @param string $license_key_input input from license key form to escape.
+     * @return string escaped license key.
+     */
     public static function escape_license($license_key_input) {
         // remove non-alphanumeric, non-hyphen characters
         $license_key = preg_replace(
@@ -304,6 +309,11 @@ class Addon {
         return $license_key;
     }
 
+    /**
+     * Constructs array of license key data to send to the Integromat license key scenario. Sends request to the Integromat hook URL.
+     * @param string $license_key license key to check against the hook.
+     * @return string[] response from the scenario.
+     */
     public static function check_license($license_key) {
         // construct array of data to send
         $data = array('key' => $license_key, 'json' => 1);
@@ -365,8 +375,9 @@ class Addon {
 
     /**
      * Validates the license key.
-     * @param license_key_input license key from the input form.
-     * @param addon_slug Respective add-on for the key.
+     * @param string $license_key_input license key from the input form.
+     * @param string $addon_slug Respective add-on for the key.
+     * @return string|null the license key if the input is valid, null if not. 
      */
     public static function validate_license_key($license_key_input, $addon_slug) {
         // if license key is empty, do nothing
@@ -413,7 +424,7 @@ class Addon {
      */
     public static function post_request($data) {
 
-        // get integromat url from redirect
+        // get integromat hook url from redirect
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, self::HOOK_URL);
         curl_setopt($curl, CURLOPT_HEADER, true);
@@ -422,6 +433,7 @@ class Addon {
         curl_exec($curl);
         $url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
 
+        // send request to hook url
         $options = array(
                 'http' => array(
                 'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
@@ -434,6 +446,22 @@ class Addon {
         $result = json_decode(file_get_contents($url, false, $context), 1);
 
         return $result;
+    }
+
+    /**
+     * Returns whether the license key is expired or not.
+     * @param string $exp_date_string the expiry date of the license entered
+     * @return boolean true if license is expired, false if not. 
+     */
+    private static function is_expired($exp_date_string) {
+        $now = new DateTime();
+        $exp_date = new DateTime($exp_date_string);
+
+        $now_ts = $now->getTimestamp();
+        $exp_date_ts = $exp_date->getTimestamp();
+        $is_expired = !empty($exp_date_string) && $exp_date_ts < $now_ts;
+
+        return $is_expired;
     }
 
     public static function valid_license_key_notice($slug) {
@@ -449,9 +477,9 @@ class Addon {
     }
 
     public static function invalid_license_key_notice($slug) {
-        $name = self::get_title($slug);
+        $plugin_name = self::get_title($slug);
         echo "<div class='notice notice-error is-dismissible'><p>";
-        echo "Your license key for <strong>" . $name;
+        echo "Your license key for <strong>" . $plugin_name;
         echo "</strong> is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>Wild Apricot for Wordpress website</a>.";
         echo "</div>";
     }
@@ -480,7 +508,7 @@ class Addon {
          echo " in <a href=" . admin_url('admin.php?page=wawp-licensing') . ">Wild Apricot Press > Licensing</a>"; 
         }
         
-        echo " in order to use the " . $plugin_name . " functionality.</p></div>";
+        echo " in order to use the <strong>" . $plugin_name . "</strong> functionality.</p></div>";
 
         unset($_GET['activate']);
     }
