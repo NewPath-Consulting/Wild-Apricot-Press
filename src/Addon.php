@@ -52,7 +52,7 @@ class Addon {
             add_option(self::WAWP_LICENSE_KEYS_OPTION);
         }
 
-        add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 1);
+        add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 2);
     }
 
     /**
@@ -130,7 +130,6 @@ class Addon {
                 // if entered license is valid, show message
                 if ($license_status == self::LICENSE_STATUS_VALID) {
                     self::valid_license_key_notice($slug);
-                    Log::good_error_log($slug, 'valid key');
                     continue; // skip rest of loop code because further operations will only be done on invalid licenses.
                 } else if ($license_status == self::LICENSE_STATUS_ENTERED_EMPTY) {
                     // if entered license is empty, show message, then revert to not entered option
@@ -147,8 +146,8 @@ class Addon {
                 unset($_GET['activate']);
             }
 
+            // continue here only if it's wawp settings or it's the plugin page and the notice should be showed
             if (is_plugin_page() && !$should_show_activation_notice) continue;
-            Log::good_error_log('hello');
 
             if ($license_status == self::LICENSE_STATUS_NOT_ENTERED) {
                 // show generic license prompt on licensing page if license has not been entered
@@ -157,15 +156,9 @@ class Addon {
                 // show invalid license message on any wawp settings page
                 self::invalid_license_key_notice($slug);
             }
-            
-            Log::good_error_log($license_status, $slug);
-            // if license status is not valid, disable plugins
-            if ($license_status != self::LICENSE_STATUS_VALID && is_addon($slug)) {
-                do_action('disable_plugin', $slug);
-            }
         }
+            
 
-        if ($core_license_status != self::LICENSE_STATUS_VALID) { do_action('disable_plugin', $slug); }
     }
 
 
@@ -333,9 +326,11 @@ class Addon {
      * Disables plugins. 
      * If the slug is the core plugin, all NewPath addons will be disabled along with the core plugin.
      * If the slug is an addon, disable_addon will be called.
+     * Make login page private.
      * @param string $slug slug string of the plugin to disable.
+     * @param string $new_license_status new, accurate status for the license. Will be invalid if license was found to be invalid or expired. Will be "not entered" if license has not been entered or WA credentials are invalid.
      */
-    public static function disable_plugin($slug) {
+    public static function disable_plugin($slug, $new_license_status) {
         // if slug == core
         // loop through addon list
         // if plugin is an addon, call disable addon
@@ -355,10 +350,7 @@ class Addon {
 
                 // change license status only if it is currently valid
                 // this will happen when this function is called during a cron job, which means this license has expired or otherwise become invalid since it had been entered.
-                $license_status = self::instance()::get_license_check_option($slug_iter);
-                if ($license_status == self::LICENSE_STATUS_VALID) {
-                    self::instance()::update_license_check_option($slug_iter, self::LICENSE_STATUS_INVALID);
-                }
+                self::instance()::update_license_check_option($slug, $new_license_status);
             }
         }
 

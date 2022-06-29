@@ -119,38 +119,42 @@ class WAIntegration {
 		// Ensure that credentials have been already entered
 		$has_valid_wa_credentials = self::valid_wa_credentials();
 		$has_valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
+		$license_status = Addon::get_license_check_option(CORE_SLUG);
 
-		$credentials_valid = true;
+		
 
+		// if the stored WA credentials and license key are valid, check the validity of each
 		if ($has_valid_wa_credentials && $has_valid_license) {
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = Addon::get_license(CORE_SLUG);
-			$integromat_response = Addon::instance()::check_license($current_license_key);
-			// Check for error; if not, then extract Wild Apricot URL and ID
-			$validated_license_key = $current_license_key;
-			if (array_key_exists('license-error', $integromat_response)) { // error
-				// An invalid license key exists! Deactivate the WAWP functionality!
-				$credentials_valid = false;
-			} else { // no error
-				$valid_wa_urls_ids = self::check_licensed_wa_urls_ids($integromat_response);
 
-				if (!$valid_wa_urls_ids) {
-					$credentials_valid = false;
-				}
+			// check for correct license properties
+			$license = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
+
+			if ($license == Addon::LICENSE_STATUS_ENTERED_EMPTY || !$has_valid_wa_credentials) {
+				$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
+			} else if (is_null($license)) {
+				$license_status = Addon::LICENSE_STATUS_INVALID;
 			}
 
-			// need to check if WA creds invalid
-
-
-		} else {
-			$credentials_valid = false;
+			// now check if WA creds invalid
+			// $wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
+			// $has_valid_wa_credentials = WAWPApi::is_application_valid($wa_credentials[self::WA_API_KEY_OPT]);
 		}
 
-		// TODO: figure out what to do for invalid WA creds
-		// deleting option is NOT an option
-		// If license key is null, then that means that it is not valid
-		if (!$credentials_valid) {
-			do_action('disable_plugin', CORE_SLUG);
+		// update new license status
+		// invalid if license was found to be invalid
+		// not entered if only WA creds are invalid
+
+
+		// license status is subject to change based on the request made
+		if ($license_status != Addon::LICENSE_STATUS_VALID || !$has_valid_license || !$has_valid_wa_credentials) {
+			// disable plugin since one or both of the creds are invalid
+			do_action('disable_plugin', CORE_SLUG, $license_status);
+		} else {
+			// if neither of the creds are invalid, do creds obtained action
+			Log::good_error_log('credentials valid');
+			do_action('wawp_wal_credentials_obtained');
 		}
 	}
 
@@ -209,8 +213,6 @@ class WAIntegration {
 
 		// Compare license key information with current site
 		if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { 
-			// if account id and url are valid, create login page
-			do_action('wawp_wal_credentials_obtained');
 			return true;
 		}
 		

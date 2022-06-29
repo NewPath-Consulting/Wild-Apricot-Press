@@ -54,7 +54,7 @@ class Activator {
 		// returns false & does disable_plugin if license is invalid/nonexistent
 		$did_activate = Addon::instance()::activate(CORE_SLUG);
 		if (!$did_activate) return;
-		if (!WAIntegration::valid_wa_credentials()) do_action('disable_plugin', CORE_SLUG);
+		if (!WAIntegration::valid_wa_credentials()) do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
 
 		// **** this code will only run if license AND wa credentials are valid ****
 		// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
@@ -78,6 +78,8 @@ class Activator {
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 
 		if (!$valid_wa_creds && (is_wawp_settings() || is_plugin_page() && $should_activation_show_notice)) {
+			unset($_GET['activate']);
+			Addon::update_show_activation_notice_option(CORE_SLUG, 0);
 			if (!$valid_license) {
 				// if both creds are invalid show one message telling the user to enter both instead of two separate messages
 				self::empty_creds_message();
