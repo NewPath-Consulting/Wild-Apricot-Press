@@ -427,7 +427,60 @@ class MySettingsPage
         <div class="wrap">
 			<h1>Wild Apricot Authorization</h1>
 			<div class="waSettings">
+				
 				<div class="loginChild">
+                    <!-- Wild Apricot credentials form -->
+					<form method="post" action="options.php">
+					<?php
+                        // Nonce for verification
+                        wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
+						// This prints out all hidden setting fields
+						settings_fields( 'wawp_wal_group' );
+						do_settings_sections( 'wawp-login' );
+						submit_button();
+					?>
+					</form>
+					<!-- Check if form is valid -->
+					<?php
+                        // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
+						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
+							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
+						} else { // successful login
+                            // Get Wild Apricot URL
+                            $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
+                            if ($wild_apricot_url) {
+                                $dataEncryption = new DataEncryption();
+                                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
+                            }
+							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
+                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
+						}
+					?>
+                    <!-- Menu Locations for Login/Logout button -->
+                    <form method="post" action="options.php">
+					<?php
+                        // Nonce for verification
+                        wp_nonce_field('wawp_menu_location_nonce_action', 'wawp_menu_location_nonce_name');
+						// This prints out all hidden setting fields
+						settings_fields( 'wawp_menu_location_group' );
+						do_settings_sections( 'wawp-login-menu-location' );
+						submit_button();
+					?>
+					</form>
+                    <!-- Check if menu location(s) have been submitted -->
+                    <?php
+                        // Check menu locations in options table
+                        $menu_location_saved = get_option('wawp_menu_location_name');
+                        // If menu locations is not empty, then it has been saved
+                        if (!empty($menu_location_saved)) {
+                            // Display success statement
+                            echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
+                        } else {
+                            echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
+                        }
+                    ?>
+				</div>
+                <div class="loginChild">
 					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
 					<ul class="wawp_list">
 					   <li>API Key</li>
@@ -479,61 +532,6 @@ class MySettingsPage
 					   </li>
 					   <br>
 					</ol>
-				</div>
-				<div class="loginChild">
-                    <!-- Wild Apricot credentials form -->
-					<form method="post" action="options.php">
-					<?php
-                        // Nonce for verification
-                        wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
-						// This prints out all hidden setting fields
-						settings_fields( 'wawp_wal_group' );
-						do_settings_sections( 'wawp-login' );
-						submit_button();
-					?>
-					</form>
-					<!-- Check if form is valid -->
-					<?php
-                        // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
-						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
-							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
-                            // Set Wild Apricot login to private
-                            do_action('disable_plugin', CORE_SLUG);
-                            // do_action('wawp_wal_set_login_private');
-						} else { // successful login
-                            // Get Wild Apricot URL
-                            $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
-                            if ($wild_apricot_url) {
-                                $dataEncryption = new DataEncryption();
-                                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
-                            }
-							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
-                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
-						}
-					?>
-                    <!-- Menu Locations for Login/Logout button -->
-                    <form method="post" action="options.php">
-					<?php
-                        // Nonce for verification
-                        wp_nonce_field('wawp_menu_location_nonce_action', 'wawp_menu_location_nonce_name');
-						// This prints out all hidden setting fields
-						settings_fields( 'wawp_menu_location_group' );
-						do_settings_sections( 'wawp-login-menu-location' );
-						submit_button();
-					?>
-					</form>
-                    <!-- Check if menu location(s) have been submitted -->
-                    <?php
-                        // Check menu locations in options table
-                        $menu_location_saved = get_option('wawp_menu_location_name');
-                        // If menu locations is not empty, then it has been saved
-                        if (!empty($menu_location_saved)) {
-                            // Display success statement
-                            echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
-                        } else {
-                            echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
-                        }
-                    ?>
 				</div>
 			</div>
         </div>
@@ -989,53 +987,57 @@ class MySettingsPage
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
-        } else { // Valid input and valid response
-            // Extract access token and ID, as well as expiring time
-            $access_token = $valid_api['access_token'];
-            $account_id = $valid_api['Permissions'][0]['AccountId'];
-            $expiring_time = $valid_api['expires_in'];
-            $refresh_token = $valid_api['refresh_token'];
-            // Store access token and account ID as transients
-            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
-            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
-            // Store refresh token in database
-            update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
-            // Get all membership levels and groups
-            $wawp_api_instance = new WAWPApi($access_token, $account_id);
-            $all_membership_levels = $wawp_api_instance->get_membership_levels();
-            // Create a new role for each membership level
-            // Delete old roles if applicable
-            $old_wa_roles = get_option('wawp_all_levels_key');
-            if (isset($old_wa_roles) && !empty($old_wa_roles)) {
-                // Loop through each role and delete it
-                foreach ($old_wa_roles as $old_role) {
-                    remove_role('wawp_' . str_replace(' ', '', $old_role));
-                }
-            }
-            foreach ($all_membership_levels as $level) {
-                // In identifier, remove spaces so that the role can become a single word
-                add_role('wawp_' . str_replace(' ', '', $level), $level);
-            }
-            $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
-            // Save membership levels and groups to options
-            update_option('wawp_all_levels_key', $all_membership_levels);
-            update_option('wawp_all_groups_key', $all_membership_groups);
 
-            // Get Wild Apricot URL
-            $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
-            $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
-            // Save URL
-            update_option(WAIntegration::WA_URL_KEY, $dataEncryption->encrypt($wild_apricot_url));
+            // Delete all licenses because they are invalid now and user must insert them again
+            Addon::clear_licenses();
+            return $valid;
+        } 
 
-            // Schedule CRON update for updating the available membership levels and groups
-            self::setup_cron_job();
+
+        // Valid input and valid response
+        // Extract access token and ID, as well as expiring time
+        $access_token = $valid_api['access_token'];
+        $account_id = $valid_api['Permissions'][0]['AccountId'];
+        $expiring_time = $valid_api['expires_in'];
+        $refresh_token = $valid_api['refresh_token'];
+        // Store access token and account ID as transients
+        set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
+        set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
+        // Store refresh token in database
+        update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
+        // Get all membership levels and groups
+        $wawp_api_instance = new WAWPApi($access_token, $account_id);
+        $all_membership_levels = $wawp_api_instance->get_membership_levels();
+        // Create a new role for each membership level
+        // Delete old roles if applicable
+        $old_wa_roles = get_option('wawp_all_levels_key');
+        if (isset($old_wa_roles) && !empty($old_wa_roles)) {
+            // Loop through each role and delete it
+            foreach ($old_wa_roles as $old_role) {
+                remove_role('wawp_' . str_replace(' ', '', $old_role));
+            }
         }
+        foreach ($all_membership_levels as $level) {
+            // In identifier, remove spaces so that the role can become a single word
+            add_role('wawp_' . str_replace(' ', '', $level), $level);
+        }
+        $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
+        // Save membership levels and groups to options
+        update_option('wawp_all_levels_key', $all_membership_levels);
+        update_option('wawp_all_groups_key', $all_membership_groups);
 
-        // Delete all licenses because they are invalid now and user must insert them again
-        Addon::clear_licenses();
+        // Get Wild Apricot URL
+        $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
+        $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
+        // Save URL
+        update_option(WAIntegration::WA_URL_KEY, $dataEncryption->encrypt($wild_apricot_url));
 
-		// Return array of valid inputs
-		return $valid;
+        // Schedule CRON update for updating the available membership levels and groups
+        self::setup_cron_job();
+
+        // Return array of valid inputs
+        return $valid;
+
     }
 
     /**

@@ -296,7 +296,7 @@ class Addon {
      * @param string $license_key license key to check against the hook.
      * @return string[] response from the scenario.
      */
-    public static function check_license($license_key) {
+    public static function request_integromat_hook($license_key) {
         // construct array of data to send
         $data = array('key' => $license_key, 'json' => 1);
 
@@ -368,38 +368,22 @@ class Addon {
      */
     public static function validate_license_key($license_key_input, $addon_slug) {
         // if license key is empty, do nothing
-        if (empty($license_key_input)) return 'empty';
-
+        if (empty($license_key_input)) return self::LICENSE_STATUS_ENTERED_EMPTY;
+        // escape input
         $license_key = self::escape_license($license_key_input);
 
+        // if license hasn't changed, return it
+        // avoid making expensive request
         if (self::get_license($addon_slug) == $license_key) return $license_key;
 
-        $response = self::check_license($license_key);
+        // check key against integromat scenario
+        $response = self::request_integromat_hook($license_key);
 
+        // check that key has the necessary properties to be valid
+        $is_license_valid = self::check_license_properties($response);
 
-        // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
-        // else return the valid license key
-        if (array_key_exists('license-error', $response)) return NULL;
+        if (!$is_license_valid) return NULL;
 
-        if (!(array_key_exists('Products', $response) && array_key_exists('Support Level', $response) && array_key_exists('expiration date', $response))) return NULL;
-
-        // Get list of product(s) that this license is valid for
-        $valid_products = $response['Products'];
-        $support_level = $response['Support Level'];
-        $exp_date = $response['expiration date'];
-
-        
-        // Check if the addon_slug in in the products list, has support access and is expired
-        if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
-            return NULL;
-        }
-
-        // Ensure that this license key is valid for the associated Wild Apricot ID and website
-        $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
-
-        if (!$valid_urls_and_ids) {
-            return NULL;
-        }
 
         return $license_key;
     }
@@ -433,6 +417,41 @@ class Addon {
         $result = json_decode(file_get_contents($url, false, $context), 1);
 
         return $result;
+    }
+
+    /**
+     * Checks the Integromat hook response for the necessary conditions for a valid license.
+     * Must have WAWP in products.
+     * Must have support.
+     * Must not be expired.
+     * @return bool true if above conditions are valid, false if not.
+     */
+    public static function check_license_properties($response) {
+        // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
+        // else return the valid license key
+        if (array_key_exists('license-error', $response)) return false;
+
+        if (!(array_key_exists('Products', $response) && array_key_exists('Support Level', $response) && array_key_exists('expiration date', $response))) return false;
+
+        // Get list of product(s) that this license is valid for
+        $valid_products = $response['Products'];
+        $support_level = $response['Support Level'];
+        $exp_date = $response['expiration date'];
+
+        
+        // Check if the addon_slug in in the products list, has support access and is expired
+        if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
+            return false;
+        }
+
+        // Ensure that this license key is valid for the associated Wild Apricot ID and website
+        $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
+
+        if (!$valid_urls_and_ids) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
