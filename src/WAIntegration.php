@@ -153,7 +153,6 @@ class WAIntegration {
 			do_action('disable_plugin', CORE_SLUG, $license_status);
 		} else {
 			// if neither of the creds are invalid, do creds obtained action
-			Log::good_error_log('credentials valid');
 			do_action('wawp_wal_credentials_obtained');
 		}
 	}
