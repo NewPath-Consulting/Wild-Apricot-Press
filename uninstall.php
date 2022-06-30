@@ -2,12 +2,13 @@
 require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/Addon.php';
 require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
+require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 
 use WAWP\Activator;
 use WAWP\Addon;
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
-	wp_die(sprintf(__('%s should only be called when uninstalling the plugin.', 'wawp'), __FILE__ ));
+	wp_die(sprintf(__('%s should only be called when uninstalling the plugin.', WAWP\CORE_SLUG), __FILE__ ));
 	exit;
 }
 

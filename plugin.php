@@ -41,8 +41,9 @@ require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
 require_once plugin_dir_path(__FILE__) . 'src/MySettingsPage.php';
 require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
+require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 
-$activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot Press (WAP)');
+$activator = new Activator(WAWP\CORE_SLUG, plugin_basename(__FILE__), WAWP\CORE_NAME);
 // Enqueue stylesheet
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {
