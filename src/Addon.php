@@ -74,9 +74,7 @@ class Addon {
         self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
         self::update_show_activation_notice_option($slug, 1);
         return false;
-
     }
-
 
     /**
      * Adds a new add-on to the array of add-ons stored in the options table.
