@@ -48,7 +48,9 @@ class Activator {
 	 * -> If so, then the full Wild Apricot functionality is run
 	 */
 	public static function activate_plugin_callback() {
-		// Log back into Wild Apricot if credentials are entered and a valid license key is provided
+		/**
+		 * Log back into Wild Apricot if credentials are entered and a valid license key is provided
+		 */
 
 		// Call Addon's activation function
 		// returns false & does disable_plugin if license is invalid/nonexistent
@@ -66,7 +68,8 @@ class Activator {
 
 
 	/**
-	 * Checks the status of the WA Authorization credentials and the license key. Displays appropriate admin notice messages if either one is invalid or missing. 
+	 * Checks the status of the WA Authorization credentials and the license key. Displays 
+	 * appropriate admin notice messages if either one is invalid or missing. 
 	 */
 	public function admin_notices_creds_check() {
 		
@@ -77,11 +80,15 @@ class Activator {
 		$valid_wa_creds = WAIntegration::valid_wa_credentials();
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 
-		if (!$valid_wa_creds && (is_wawp_settings() || is_plugin_page() && $should_activation_show_notice)) {
+		if (!$valid_wa_creds && (is_wawp_settings()
+		 || is_plugin_page() && $should_activation_show_notice)) {
 			unset($_GET['activate']);
 			Addon::update_show_activation_notice_option(CORE_SLUG, 0);
 			if (!$valid_license) {
-				// if both creds are invalid show one message telling the user to enter both instead of two separate messages
+				/**
+				 * if both creds are invalid show one message telling the user 
+				 * to enter both instead of two separate messages
+				 */
 				self::empty_creds_message();
 			} else {
 				self::empty_wa_message();

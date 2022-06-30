@@ -1,7 +1,7 @@
 <?php
 namespace WAWP;
 
-// require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/Log.php';
 
 use WAWP\Log;
 
@@ -389,7 +389,7 @@ class WAWPApi {
 		// Get if user is administrator or not
 		$is_administrator = $contact_info['IsAccountAdministrator'];
 		// Perform API call based on if user is administrator or not
-		$user_data_api = NULL;
+		$user_data_api = null;
 		if (isset($is_administrator) && $is_administrator == '1') { // user is administrator
 			$contact_id = $contact_info['Id'];
 			$user_data_api = wp_remote_get('https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);

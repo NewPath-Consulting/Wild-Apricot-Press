@@ -6,7 +6,7 @@ use DOMDocument;
 use DOMAttr;
 use WAWP\Log;
 use WAWP\Addon;
-// require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/helpers.php';
 
@@ -161,13 +161,13 @@ class WAIntegration {
 		$licensed_wa_urls = array();
 
 		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
-			return NULL;
+			return null;
 		}
 
 		$licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
 		// Sanitize urls, if necessary
 
-		if (empty($licensed_wa_urls)) return NULL;
+		if (empty($licensed_wa_urls)) return null;
 
 		foreach ($licensed_wa_urls as $url_key => $url_value) {
 			// Lowercase and remove https://, http://, and/or www. from url
@@ -181,12 +181,12 @@ class WAIntegration {
 		$licensed_wa_ids = array();
 
 		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
-			return NULL;
+			return null;
 		}
 
 		$licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
 
-		if (empty($licensed_wa_ids)) return NULL;
+		if (empty($licensed_wa_ids)) return null;
 
 		foreach ($licensed_wa_ids as $id_key => $id_value) {
 			// Ensure that only numbers are in the ID #
@@ -199,7 +199,7 @@ class WAIntegration {
 	public static function check_licensed_wa_urls_ids($response) {
 		$licensed_wa_urls = self::get_licensed_wa_urls($response);
 		$licensed_wa_ids = self::get_licensed_wa_ids($response);
-		if ($licensed_wa_urls == NULL || $licensed_wa_ids == NULL ) return false;
+		if ($licensed_wa_urls == null || $licensed_wa_ids == null ) return false;
 
 		// Get access token and account id
 		$access_and_account = WAWPApi::verify_valid_access_token();
@@ -448,7 +448,7 @@ class WAIntegration {
 				}
 
 				// Find common groups between the user and the post's restrictions
-				// If user_groups is NULL, then the user is not part of any groups
+				// If user_groups is null, then the user is not part of any groups
 				$common_groups = array();
 				if (!empty($user_groups) && !empty($post_restricted_groups)) {
 					$user_groups = maybe_unserialize($user_groups[0]);
@@ -477,7 +477,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Processes the restricted groups set in the post meta data and update these levels/groups to the current post's meta data
+	 * Processes the restricted groups set in the post meta data and update these levels/groups to the current post's meta data. Called when a post is saved.
 	 *
 	 * @param int     $post_id holds the ID of the current post
 	 * @param WP_Post $post holds the current post
@@ -497,8 +497,12 @@ class WAIntegration {
 
 		// Get levels and groups that the user checked off
 		// Get value if index has been set to $_POST, and set to an empty array if NOT
+		// TODO: sanitize, escape, etc.
 		$checked_groups_ids = array_key_exists('wawp_membership_groups', $_POST) ? $_POST['wawp_membership_groups'] : array();
 		$checked_levels_ids = array_key_exists('wawp_membership_levels', $_POST) ? $_POST['wawp_membership_levels'] : array();
+
+		Log::good_error_log($checked_groups_ids);
+		Log::good_error_log($checked_levels_ids);
 
 		// Add the 'restricted' property to this post's meta data and check if page is indeed restricted
 		$this_post_is_restricted = false;
