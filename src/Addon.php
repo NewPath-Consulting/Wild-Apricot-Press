@@ -115,6 +115,7 @@ class Addon {
     public static function license_admin_notices() {
 
         $is_licensing_page = is_licensing_submenu();
+        $is_plugin_page = is_plugin_page();
         $core_license_status = false;
 
         // loop through all addons
@@ -139,13 +140,13 @@ class Addon {
             $should_show_activation_notice = self::get_show_activation_notice_option($slug);
             // if it's the plugin page, set show notice to false so it doesn't appear every time you see the plugins page
             // also prevent the activation message from showing
-            if (is_plugin_page()) {
+            if ($is_plugin_page) {
                 self::update_show_activation_notice_option($slug, 0);
                 unset($_GET['activate']);
             }
 
             // continue here only if it's wawp settings or it's the plugin page and the notice should be showed
-            if (is_plugin_page() && !$should_show_activation_notice) continue;
+            if ($is_plugin_page && !$should_show_activation_notice) continue;
 
             if ($license_status == self::LICENSE_STATUS_NOT_ENTERED) {
                 // show generic license prompt on licensing page if license has not been entered
