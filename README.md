@@ -2,7 +2,7 @@
 Contributors: asirota
 Tags: wildapricot, wild apricot, sso, membership
 Requires at least: 5.0
-Tested up to: 5.8
+Tested up to: 6.0
 Requires PHP: 7.4
 Stable Tag: 1.0.0
 License: GPL v2 or later
@@ -14,9 +14,10 @@ Wild Apricot Press (WAP) Documentation
 
 # Release History
 
-## Version 1.0b3 - March 11, 2022
+## Version 1.0b3 - June 30, 2022
 - fixed images in settings page
 - started to escape output text for issue #58
+- refactored licensing code and introduced generic license checker URL
 
 ## Version 1.0b2 - February 17, 2022
 - fixed support for custom themes like Avada
