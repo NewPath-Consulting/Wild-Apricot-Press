@@ -2,7 +2,7 @@
 namespace WAWP;
 
 require_once __DIR__ . '/Addon.php';
-require_once __DIR__ . '/Log.php';
+// require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 
 

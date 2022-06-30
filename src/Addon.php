@@ -4,7 +4,7 @@ namespace WAWP;
 require_once __DIR__ . '/WAWPApi.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/DataEncryption.php';
-require_once __DIR__ . '/Log.php';
+// require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 
 
