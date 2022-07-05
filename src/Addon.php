@@ -282,7 +282,7 @@ class Addon {
     public static function escape_license($license_key_input) {
         // remove non-alphanumeric, non-hyphen characters
         $license_key = preg_replace(
-            '/[^A-Za-z0-9\-]/',
+            '/[^A-Z0-9\-]/',
             '',
             $license_key_input
         );
