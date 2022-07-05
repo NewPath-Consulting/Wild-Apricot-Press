@@ -600,9 +600,7 @@ class MySettingsPage
             wp_die('Your nonce for the restriction message could not be verified.');
         }
 		// Create valid variable that will hold the valid input
-        // Sanitize wp editor
-        // https://wordpress.stackexchange.com/questions/262796/sanitize-content-from-wp-editor
-		$valid = wp_kses_post($input);
+		$valid = sanitize_textarea_field($input);
         // Return valid input
         return $valid;
     }
