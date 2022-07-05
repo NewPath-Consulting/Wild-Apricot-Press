@@ -495,14 +495,13 @@ class WAIntegration {
 			return;
 		}
 
+		$post_meta = get_post_meta($post_id);
 		// Get levels and groups that the user checked off
 		// Get value if index has been set to $_POST, and set to an empty array if NOT
-		// TODO: sanitize, escape, etc.
-		$checked_groups_ids = array_key_exists('wawp_membership_groups', $_POST) ? $_POST['wawp_membership_groups'] : array();
-		$checked_levels_ids = array_key_exists('wawp_membership_levels', $_POST) ? $_POST['wawp_membership_levels'] : array();
 
-		Log::good_error_log($checked_groups_ids);
-		Log::good_error_log($checked_levels_ids);
+		$wa_post_meta = self::get_wa_post_meta($post_meta);
+		$checked_groups_ids = $wa_post_meta[self::RESTRICTED_GROUPS];
+		$checked_levels_ids = $wa_post_meta[self::RESTRICTED_LEVELS];
 
 		// Add the 'restricted' property to this post's meta data and check if page is indeed restricted
 		$this_post_is_restricted = false;
@@ -558,7 +557,7 @@ class WAIntegration {
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
 		// Save individual restriction message to post meta data
-		$individual_message = $_POST['wawp_individual_post_restricted_message_textarea'];
+		$individual_message = $wa_post_meta[self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY];
 		if (!empty($individual_message)) {
 			// Filter restriction message
 			$individual_message = wp_kses_post($individual_message);
@@ -1287,12 +1286,10 @@ class WAIntegration {
 									$users_member_groups = maybe_unserialize($users_member_groups[0]);
 									$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
 									$user_member_level = $user_member_level[0];
+									$wa_post_meta = self::get_wa_post_meta($nav_item_id);
 									// Get page's groups and level
-									$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
-									// Unserialize if necessary
-									$page_member_groups = maybe_unserialize($page_member_groups[0]);
-									$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
-									$page_member_levels = maybe_unserialize($page_member_levels[0]);
+									$page_member_groups = $wa_post_meta[self::RESTRICTED_GROUPS];
+									$page_member_levels = $wa_post_meta[self::RESTRICTED_LEVELS];
 									// Check if user's groups/level overlap with the page's groups/level
 									$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
 									$intersect_level = in_array($user_member_level, $page_member_levels);
@@ -1357,8 +1354,53 @@ class WAIntegration {
 					}
 				}
 			}
+	/**
+	 * Returns the post meta values pertaining to Wild Apricot.
+	 * The list of restricted groups and levels, flag of whether the post is restricted or not, and the restriction message.
+	 *
+	 * @param array $meta metadata of a post.
+	 * @return array array of the restricted groups and levels, each in their own
+	 * respective element.
+	 */
+	public function get_wa_post_meta($post_id) {
+		$meta = get_post_meta($post_id);
+		$restricted_groups = array();
+		$restricted_levels = array();
+		$is_restricted = 0;
+		$individual_restriction_msg = '';
+
+		/**
+		 * these will only be present in the post meta if there are restricted
+		 * groups/levels. 
+		 */
+		if (array_key_exists(self::RESTRICTED_GROUPS, $meta)) {
+			$restricted_groups = $meta[self::RESTRICTED_GROUPS][0];
 		}
-		return $items;
+		if (array_key_exists(self::RESTRICTED_LEVELS, $meta)) {
+			$restricted_levels = $meta[self::RESTRICTED_LEVELS][0];
+		}
+
+		// restriction flag will always be present
+		$is_restricted = $meta[self::IS_POST_RESTRICTED][0];
+
+		// like groups and levels, restriction message will not always be in the meta
+		if (array_key_exists(self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, $meta)) {
+			$individual_restriction_msg = $meta[self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY][0];
+		}
+
+		/**
+		 * need to call maybe_unserialize twice since the array of restricted 
+		 * groups/levels is a serialized string containing a serialized array.
+		 */
+		$wa_meta = array(
+			self::IS_POST_RESTRICTED => $is_restricted,
+			self::RESTRICTED_GROUPS => maybe_unserialize(maybe_unserialize($restricted_groups)),
+			self::RESTRICTED_LEVELS => maybe_unserialize(maybe_unserialize($restricted_levels)),
+			self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY => $individual_restriction_msg
+			
+		);
+
+		return $wa_meta;
 	}
 }
 ?>
