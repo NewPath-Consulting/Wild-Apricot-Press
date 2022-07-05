@@ -495,10 +495,12 @@ class WAIntegration {
 			return;
 		}
 
+		// actually need to use post if it's the first time getting post meta.
 		$post_meta = get_post_meta($post_id);
+		if (!array_key_exists(self::RESTRICTED_GROUPS, $post_meta)) {
+			$post_meta = sanitize_post_meta($post_meta);
+		}
 		// Get levels and groups that the user checked off
-		// Get value if index has been set to $_POST, and set to an empty array if NOT
-
 		$wa_post_meta = self::get_wa_post_meta($post_meta);
 		$checked_groups_ids = $wa_post_meta[self::RESTRICTED_GROUPS];
 		$checked_levels_ids = $wa_post_meta[self::RESTRICTED_LEVELS];
@@ -1354,6 +1356,9 @@ class WAIntegration {
 					}
 				}
 			}
+		}
+		return $items;
+	}
 	/**
 	 * Returns the post meta values pertaining to Wild Apricot.
 	 * The list of restricted groups and levels, flag of whether the post is restricted or not, and the restriction message.
@@ -1362,8 +1367,7 @@ class WAIntegration {
 	 * @return array array of the restricted groups and levels, each in their own
 	 * respective element.
 	 */
-	public function get_wa_post_meta($post_id) {
-		$meta = get_post_meta($post_id);
+	public function get_wa_post_meta($meta) {
 		$restricted_groups = array();
 		$restricted_levels = array();
 		$is_restricted = 0;
@@ -1381,7 +1385,11 @@ class WAIntegration {
 		}
 
 		// restriction flag will always be present
-		$is_restricted = $meta[self::IS_POST_RESTRICTED][0];
+		if (array_key_exists(self::IS_POST_RESTRICTED, $meta)) {
+			$is_restricted = $meta[self::IS_POST_RESTRICTED][0];
+
+			$is_restricted = $meta[self::IS_POST_RESTRICTED][0] ? true : false;
+		}
 
 		// like groups and levels, restriction message will not always be in the meta
 		if (array_key_exists(self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, $meta)) {
