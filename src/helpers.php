@@ -10,8 +10,6 @@ namespace WAWP;
 const CORE_SLUG = 'wawp';
 const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
 
-const TYPE_ARRAY = 'array';
-const TYPE_STRING = 'string';
 
 /**
  * @return bool true if the current page is the licensing settings page, false if not
@@ -78,72 +76,26 @@ function is_addon($slug) {
 }
 
 /**
- * Returns the type of an object.
- * @param mixed $object
- * @return string type of the object
+ * Recursive function to sanitize post meta data.
+ *
+ * @param array $post_meta post meta data to sanitize.
+ * @param string $key optional: key of the value to sanitize.
+ * passed in on recursive iterations.
+ * @param string $value optional: value to sanitize.
+ * passed in on recursive iterations.
+ * @return array sanitized array of post meta data.
  */
-function get_object_type($obj) {}
-
-/**
- * Sanitizes, escapes, and validates input. Specific procedues vary based on the type of
- * the variable.
- * @see WordPress sanitization function docs 
- * https://developer.wordpress.org/reference/functions/sanitize_text_field/ 
- * https://developer.wordpress.org/reference/functions/sanitize_textarea_field/ for specifics.
- * Validation: making sure the variable is the right type and is set. Some of the 
- * validation is specific to the type of variable and must be done outside 
- * this generic function.
- * @param string|array $input the user input to sanitize and validate.
- * @param string $expected_type the expected type of the input variable.
- * @param bool $is_textarea flags whether the input is a text area or not. This changes
- * which Wordpress sanitization function is called. 
- * @return string|array the sanitized input.
- */
-function sanitize_and_validate($raw_value, $expected_type, $is_textarea) {
-    // Sanitization
-    // if type is array, check if array and loop through and sanitize each input.
-    $obj_type = get_object_type($raw_value);
-    
-    // verify the expected type
-    if ($obj_type != $expected_type || !isset($raw_value)) return;
-
-    $sanitized = '';
-    if ($obj_type == TYPE_ARRAY) {
-        foreach ($raw_value as $key => $value) {
-            $value = sanitize($value);
-        }
-        return $raw_value;
-    } else if ($is_textarea) {
-        $sanitized = sanitize_textarea_field($raw_value);
-    }
-    else if ($obj_type == TYPE_STRING) {
-        $sanitized = sanitize($raw_value);
+function sanitize_post_meta($post_meta, $key = '', $value = '') {
+    if (gettype($value) == 'string') {
+        $post_meta[$key] = sanitize_text_field($value);
+        return $post_meta;
     }
 
-    return $sanitized;
+    foreach ($post_meta as $key => $value) {
+        return sanitize_post_meta($post_meta, $key, $value);
+    }
 
 
-    // if it's a license, sanitize, remove non alphanumeric and lowercase chars, preserve hyphens
-    // if it's a textarea, call wordpress textarea sanitize
-
-    // Validation
-    // 
-}
-
-/**
- * Removes non-alphanumeric characters from the input string.
- * @param string $input
- * @return string Sanitized input.
- */
-function sanitize($input) {
-    $sanitized = sanitize_text_field($input);
-    $sanitized = preg_replace(
-        '/[^A-Za-z0-9]+/',
-        '',
-        $sanitized
-    );
-
-    return $sanitized;
 }
 
 /**
@@ -153,5 +105,3 @@ function sanitize($input) {
  * @return string escaped
  */
 function escape_output($output) {}
-
-?>
