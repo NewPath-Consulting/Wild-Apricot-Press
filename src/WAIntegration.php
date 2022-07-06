@@ -398,12 +398,14 @@ class WAIntegration {
 				// Append 'Log In' button and the styling div to the restriction message
 				$login_url = $this->get_login_link();
 				$restriction_message = '<div class="wawp_restriction_content_div">' . $restriction_message;
-				$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
-				$restriction_message .= '</div>';
+
 				// Automatically restrict the post if user is not logged in
 				if (!is_user_logged_in()) {
+					$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
+					$restriction_message .= '</div>';
 					return $restriction_message;
 				}
+				$restriction_message .= '</div>';
 				// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with Wild Apricot
 				// Get user's Wild Apricot ID -> if it does not exist, then the user is not synced with Wild Apricot
 				$current_user_ID = wp_get_current_user()->ID;
@@ -610,7 +612,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
