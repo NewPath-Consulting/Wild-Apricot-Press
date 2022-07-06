@@ -51,6 +51,22 @@ function get_current_url() {
 }
 
 /**
+ * Returns the current tab. Used for finding which tab of the admin settings page
+ * the user is on.
+ *
+ * @return string|null the current tab, or null if it's the main tab.
+ */
+function get_current_tab() {
+    $current_url = get_current_url();
+    $url_components = parse_url($current_url);
+    parse_str($url_components['query'], $params);
+    if (array_key_exists('tab', $params)) {
+        return $params['tab'];
+    }
+    return null;
+}
+
+/**
  * @return bool true if the current page is the plugins admin page, false if not
  */
 function is_plugin_page() {

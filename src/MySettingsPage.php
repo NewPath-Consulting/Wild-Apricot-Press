@@ -233,9 +233,7 @@ class MySettingsPage
      */
     public function create_admin_page()
     {
-        // Get active tab from $_GET param
-        $default_tab = null;
-        $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
+        $tab = get_current_tab();
         ?>
         <div class="wrap">
             <h2>Wild Apricot Admin Settings</h2>
