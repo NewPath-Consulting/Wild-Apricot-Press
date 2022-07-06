@@ -4,7 +4,7 @@
  * Plugin Name:       NewPath Wild Apricot Press (WAP)
  * Plugin URI:        https://newpathconsulting.com/wap
  * Description:       Integrates your Wild Apricot-powered organization with a WordPress website! Powered by Wild Apricot's API.
- * Version:           1.0b2
+ * Version:           1.0b3
  * Requires at least: 5.0
  * Requires PHP:      7.4
  * Author:            NewPath Consulting
@@ -41,8 +41,9 @@ require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
 require_once plugin_dir_path(__FILE__) . 'src/MySettingsPage.php';
 require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
+require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 
-$activator = new Activator('wawp', plugin_basename(__FILE__), 'Wild Apricot Press (WAP)');
+$activator = new Activator(WAWP\CORE_SLUG, plugin_basename(__FILE__), WAWP\CORE_NAME);
 // Enqueue stylesheet
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {

@@ -2,8 +2,13 @@
 namespace WAWP;
 
 require_once __DIR__ . '/Addon.php';
+// require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/helpers.php';
+
 
 use WAWP\Addon;
+use WAWP\Log;
+
 
 use function PHPSTORM_META\map;
 
@@ -233,6 +238,10 @@ class MySettingsPage
         $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
         ?>
         <div class="wrap">
+            <h2>Wild Apricot Admin Settings</h2>
+            <?php 
+            // don't display settings if credentials and/or key are not valid
+            if (!WAIntegration::valid_wa_credentials() || !Addon::instance()::has_valid_license(CORE_SLUG)) { ?> </div> <?php return; } ?>
             <!-- Tabs for navigation -->
             <nav class="nav-tab-wrapper">
                 <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Content Restriction Options</a>
@@ -416,61 +425,9 @@ class MySettingsPage
 		$this->options = get_option( 'wawp_wal_name' );
 		?>
         <div class="wrap">
-			<h1>Connect Wild Apricot with WordPress!</h1>
+			<h1>Wild Apricot Authorization</h1>
 			<div class="waSettings">
-				<div class="loginChild">
-					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
-					<ul class="wawp_list">
-					   <li>API Key</li>
-					   <li>Client ID</li>
-					   <li>Client Secret</li>
-					</ul>
-					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
-					<ol>
-					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
-					      <img src="../images/authorized-applications.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
-					   </li>
-					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
-					      <br><br>
-					      <img src="../images/authorized-applications.png" alt="Authorized application button" class="wawp_authorization_img"> <br>
-					   </li>
-					   <li> On the Application authorization screen, click the <b>Server application</b> option then click the <b>Continue</b> button. <br><br>
-					      <img src="../images/authorized-application-type.png" alt="Authorized application server selection" class="wawp_authorization_img"><br>
-					   </li>
-					   <li>
-					      On the Application details screen, the following options should be set:
-					      <ul class="wawp_list">
-						 <li>
-						    <b>Application name</b>
-						    <ul class="wawp_list">
-						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site".
-						       </li>
-						    </ul>
-						 </li>
-						 <li>
-						    <b>Access Level</b>
-						    <ul class="wawp_list">
-						       <li>Choose full access as the <b>Wild Apricot Press</b> plugin requires ability to read and write to your Wild Apricot database.
-						       </li>
-						    </ul>
-						 </li>
-						 <li>
-						    <b>Client Secret</b>
-						    <ul class="wawp_list">
-						       <li>If there is no Client secret value displayed, click the green Generate client secret button. To delete the client secret, click the red X beside the value.
-						       </li>
-						    </ul>
-					      </ul>
-					   </li>
-					   <li>
-					      Click the <b>Save</b> button to save your changes.
-					   </li>
-					   <li>From the Application details screen, copy the <b>API key</b>, <b>Client ID</b>, and <b>Client secret</b> (the blue boxes). Input these values into their respective locations in WordPress, to the right of these instructions. <br><br>
-					      <img src="../images/application-detatails-api-keys.png" alt="Authorized application API keys" width="500">  <br>
-					   </li>
-					   <br>
-					</ol>
-				</div>
+				
 				<div class="loginChild">
                     <!-- Wild Apricot credentials form -->
 					<form method="post" action="options.php">
@@ -488,8 +445,6 @@ class MySettingsPage
                         // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
-                            // Set Wild Apricot login to private
-                            do_action('wawp_wal_set_login_private');
 						} else { // successful login
                             // Get Wild Apricot URL
                             $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
@@ -525,6 +480,59 @@ class MySettingsPage
                         }
                     ?>
 				</div>
+                <div class="loginChild">
+					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
+					<ul class="wawp_list">
+					   <li>API Key</li>
+					   <li>Client ID</li>
+					   <li>Client Secret</li>
+					</ul>
+					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
+					<ol>
+					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
+					   </li>
+					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
+					      <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Authorized application button" class="wawp_authorization_img"> <br>
+					   </li>
+					   <li> On the Application authorization screen, click the <b>Server application</b> option then click the <b>Continue</b> button. <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-application-type.png" alt="Authorized application server selection" class="wawp_authorization_img"><br>
+					   </li>
+					   <li>
+					      On the Application details screen, the following options should be set:
+					      <ul class="wawp_list">
+						 <li>
+						    <b>Application name</b>
+						    <ul class="wawp_list">
+						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site".
+						       </li>
+						    </ul>
+						 </li>
+						 <li>
+						    <b>Access Level</b>
+						    <ul class="wawp_list">
+						       <li>Choose full access as the <b>Wild Apricot Press</b> plugin requires ability to read and write to your Wild Apricot database.
+						       </li>
+						    </ul>
+						 </li>
+						 <li>
+						    <b>Client Secret</b>
+						    <ul class="wawp_list">
+						       <li>If there is no Client secret value displayed, click the green Generate client secret button. To delete the client secret, click the red X beside the value.
+						       </li>
+						    </ul>
+					      </ul>
+					   </li>
+					   <li>
+					      Click the <b>Save</b> button to save your changes.
+					   </li>
+					   <li>From the Application details screen, copy the <b>API key</b>, <b>Client ID</b>, and <b>Client secret</b> (the blue boxes). Input these values into their respective locations in WordPress, to the right of these instructions. <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/application-detatails-api-keys.png" alt="Authorized application API keys" width="500">  <br>
+					   </li>
+					   <br>
+					</ol>
+				</div>
 			</div>
         </div>
         <?php
@@ -553,7 +561,7 @@ class MySettingsPage
             } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
                 $link_address = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
                 echo "<h2>License Keys</h2>";
-                echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
+                // echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
             }
             ?>
         </div>
@@ -602,8 +610,7 @@ class MySettingsPage
     /**
      * Register and add settings
      */
-    public function page_init()
-    {
+    public function page_init() {
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'wal_sanitize'),
@@ -711,21 +718,21 @@ class MySettingsPage
             array($this, 'license_key_input'), // callback
             'wawp_licensing', // page
             'wawp_license', // section
-            array('slug' => 'wawp', 'title' => 'Wild Apricot Press') // args for callback
+            array('slug' => CORE_SLUG, 'name' => CORE_NAME) // args for callback
         );
 
         // For each addon installed, render a license key form
         $addons = Addon::instance()::get_addons();
         foreach ($addons as $slug => $addon) {
-            if ($slug == Activator::CORE) {continue;}
-            $title = $addon['title'];
+            if ($slug == CORE_SLUG) {continue;}
+            $name = $addon['name'];
             add_settings_field(
                 'wawp_license_form_' . $slug, // ID
-                $title, // title
+                $name, // title
                 array($this, 'license_key_input'), // callback
                 'wawp_licensing', // page
                 'wawp_license', // section
-                array('slug' => $slug, 'title', $title) // args for callback
+                array('slug' => $slug, 'name', $name) // args for callback
             );
         }
 
@@ -917,8 +924,7 @@ class MySettingsPage
      *
      * @param array $input Contains all settings fields as array keys
      */
-    public function wal_sanitize( $input )
-    {
+    public function wal_sanitize( $input ) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_credentials_nonce_name'], 'wawp_credentials_nonce_action')) {
             wp_die('Your Wild Apricot credentials could not be verified.');
@@ -981,53 +987,57 @@ class MySettingsPage
             // Set all inputs to ''
             $keys = array_keys($valid);
             $valid = array_fill_keys($keys, '');
-        } else { // Valid input and valid response
-            // Extract access token and ID, as well as expiring time
-            $access_token = $valid_api['access_token'];
-            $account_id = $valid_api['Permissions'][0]['AccountId'];
-            $expiring_time = $valid_api['expires_in'];
-            $refresh_token = $valid_api['refresh_token'];
-            // Store access token and account ID as transients
-            set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
-            set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
-            // Store refresh token in database
-            update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
-            // Get all membership levels and groups
-            $wawp_api_instance = new WAWPApi($access_token, $account_id);
-            $all_membership_levels = $wawp_api_instance->get_membership_levels();
-            // Create a new role for each membership level
-            // Delete old roles if applicable
-            $old_wa_roles = get_option('wawp_all_levels_key');
-            if (isset($old_wa_roles) && !empty($old_wa_roles)) {
-                // Loop through each role and delete it
-                foreach ($old_wa_roles as $old_role) {
-                    remove_role('wawp_' . str_replace(' ', '', $old_role));
-                }
-            }
-            foreach ($all_membership_levels as $level) {
-                // In identifier, remove spaces so that the role can become a single word
-                add_role('wawp_' . str_replace(' ', '', $level), $level);
-            }
-            $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
-            // Save membership levels and groups to options
-            update_option('wawp_all_levels_key', $all_membership_levels);
-            update_option('wawp_all_groups_key', $all_membership_groups);
 
-            // Get Wild Apricot URL
-            $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
-            $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
-            // Save URL
-            update_option(WAIntegration::WA_URL_KEY, $dataEncryption->encrypt($wild_apricot_url));
+            // Delete all licenses because they are invalid now and user must insert them again
+            Addon::clear_licenses();
+            return $valid;
+        } 
 
-            // Schedule CRON update for updating the available membership levels and groups
-            self::setup_cron_job();
+
+        // Valid input and valid response
+        // Extract access token and ID, as well as expiring time
+        $access_token = $valid_api['access_token'];
+        $account_id = $valid_api['Permissions'][0]['AccountId'];
+        $expiring_time = $valid_api['expires_in'];
+        $refresh_token = $valid_api['refresh_token'];
+        // Store access token and account ID as transients
+        set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
+        set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
+        // Store refresh token in database
+        update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
+        // Get all membership levels and groups
+        $wawp_api_instance = new WAWPApi($access_token, $account_id);
+        $all_membership_levels = $wawp_api_instance->get_membership_levels();
+        // Create a new role for each membership level
+        // Delete old roles if applicable
+        $old_wa_roles = get_option('wawp_all_levels_key');
+        if (isset($old_wa_roles) && !empty($old_wa_roles)) {
+            // Loop through each role and delete it
+            foreach ($old_wa_roles as $old_role) {
+                remove_role('wawp_' . str_replace(' ', '', $old_role));
+            }
         }
+        foreach ($all_membership_levels as $level) {
+            // In identifier, remove spaces so that the role can become a single word
+            add_role('wawp_' . str_replace(' ', '', $level), $level);
+        }
+        $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
+        // Save membership levels and groups to options
+        update_option('wawp_all_levels_key', $all_membership_levels);
+        update_option('wawp_all_groups_key', $all_membership_groups);
 
-        // Delete all licenses because they are invalid now and user must insert them again
-        delete_option(WAIntegration::WAWP_LICENSES_KEY);
+        // Get Wild Apricot URL
+        $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
+        $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
+        // Save URL
+        update_option(WAIntegration::WA_URL_KEY, $dataEncryption->encrypt($wild_apricot_url));
 
-		// Return array of valid inputs
-		return $valid;
+        // Schedule CRON update for updating the available membership levels and groups
+        self::setup_cron_job();
+
+        // Return array of valid inputs
+        return $valid;
+
     }
 
     /**
@@ -1069,8 +1079,7 @@ class MySettingsPage
     /**
      * Print the instructions text for entering your Wild Apricot credentials
      */
-    public function wal_print_section_info()
-    {
+    public function wal_print_section_info() {
         print 'Enter your Wild Apricot credentials here. Your data is encrypted for your safety!';
     }
 
@@ -1085,8 +1094,7 @@ class MySettingsPage
     /**
      * Display text field for API key
      */
-    public function api_key_callback()
-    {
+    public function api_key_callback() {
 		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
 			type='text' placeholder='*************' />";
 		// Check if api key has been set; if so, echo that the client secret has been set!
@@ -1098,8 +1106,7 @@ class MySettingsPage
     /**
      * Display text field for Client ID
      */
-    public function client_id_callback()
-    {
+    public function client_id_callback() {
 		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
 			type='text' placeholder='*************' />";
 		// Check if client id has been set; if so, echo that the client secret has been set!
@@ -1111,8 +1118,7 @@ class MySettingsPage
 	/**
      * Display text field for Client Secret
      */
-    public function client_secret_callback()
-    {
+    public function client_secret_callback() {
 		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
 			type='text' placeholder='*************' />";
 		// Check if client secret has been set; if so, echo that the client secret has been set!
@@ -1149,11 +1155,12 @@ class MySettingsPage
      */
     public function license_key_input(array $args) {
         $slug = $args['slug'];
-        $license = Addon::instance()::get_licenses();
+        $licenses = Addon::instance()::get_licenses();
         // Check that slug is valid
         $input_value = '';
-        if (!empty($license) && array_key_exists($slug, $license)) {
-            $input_value = $license[$slug];
+        if (Addon::instance()::has_valid_license($slug)) {
+            $input_value = Addon::instance()::get_license($slug);
+        } else {
         }
         echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $input_value . "'  />" ;
     }
@@ -1166,6 +1173,7 @@ class MySettingsPage
      * @param array $input settings form input array mapping addon slugs to license keys
      */
     public function validate_license_form($input) {
+        $data_encryption = new DataEncryption();
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
             wp_die('The license keys could not be verified.');
@@ -1175,20 +1183,24 @@ class MySettingsPage
 
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
-            $option_name = 'license-check-' . $slug;
-            if (is_null($key)) { // invalid key
-                update_option($option_name, 'invalid');
-                // ERROR LOG
-                error_log('Invalid license key!');
-            } else { // valid key
-                if ($key == 'unchanged') {
-                    delete_option($option_name);
-                    $valid[$slug] = Addon::instance()::get_license($slug);
-                } else {
-                    update_option($option_name, 'true');
-                    $valid[$slug] = $key;
-                }
+            if (is_null($key)) { 
+                // invalid key
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
+                $valid[$slug] = '';
+
+            } else if ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
+                // key was not entered -- different message will be shown
+                $valid[$slug] = '';
+
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
+            } else { 
+                // valid key
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
+                $valid[$slug] = $data_encryption->encrypt($key);
+
             }
+
+
         }
         return $valid;
     }

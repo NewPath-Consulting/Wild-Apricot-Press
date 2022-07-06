@@ -4,6 +4,12 @@ namespace WAWP;
 // For iterating through menu HTML
 use DOMDocument;
 use DOMAttr;
+use WAWP\Log;
+use WAWP\Addon;
+// require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/Addon.php';
+require_once __DIR__ . '/helpers.php';
+
 
 /**
  * Class for managing the user's Wild Apricot account
@@ -12,6 +18,9 @@ class WAIntegration {
 	// Constants for keys used for database management
 	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
 	const WAWP_LICENSES_KEY = 'wawp_license_keys';
+	const WA_API_KEY_OPT = 'wawp_wal_api_key';
+	const WA_CLIENT_ID_OPT = 'wawp_wal_client_id';
+	const WA_CLIENT_SECRET_OPT = 'wawp_wal_client_secret';
 	const WA_USER_ID_KEY = 'wawp_wa_user_id';
 	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
 	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
@@ -84,73 +93,131 @@ class WAIntegration {
 	}
 
 	/**
+	 * Checks for valid Wild Apricot credentials.
+	 * @return boolean true if valid authorization creds, false if not
+	 */
+	public static function valid_wa_credentials() {
+		$wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
+
+		// wa_credentials will be false if the option doesn't exist
+		// return here so we don't get invalid index in the lines below
+		if (!$wa_credentials || !isset($wa_credentials)) return false;
+		if (empty($wa_credentials)) return false;
+
+		$api_key = $wa_credentials[self::WA_API_KEY_OPT];
+		$client_id = $wa_credentials[self::WA_CLIENT_ID_OPT];
+		$client_secret = $wa_credentials[self::WA_CLIENT_SECRET_OPT];
+
+		// check first that creds exist
+		return !empty($api_key) && !empty($client_id) && !empty($client_secret);
+	}
+
+	/**
 	 * Checks that updated Wild Apricot credentials match the registered site on the license key
 	 */
 	public function check_updated_credentials() {
 		// Ensure that credentials have been already entered
-		$wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
-		$license_credentials = get_option(self::WAWP_LICENSES_KEY);
-		if (!empty($wa_credentials) && !empty($license_credentials) && array_key_exists('wawp', $license_credentials)) {
+		$has_valid_wa_credentials = self::valid_wa_credentials();
+		$has_valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
+		$license_status = Addon::get_license_check_option(CORE_SLUG);
+
+		
+
+		// if the stored WA credentials and license key are valid, check the validity of each
+		if ($has_valid_wa_credentials && $has_valid_license) {
 			// Verify that the license still matches the Wild Apricot credentials
-			$current_license_key = $license_credentials['wawp'];
-			// Get Wild Apricot URL and ID from license key response
-			$wa_data = array('key' => $current_license_key, 'json' => '1');
-			// send request, receive response in $response
-			$integromat_response = Addon::post_request($wa_data);
-			// Check for error; if not, then extract Wild Apricot URL and ID
-			$validated_license_key = $current_license_key;
-			if (array_key_exists('license-error', $integromat_response)) { // error
-				// An invalid license key exists! Deactivate the WAWP functionality!
-				$validated_license_key = null;
-			} else { // no error
-				// Extract URL(s)
-				$licensed_wa_urls = array();
-				if (array_key_exists('Licensed Wild Apricot URLs', $integromat_response)) {
-					// Get urls
-					$licensed_wa_urls = $integromat_response['Licensed Wild Apricot URLs'];
-					// Sanitize urls by removing prefix and lowercasing each letter
-					if (!empty($licensed_wa_urls)) {
-						foreach ($licensed_wa_urls as $url_key => $url_value) {
-							$licensed_wa_urls[$url_key] = WAWPApi::create_consistent_url($url_value);
-						}
-					}
-				}
-				// Extract ID(s)
-				$licensed_wa_ids = array();
-				if (array_key_exists('Licensed Wild Apricot Account IDs', $integromat_response)) {
-					$licensed_wa_ids = $integromat_response['Licensed Wild Apricot Account IDs'];
-					// Sanitize to include only numbers
-					if (!empty($licensed_wa_ids)) {
-						foreach ($licensed_wa_ids as $id_key => $id_value) {
-							// $licensed_wa_ids[$id_key] = preg_replace('/\d/', '', $id_value);
-							$licensed_wa_ids[$id_key] = intval($id_value);
-						}
-					}
-				}
-				// Get Wild Apricot Urls and Ids from Wild Apricot API
-				// Ensure there is a valid access token
-				$access_options = WAWPApi::verify_valid_access_token();
-				$access_token = $access_options['access_token'];
-				$wa_account_id = $access_options['wa_account_id'];
-				$wawp_api_instance = new WAWPApi($access_token, $wa_account_id);
-				// Get site's Wild Apricot URL and ID
-				$url_and_id = $wawp_api_instance->get_account_url_and_id();
-				$wa_url = $url_and_id['Url'];
-				$wa_id = $url_and_id['Id'];
-				// Now, compare the urls and ids from the license key and the Wild Apricot API
-				if (!(in_array($wa_url, $licensed_wa_urls) && in_array($wa_id, $licensed_wa_ids))) { // invalid license!
-					$validated_license_key = null;
-				}
+			$current_license_key = Addon::get_license(CORE_SLUG);
+
+			// check for correct license properties
+			$license = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
+
+			if ($license == Addon::LICENSE_STATUS_ENTERED_EMPTY || !$has_valid_wa_credentials) {
+				$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
+			} else if (is_null($license)) {
+				$license_status = Addon::LICENSE_STATUS_INVALID;
 			}
-			// If license key is null, then that means that it is not valid
-			if (is_null($validated_license_key)) {
-				// Disable WAWP functionality
-				do_action('wawp_wal_set_login_private');
-				// Clear WAWP credentials and license
-				delete_option(self::WA_CREDENTIALS_KEY, '');
-				delete_option(self::WAWP_LICENSES_KEY, '');
-			}
+
+			// now check if WA creds invalid
+			// $wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
+			// $has_valid_wa_credentials = WAWPApi::is_application_valid($wa_credentials[self::WA_API_KEY_OPT]);
 		}
+
+		// update new license status
+		// invalid if license was found to be invalid
+		// not entered if only WA creds are invalid
+
+
+		// license status is subject to change based on the request made
+		if ($license_status != Addon::LICENSE_STATUS_VALID || !$has_valid_license || !$has_valid_wa_credentials) {
+			// disable plugin since one or both of the creds are invalid
+			do_action('disable_plugin', CORE_SLUG, $license_status);
+		} else {
+			// if neither of the creds are invalid, do creds obtained action
+			do_action('wawp_wal_credentials_obtained');
+		}
+	}
+
+	public static function get_licensed_wa_urls($response) {
+		$licensed_wa_urls = array();
+
+		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
+			return NULL;
+		}
+
+		$licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
+		// Sanitize urls, if necessary
+
+		if (empty($licensed_wa_urls)) return NULL;
+
+		foreach ($licensed_wa_urls as $url_key => $url_value) {
+			// Lowercase and remove https://, http://, and/or www. from url
+			$licensed_wa_urls[$url_key] = WAWPApi::create_consistent_url($url_value);
+		}
+
+		return $licensed_wa_urls;
+	}
+
+	public static function get_licensed_wa_ids($response) {
+		$licensed_wa_ids = array();
+
+		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
+			return NULL;
+		}
+
+		$licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
+
+		if (empty($licensed_wa_ids)) return NULL;
+
+		foreach ($licensed_wa_ids as $id_key => $id_value) {
+			// Ensure that only numbers are in the ID #
+			$licensed_wa_ids[$id_key] = intval($id_value);
+		}
+
+		return $licensed_wa_ids;
+	}
+
+	public static function check_licensed_wa_urls_ids($response) {
+		$licensed_wa_urls = self::get_licensed_wa_urls($response);
+		$licensed_wa_ids = self::get_licensed_wa_ids($response);
+		if ($licensed_wa_urls == NULL || $licensed_wa_ids == NULL ) return false;
+
+		// Get access token and account id
+		$access_and_account = WAWPApi::verify_valid_access_token();
+		$access_token = $access_and_account['access_token'];
+		$wa_account_id = $access_and_account['wa_account_id'];
+		// Get account url from API
+		$wawp_api = new WAWPApi($access_token, $wa_account_id);
+		$wild_apricot_info = $wawp_api->get_account_url_and_id();
+
+
+		// Compare license key information with current site
+		if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { 
+			return true;
+		}
+		
+		// do_action('wawp_wal_set_login_private');
+		return false;
+
 	}
 
 	/**
@@ -317,7 +384,7 @@ class WAIntegration {
 
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
 		$wawp_licenses = get_option(self::WAWP_LICENSES_KEY);
-		if (is_singular() && !empty($valid_wa_credentials) && !empty($wawp_licenses) && array_key_exists('wawp', $wawp_licenses) && $wawp_licenses['wawp'] != '') {
+		if (is_singular() && !empty($valid_wa_credentials) && !empty($wawp_licenses) && array_key_exists(CORE_SLUG, $wawp_licenses) && $wawp_licenses[CORE_SLUG] != '') {
 			// Check that this current post is restricted
 			$is_post_restricted = get_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, true); // return single value
 			if (isset($is_post_restricted) && $is_post_restricted) {
@@ -691,7 +758,7 @@ class WAIntegration {
 		// $valid_wa_credentials = get_option('wawp_wa_credentials_valid');
 		$valid_wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
 		$valid_license = get_option(self::WAWP_LICENSES_KEY);
-		if (!empty($valid_wa_credentials) && !empty($valid_license) && array_key_exists('wawp', $valid_license) && $valid_license['wawp'] != '') {
+		if (!empty($valid_wa_credentials) && !empty($valid_license) && array_key_exists(CORE_SLUG, $valid_license) && $valid_license[CORE_SLUG] != '') {
 			// Add meta boxes on the 'add_meta_boxes' hook
 			add_action('add_meta_boxes', array($this, 'post_access_add_post_meta_boxes'));
 		}
@@ -1062,7 +1129,6 @@ class WAIntegration {
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
 					// DEBUG LOG
-					error_log('Invalid email entered on Wild Apricot login!');
 					return;
 				}
 
@@ -1077,7 +1143,6 @@ class WAIntegration {
 				} else { // password is NOT valid
 					// Output error
 					add_filter('the_content', array($this, 'add_login_error'));
-					error_log('Invalid password entered on Wild Apricot login!');
 					return;
 				}
 
@@ -1094,7 +1159,6 @@ class WAIntegration {
 				if (!$login_attempt) {
 					// Present user with log in error
 					add_filter('the_content', array($this, 'add_login_error'));
-					error_log('Failed attempt on Wild Apricot login!');
 					return;
 				}
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
@@ -1167,9 +1231,7 @@ class WAIntegration {
 	// Also: https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
 	public function create_wa_login_logout($items, $args) {
 		// First, check if Wild Apricot credentials and the license is valid
-		$wa_credentials_saved = get_option(self::WA_CREDENTIALS_KEY);
-		$license_keys_saved = get_option(self::WAWP_LICENSES_KEY);
-		if (isset($wa_credentials_saved) && isset($wa_credentials_saved['wawp_wal_api_key']) && $wa_credentials_saved['wawp_wal_api_key'] != '' && !empty($license_keys_saved) && array_key_exists('wawp', $license_keys_saved) && $license_keys_saved['wawp'] != '') {
+		if (self::valid_wa_credentials() && Addon::has_valid_license(CORE_SLUG)) {
 			// Check the restrictions of each item in header IF the header is not blank
 			if (!empty($items)) {
 				// Get navigation items
