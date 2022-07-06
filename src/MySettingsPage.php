@@ -338,7 +338,7 @@ class MySettingsPage
                 $status_checked = 'checked';
             }
             ?>
-            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo htmlspecialchars($status_key); ?>" <?php echo($status_checked); ?>/> <?php echo htmlspecialchars($status); ?> </input><br>
+            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php esc_html_e($status_key); ?>" <?php esc_html_e($status_checked); ?>/> <?php esc_html_e($status); ?> </input><br>
             <?php
         }
     }
@@ -361,7 +361,7 @@ class MySettingsPage
                 }
             }
             ?>
-            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo htmlspecialchars($key); ?>" <?php echo($checked); ?>/> <?php echo htmlspecialchars($attribute); ?> </input><br>
+            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php esc_html_e($key); ?>" <?php esc_html_e($checked); ?>/> <?php esc_html_e($attribute); ?> </input><br>
             <p><b><br>Please note that this information will never be deleted from your Wild Apricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your Wild Apricot site.
             So, don't worry - you are not permanently deleting information that you cannot recover later!</b></p>
             <?php
@@ -387,13 +387,13 @@ class MySettingsPage
                     }
                 }
                 ?>
-					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php echo htmlspecialchars($field_id); ?>" <?php echo($is_checked); ?>/> <?php echo htmlspecialchars($field_name); ?> </input><br>
+					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php esc_html_e($field_id); ?>" <?php esc_html_e($is_checked); ?>/> <?php esc_html_e($field_name); ?> </input><br>
 				<?php
             }
         } else { // no custom fields
             $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
             ?>
-            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php echo htmlspecialchars($authorization_link); ?>">Wild Apricot Press -> Authorization</a></p>
+            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">Wild Apricot Press -> Authorization</a></p>
             <?php
         }
     }
@@ -557,9 +557,7 @@ class MySettingsPage
                 </form>
                 <?php
             } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
-                $link_address = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
                 echo "<h2>License Keys</h2>";
-                // echo "Before entering your license key(s), please enter your Wild Apricot credentials in <a href='".$link_address."'>WA4WP > Authorization</a>";
             }
             ?>
         </div>
@@ -1142,8 +1140,8 @@ class MySettingsPage
         $wawp_wal_login_logout_button = get_option('wawp_menu_location_name',[]);
 
         foreach ($menu_items as $item) {
-            echo "<div><input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_menu_location_name[]\" value=\"" . esc_attr($item) . "\"" . (in_array( esc_attr($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
-            echo "<label for= \"" . esc_attr($item) . "\">" . esc_attr($item) . "</label></div>";
+            echo "<div><input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_menu_location_name[]\" value=\"" . esc_html__($item) . "\"" . (in_array( esc_html__($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
+            echo "<label for= \"" . esc_html__($item) . "\">" . esc_html__($item) . "</label></div>";
         }
     }
 
@@ -1160,7 +1158,7 @@ class MySettingsPage
             $input_value = Addon::instance()::get_license($slug);
         } else {
         }
-        echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . $input_value . "'  />" ;
+        echo "<input id='license_key " . esc_html__($slug) . "' name='wawp_license_keys[" . esc_html__($slug) ."]' type='text' value='" . $input_value . "'  />" ;
     }
 
     /**
