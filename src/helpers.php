@@ -76,29 +76,6 @@ function is_addon($slug) {
 }
 
 /**
- * Recursive function to sanitize post meta data.
- *
- * @param array $post_meta post meta data to sanitize.
- * @param string $key optional: key of the value to sanitize.
- * passed in on recursive iterations.
- * @param string $value optional: value to sanitize.
- * passed in on recursive iterations.
- * @return array sanitized array of post meta data.
- */
-function sanitize_post_meta($post_meta, $key = '', $value = '') {
-    if (gettype($value) == 'string') {
-        $post_meta[$key] = sanitize_text_field($value);
-        return $post_meta;
-    }
-
-    foreach ($post_meta as $key => $value) {
-        return sanitize_post_meta($post_meta, $key, $value);
-    }
-
-
-}
-
-/**
  * Escapes HTML output.
  *
  * @param string $output

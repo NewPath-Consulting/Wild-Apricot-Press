@@ -496,12 +496,8 @@ class WAIntegration {
 		}
 
 		// actually need to use post if it's the first time getting post meta.
-		$post_meta = get_post_meta($post_id);
-		if (!array_key_exists(self::RESTRICTED_GROUPS, $post_meta)) {
-			$post_meta = sanitize_post_meta($post_meta);
-		}
+		$wa_post_meta = self::get_wa_post_meta_from_post_data($_POST);
 		// Get levels and groups that the user checked off
-		$wa_post_meta = self::get_wa_post_meta($post_meta);
 		$checked_groups_ids = $wa_post_meta[self::RESTRICTED_GROUPS];
 		$checked_levels_ids = $wa_post_meta[self::RESTRICTED_LEVELS];
 
@@ -1409,6 +1405,62 @@ class WAIntegration {
 		);
 
 		return $wa_meta;
+	}
+
+	/**
+	 * Recursive function to sanitize post meta data.
+	 *
+	 * @param array $post_meta post meta data to sanitize.
+	 * @return array sanitized array of post meta data.
+	 */
+	public static function sanitize_post_meta($post_meta) {
+		// loop through all values in the array
+		foreach ($post_meta as $key => &$value) {
+			// if the value is a string, sanitize it
+			if (gettype($value) == 'string') {
+				if (str_contains($key, 'textarea')) {
+					$value = sanitize_textarea_field($value);
+				} else {
+					$value = sanitize_text_field($value);
+				}
+			} elseif (gettype($value) == 'array') {
+				/**
+				 * if the value is an array, recursively call this function and
+				 * obtain the sanitized inner array that it will return
+				 */
+				$value = self::sanitize_post_meta($value);
+			}
+			
+		}
+
+		return $post_meta;
+	}
+
+	/**
+	 * Obtains the relevant WA post meta data from the $_POST response data and
+	 * formats it similar to the post meta data structure obtained by using
+	 * get_post_meta.
+	 *
+	 * @param string[] $post_data
+	 * @return string[] formatted array of the post meta data.
+	 */
+	public static function get_wa_post_meta_from_post_data($post_data) {
+		$post_data = self::sanitize_post_meta($post_data);
+		if (array_key_exists('wawp_membership_groups', $post_data)) {
+			$memgroups = $post_data['wawp_membership_groups'];
+		}
+		if (array_key_exists('wawp_membership_levels', $post_data)) {
+			$memlevels = $post_data['wawp_membership_levels'];
+		}
+		if (array_key_exists('wawp_individual_post_restricted_message_textarea', $post_data)) {
+			$restmsg = $post_data['wawp_individual_post_restricted_message_textarea'];
+		}
+
+		return array (
+			self::RESTRICTED_GROUPS => $memgroups,
+			self::RESTRICTED_LEVELS => $memlevels,
+			self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY => $restmsg
+		);
 	}
 }
 ?>
