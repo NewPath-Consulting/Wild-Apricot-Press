@@ -118,6 +118,7 @@ class Addon {
         $is_plugin_page = is_plugin_page();
         $core_license_status = false;
 
+        Log::wap_log_debug('Addon::license_admin_notices');
         // loop through all addons
         foreach(self::get_addons() as $slug => $data) {
             // grab the license status from options table
@@ -257,7 +258,7 @@ class Addon {
         return $addons[$slug]['name'];
 
     }
-    
+
     /**
      * Called in uninstall.php. Deletes the data stored in the options table.
      */
