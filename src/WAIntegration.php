@@ -240,8 +240,8 @@ class WAIntegration {
 			$wild_apricot_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
 			if (!empty($wild_apricot_id)) {
 				// User is still logged into Wild Apricot
-				$logout_link = esc_url(wp_logout_url(esc_url(site_url())));
-				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, ensure that you are logged out of your Wild Apricot account by clicking <a href="'.$logout_link.'">Log Out</a>.';
+				$logout_link = wp_logout_url(esc_url(site_url()));
+				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, ensure that you are logged out of your Wild Apricot account by clicking <a href="' . esc_url($logout_link). '">Log Out</a>.';
 			}
 		}
 	}
@@ -612,7 +612,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this field blank - the global restriction message set under <a href="<?php echo esc_url($global_restriction_link) ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
@@ -676,7 +676,7 @@ class WAIntegration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($level_checked); ?>/> <?php echo htmlspecialchars($membership_level); ?> </input>
+						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php esc_html_e($membership_key); ?>" <?php esc_html_e($level_checked); ?>/> <?php esc_html_e($membership_level); ?> </input>
 					</li>
 				<?php
 			}
@@ -713,7 +713,7 @@ class WAIntegration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php echo htmlspecialchars($membership_key); ?>" <?php echo($group_checked); ?>/> <?php echo htmlspecialchars($membership_group); ?> </input>
+						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php esc_html_e($membership_key); ?>" <?php esc_html_e($group_checked); ?>/> <?php esc_html_e($membership_group); ?> </input>
 					</li>
 				<?php
 			}
@@ -840,7 +840,7 @@ class WAIntegration {
 					<th><label>Account ID</label></th>
 					<td>
 					<?php
-						echo '<label>' . $wa_account_id . '</label>';
+						echo '<label>' . esc_html__($wa_account_id) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -849,7 +849,7 @@ class WAIntegration {
 					<th><label>Membership Level</label></th>
 					<td>
 					<?php
-						echo '<label>' . $membership_level . '</label>';
+						echo '<label>' . esc_html__($membership_level) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -858,7 +858,7 @@ class WAIntegration {
 					<th><label>User Status</label></th>
 					<td>
 					<?php
-						echo '<label>' . $user_status . '</label>';
+						echo '<label>' . esc_html__($user_status) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -867,7 +867,7 @@ class WAIntegration {
 					<th><label>Organization</label></th>
 					<td>
 					<?php
-						echo '<label>' . $organization . '</label>';
+						echo '<label>' . esc_html__($organization) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -876,7 +876,7 @@ class WAIntegration {
 					<th><label>Groups</label></th>
 					<td>
 					<?php
-						echo '<label>' . $group_list . '</label>';
+						echo '<label>' . esc_html__($group_list) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -898,10 +898,10 @@ class WAIntegration {
 						}
 						?>
 						<tr>
-							<th><label><?php echo($all_custom_fields[$custom_field]); ?></label></th>
+							<th><label><?php esc_html_e($all_custom_fields[$custom_field]); ?></label></th>
 							<td>
 							<?php
-								echo '<label>' . $field_saved_value . '</label>';
+								echo '<label>' . esc_html__($field_saved_value) . '</label>';
 							?>
 							</td>
 						</tr>
@@ -1045,7 +1045,7 @@ class WAIntegration {
 			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
 			// Show error if necessary
 			if (is_wp_error($current_wp_user_id)) {
-				echo $current_wp_user_id->get_error_message();
+				esc_html_e($current_wp_user_id->get_error_message());
 			}
 			// Set user's status of being added by the plugin to true
 			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, true);
