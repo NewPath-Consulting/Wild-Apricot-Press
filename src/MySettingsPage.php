@@ -2,7 +2,7 @@
 namespace WAWP;
 
 require_once __DIR__ . '/Addon.php';
-// require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 
 
@@ -233,9 +233,7 @@ class MySettingsPage
      */
     public function create_admin_page()
     {
-        // Get active tab from $_GET param
-        $default_tab = null;
-        $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
+        $tab = get_current_tab();
         ?>
         <div class="wrap">
             <h2>Wild Apricot Admin Settings</h2>
@@ -600,9 +598,7 @@ class MySettingsPage
             wp_die('Your nonce for the restriction message could not be verified.');
         }
 		// Create valid variable that will hold the valid input
-        // Sanitize wp editor
-        // https://wordpress.stackexchange.com/questions/262796/sanitize-content-from-wp-editor
-		$valid = wp_kses_post($input);
+		$valid = sanitize_textarea_field($input);
         // Return valid input
         return $valid;
     }
@@ -614,7 +610,7 @@ class MySettingsPage
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'wal_sanitize'),
-            'default' => NULL
+            'default' => null
         );
 
 		// Register setting
@@ -663,7 +659,7 @@ class MySettingsPage
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'menu_location_sanitize'),
-            'default' => NULL
+            'default' => null
         );
 
 		// Register setting
@@ -695,7 +691,7 @@ class MySettingsPage
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'validate_license_form'),
-            'default' => NULL
+            'default' => null
         );
 
         register_setting(
@@ -740,7 +736,7 @@ class MySettingsPage
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'restriction_status_sanitize'),
-            'default' => NULL
+            'default' => null
         );
         register_setting(
             'wawp_restriction_status_group', // group name for settings
@@ -768,7 +764,7 @@ class MySettingsPage
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'restriction_sanitize'),
-            'default' => NULL
+            'default' => null
         );
         register_setting(
             'wawp_restriction_group', // group name for settings
@@ -797,7 +793,7 @@ class MySettingsPage
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'custom_fields_sanitize'),
-            'default' => NULL
+            'default' => null
         );
         register_setting(
             'wawp_fields_group', // group name for settings
@@ -824,7 +820,7 @@ class MySettingsPage
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'plugin_options_sanitize'),
-            'default' => NULL
+            'default' => null
         );
         register_setting(
             'wawp_delete_group', // group name for settings
@@ -865,7 +861,9 @@ class MySettingsPage
      */
     public function menu_location_sanitize($input) {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['wawp_menu_location_nonce_name'], 'wawp_menu_location_nonce_action')) {
+        if (!wp_verify_nonce(
+            $_POST['wawp_menu_location_nonce_name'], 'wawp_menu_location_nonce_action')
+        ) {
             wp_die('Your nonce for the menu location(s) could not be verified.');
         }
 

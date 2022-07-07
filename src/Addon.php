@@ -4,7 +4,7 @@ namespace WAWP;
 require_once __DIR__ . '/WAWPApi.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/DataEncryption.php';
-// require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 
 
@@ -195,7 +195,7 @@ class Addon {
      */
     public static function get_licenses() {
         $licenses = get_option(self::WAWP_LICENSE_KEYS_OPTION);
-        if (!$licenses) return NULL;
+        if (!$licenses) return null;
         foreach ($licenses as $slug => $license) {
             $licenses[$slug] = self::$data_encryption->decrypt($license);
         }
@@ -211,7 +211,7 @@ class Addon {
     public static function get_license($slug) {
         $licenses = self::get_licenses();
 
-        if (empty($licenses[$slug])) return NULL;
+        if (empty($licenses[$slug])) return null;
 
         return $licenses[$slug];
     }
@@ -282,7 +282,7 @@ class Addon {
     public static function escape_license($license_key_input) {
         // remove non-alphanumeric, non-hyphen characters
         $license_key = preg_replace(
-            '/[^A-Za-z0-9\-]/',
+            '/[^A-Z0-9\-]/',
             '',
             $license_key_input
         );
@@ -381,7 +381,7 @@ class Addon {
         // check that key has the necessary properties to be valid
         $is_license_valid = self::check_license_properties($response);
 
-        if (!$is_license_valid) return NULL;
+        if (!$is_license_valid) return null;
 
 
         return $license_key;
@@ -426,7 +426,7 @@ class Addon {
      * @return bool true if above conditions are valid, false if not.
      */
     public static function check_license_properties($response) {
-        // if the license is invalid OR an invalid Wild Apricot URL is being used, return NULL
+        // if the license is invalid OR an invalid Wild Apricot URL is being used, return null
         // else return the valid license key
         if (array_key_exists('license-error', $response)) return false;
 

@@ -1,9 +1,15 @@
 <?php
+/**
+ * helpers.php
+ * The purpose of this class is to hold common constants and functions used across files 
+ * in the WAWP namespace.
+ */
 
 namespace WAWP;
 
 const CORE_SLUG = 'wawp';
 const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
+
 
 /**
  * @return bool true if the current page is the licensing settings page, false if not
@@ -45,6 +51,22 @@ function get_current_url() {
 }
 
 /**
+ * Returns the current tab. Used for finding which tab of the admin settings page
+ * the user is on.
+ *
+ * @return string|null the current tab, or null if it's the main tab.
+ */
+function get_current_tab() {
+    $current_url = get_current_url();
+    $url_components = parse_url($current_url);
+    parse_str($url_components['query'], $params);
+    if (array_key_exists('tab', $params)) {
+        return $params['tab'];
+    }
+    return null;
+}
+
+/**
  * @return bool true if the current page is the plugins admin page, false if not
  */
 function is_plugin_page() {
@@ -69,4 +91,10 @@ function is_addon($slug) {
     return !is_core($slug);
 }
 
-?>
+/**
+ * Escapes HTML output.
+ *
+ * @param string $output
+ * @return string escaped
+ */
+function escape_output($output) {}
