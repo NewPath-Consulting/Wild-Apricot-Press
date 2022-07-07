@@ -51,7 +51,7 @@ class WAWPApi {
     private static function response_to_data($response) {
         if (is_wp_error($response)) {
 			// LOG ERROR
-			// Log::good_error_log('There has been an error with the Wild Apricot API call! Please try again later.');
+			Log::wap_debug_log('There was an error with the Wild Apricot API. Please try again.');
 			return false;
 		}
 		// Get body of response
@@ -61,7 +61,7 @@ class WAWPApi {
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
 			// LOG ERROR
-			// Log::good_error_log('There was an error with the Wild Apricot API! Please try again!');
+			Log::wap_debug_log('There was an error with the Wild Apricot API. Please try again.');
 			// Update successful login as false
 			return false;
 		}
