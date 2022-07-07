@@ -103,9 +103,9 @@ class Activator {
 	private function empty_creds_message() {
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your ";
-		echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">Wild Apricot credentials</a>";
+		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot credentials</a>";
 		echo " and ";
-		echo "<a href=" . admin_url('admin.php?page=wawp-licensing') . "> license key</a>";
+		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . "> license key</a>";
 		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
 		echo "</p></div>";
 	}
@@ -115,7 +115,7 @@ class Activator {
 
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your Wild Apricot credentials in ";
-		echo "<a href=" . admin_url('admin.php?page=wawp-login') . ">Wild Apricot Press > Authorization</a>";
+		echo "<a href=" . esc_html__(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot Press > Authorization</a>";
 		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
 		echo "</p></div>";
 	}
