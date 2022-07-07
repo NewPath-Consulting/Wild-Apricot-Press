@@ -72,6 +72,7 @@ class Activator {
 	 * appropriate admin notice messages if either one is invalid or missing. 
 	 */
 	public function admin_notices_creds_check() {
+		Log::good_error_log(ABSPATH);
 		
 		// only display these messages on wawp settings page or plugin page right after plugin is activated
 		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
