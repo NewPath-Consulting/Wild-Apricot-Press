@@ -6,7 +6,7 @@ use DOMDocument;
 use DOMAttr;
 use WAWP\Log;
 use WAWP\Addon;
-// require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/helpers.php';
 
@@ -161,13 +161,13 @@ class WAIntegration {
 		$licensed_wa_urls = array();
 
 		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
-			return NULL;
+			return null;
 		}
 
 		$licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
 		// Sanitize urls, if necessary
 
-		if (empty($licensed_wa_urls)) return NULL;
+		if (empty($licensed_wa_urls)) return null;
 
 		foreach ($licensed_wa_urls as $url_key => $url_value) {
 			// Lowercase and remove https://, http://, and/or www. from url
@@ -181,12 +181,12 @@ class WAIntegration {
 		$licensed_wa_ids = array();
 
 		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
-			return NULL;
+			return null;
 		}
 
 		$licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
 
-		if (empty($licensed_wa_ids)) return NULL;
+		if (empty($licensed_wa_ids)) return null;
 
 		foreach ($licensed_wa_ids as $id_key => $id_value) {
 			// Ensure that only numbers are in the ID #
@@ -199,7 +199,7 @@ class WAIntegration {
 	public static function check_licensed_wa_urls_ids($response) {
 		$licensed_wa_urls = self::get_licensed_wa_urls($response);
 		$licensed_wa_ids = self::get_licensed_wa_ids($response);
-		if ($licensed_wa_urls == NULL || $licensed_wa_ids == NULL ) return false;
+		if ($licensed_wa_urls == null || $licensed_wa_ids == null ) return false;
 
 		// Get access token and account id
 		$access_and_account = WAWPApi::verify_valid_access_token();
@@ -398,12 +398,14 @@ class WAIntegration {
 				// Append 'Log In' button and the styling div to the restriction message
 				$login_url = $this->get_login_link();
 				$restriction_message = '<div class="wawp_restriction_content_div">' . $restriction_message;
-				$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
-				$restriction_message .= '</div>';
+
 				// Automatically restrict the post if user is not logged in
 				if (!is_user_logged_in()) {
+					$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
+					$restriction_message .= '</div>';
 					return $restriction_message;
 				}
+				$restriction_message .= '</div>';
 				// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with Wild Apricot
 				// Get user's Wild Apricot ID -> if it does not exist, then the user is not synced with Wild Apricot
 				$current_user_ID = wp_get_current_user()->ID;
@@ -448,7 +450,7 @@ class WAIntegration {
 				}
 
 				// Find common groups between the user and the post's restrictions
-				// If user_groups is NULL, then the user is not part of any groups
+				// If user_groups is null, then the user is not part of any groups
 				$common_groups = array();
 				if (!empty($user_groups) && !empty($post_restricted_groups)) {
 					$user_groups = maybe_unserialize($user_groups[0]);
@@ -477,7 +479,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Processes the restricted groups set in the post meta data and update these levels/groups to the current post's meta data
+	 * Processes the restricted groups set in the post meta data and update these levels/groups to the current post's meta data. Called when a post is saved.
 	 *
 	 * @param int     $post_id holds the ID of the current post
 	 * @param WP_Post $post holds the current post
@@ -495,10 +497,11 @@ class WAIntegration {
 			return;
 		}
 
+		// actually need to use post if it's the first time getting post meta.
+		$wa_post_meta = self::get_wa_post_meta_from_post_data($_POST);
 		// Get levels and groups that the user checked off
-		// Get value if index has been set to $_POST, and set to an empty array if NOT
-		$checked_groups_ids = array_key_exists('wawp_membership_groups', $_POST) ? $_POST['wawp_membership_groups'] : array();
-		$checked_levels_ids = array_key_exists('wawp_membership_levels', $_POST) ? $_POST['wawp_membership_levels'] : array();
+		$checked_groups_ids = $wa_post_meta[self::RESTRICTED_GROUPS];
+		$checked_levels_ids = $wa_post_meta[self::RESTRICTED_LEVELS];
 
 		// Add the 'restricted' property to this post's meta data and check if page is indeed restricted
 		$this_post_is_restricted = false;
@@ -554,7 +557,7 @@ class WAIntegration {
 		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
 		// Save individual restriction message to post meta data
-		$individual_message = $_POST['wawp_individual_post_restricted_message_textarea'];
+		$individual_message = $wa_post_meta[self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY];
 		if (!empty($individual_message)) {
 			// Filter restriction message
 			$individual_message = wp_kses_post($individual_message);
@@ -609,7 +612,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post! If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this field blank - the global restriction message set under <a href="<?php echo $global_restriction_link ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
@@ -1283,12 +1286,10 @@ class WAIntegration {
 									$users_member_groups = maybe_unserialize($users_member_groups[0]);
 									$user_member_level = get_user_meta($current_users_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY);
 									$user_member_level = $user_member_level[0];
+									$wa_post_meta = self::get_wa_post_meta($nav_item_id);
 									// Get page's groups and level
-									$page_member_groups = get_post_meta($nav_item_id, self::RESTRICTED_GROUPS);
-									// Unserialize if necessary
-									$page_member_groups = maybe_unserialize($page_member_groups[0]);
-									$page_member_levels = get_post_meta($nav_item_id, self::RESTRICTED_LEVELS);
-									$page_member_levels = maybe_unserialize($page_member_levels[0]);
+									$page_member_groups = $wa_post_meta[self::RESTRICTED_GROUPS];
+									$page_member_levels = $wa_post_meta[self::RESTRICTED_LEVELS];
 									// Check if user's groups/level overlap with the page's groups/level
 									$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
 									$intersect_level = in_array($user_member_level, $page_member_levels);
@@ -1355,6 +1356,113 @@ class WAIntegration {
 			}
 		}
 		return $items;
+	}
+	/**
+	 * Returns the post meta values pertaining to Wild Apricot.
+	 * The list of restricted groups and levels, flag of whether the post is restricted or not, and the restriction message.
+	 *
+	 * @param array $meta metadata of a post.
+	 * @return array array of the restricted groups and levels, each in their own
+	 * respective element.
+	 */
+	public function get_wa_post_meta($meta) {
+		$restricted_groups = array();
+		$restricted_levels = array();
+		$is_restricted = 0;
+		$individual_restriction_msg = '';
+
+		/**
+		 * these will only be present in the post meta if there are restricted
+		 * groups/levels. 
+		 */
+		if (array_key_exists(self::RESTRICTED_GROUPS, $meta)) {
+			$restricted_groups = $meta[self::RESTRICTED_GROUPS][0];
+		}
+		if (array_key_exists(self::RESTRICTED_LEVELS, $meta)) {
+			$restricted_levels = $meta[self::RESTRICTED_LEVELS][0];
+		}
+
+		// restriction flag will always be present
+		if (array_key_exists(self::IS_POST_RESTRICTED, $meta)) {
+			$is_restricted = $meta[self::IS_POST_RESTRICTED][0];
+
+			$is_restricted = $meta[self::IS_POST_RESTRICTED][0] ? true : false;
+		}
+
+		// like groups and levels, restriction message will not always be in the meta
+		if (array_key_exists(self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, $meta)) {
+			$individual_restriction_msg = $meta[self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY][0];
+		}
+
+		/**
+		 * need to call maybe_unserialize twice since the array of restricted 
+		 * groups/levels is a serialized string containing a serialized array.
+		 */
+		$wa_meta = array(
+			self::IS_POST_RESTRICTED => $is_restricted,
+			self::RESTRICTED_GROUPS => maybe_unserialize(maybe_unserialize($restricted_groups)),
+			self::RESTRICTED_LEVELS => maybe_unserialize(maybe_unserialize($restricted_levels)),
+			self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY => $individual_restriction_msg
+			
+		);
+
+		return $wa_meta;
+	}
+
+	/**
+	 * Recursive function to sanitize post meta data.
+	 *
+	 * @param array $post_meta post meta data to sanitize.
+	 * @return array sanitized array of post meta data.
+	 */
+	public static function sanitize_post_meta($post_meta) {
+		// loop through all values in the array
+		foreach ($post_meta as $key => &$value) {
+			// if the value is a string, sanitize it
+			if (gettype($value) == 'string') {
+				if (str_contains($key, 'textarea')) {
+					$value = sanitize_textarea_field($value);
+				} else {
+					$value = sanitize_text_field($value);
+				}
+			} elseif (gettype($value) == 'array') {
+				/**
+				 * if the value is an array, recursively call this function and
+				 * obtain the sanitized inner array that it will return
+				 */
+				$value = self::sanitize_post_meta($value);
+			}
+			
+		}
+
+		return $post_meta;
+	}
+
+	/**
+	 * Obtains the relevant WA post meta data from the $_POST response data and
+	 * formats it similar to the post meta data structure obtained by using
+	 * get_post_meta.
+	 *
+	 * @param string[] $post_data
+	 * @return string[] formatted array of the post meta data.
+	 */
+	public static function get_wa_post_meta_from_post_data($post_data) {
+		$post_data = self::sanitize_post_meta($post_data);
+		if (array_key_exists('wawp_membership_groups', $post_data)) {
+			$memgroups = $post_data['wawp_membership_groups'];
+		}
+		if (array_key_exists('wawp_membership_levels', $post_data)) {
+			$memlevels = $post_data['wawp_membership_levels'];
+		}
+		if (array_key_exists('wawp_individual_post_restricted_message_textarea', $post_data)) {
+			$restmsg = $post_data['wawp_individual_post_restricted_message_textarea'];
+		}
+
+		return array (
+			self::RESTRICTED_GROUPS => $memgroups,
+			self::RESTRICTED_LEVELS => $memlevels,
+			self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY => $restmsg
+		);
 	}
 }
 ?>
