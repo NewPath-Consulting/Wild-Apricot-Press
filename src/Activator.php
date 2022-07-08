@@ -6,40 +6,35 @@ require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/Log.php';
 
-Log::wap_log_debug('not in function');
+// Log::wap_log_debug('not in function');
 
 class Activator {
 
-	const CORE = 'wawp';
 	const SHOW_NOTICE_ACTIVATION = 'show_notice_activation';
-
-	private $slug;
-	private $filename;
-	private $plugin_name;
+	const LICENSE_CHECK_OPTION = 'license-check-' . CORE_SLUG;
 
 	private $license_req_option_name;
 
 	/**
 	 * Constructor for Activator class
 	 */
-	public function __construct($slug, $filename, $plugin_name) {
-		$this->slug = $slug;
-		$this->filename = $filename;
-		$this->plugin_name = $plugin_name;
-		$this->license_req_option_name = 'license-check-' . $slug;
-
+	public function __construct($filename) {
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
 
 		add_action('admin_notices', array($this, 'admin_notices_creds_check'));
 
+		// Log::wap_log_debug('in construct function');
+
 		Addon::instance()::new_addon(array(
-			'slug' => $slug,
-			'name' => $plugin_name,
+			'slug' => CORE_SLUG,
+			'name' => CORE_NAME,
 			'filename' => $filename,
-			'license_check_option' => $this->license_req_option_name,
+			'license_check_option' => self::LICENSE_CHECK_OPTION,
 			'show_activation_notice' => self::SHOW_NOTICE_ACTIVATION,
 			'is_addon' => 0 // only core calls activator, so is_addon will always be false here
 		));
+
+
 
 	}
 
@@ -76,7 +71,7 @@ class Activator {
 	 */
 	public function admin_notices_creds_check() {
 		
-		Log::wap_log_debug('in activator admin notices function');
+		// Log::wap_log_debug('in activator admin notices function');
 		// only display these messages on wawp settings page or plugin page right after plugin is activated
 		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
  		if (!is_wawp_settings() && !is_plugin_page()) return;

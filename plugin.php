@@ -14,8 +14,6 @@
  * Text Domain:       wawp
  */
 
-use WAWP\Activator;
-
 /*
 Copyright (C) 2021 NewPath Consulting
 
@@ -43,7 +41,7 @@ require_once plugin_dir_path(__FILE__) . 'src/MySettingsPage.php';
 require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
 require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 
-$activator = new Activator(WAWP\CORE_SLUG, plugin_basename(__FILE__), WAWP\CORE_NAME);
+$activator = new WAWP\Activator(plugin_basename(__FILE__));
 // Enqueue stylesheet
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {
@@ -63,10 +61,10 @@ $wa_integration_instance = new WAWP\WAIntegration();
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
-	WAWP\Log::wap_log_debug('register deactivation hook');
+	// WAWP\Log::wap_log_debug('register deactivation hook');
 	WAWP\Deactivator::deactivate();
 } );
 
-WAWP\Log::wap_log_debug('in plugin.php');
+// WAWP\Log::wap_log_debug('in plugin.php');
 
 ?>

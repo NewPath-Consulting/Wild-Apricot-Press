@@ -9,7 +9,6 @@ require_once __DIR__ . '/helpers.php';
 
 
 use \DateTime; // for checking license key expiration dates
-use WAWP\Log;
 
 /**
  * Addon class
@@ -116,9 +115,8 @@ class Addon {
 
         $is_licensing_page = is_licensing_submenu();
         $is_plugin_page = is_plugin_page();
-        $core_license_status = false;
 
-        Log::wap_log_debug('Addon::license_admin_notices');
+        // Log::wap_log_debug('Addon::license_admin_notices');
         // loop through all addons
         foreach(self::get_addons() as $slug => $data) {
             // grab the license status from options table
