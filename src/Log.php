@@ -32,7 +32,11 @@ class Log {
      * The name of the option stored in the options table
      * which contains the user's debug setting.   
      */
-    const DEBUG_OPTION = 'wawp-debug';
+    const LOG_OPTION = 'wawp_logfile';
+
+    static public function can_debug() {
+        return get_option(Log::LOG_OPTION);
+    }
 
     /**
      * Print an error message to the log file.
@@ -160,8 +164,6 @@ class Log {
 
         return $name;
     }
-
-    static private function can_debug() {}
 
     static private function set_debug() {}
 }

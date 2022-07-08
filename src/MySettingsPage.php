@@ -51,6 +51,17 @@ class MySettingsPage
     }
 
     /**
+	 * Set-up CRON job for updating membership levels and groups
+	 */
+	public static function setup_cron_job() {
+        //If $timestamp === false schedule the event since it hasn't been done previously
+        if (!wp_next_scheduled(self::CRON_HOOK)) {
+            //Schedule the event for right now, then to repeat daily using the hook
+            wp_schedule_event(current_time('timestamp'), 'daily', self::CRON_HOOK);
+        }
+    }
+
+    /**
      * Removes the invalid, now deleted groups and levels after the membership levels and groups are updated
      * Please note that, while this function refers to "levels", this function works for both levels and groups
      *
@@ -228,380 +239,7 @@ class MySettingsPage
         );
     }
 
-    /**
-     * Settings page callback
-     */
-    public function create_admin_page()
-    {
-        $tab = get_current_tab();
-        ?>
-        <div class="wrap">
-            <h2>Wild Apricot Admin Settings</h2>
-            <?php 
-            // don't display settings if credentials and/or key are not valid
-            if (!WAIntegration::valid_wa_credentials() || !Addon::instance()::has_valid_license(CORE_SLUG)) { ?> </div> <?php return; } ?>
-            <!-- Tabs for navigation -->
-            <nav class="nav-tab-wrapper">
-                <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Content Restriction Options</a>
-                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='fields'):?>nav-tab-active<?php endif; ?>">Synchronization Options</a>
-                <a href="?page=wawp-wal-admin&tab=plugin" class="nav-tab <?php if($tab==='plugin'):?>nav-tab-active<?php endif; ?>">Plugin Options</a>
-            </nav>
-            <div class="tab-content">
-                <?php switch($tab) :
-                    case 'fields':
-                        ?>
-                        <form method="post" action="options.php">
-                        <?php
-                            // Nonce for verification
-                            wp_nonce_field('wawp_field_nonce_action', 'wawp_field_nonce_name');
-                            // This prints out all hidden setting fields
-                            settings_fields( 'wawp_fields_group' );
-                            do_settings_sections( 'wawp-wal-admin&tab=fields' );
-                            submit_button();
-                        ?>
-                        </form>
-                        <?php
-                        break;
-                    case 'plugin':
-                        ?>
-                            <form method="post" action="options.php">
-                            <?php
-                            // Nonce for verification
-                            wp_nonce_field('wawp_delete_nonce_action', 'wawp_delete_nonce_name');
-                            // This prints out all hidden setting fields
-                            settings_fields( 'wawp_delete_group' );
-                            do_settings_sections( 'wawp-wal-admin&tab=plugin' );
-                            submit_button();
-                            ?>
-                        </form>
-                        <?php
-                        break;
-                    default:
-                        ?>
-                        <!-- Form for Restriction Status(es) -->
-                        <form method="post" action="options.php">
-                        <?php
-                            // Nonce for verification
-                            wp_nonce_field('wawp_restriction_status_nonce_action', 'wawp_restriction_status_nonce_name');
-                            // This prints out all hidden setting fields
-                            settings_fields('wawp_restriction_status_group');
-                            do_settings_sections( 'wawp-wal-admin' );
-                            submit_button();
-                        ?>
-                        </form>
-                        <!-- Form for global restriction message -->
-                        <form method="post" action="options.php">
-                        <?php
-                            // Nonce for verification
-                            wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
-                            // This prints out all hidden setting fields
-                            settings_fields('wawp_restriction_group');
-                            do_settings_sections( 'wawp-wal-admin-message' );
-                            submit_button();
-                        ?>
-                        </form>
-                        <?php
-                        break;
-                    endswitch; ?>
-            </div>
-        </div>
-        <?php
-    }
-
-    /**
-     * Displays the checkboxes for selecting the restricted status(es)
-     */
-    public function restriction_status_callback() {
-        // Display checkboxes for each Wild Apricot status
-        // List of statuses here: https://gethelp.wildapricot.com/en/articles/137-member-and-contact-statuses
-        $list_of_statuses = array(
-            'Active' => 'Active',
-            'Lapsed' => 'Lapsed',
-            'PendingNew' => 'Pending - New',
-            'PendingRenewal' => 'Pending - Renewal',
-            'PendingLevel' => 'Pending - Level change'
-        );
-        // Should 'suspended' and 'archived' be included?
-
-        // Load in the list of restricted statuses, if applicable
-        $saved_statuses = get_option('wawp_restriction_status_name');
-        // Check if saved statuses exists; if not, then create an empty array
-        if (empty($saved_statuses)) { // create empty array
-            $saved_statuses = array();
-        }
-
-        // Loop through the list of statuses and add each as a checkbox
-        foreach ($list_of_statuses as $status_key => $status) {
-            // Check if checkbox is already checked off
-            $status_checked = '';
-            if (in_array($status_key, $saved_statuses)) {
-                $status_checked = 'checked';
-            }
-            ?>
-            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php esc_html_e($status_key); ?>" <?php esc_html_e($status_checked); ?>/> <?php esc_html_e($status); ?> </input><br>
-            <?php
-        }
-    }
-
-    /**
-     * Displays the options for deleting the plugin, including if the Wild Apricot synced users should be retained, etc.
-     */
-    public function plugin_delete_callback() {
-        // Store each checkbox description in array
-        $synced_info = array('wawp_delete_checkbox' => 'Delete all Wild Apricot information from my WordPress site');
-        // Load in saved checkboxes
-        $saved_synced_info = get_option('wawp_delete_name');
-        // Display checkboxes
-        foreach ($synced_info as $key => $attribute) {
-            $checked = '';
-            // Check if this attribute has already been checked
-            if (!empty($saved_synced_info)) {
-                if (in_array($key, $saved_synced_info)) {
-                    $checked = 'checked';
-                }
-            }
-            ?>
-            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php esc_html_e($key); ?>" <?php esc_html_e($checked); ?>/> <?php esc_html_e($attribute); ?> </input><br>
-            <p><b><br>Please note that this information will never be deleted from your Wild Apricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your Wild Apricot site.
-            So, don't worry - you are not permanently deleting information that you cannot recover later!</b></p>
-            <?php
-        }
-    }
-
-    /**
-     * Displays the checkboxes for the Wild Apricot custom fields
-     */
-    public function field_message_callback() {
-        // Load in custom fields
-        $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
-        $checked_fields = get_option('wawp_fields_name');
-        // Display each custom field as a checkbox
-        if (!empty($custom_fields)) {
-            foreach ($custom_fields as $field_id => $field_name) {
-                // Check if this field is in the list of checked fields
-                $is_checked = '';
-                if (!empty($checked_fields)) {
-                    if (in_array($field_id, $checked_fields)) {
-                        // This field should be checked
-                        $is_checked = 'checked';
-                    }
-                }
-                ?>
-					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php esc_html_e($field_id); ?>" <?php esc_html_e($is_checked); ?>/> <?php esc_html_e($field_name); ?> </input><br>
-				<?php
-            }
-        } else { // no custom fields
-            $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
-            ?>
-            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">Wild Apricot Press -> Authorization</a></p>
-            <?php
-        }
-    }
-
-    /**
-     * Displays the restriction message text area
-     */
-    public function restriction_message_callback() {
-        // Add wp editor
-        // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
-        // https://developer.wordpress.org/reference/functions/wp_editor/
-        // Get default or saved restriction message
-        $initial_content = get_option('wawp_restriction_name');
-        $editor_id = 'wawp_restricted_message_textarea';
-        $editor_name = 'wawp_restriction_name';
-        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
-        // Create WP editor
-        wp_editor($initial_content, $editor_id, $editor_settings);
-    }
-
-	/**
-	 * Login page callback
-     *
-     * Creates the content for the Wild Apricot login page, including instructions
-	 */
-	public function create_login_page() {
-		$this->options = get_option( 'wawp_wal_name' );
-		?>
-        <div class="wrap">
-			<h1>Wild Apricot Authorization</h1>
-			<div class="waSettings">
-				
-				<div class="loginChild">
-                    <!-- Wild Apricot credentials form -->
-					<form method="post" action="options.php">
-					<?php
-                        // Nonce for verification
-                        wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
-						// This prints out all hidden setting fields
-						settings_fields( 'wawp_wal_group' );
-						do_settings_sections( 'wawp-login' );
-						submit_button();
-					?>
-					</form>
-					<!-- Check if form is valid -->
-					<?php
-                        // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
-						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
-							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
-						} else { // successful login
-                            // Get Wild Apricot URL
-                            $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
-                            if ($wild_apricot_url) {
-                                $dataEncryption = new DataEncryption();
-                                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
-                            }
-							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
-                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
-						}
-					?>
-                    <!-- Menu Locations for Login/Logout button -->
-                    <form method="post" action="options.php">
-					<?php
-                        // Nonce for verification
-                        wp_nonce_field('wawp_menu_location_nonce_action', 'wawp_menu_location_nonce_name');
-						// This prints out all hidden setting fields
-						settings_fields( 'wawp_menu_location_group' );
-						do_settings_sections( 'wawp-login-menu-location' );
-						submit_button();
-					?>
-					</form>
-                    <!-- Check if menu location(s) have been submitted -->
-                    <?php
-                        // Check menu locations in options table
-                        $menu_location_saved = get_option('wawp_menu_location_name');
-                        // If menu locations is not empty, then it has been saved
-                        if (!empty($menu_location_saved)) {
-                            // Display success statement
-                            echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
-                        } else {
-                            echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
-                        }
-                    ?>
-				</div>
-                <div class="loginChild">
-					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
-					<ul class="wawp_list">
-					   <li>API Key</li>
-					   <li>Client ID</li>
-					   <li>Client Secret</li>
-					</ul>
-					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
-					<ol>
-					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
-					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
-					   </li>
-					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
-					      <br><br>
-					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Authorized application button" class="wawp_authorization_img"> <br>
-					   </li>
-					   <li> On the Application authorization screen, click the <b>Server application</b> option then click the <b>Continue</b> button. <br><br>
-					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-application-type.png" alt="Authorized application server selection" class="wawp_authorization_img"><br>
-					   </li>
-					   <li>
-					      On the Application details screen, the following options should be set:
-					      <ul class="wawp_list">
-						 <li>
-						    <b>Application name</b>
-						    <ul class="wawp_list">
-						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site".
-						       </li>
-						    </ul>
-						 </li>
-						 <li>
-						    <b>Access Level</b>
-						    <ul class="wawp_list">
-						       <li>Choose full access as the <b>Wild Apricot Press</b> plugin requires ability to read and write to your Wild Apricot database.
-						       </li>
-						    </ul>
-						 </li>
-						 <li>
-						    <b>Client Secret</b>
-						    <ul class="wawp_list">
-						       <li>If there is no Client secret value displayed, click the green Generate client secret button. To delete the client secret, click the red X beside the value.
-						       </li>
-						    </ul>
-					      </ul>
-					   </li>
-					   <li>
-					      Click the <b>Save</b> button to save your changes.
-					   </li>
-					   <li>From the Application details screen, copy the <b>API key</b>, <b>Client ID</b>, and <b>Client secret</b> (the blue boxes). Input these values into their respective locations in WordPress, to the right of these instructions. <br><br>
-					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/application-detatails-api-keys.png" alt="Authorized application API keys" width="500">  <br>
-					   </li>
-					   <br>
-					</ol>
-				</div>
-			</div>
-        </div>
-        <?php
-	}
-
-    // Create license form page
-    public function wawp_licensing_page() {
-        ?>
-        <div class="wrap">
-            <?php
-            // Check if Wild Apricot credentials have been entered
-            $wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
-            // If credentials have been entered (not empty), then we can present the license page
-            if (!empty($wa_credentials) && $wa_credentials['wawp_wal_api_key'] != '') {
-                ?>
-                <form method="post" action="options.php">
-                    <?php
-                    // Nonce for verification
-                    wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
-                    settings_fields('wawp_license_keys');
-                    do_settings_sections('wawp_licensing');
-                    submit_button('Save', 'primary');
-                    ?>
-                </form>
-                <?php
-            } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
-                echo "<h2>License Keys</h2>";
-            }
-            ?>
-        </div>
-        <?php
-    }
-
-    /**
-     * Sanitize restriction status checkboxes
-     *
-     * @param array $input Contains all settings fields as array keys
-     */
-    public function restriction_status_sanitize($input) {
-        // Verify nonce
-        if (!wp_verify_nonce($_POST['wawp_restriction_status_nonce_name'], 'wawp_restriction_status_nonce_action')) {
-            wp_die('Your nonce for the restriction status(es) could not be verified.');
-        }
-        $valid = array();
-        // Loop through each checkbox and sanitize
-        if (!empty($input)) {
-            foreach ($input as $key => $box) {
-                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
-            }
-        }
-        // Return sanitized value
-        return $valid;
-    }
-
-    /**
-     * Sanitize restriction message
-     *
-     * @param array $input Contains all settings fields as array keys
-     */
-    public function restriction_sanitize($input) {
-        // Check that nonce is valid
-        if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
-            wp_die('Your nonce for the restriction message could not be verified.');
-        }
-		// Create valid variable that will hold the valid input
-		$valid = sanitize_textarea_field($input);
-        // Return valid input
-        return $valid;
-    }
-
-    /**
+        /**
      * Register and add settings
      */
     public function page_init() {
@@ -817,7 +455,7 @@ class MySettingsPage
         // Register setting
         $register_args = array(
             'type' => 'string',
-            'sanitize_callback' => array( $this, 'plugin_options_sanitize'),
+            'sanitize_callback' => array( $this, 'deletion_options_sanitize'),
             'default' => null
         );
         register_setting(
@@ -839,17 +477,473 @@ class MySettingsPage
             'wawp-wal-admin&tab=plugin', // page
             'wawp_delete_id' // section
         );
+
+        // ------------------------------ Log File Options ---------------------------
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array($this, 'logfile_options_sanitize'),
+            'default' => null
+        );
+        register_setting(
+            'wawp_logfile_group',
+            Log::LOG_OPTION,
+            $register_args
+        );
+        add_settings_section(
+            'wawp_logfile_id',
+            'Plugin Log Messages',
+            array($this, 'print_logfile_info'),
+            'wawp-wal-admin&tab=plugin#log'
+        );
+        add_settings_field(
+            'wawp_logfile_flag_id',
+            'Print log messages to log file',
+            array($this, 'wawp_logfile_flag_form'),
+            'wawp-wal-admin&tab=plugin#log',
+            'wawp_logfile_id',
+        );
+
     }
 
     /**
-	 * Set-up CRON job for updating membership levels and groups
-	 */
-	public static function setup_cron_job() {
-        //If $timestamp === false schedule the event since it hasn't been done previously
-        if (!wp_next_scheduled(self::CRON_HOOK)) {
-            //Schedule the event for right now, then to repeat daily using the hook
-            wp_schedule_event(current_time('timestamp'), 'daily', self::CRON_HOOK);
+     * Settings page callback
+     */
+    public function create_admin_page()
+    {
+        $tab = get_current_tab();
+        ?>
+        <div class="wrap">
+            <h2>Wild Apricot Admin Settings</h2>
+            <?php 
+            // don't display settings if credentials and/or key are not valid
+            if (!WAIntegration::valid_wa_credentials() || !Addon::instance()::has_valid_license(CORE_SLUG)) { ?> </div> <?php return; } ?>
+            <!-- Tabs for navigation -->
+            <nav class="nav-tab-wrapper">
+                <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Content Restriction Options</a>
+                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='fields'):?>nav-tab-active<?php endif; ?>">Synchronization Options</a>
+                <a href="?page=wawp-wal-admin&tab=plugin" class="nav-tab <?php if($tab==='plugin'):?>nav-tab-active<?php endif; ?>">Plugin Options</a>
+            </nav>
+            <div class="tab-content">
+                <?php switch($tab) :
+                    case 'fields':
+                        ?>
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_field_nonce_action', 'wawp_field_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields( 'wawp_fields_group' );
+                            do_settings_sections( 'wawp-wal-admin&tab=fields' );
+                            submit_button();
+                        ?>
+                        </form>
+                        <?php
+                        break;
+                    case 'plugin':
+                        ?>
+                        <form method="post" action="options.php">
+                            <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_delete_nonce_action', 'wawp_delete_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields( 'wawp_delete_group' );
+                            do_settings_sections( 'wawp-wal-admin&tab=plugin' );
+                            submit_button();
+                            ?>
+                        </form>
+                        <form method="post" action="options.php">
+                            <?php
+                            wp_nonce_field('wawp_logfile_flag_nonce_action', 'wawp_logfile_flag_nonce_name');
+                            settings_fields('wawp_logfile_group');
+                            do_settings_sections('wawp-wal-admin&tab=plugin#log');
+                            submit_button();
+                            ?>
+                        </form>
+                        <?php
+                        break;
+                    default:
+                        ?>
+                        <!-- Form for Restriction Status(es) -->
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_restriction_status_nonce_action', 'wawp_restriction_status_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields('wawp_restriction_status_group');
+                            do_settings_sections( 'wawp-wal-admin' );
+                            submit_button();
+                        ?>
+                        </form>
+                        <!-- Form for global restriction message -->
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields('wawp_restriction_group');
+                            do_settings_sections( 'wawp-wal-admin-message' );
+                            submit_button();
+                        ?>
+                        </form>
+                        <?php
+                        break;
+                    endswitch; ?>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Displays the checkboxes for selecting the restricted status(es)
+     */
+    public function restriction_status_callback() {
+        // Display checkboxes for each Wild Apricot status
+        // List of statuses here: https://gethelp.wildapricot.com/en/articles/137-member-and-contact-statuses
+        $list_of_statuses = array(
+            'Active' => 'Active',
+            'Lapsed' => 'Lapsed',
+            'PendingNew' => 'Pending - New',
+            'PendingRenewal' => 'Pending - Renewal',
+            'PendingLevel' => 'Pending - Level change'
+        );
+        // Should 'suspended' and 'archived' be included?
+
+        // Load in the list of restricted statuses, if applicable
+        $saved_statuses = get_option('wawp_restriction_status_name');
+        // Check if saved statuses exists; if not, then create an empty array
+        if (empty($saved_statuses)) { // create empty array
+            $saved_statuses = array();
         }
+
+        // Loop through the list of statuses and add each as a checkbox
+        foreach ($list_of_statuses as $status_key => $status) {
+            // Check if checkbox is already checked off
+            $status_checked = '';
+            if (in_array($status_key, $saved_statuses)) {
+                $status_checked = 'checked';
+            }
+            ?>
+            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php esc_html_e($status_key); ?>" <?php esc_html_e($status_checked); ?>/> <?php esc_html_e($status); ?> </input><br>
+            <?php
+        }
+    }
+
+
+    /**
+     * Displays the restriction message text area
+     */
+    public function restriction_message_callback() {
+        // Add wp editor
+        // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
+        // https://developer.wordpress.org/reference/functions/wp_editor/
+        // Get default or saved restriction message
+        $initial_content = get_option('wawp_restriction_name');
+        $editor_id = 'wawp_restricted_message_textarea';
+        $editor_name = 'wawp_restriction_name';
+        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
+        // Create WP editor
+        wp_editor($initial_content, $editor_id, $editor_settings);
+    }
+
+    /**
+     * Displays the checkboxes for the Wild Apricot custom fields
+     */
+    public function field_message_callback() {
+        // Load in custom fields
+        $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
+        $checked_fields = get_option('wawp_fields_name');
+        // Display each custom field as a checkbox
+        if (!empty($custom_fields)) {
+            foreach ($custom_fields as $field_id => $field_name) {
+                // Check if this field is in the list of checked fields
+                $is_checked = '';
+                if (!empty($checked_fields)) {
+                    if (in_array($field_id, $checked_fields)) {
+                        // This field should be checked
+                        $is_checked = 'checked';
+                    }
+                }
+                ?>
+					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php esc_html_e($field_id); ?>" <?php esc_html_e($is_checked); ?>/> <?php esc_html_e($field_name); ?> </input><br>
+				<?php
+            }
+        } else { // no custom fields
+            $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
+            ?>
+            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">Wild Apricot Press -> Authorization</a></p>
+            <?php
+        }
+    }
+
+
+        /**
+     * Displays the options for deleting the plugin, including if the Wild Apricot synced users should be retained, etc.
+     */
+    public function plugin_delete_callback() {
+        // Store each checkbox description in array
+        $synced_info = array('wawp_delete_checkbox' => 'Delete all Wild Apricot information from my WordPress site');
+        // Load in saved checkboxes
+        $saved_synced_info = get_option('wawp_delete_name');
+        // Display checkboxes
+        foreach ($synced_info as $key => $attribute) {
+            $checked = '';
+            // Check if this attribute has already been checked
+            if (!empty($saved_synced_info)) {
+                if (in_array($key, $saved_synced_info)) {
+                    $checked = 'checked';
+                }
+            }
+            ?>
+            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php esc_html_e($key); ?>" <?php esc_html_e($checked); ?>/> <?php esc_html_e($attribute); ?> </input><br>
+            <p><b><br>Please note that this information will never be deleted from your Wild Apricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your Wild Apricot site.
+            So, don't worry - you are not permanently deleting information that you cannot recover later!</b></p>
+            <?php
+        }
+    }
+
+    public function wawp_logfile_flag_form() {
+        $logfile_flag = Log::can_debug();
+        $checked = $logfile_flag ? 'checked' : '';
+        ?>
+        <input type="checkbox" name="<?php esc_html_e(Log::LOG_OPTION); ?>[]" class="wawp_class_logfile" value="<?php esc_html_e($checked); ?>"></input>
+        <?php
+    }
+
+	/**
+	 * Login page callback
+     *
+     * Creates the content for the Wild Apricot login page, including instructions
+	 */
+	public function create_login_page() {
+		$this->options = get_option( 'wawp_wal_name' );
+		?>
+        <div class="wrap">
+			<h1>Wild Apricot Authorization</h1>
+			<div class="waSettings">
+				
+				<div class="loginChild">
+                    <!-- Wild Apricot credentials form -->
+					<form method="post" action="options.php">
+					<?php
+                        // Nonce for verification
+                        wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
+						// This prints out all hidden setting fields
+						settings_fields( 'wawp_wal_group' );
+						do_settings_sections( 'wawp-login' );
+						submit_button();
+					?>
+					</form>
+					<!-- Check if form is valid -->
+					<?php
+                        // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
+						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
+							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
+						} else { // successful login
+                            // Get Wild Apricot URL
+                            $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
+                            if ($wild_apricot_url) {
+                                $dataEncryption = new DataEncryption();
+                                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
+                            }
+							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
+                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
+						}
+					?>
+                    <!-- Menu Locations for Login/Logout button -->
+                    <form method="post" action="options.php">
+					<?php
+                        // Nonce for verification
+                        wp_nonce_field('wawp_menu_location_nonce_action', 'wawp_menu_location_nonce_name');
+						// This prints out all hidden setting fields
+						settings_fields( 'wawp_menu_location_group' );
+						do_settings_sections( 'wawp-login-menu-location' );
+						submit_button();
+					?>
+					</form>
+                    <!-- Check if menu location(s) have been submitted -->
+                    <?php
+                        // Check menu locations in options table
+                        $menu_location_saved = get_option('wawp_menu_location_name');
+                        // If menu locations is not empty, then it has been saved
+                        if (!empty($menu_location_saved)) {
+                            // Display success statement
+                            echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
+                        } else {
+                            echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
+                        }
+                    ?>
+				</div>
+                <div class="loginChild">
+					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
+					<ul class="wawp_list">
+					   <li>API Key</li>
+					   <li>Client ID</li>
+					   <li>Client Secret</li>
+					</ul>
+					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
+					<ol>
+					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
+					   </li>
+					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
+					      <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Authorized application button" class="wawp_authorization_img"> <br>
+					   </li>
+					   <li> On the Application authorization screen, click the <b>Server application</b> option then click the <b>Continue</b> button. <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-application-type.png" alt="Authorized application server selection" class="wawp_authorization_img"><br>
+					   </li>
+					   <li>
+					      On the Application details screen, the following options should be set:
+					      <ul class="wawp_list">
+						 <li>
+						    <b>Application name</b>
+						    <ul class="wawp_list">
+						       <li>The name used to identify this application within the list of authorized applications. Select whatever name you like. For our example, it will be called "Our WordPress Site".
+						       </li>
+						    </ul>
+						 </li>
+						 <li>
+						    <b>Access Level</b>
+						    <ul class="wawp_list">
+						       <li>Choose full access as the <b>Wild Apricot Press</b> plugin requires ability to read and write to your Wild Apricot database.
+						       </li>
+						    </ul>
+						 </li>
+						 <li>
+						    <b>Client Secret</b>
+						    <ul class="wawp_list">
+						       <li>If there is no Client secret value displayed, click the green Generate client secret button. To delete the client secret, click the red X beside the value.
+						       </li>
+						    </ul>
+					      </ul>
+					   </li>
+					   <li>
+					      Click the <b>Save</b> button to save your changes.
+					   </li>
+					   <li>From the Application details screen, copy the <b>API key</b>, <b>Client ID</b>, and <b>Client secret</b> (the blue boxes). Input these values into their respective locations in WordPress, to the right of these instructions. <br><br>
+					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/application-detatails-api-keys.png" alt="Authorized application API keys" width="500">  <br>
+					   </li>
+					   <br>
+					</ol>
+				</div>
+			</div>
+        </div>
+        <?php
+	}
+
+    // Create license form page
+    public function wawp_licensing_page() {
+        ?>
+        <div class="wrap">
+            <?php
+            // Check if Wild Apricot credentials have been entered
+            $wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
+            // If credentials have been entered (not empty), then we can present the license page
+            if (!empty($wa_credentials) && $wa_credentials['wawp_wal_api_key'] != '') {
+                ?>
+                <form method="post" action="options.php">
+                    <?php
+                    // Nonce for verification
+                    wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
+                    settings_fields('wawp_license_keys');
+                    do_settings_sections('wawp_licensing');
+                    submit_button('Save', 'primary');
+                    ?>
+                </form>
+                <?php
+            } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
+                echo "<h2>License Keys</h2>";
+            }
+            ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Sanitize restriction status checkboxes
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_status_sanitize($input) {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['wawp_restriction_status_nonce_name'], 'wawp_restriction_status_nonce_action')) {
+            wp_die('Your nonce for the restriction status(es) could not be verified.');
+        }
+        $valid = array();
+        // Loop through each checkbox and sanitize
+        if (!empty($input)) {
+            foreach ($input as $key => $box) {
+                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+            }
+        }
+        // Return sanitized value
+        return $valid;
+    }
+
+    /**
+     * Sanitize restriction message
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_sanitize($input) {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
+            wp_die('Your nonce for the restriction message could not be verified.');
+        }
+		// Create valid variable that will hold the valid input
+		$valid = sanitize_textarea_field($input);
+        // Return valid input
+        return $valid;
+    }
+
+    /**
+     * Sanitize custom fields input
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function custom_fields_sanitize($input) {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_field_nonce_name'], 'wawp_field_nonce_action')) {
+            wp_die('Your nonce could not be verified.');
+        }
+        // Sanitize checkboxes
+        $valid = array();
+        if (!empty($input)) {
+            foreach ($input as $key => $checkbox) {
+                $valid[$key] = sanitize_text_field($checkbox);
+            }
+        }
+        return $valid;
+    }
+
+    /**
+     * Sanitize the plugin options
+     */
+    public function deletion_options_sanitize($input) {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_delete_nonce_name'], 'wawp_delete_nonce_action')) {
+            wp_die('Your plugin options could not be verified.');
+        } 
+        $valid = array();
+        Log::wap_log_debug($input);
+        // Loop through input array and sanitize each value
+        if (!empty($input)) {
+            foreach ($input as $in_key => $in_value) {
+                $valid[$in_key] = sanitize_text_field($in_value);
+            }
+        }
+        // Return valid input
+        return $valid;
+    }
+
+    public function logfile_options_sanitize($input) {
+        if (!wp_verify_nonce($_POST['wawp_logfile_flag_nonce_name'], 'wawp_logfile_flag_nonce_action')) {
+            wp_die('Your plugin options could not be verified.');
+        }
+        $valid = array();
+        Log::wap_log_debug($input);
+        $valid = $input;
+        return $valid;
     }
 
     /**
@@ -877,45 +971,6 @@ class MySettingsPage
     }
 
     /**
-     * Sanitize custom fields input
-     *
-     * @param array $input Contains all settings fields as array keys
-     */
-    public function custom_fields_sanitize($input) {
-        // Check that nonce is valid
-        if (!wp_verify_nonce($_POST['wawp_field_nonce_name'], 'wawp_field_nonce_action')) {
-            wp_die('Your nonce could not be verified.');
-        }
-        // Sanitize checkboxes
-        $valid = array();
-        if (!empty($input)) {
-            foreach ($input as $key => $checkbox) {
-                $valid[$key] = sanitize_text_field($checkbox);
-            }
-        }
-        return $valid;
-    }
-
-    /**
-     * Sanitize the plugin options
-     */
-    public function plugin_options_sanitize($input) {
-        // Check that nonce is valid
-        if (!wp_verify_nonce($_POST['wawp_delete_nonce_name'], 'wawp_delete_nonce_action')) {
-            wp_die('Your plugin options could not be verified.');
-        }
-        $valid = array();
-        // Loop through input array and sanitize each value
-        if (!empty($input)) {
-            foreach ($input as $in_key => $in_value) {
-                $valid[$in_key] = sanitize_text_field($in_value);
-            }
-        }
-        // Return valid input
-        return $valid;
-    }
-
-    /**
      * Sanitize each setting field as needed
      *
      * @param array $input Contains all settings fields as array keys
@@ -928,6 +983,7 @@ class MySettingsPage
 		// Create valid array that will hold the valid input
 		$valid = array();
 
+        // TODO: loop through instead of doing this
         // Get valid api key
         $valid['wawp_wal_api_key'] = preg_replace(
             '/[^A-Za-z0-9]+/', // match only letters and numbers
@@ -1037,13 +1093,6 @@ class MySettingsPage
     }
 
     /**
-     * Print description of the plugin options
-     */
-    public function print_delete_info() {
-        print 'By default, upon deletion of the <b>Wild Apricot Press</b> plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the <b>Wild Apricot Press</b> plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>Wild Apricot Press</b> plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
-    }
-
-    /**
      * Print instructions on how to use the restriction status checkboxes
      */
     public function print_restriction_status_info() {
@@ -1056,6 +1105,17 @@ class MySettingsPage
      */
     public function print_fields_info() {
         print 'Please select the Wild Apricot Contact Fields that you would like to sync with your WordPress site.';
+    }
+
+    /**
+     * Print description of the plugin options
+     */
+    public function print_delete_info() {
+        print 'By default, upon deletion of the <b>Wild Apricot Press</b> plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted). If you like, you can remove all Wild Apricot information from your WordPress site after deleting the <b>Wild Apricot Press</b> plugin by checking the checkbox below.<br><br>Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>Wild Apricot Press</b> plugin. If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked!';
+    }
+
+    public function print_logfile_info() {
+        print 'By checking this box, error and warning messages will be printed to a log file accessible in wp-content.';
     }
 
     /**
