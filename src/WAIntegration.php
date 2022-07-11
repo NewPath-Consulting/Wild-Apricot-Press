@@ -151,6 +151,7 @@ class WAIntegration {
 		if ($license_status != Addon::LICENSE_STATUS_VALID || !$has_valid_license || !$has_valid_wa_credentials) {
 			// disable plugin since one or both of the creds are invalid
 			do_action('disable_plugin', CORE_SLUG, $license_status);
+			Log::wap_log_error('Wild Apricot credentials and/or license key found to be invalid. Disabling plugin functionality.');
 		} else {
 			// if neither of the creds are invalid, do creds obtained action
 			do_action('wawp_wal_credentials_obtained');
@@ -161,6 +162,7 @@ class WAIntegration {
 		$licensed_wa_urls = array();
 
 		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
+			Log::wap_log_warning('Licensed Wild Apricot URLs missing from hook response.');
 			return null;
 		}
 
@@ -181,6 +183,7 @@ class WAIntegration {
 		$licensed_wa_ids = array();
 
 		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
+			Log::wap_log_warning('License Wild Apricot IDs missing from hook response');
 			return null;
 		}
 
@@ -241,6 +244,7 @@ class WAIntegration {
 			if (!empty($wild_apricot_id)) {
 				// User is still logged into Wild Apricot
 				$logout_link = wp_logout_url(esc_url(site_url()));
+				Log::wap_log_warning('Please log out of your Wild Apricot account before accessing the Wordpress admin menu.');
 				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, ensure that you are logged out of your Wild Apricot account by clicking <a href="' . esc_url($logout_link). '">Log Out</a>.';
 			}
 		}
@@ -348,6 +352,7 @@ class WAIntegration {
 		// Only run on wa4wp page
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (is_page($login_page_id)) {
+			Log::wap_log_error('Wild Apricot login error: email or password invalid');
 			return $content . '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
 			If you are sure that you entered the correct email and password, please contact your administrator.</p>';
 		}
@@ -488,6 +493,9 @@ class WAIntegration {
 		// Verify the nonce before proceeding
 		if (!isset($_POST['wawp_post_access_control']) || !wp_verify_nonce($_POST['wawp_post_access_control'], basename(__FILE__))) {
 			// Invalid nonce
+			if (is_wawp_settings()) return;
+			Log::wap_log_error('Your nonce for the post access control input could not be verified');
+			add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
 			return;
 		}
 

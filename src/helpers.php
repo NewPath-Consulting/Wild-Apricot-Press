@@ -91,10 +91,11 @@ function is_addon($slug) {
     return !is_core($slug);
 }
 
-/**
- * Escapes HTML output.
- *
- * @param string $output
- * @return string escaped
- */
-function escape_output($output) {}
+function invalid_nonce_error_message() {
+    echo "<div class='notice notice-warning is-dismissable'><p>";
+    echo "Invalid nonce error. Please try again.";
+    echo "</p></div>";
+    remove_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+}
+
+

@@ -50,8 +50,8 @@ class Log {
      * @param int $severity severity of the issue
      * @return void
      */
-    static public function wap_log_error($msg, $severity) {
-        self::print_message($msg, self::LOG_ERROR);
+    static public function wap_log_error($msg, $severity = '') {
+        self::print_message($msg, self::LOG_ERROR, $severity);
     }
 
     /**
@@ -78,7 +78,7 @@ class Log {
      * @param string $error_type type of log: error, warning, or debug
      * @return void
      */
-    static private function print_message($msg, $error_type) : void {
+    static private function print_message($msg, $error_type, $severity = '') : void {
         if (!self::can_debug()) { return; }
         $backtrace = debug_backtrace();
 

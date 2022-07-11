@@ -67,6 +67,13 @@ class Addon {
         return self::$instance;
     }
 
+    /**
+     * Activates addon functionality. 
+     *
+     * @param string $slug slug of addon to activate.
+     * @return boolean true if addon has valid license and can be activated, 
+     * false if not.
+     */
     public static function activate($slug) {
         $license_exists = self::instance()::has_valid_license($slug);
         if ($license_exists) return true;
@@ -378,7 +385,7 @@ class Addon {
         $response = self::request_integromat_hook($license_key);
 
         // check that key has the necessary properties to be valid
-        $is_license_valid = self::check_license_properties($response);
+        $is_license_valid = self::check_license_properties($response, $addon_slug);
 
         if (!$is_license_valid) return null;
 
@@ -424,7 +431,7 @@ class Addon {
      * Must not be expired.
      * @return bool true if above conditions are valid, false if not.
      */
-    public static function check_license_properties($response) {
+    public static function check_license_properties($response, $slug) {
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return null
         // else return the valid license key
         if (array_key_exists('license-error', $response)) return false;
@@ -438,14 +445,21 @@ class Addon {
 
         
         // Check if the addon_slug in in the products list, has support access and is expired
-        if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support' || self::is_expired($exp_date)) {
+        if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support') {
             return false;
+        }
+
+        $name = self::get_title($slug);
+
+        if (self::is_expired($exp_date)) {
+            Log::wap_log_error('License key for ' . $name . ' has expired.');
         }
 
         // Ensure that this license key is valid for the associated Wild Apricot ID and website
         $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
 
         if (!$valid_urls_and_ids) {
+            Log::wap_log_error('License key for' . $name . 'invalid for your Wild Apricot account and/or website');
             return false;
         }
 

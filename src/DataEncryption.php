@@ -13,6 +13,7 @@ class DataEncryption {
 
 	public function encrypt( $value ) {
 		if ( ! extension_loaded( 'openssl' ) ) {
+			Log::wap_log_error('OpenSSL not installed.');
 			return $value;
 		}
 
@@ -22,6 +23,7 @@ class DataEncryption {
 
 		$raw_value = openssl_encrypt( $value . $this->salt, $method, $this->key, 0, $iv );
 		if ( ! $raw_value ) {
+			Log::wap_log_error('Unable to encrypt');
 			return false;
 		}
 
@@ -30,6 +32,7 @@ class DataEncryption {
 
 	public function decrypt( $raw_value ) {
 		if ( ! extension_loaded( 'openssl' ) ) {
+			Log::wap_log_error('OpenSSL not installed.');
 			return $raw_value;
 		}
 
@@ -43,6 +46,7 @@ class DataEncryption {
 
 		$value = openssl_decrypt( $raw_value, $method, $this->key, 0, $iv );
 		if ( ! $value || substr( $value, - strlen( $this->salt ) ) !== $this->salt ) {
+			Log::wap_log_error('Unable to encrypt');
 			return false;
 		}
 
@@ -54,6 +58,7 @@ class DataEncryption {
 			return LOGGED_IN_KEY;
 		}
 		// Error if we are down here
+		Log::wap_log_error('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
 		throw new Exception('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
 	}
 
@@ -62,6 +67,7 @@ class DataEncryption {
 			return LOGGED_IN_SALT;
 		}
 		// Error if we are down here
+		Log::wap_log_error('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
 		throw new Exception('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
 	}
 }

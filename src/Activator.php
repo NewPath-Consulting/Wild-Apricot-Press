@@ -13,7 +13,6 @@ class Activator {
 	const SHOW_NOTICE_ACTIVATION = 'show_notice_activation';
 	const LICENSE_CHECK_OPTION = 'license-check-' . CORE_SLUG;
 
-	private $license_req_option_name;
 
 	/**
 	 * Constructor for Activator class
@@ -53,8 +52,14 @@ class Activator {
 		// Call Addon's activation function
 		// returns false & does disable_plugin if license is invalid/nonexistent
 		$did_activate = Addon::instance()::activate(CORE_SLUG);
-		if (!$did_activate) return;
-		if (!WAIntegration::valid_wa_credentials()) do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
+		if (!$did_activate) {
+			Log::wap_log_warning('Missing license key for ' . CORE_NAME . ' plugin functionality disabled.');
+		}
+		if (!WAIntegration::valid_wa_credentials()) {
+			do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
+			Log::wap_log_warning('Missing Wild Apricot API credentials. Plugin functionality disabled.');
+		}
+		Log::wap_log_debug('Plugin activated.');
 
 		// **** this code will only run if license AND wa credentials are valid ****
 		// Run credentials obtained hook, which will read in the credentials in WAIntegration.php

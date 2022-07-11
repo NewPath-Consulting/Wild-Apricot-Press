@@ -676,7 +676,7 @@ class MySettingsPage
     }
 
 
-        /**
+    /**
      * Displays the options for deleting the plugin, including if the Wild Apricot synced users should be retained, etc.
      */
     public function plugin_delete_callback() {
@@ -701,6 +701,11 @@ class MySettingsPage
         }
     }
 
+    /**
+     * Renders the log file toggle checkbox.
+     *
+     * @return void
+     */
     public function wawp_logfile_flag_form() {
         $checked = Log::can_debug();
         Log::wap_log_debug('logfile flag ' . print_r($checked,1));
@@ -770,6 +775,7 @@ class MySettingsPage
                             // Display success statement
                             echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
                         } else {
+                            Log::wap_log_warning('No menu location for the login/logout button selected. Please select so the button will appear on your site.');
                             echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
                         }
                     ?>
@@ -832,7 +838,54 @@ class MySettingsPage
         <?php
 	}
 
-    // Create license form page
+
+
+    /**
+     * Sanitize restriction status checkboxes
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_status_sanitize($input) {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['wawp_restriction_status_nonce_name'], 'wawp_restriction_status_nonce_action')) {
+            // wp_die('Your nonce for the restriction status(es) could not be verified.');
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the restriction status could not be verified. Please try again.');
+        }
+        $valid = array();
+        // Loop through each checkbox and sanitize
+        if (!empty($input)) {
+            foreach ($input as $key => $box) {
+                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+            }
+        }
+        // Return sanitized value
+        return $valid;
+    }
+
+    /**
+     * Sanitize restriction message
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function restriction_sanitize($input) {
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
+            // wp_die('Your nonce for the restriction message could not be verified.');
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the restriction message could not be verified. Please try again.');
+        }
+		// Create valid variable that will hold the valid input
+		$valid = sanitize_textarea_field($input);
+        // Return valid input
+        return $valid;
+    }
+
+    /**
+     * Create licensing page content.
+     *
+     * @return void
+     */
     public function wawp_licensing_page() {
         ?>
         <div class="wrap">
@@ -854,6 +907,7 @@ class MySettingsPage
                 <?php
             } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
                 echo "<h2>License Keys</h2>";
+                Log::wap_log_warning('Missing Wild Apricot API credentials -- cannot render license page');
             }
             ?>
         </div>
@@ -861,40 +915,19 @@ class MySettingsPage
     }
 
     /**
-     * Sanitize restriction status checkboxes
-     *
-     * @param array $input Contains all settings fields as array keys
+     * Create the license key input box for the form
+     * @param array $args contains arguments with (slug, title) as keys.
      */
-    public function restriction_status_sanitize($input) {
-        // Verify nonce
-        if (!wp_verify_nonce($_POST['wawp_restriction_status_nonce_name'], 'wawp_restriction_status_nonce_action')) {
-            wp_die('Your nonce for the restriction status(es) could not be verified.');
+    public function license_key_input(array $args) {
+        $slug = $args['slug'];
+        $licenses = Addon::instance()::get_licenses();
+        // Check that slug is valid
+        $input_value = '';
+        if (Addon::instance()::has_valid_license($slug)) {
+            $input_value = Addon::instance()::get_license($slug);
+        } else {
         }
-        $valid = array();
-        // Loop through each checkbox and sanitize
-        if (!empty($input)) {
-            foreach ($input as $key => $box) {
-                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
-            }
-        }
-        // Return sanitized value
-        return $valid;
-    }
-
-    /**
-     * Sanitize restriction message
-     *
-     * @param array $input Contains all settings fields as array keys
-     */
-    public function restriction_sanitize($input) {
-        // Check that nonce is valid
-        if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
-            wp_die('Your nonce for the restriction message could not be verified.');
-        }
-		// Create valid variable that will hold the valid input
-		$valid = sanitize_textarea_field($input);
-        // Return valid input
-        return $valid;
+        echo "<input id='license_key " . esc_html__($slug) . "' name='wawp_license_keys[" . esc_html__($slug) ."]' type='text' value='" . $input_value . "'  />" ;
     }
 
     /**
@@ -905,7 +938,9 @@ class MySettingsPage
     public function custom_fields_sanitize($input) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_field_nonce_name'], 'wawp_field_nonce_action')) {
-            wp_die('Your nonce could not be verified.');
+            // wp_die('Your nonce could not be verified.');
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the custom fields selection could not be verified. Please try again.');
         }
         // Sanitize checkboxes
         $valid = array();
@@ -923,7 +958,9 @@ class MySettingsPage
     public function deletion_options_sanitize($input) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_delete_nonce_name'], 'wawp_delete_nonce_action')) {
-            wp_die('Your plugin options could not be verified.');
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the deletion option could not be verified.');
+            // wp_die('Your plugin options could not be verified.');
         } 
         $valid = array();
         Log::wap_log_debug($input);
@@ -937,9 +974,16 @@ class MySettingsPage
         return $valid;
     }
 
+    /**
+     * Sanitize the logfile toggle input.
+     *
+     * @param string $input
+     * @return string sanitized input
+     */
     public function logfile_options_sanitize($input) {
         if (!wp_verify_nonce($_POST['wawp_logfile_flag_nonce_name'], 'wawp_logfile_flag_nonce_action')) {
-            wp_die('Your plugin options could not be verified.');
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the logfile option could not be verified.');
         }
         
         $valid = sanitize_text_field($input);
@@ -958,7 +1002,8 @@ class MySettingsPage
         if (!wp_verify_nonce(
             $_POST['wawp_menu_location_nonce_name'], 'wawp_menu_location_nonce_action')
         ) {
-            wp_die('Your nonce for the menu location(s) could not be verified.');
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the menu location(s) could not be verified.');
         }
 
         // Create valid array that will hold valid inputs
@@ -980,7 +1025,9 @@ class MySettingsPage
     public function wal_sanitize( $input ) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_credentials_nonce_name'], 'wawp_credentials_nonce_action')) {
-            wp_die('Your Wild Apricot credentials could not be verified.');
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the Wild Apricot credentials could not be verified.');
+            // wp_die('Your Wild Apricot credentials could not be verified.');
         }
 		// Create valid array that will hold the valid input
 		$valid = array();
@@ -1094,6 +1141,47 @@ class MySettingsPage
 
     }
 
+        /**
+     * License form callback.
+     * For each license submitted, check if the license is valid.
+     * If it is valid, it gets added to the array of valid license keys.
+     * Otherwise, the user receives an error.
+     * @param array $input settings form input array mapping addon slugs to license keys
+     */
+    public function validate_license_form($input) {
+        $data_encryption = new DataEncryption();
+        // Check that nonce is valid
+        if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the license key(s) could not be verified.');
+        }
+
+        $valid = array();
+
+        foreach($input as $slug => $license) {
+            $key = Addon::instance()::validate_license_key($license, $slug);
+            if (is_null($key)) { 
+                // invalid key
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
+                $valid[$slug] = '';
+
+            } else if ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
+                // key was not entered -- different message will be shown
+                $valid[$slug] = '';
+
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
+            } else { 
+                // valid key
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
+                $valid[$slug] = $data_encryption->encrypt($key);
+
+            }
+
+
+        }
+        return $valid;
+    }
+
     /**
      * Print instructions on how to use the restriction status checkboxes
      */
@@ -1202,64 +1290,14 @@ class MySettingsPage
         $wawp_wal_login_logout_button = get_option('wawp_menu_location_name',[]);
 
         foreach ($menu_items as $item) {
-            echo "<div><input type=\"checkbox\" id=\"wawp_selected_menu\" name=\"wawp_menu_location_name[]\" value=\"" . esc_html__($item) . "\"" . (in_array( esc_html__($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
-            echo "<label for= \"" . esc_html__($item) . "\">" . esc_html__($item) . "</label></div>";
+            echo "<div><input type='checkbox' id='wawp_selected_menu' name='wawp_menu_location_name[]' value='" . esc_html__($item) . "'" . (in_array( esc_html__($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
+            echo "<label for= '" . esc_html__($item) . "'>" . esc_html__($item) . "</label></div>";
         }
     }
 
-    /**
-     * Create the license key input box for the form
-     * @param array $args contains arguments with (slug, title) as keys.
-     */
-    public function license_key_input(array $args) {
-        $slug = $args['slug'];
-        $licenses = Addon::instance()::get_licenses();
-        // Check that slug is valid
-        $input_value = '';
-        if (Addon::instance()::has_valid_license($slug)) {
-            $input_value = Addon::instance()::get_license($slug);
-        } else {
-        }
-        echo "<input id='license_key " . esc_html__($slug) . "' name='wawp_license_keys[" . esc_html__($slug) ."]' type='text' value='" . $input_value . "'  />" ;
-    }
-
-    /**
-     * License form callback.
-     * For each license submitted, check if the license is valid.
-     * If it is valid, it gets added to the array of valid license keys.
-     * Otherwise, the user receives an error.
-     * @param array $input settings form input array mapping addon slugs to license keys
-     */
-    public function validate_license_form($input) {
-        $data_encryption = new DataEncryption();
-        // Check that nonce is valid
-        if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
-            wp_die('The license keys could not be verified.');
-        }
-
-        $valid = array();
-
-        foreach($input as $slug => $license) {
-            $key = Addon::instance()::validate_license_key($license, $slug);
-            if (is_null($key)) { 
-                // invalid key
-                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
-                $valid[$slug] = '';
-
-            } else if ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
-                // key was not entered -- different message will be shown
-                $valid[$slug] = '';
-
-                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
-            } else { 
-                // valid key
-                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
-                $valid[$slug] = $data_encryption->encrypt($key);
-
-            }
 
 
-        }
-        return $valid;
-    }
+
+
+
 }

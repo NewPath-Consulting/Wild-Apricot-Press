@@ -174,12 +174,16 @@ class WAWPApi {
 		$wild_apricot_values = array();
 		if (array_key_exists('Id', $details_response)) {
 			$wild_apricot_values['Id'] = $details_response['Id'];
+		} else {
+			Log::wap_log_error('Could not find Wild Apricot ID.');
 		}
 		$wild_apricot_url = '';
 		if (array_key_exists('PrimaryDomainName', $details_response)) {
 			$wild_apricot_values['Url'] = $details_response['PrimaryDomainName'];
 			// Lowercase and remove https, http, or www from url
 			$wild_apricot_values['Url'] = self::create_consistent_url($wild_apricot_values['Url']);
+		} else {
+			Log::wap_log_error('Could not find Wild Apricot URL.');
 		}
 
 		// Return values
@@ -210,6 +214,8 @@ class WAWPApi {
 					$custom_fields[$field_id] = $field_name;
 				}
 			}
+		} else {
+			Log::wap_log_error('Could not retrieve custom fields.');
 		}
 		// Save custom fields in the options table
 		update_option(WAIntegration::LIST_OF_CUSTOM_FIELDS, $custom_fields);
