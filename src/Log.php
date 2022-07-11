@@ -34,6 +34,11 @@ class Log {
      */
     const LOG_OPTION = 'wawp_logfile';
 
+    /**
+     * Returns the log file flag. 
+     *
+     * @return boolean true if log file is enabled, false if not.
+     */
     static public function can_debug() {
         return get_option(Log::LOG_OPTION);
     }
@@ -69,11 +74,12 @@ class Log {
      * 
      * see get_function_string for specifics on function format.
      * 
-     * @param string $msg message to print to log file
+     * @param mixed $msg message to print to log file
      * @param string $error_type type of log: error, warning, or debug
      * @return void
      */
     static private function print_message($msg, $error_type) : void {
+        if (!self::can_debug()) { return; }
         $backtrace = debug_backtrace();
 
         // collect caller info to print to logfile

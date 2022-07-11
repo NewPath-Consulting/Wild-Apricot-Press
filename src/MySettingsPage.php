@@ -702,10 +702,11 @@ class MySettingsPage
     }
 
     public function wawp_logfile_flag_form() {
-        $logfile_flag = Log::can_debug();
-        $checked = $logfile_flag ? 'checked' : '';
+        $checked = Log::can_debug();
+        Log::wap_log_debug('logfile flag ' . print_r($checked,1));
+        // $checked = $logfile_flag ? 'checked' : '';
         ?>
-        <input type="checkbox" name="<?php esc_html_e(Log::LOG_OPTION); ?>[]" class="wawp_class_logfile" value="<?php esc_html_e($checked); ?>"></input>
+        <input type="checkbox" name="<?php esc_html_e(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked" <?php esc_html_e($checked); ?>></input>
         <?php
     }
 
@@ -940,9 +941,10 @@ class MySettingsPage
         if (!wp_verify_nonce($_POST['wawp_logfile_flag_nonce_name'], 'wawp_logfile_flag_nonce_action')) {
             wp_die('Your plugin options could not be verified.');
         }
-        $valid = array();
-        Log::wap_log_debug($input);
-        $valid = $input;
+        
+        $valid = sanitize_text_field($input);
+        // if input is empty, box is not checked, return empty string
+        if (!$valid) return '';
         return $valid;
     }
 
