@@ -1,7 +1,7 @@
 <?php
 /**
  * helpers.php
- * The purpose of this class is to hold common constants and functions used across files 
+ * The purpose of this class is to hold common constants and one-off functions used across files 
  * in the WAWP namespace.
  */
 
@@ -89,6 +89,12 @@ function is_core($slug) {
  */
 function is_addon($slug) {
     return !is_core($slug);
+}
+
+function empty_string_array($arr) {
+    $keys = array_keys($arr);
+    $arr = array_fill_keys($keys, '');
+    return $arr;
 }
 
 function invalid_nonce_error_message() {
