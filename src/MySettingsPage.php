@@ -154,19 +154,26 @@ class MySettingsPage
     public function cron_update_wa_memberships() {
         // Ensure that access token is valid
         $valid_access_credentials = WAWPApi::verify_valid_access_token();
+        
         $access_token = $valid_access_credentials['access_token'];
         $wa_account_id = $valid_access_credentials['wa_account_id'];
 
         // Ensure that access token and account id exist
         if (!empty($access_token) && !empty($wa_account_id)) {
-            // Create WAWP Api instance
-            $wawp_api = new WAWPApi($access_token, $wa_account_id);
 
-            // Get membership levels
-            $updated_levels = $wawp_api->get_membership_levels();
+            try {
+                // Create WAWP Api instance
+                $wawp_api = new WAWPApi($access_token, $wa_account_id);
 
-            // Get membership groups
-            $updated_groups = $wawp_api->get_membership_levels(true);
+                // Get membership levels
+                $updated_levels = $wawp_api->get_membership_levels();
+
+                // Get membership groups
+                $updated_groups = $wawp_api->get_membership_levels(true);
+            } catch (Exception $e) {
+                return;
+            }
+
 
             // If the number of updated groups/levels is less than the number of old groups/levels, then this means that one or more group/level has been deleted
             // So, we must find the deleted group/level and remove it from the restriction post meta data of a post, if applicable
