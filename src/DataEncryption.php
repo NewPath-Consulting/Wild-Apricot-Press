@@ -1,5 +1,8 @@
 <?php
 namespace WAWP;
+
+require_once __DIR__ . '/WAWPException.php';
+
 class DataEncryption {
 	// Holds key and salt values
 	private $key;
@@ -13,8 +16,7 @@ class DataEncryption {
 
 	public function encrypt( $value ) {
 		if ( ! extension_loaded( 'openssl' ) ) {
-			Log::wap_log_error('OpenSSL not installed.');
-			return $value;
+			throw new EncryptionException(EncryptionException::openssl_error());
 		}
 
 		$method = 'aes-256-ctr';
@@ -23,8 +25,7 @@ class DataEncryption {
 
 		$raw_value = openssl_encrypt( $value . $this->salt, $method, $this->key, 0, $iv );
 		if ( ! $raw_value ) {
-			Log::wap_log_error('Unable to encrypt');
-			return false;
+			throw new EncryptionException(EncryptionException::encrypt_error());
 		}
 
 		return base64_encode( $iv . $raw_value );
@@ -32,8 +33,7 @@ class DataEncryption {
 
 	public function decrypt( $raw_value ) {
 		if ( ! extension_loaded( 'openssl' ) ) {
-			Log::wap_log_error('OpenSSL not installed.');
-			return $raw_value;
+			throw new EncryptionException(EncryptionException::openssl_error());
 		}
 
 		$raw_value = base64_decode( $raw_value, true );
@@ -46,8 +46,7 @@ class DataEncryption {
 
 		$value = openssl_decrypt( $raw_value, $method, $this->key, 0, $iv );
 		if ( ! $value || substr( $value, - strlen( $this->salt ) ) !== $this->salt ) {
-			Log::wap_log_error('Unable to encrypt');
-			return false;
+			throw new EncryptionException(EncryptionException::decrypt_error());
 		}
 
 		return substr( $value, 0, - strlen( $this->salt ) );
@@ -57,18 +56,16 @@ class DataEncryption {
 		if ( defined( 'LOGGED_IN_KEY' ) && '' !== LOGGED_IN_KEY ) {
 			return LOGGED_IN_KEY;
 		}
-		// Error if we are down here
-		Log::wap_log_error('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
-		throw new Exception('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
+
+		throw new EncryptionException('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
 	}
 
 	private function get_default_salt() {
 		if ( defined( 'LOGGED_IN_SALT' ) && '' !== LOGGED_IN_SALT ) {
 			return LOGGED_IN_SALT;
 		}
-		// Error if we are down here
-		Log::wap_log_error('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
-		throw new Exception('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
+
+		throw new EncryptionException('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
 	}
 }
 ?>
