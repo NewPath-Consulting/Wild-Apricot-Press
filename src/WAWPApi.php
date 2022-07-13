@@ -79,13 +79,14 @@ class WAWPApi {
 		$credentials = get_option('wawp_wal_name');
 		$decrypted_credentials = array();
 		// Ensure that credentials are not empty
-		if (!empty($credentials)) {
-			// Decrypt credentials
+		// Decrypt credentials
+		try {
 			$dataEncryption = new DataEncryption();
 			$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
 			$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
 			$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
-		}
+		} catch (EncryptionException $e) {} 
+
 
 		return $decrypted_credentials;
 	}
@@ -107,36 +108,56 @@ class WAWPApi {
     }
 
 	/**
-	 * Checks if a new admin access token is required and returns a valid access token
+	 * Checks if a new admin access token is required and returns a valid access
+	 * token. If there are any encryption or decryption exceptions, WAP 
+	 * functionality is disabled.
 	 *
 	 * @return array $verified_data holds the verified access token and account ID
 	 */
 	public static function verify_valid_access_token() {
-		$dataEncryption = new DataEncryption();
+		
+		$verified_data = array(
+			'access_token' => '',
+			'wa_account_id' => ''
+		);
         // Check if access token is still valid
 		$access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
 		$wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
 		if (!$access_token || !$wa_account_id) { // access token is expired
-			// Refresh access token
-			$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
-			$refresh_token = $dataEncryption->decrypt($refresh_token);
-			$new_response = self::get_new_access_token($refresh_token);
-			// Get variables from response
-			$new_access_token = $new_response['access_token'];
-			$new_expiring_time = $new_response['expires_in'];
-			$new_account_id = $new_response['Permissions'][0]['AccountId'];
-			// Set these new values to the transients
-			set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $dataEncryption->encrypt($new_access_token), $new_expiring_time);
-			set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $dataEncryption->encrypt($new_account_id), $new_expiring_time);
+
+			try {
+				$dataEncryption = new DataEncryption();
+				// Refresh access token
+				$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+				$refresh_token = $dataEncryption->decrypt($refresh_token);
+				$new_response = self::get_new_access_token($refresh_token);
+				// Get variables from response
+				$new_access_token = $new_response['access_token'];
+				$new_expiring_time = $new_response['expires_in'];
+				$new_account_id = $new_response['Permissions'][0]['AccountId'];
+				// Set these new values to the transients
+				$new_access_token_enc = $dataEncryption->encrypt($new_access_token);
+				$new_account_id_enc = $dataEncryption->encrypt($new_account_id);
+			} catch (Exception $e) {
+				return $e->WA_creds_handler($verified_data);
+			}
+			
+			set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $new_access_token_enc, $new_expiring_time);
+			set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $new_account_id_enc, $new_expiring_time);
 			// Update values
 			$access_token = $new_access_token;
 			$wa_account_id = $new_account_id;
 		} else {
-			$access_token = $dataEncryption->decrypt($access_token);
-			$wa_account_id = $dataEncryption->decrypt($wa_account_id);
+			try {
+				$dataEncryption = new DataEncryption();
+				$access_token = $dataEncryption->decrypt($access_token);
+				$wa_account_id = $dataEncryption->decrypt($wa_account_id);
+			} catch (EncryptionException $e) {
+				// returns array with empty access token and account id values
+				return $e->WA_creds_handler($verified_data);
+			}
 		}
 		// Return array of access token and account id
-		$verified_data = array();
 		$verified_data['access_token'] = $access_token;
 		$verified_data['wa_account_id'] = $wa_account_id;
 		return $verified_data;

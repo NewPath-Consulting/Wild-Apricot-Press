@@ -4,6 +4,7 @@ namespace WAWP;
 require_once __DIR__ . '/WAWPApi.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/DataEncryption.php';
+require_once __DIR__ . '/WAWPException.php';
 require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 
@@ -45,13 +46,19 @@ class Addon {
     private static $data_encryption;
 
     private function __construct() {
-        self::$data_encryption = new DataEncryption();
+        add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 2);
+
+        try {
+            self::$data_encryption = new DataEncryption();
+        } catch (Exception $e) {
+            Log::wap_log_error('Could not construct addon.');
+            do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
+            return;
+        }
 
         if (!get_option(self::WAWP_LICENSE_KEYS_OPTION)) {
             add_option(self::WAWP_LICENSE_KEYS_OPTION);
         }
-
-        add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 2);
     }
 
     /**
@@ -203,7 +210,14 @@ class Addon {
         $licenses = get_option(self::WAWP_LICENSE_KEYS_OPTION);
         if (!$licenses) return null;
         foreach ($licenses as $slug => $license) {
-            $licenses[$slug] = self::$data_encryption->decrypt($license);
+            // decrypt will throw an error when trying to decrypt empty string
+            if (empty($license)) { continue; }
+            try {
+                $licenses[$slug] = self::$data_encryption->decrypt($license);
+            } catch(EncryptionException $e) {
+                $licenses[$slug] = '';
+            }
+            
         }
 
         return $licenses;

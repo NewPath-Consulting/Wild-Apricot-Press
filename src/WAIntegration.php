@@ -158,7 +158,36 @@ class WAIntegration {
 		}
 	}
 
-	public static function get_licensed_wa_urls($response) {
+	public static function check_licensed_wa_urls_ids($response) {
+		$licensed_wa_urls = self::get_licensed_wa_urls($response);
+		$licensed_wa_ids = self::get_licensed_wa_ids($response);
+		if (is_null($licensed_wa_urls) || is_null($licensed_wa_ids)) return false;
+
+		try {
+			// Get access token and account id
+			$access_and_account = WAWPApi::verify_valid_access_token();
+			$access_token = $access_and_account['access_token'];
+			$wa_account_id = $access_and_account['wa_account_id'];
+			// Get account url from API
+			$wawp_api = new WAWPApi($access_token, $wa_account_id);
+			$wild_apricot_info = $wawp_api->get_account_url_and_id();
+		} catch (Exception $e) {
+			return false;
+		}
+
+
+
+		// Compare license key information with current site
+		if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { 
+			return true;
+		}
+		
+		// do_action('wawp_wal_set_login_private');
+		return false;
+
+	}
+
+	private static function get_licensed_wa_urls($response) {
 		$licensed_wa_urls = array();
 
 		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
@@ -179,7 +208,7 @@ class WAIntegration {
 		return $licensed_wa_urls;
 	}
 
-	public static function get_licensed_wa_ids($response) {
+	private static function get_licensed_wa_ids($response) {
 		$licensed_wa_ids = array();
 
 		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
@@ -197,30 +226,6 @@ class WAIntegration {
 		}
 
 		return $licensed_wa_ids;
-	}
-
-	public static function check_licensed_wa_urls_ids($response) {
-		$licensed_wa_urls = self::get_licensed_wa_urls($response);
-		$licensed_wa_ids = self::get_licensed_wa_ids($response);
-		if ($licensed_wa_urls == null || $licensed_wa_ids == null ) return false;
-
-		// Get access token and account id
-		$access_and_account = WAWPApi::verify_valid_access_token();
-		$access_token = $access_and_account['access_token'];
-		$wa_account_id = $access_and_account['wa_account_id'];
-		// Get account url from API
-		$wawp_api = new WAWPApi($access_token, $wa_account_id);
-		$wild_apricot_info = $wawp_api->get_account_url_and_id();
-
-
-		// Compare license key information with current site
-		if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { 
-			return true;
-		}
-		
-		// do_action('wawp_wal_set_login_private');
-		return false;
-
 	}
 
 	/**
@@ -352,7 +357,6 @@ class WAIntegration {
 		// Only run on wa4wp page
 		$login_page_id = get_option('wawp_wal_page_id');
 		if (is_page($login_page_id)) {
-			Log::wap_log_error('Wild Apricot login error: email or password invalid');
 			return $content . '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
 			If you are sure that you entered the correct email and password, please contact your administrator.</p>';
 		}
@@ -928,15 +932,21 @@ class WAIntegration {
 	 * @param int $current_user_id The user's WordPress ID
 	 */
 	public function refresh_user_wa_info() {
-		// Create WAWPApi with valid credentials
-		$verified_data = WAWPApi::verify_valid_access_token();
-		$admin_access_token = $verified_data['access_token'];
-		$admin_account_id = $verified_data['wa_account_id'];
-		$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
-		// Refresh custom fields first
-		$wawp_api->retrieve_custom_fields();
-		// Get info for all Wild Apricot users
-		$wawp_api->get_all_user_info();
+		try {
+			// Create WAWPApi with valid credentials
+			$verified_data = WAWPApi::verify_valid_access_token();
+			$admin_access_token = $verified_data['access_token'];
+			$admin_account_id = $verified_data['wa_account_id'];
+			$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
+			// Refresh custom fields first
+			$wawp_api->retrieve_custom_fields();
+			// Get info for all Wild Apricot users
+			$wawp_api->get_all_user_info();
+		} catch (Exception $e) {
+			Log::wap_log_error($e->getMessage());
+			return;
+		}
+
 	}
 
 	/**
@@ -970,7 +980,13 @@ class WAIntegration {
 		$wa_user_id = $member_permissions['AccountId'];
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
-		$contact_info = $wawp_api->get_info_on_current_user();
+		$contact_info = array();
+		try {
+			$contact_info = $wawp_api->get_info_on_current_user();
+		} catch (Exception $e){
+			return;
+		}
+		
 		// Get membership level
 		$membership_level = '';
 		$membership_level_id = '';
@@ -1059,8 +1075,6 @@ class WAIntegration {
 			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, true);
 		}
 
-		// Add access token and secret token to user's metadata
-		$dataEncryption = new DataEncryption();
 		// Add Wild Apricot membership level to user's metadata
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
 		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
@@ -1165,13 +1179,14 @@ class WAIntegration {
 				}
 
 				// Send POST request to Wild Apricot API to log in if input is valid
-				$login_attempt = WAWPApi::login_email_password($valid_login);
-				// If login attempt is false, then the user could not log in
-				if (!$login_attempt) {
-					// Present user with log in error
+				try {
+					$login_attempt = WAWPApi::login_email_password($valid_login);
+				} catch (APIException $e) {
+					// If login attempt is false or there's an API error, then the user could not log in
 					add_filter('the_content', array($this, 'add_login_error'));
-					return;
+					return;					
 				}
+
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
 				$this->add_user_to_wp_database($login_attempt, $valid_login['email'], $remember_user);
 
@@ -1203,10 +1218,13 @@ class WAIntegration {
 	public function custom_login_form_shortcode() {
 		// Get Wild Apricot URL
 		$wild_apricot_url = get_option(self::WA_URL_KEY);
-		if ($wild_apricot_url) {
+		try {
 			$dataEncryption = new DataEncryption();
 			$wild_apricot_url =	esc_url($dataEncryption->decrypt($wild_apricot_url));
+		} catch (EncryptionException $e) {
+			return;
 		}
+
 		// Create page content -> login form
 		ob_start(); ?>
 			<div id="wawp_login-wrap">

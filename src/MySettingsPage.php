@@ -1029,87 +1029,110 @@ class MySettingsPage
             Log::wap_log_error('Your nonce for the Wild Apricot credentials could not be verified.');
             // wp_die('Your Wild Apricot credentials could not be verified.');
         }
-		// Create valid array that will hold the valid input
-		$valid = array();
 
-        // TODO: loop through instead of doing this
-        // Get valid api key
-        $valid['wawp_wal_api_key'] = preg_replace(
-            '/[^A-Za-z0-9]+/', // match only letters and numbers
-            '',
-            $input['wawp_wal_api_key']
-        );
-        // Get valid client id
-        $valid['wawp_wal_client_id'] = preg_replace(
-            '/[^A-Za-z0-9]+/', // match only letters and numbers
-            '',
-            $input['wawp_wal_client_id']
-        );
-        // Get valid client secret
-        $valid['wawp_wal_client_secret'] = preg_replace(
-            '/[^A-Za-z0-9]+/', // match only letters and numbers
-            '',
-            $input['wawp_wal_client_secret']
-        );
+        $valid = array();
+        // try to validate and encrypt input, and connect to api
+        // any of the functions in this try block could throw an exception, catcn will handle all of them.
+        try {
+            $valid = self::validate_and_sanitize_wa_input($input);
+            $api_key = $valid[WAIntegration::WA_API_KEY_OPT];
 
-        // Encrypt values if they are valid
-        $entered_valid = true;
-        $entered_api_key = '';
-        // require_once('DataEncryption.php');
-		$dataEncryption = new DataEncryption();
-        // Check if inputs are valid
-        if ($valid['wawp_wal_api_key'] !== $input['wawp_wal_api_key'] || $input['wawp_wal_api_key'] == '') { // incorrect api key
-            $valid['wawp_wal_api_key'] = '';
-            $entered_valid = false;
-        } else { // valid
-            $entered_api_key = $valid['wawp_wal_api_key'];
-            $valid['wawp_wal_api_key'] = $dataEncryption->encrypt($valid['wawp_wal_api_key']);
-        }
-        if ($valid['wawp_wal_client_id'] !== $input['wawp_wal_client_id'] || $input['wawp_wal_client_id'] == '') { // incorrect client ID
-            $valid['wawp_wal_client_id'] = '';
-            $entered_valid = false;
-        } else {
-            $valid['wawp_wal_client_id'] = $dataEncryption->encrypt($valid['wawp_wal_client_id']);
-        }
-        if ($valid['wawp_wal_client_secret'] !== $input['wawp_wal_client_secret'] || $input['wawp_wal_client_secret'] == '') { // incorrect client secret
-            $valid['wawp_wal_client_secret'] = '';
-            $entered_valid = false;
-        } else {
-            $valid['wawp_wal_client_secret'] = $dataEncryption->encrypt($valid['wawp_wal_client_secret']);
+            $data_encryption = new DataEncryption();
+            $api_key = $data_encryption->decrypt($api_key);   
+            self::obtain_and_save_wa_data_from_api($api_key);
+        } catch (Exception $e) {
+            /** 
+             * if inputs are invalid or there are other issues, just return empty
+             * string array and disable functionality.
+             */
+            return $e->WA_creds_handler($input);
         }
 
-        // If input is valid, check if it can connect to the API
-        $valid_api = '';
-        if ($entered_valid) {
-            $valid_api = WAWPApi::is_application_valid($entered_api_key);
-        }
-        // Set all elements to '' if api call is invalid or invalid input has been entered
-        if ($valid_api == false || !$entered_valid) {
-            // Set all inputs to ''
-            $keys = array_keys($valid);
-            $valid = array_fill_keys($keys, '');
+        // Schedule CRON update for updating the available membership levels and groups
+        self::setup_cron_job();
 
-            // Delete all licenses because they are invalid now and user must insert them again
-            Addon::clear_licenses();
-            return $valid;
+        // Return array of valid inputs
+        return $valid;
+    }
+
+    /**
+     * Sanitize and validate each input value for the Wild Apricot API 
+     * Credentials.
+     *
+     * @param string[] $input
+     * @return string[]|false returns array of valid inputs and false if inputs are not valid
+     */
+    private static function validate_and_sanitize_wa_input($input) {
+        $valid = array();
+        $data_encryption = new DataEncryption();
+        foreach ($input as $key => $value) {
+            // remove non-alphanumeric chars
+            $valid[$key] = preg_replace(
+                '/[^A-Za-z0-9]+/',
+                '',
+                $value
+            );
+
+            $enc = $data_encryption->encrypt($valid[$key]);
+
+            if ($valid[$key] != $value || empty($value)) {
+                throw new Exception($key . ' invalid');
+            }
+
+            $valid[$key] = $enc;
+        }
+
+        return $valid;
+    }
         } 
+    }
 
-
-        // Valid input and valid response
+    /**
+     * Gets Wild Apricot membership levels and groups, account URL and ID and
+     * sets transients and updates options. Data encryption and API calls could
+     * throw exceptions which are caught in the caller function.
+     *
+     * @param string[] $valid_api response from initial connection to Wild Apricot API
+     * @return void
+     */
+    private static function obtain_and_save_wa_data_from_api($api_key) {
+        $valid_api = WAWPApi::is_application_valid($api_key); 
+        Log::wap_log_debug($valid_api);  
+        $data_encryption = new DataEncryption();
         // Extract access token and ID, as well as expiring time
         $access_token = $valid_api['access_token'];
         $account_id = $valid_api['Permissions'][0]['AccountId'];
         $expiring_time = $valid_api['expires_in'];
         $refresh_token = $valid_api['refresh_token'];
-        // Store access token and account ID as transients
-        set_transient('wawp_admin_access_token', $dataEncryption->encrypt($access_token), $expiring_time);
-        set_transient('wawp_admin_account_id', $dataEncryption->encrypt($account_id), $expiring_time);
-        // Store refresh token in database
-        update_option('wawp_admin_refresh_token', $dataEncryption->encrypt($refresh_token));
+
+        $access_token_enc = $data_encryption->encrypt($access_token);
+        $account_id_enc = $data_encryption->encrypt($account_id);
+        $refresh_token_enc = $data_encryption->encrypt($refresh_token); 
+
         // Get all membership levels and groups
         $wawp_api_instance = new WAWPApi($access_token, $account_id);
         $all_membership_levels = $wawp_api_instance->get_membership_levels();
-        // Create a new role for each membership level
+
+        $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
+
+        // Get Wild Apricot URL
+        $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
+        $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
+        $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
+
+
+
+        // Save transients and options all at once; by this point all values should be valid.
+        // Store access token and account ID as transients
+        set_transient('wawp_admin_access_token', $access_token_enc, $expiring_time);
+        set_transient('wawp_admin_account_id', $account_id_enc, $expiring_time);
+        // Store refresh token in database
+        update_option('wawp_admin_refresh_token', $refresh_token_enc);
+        // Save membership levels and groups to options
+        update_option('wawp_all_levels_key', $all_membership_levels);
+        update_option('wawp_all_groups_key', $all_membership_groups);
+        update_option(WAIntegration::WA_URL_KEY, $wild_apricot_url_enc);
+            // Create a new role for each membership level
         // Delete old roles if applicable
         $old_wa_roles = get_option('wawp_all_levels_key');
         if (isset($old_wa_roles) && !empty($old_wa_roles)) {
@@ -1122,26 +1145,9 @@ class MySettingsPage
             // In identifier, remove spaces so that the role can become a single word
             add_role('wawp_' . str_replace(' ', '', $level), $level);
         }
-        $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
-        // Save membership levels and groups to options
-        update_option('wawp_all_levels_key', $all_membership_levels);
-        update_option('wawp_all_groups_key', $all_membership_groups);
-
-        // Get Wild Apricot URL
-        $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
-        $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
-        // Save URL
-        update_option(WAIntegration::WA_URL_KEY, $dataEncryption->encrypt($wild_apricot_url));
-
-        // Schedule CRON update for updating the available membership levels and groups
-        self::setup_cron_job();
-
-        // Return array of valid inputs
-        return $valid;
-
     }
 
-        /**
+    /**
      * License form callback.
      * For each license submitted, check if the license is valid.
      * If it is valid, it gets added to the array of valid license keys.
@@ -1149,7 +1155,6 @@ class MySettingsPage
      * @param array $input settings form input array mapping addon slugs to license keys
      */
     public function validate_license_form($input) {
-        $data_encryption = new DataEncryption();
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
@@ -1157,6 +1162,13 @@ class MySettingsPage
         }
 
         $valid = array();
+
+        // return empty array if we can't encrypt data
+        try {
+            $data_encryption = new DataEncryption();
+        } catch (EncryptionException $e) {
+            return $valid;
+        }
 
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
@@ -1173,7 +1185,14 @@ class MySettingsPage
             } else { 
                 // valid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
-                $valid[$slug] = $data_encryption->encrypt($key);
+                $license_encrypted = '';
+                try {
+                    $license_encrypted = $data_encryption->encrypt($key);
+                } catch (\Exception $e) {
+                    // if license could not be encrypted, just discard it
+                    Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
+                }
+                $valid[$slug] = $license_encrypted;
 
             }
 
