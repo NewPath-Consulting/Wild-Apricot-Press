@@ -2,6 +2,7 @@
 namespace WAWP;
 
 require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/WAWPException.php';
 
 use WAWP\Log;
 
@@ -50,9 +51,7 @@ class WAWPApi {
 	 */
     private static function response_to_data($response) {
         if (is_wp_error($response)) {
-			// LOG ERROR
-			Log::wap_log_error('There was an error with the Wild Apricot API. Please try again.', 1);
-			return false;
+			throw new APIException('There was an error calling the Wild Apricot API. Please try again.');
 		}
 		// Get body of response
 		$body = wp_remote_retrieve_body($response);
@@ -61,9 +60,7 @@ class WAWPApi {
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
 			// LOG ERROR
-			Log::wap_log_error('There was an error with the Wild Apricot API. Please try again.', 1);
-			// Update successful login as false
-			return false;
+			throw new APIException('There was an error in the Wild Apricot API. Please try again.');
 		}
 		// Valid response; return data
 		return $data;
@@ -509,6 +506,7 @@ class WAWPApi {
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
 		$data = self::response_to_data($response);
+		if (!$data) { throw new Exception(); }
 		return $data;
 	}
 }
