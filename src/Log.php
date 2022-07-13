@@ -20,6 +20,7 @@ class Log {
     const LOG_ERROR = 'ERROR';
     const LOG_WARNING = 'WARNING';
     const LOG_DEBUG = 'DEBUG';
+    const LOG_FATAL = 'FATAL ERROR';
 
     /**
      * Path of the log file to which messages will be printed.
@@ -47,11 +48,11 @@ class Log {
      * Print an error message to the log file.
      *
      * @param string $msg message to print
-     * @param int $severity severity of the issue
+     * @param bool $fatal whether the error is a fatal error or not.
      * @return void
      */
-    static public function wap_log_error($msg, $severity = '') {
-        self::print_message($msg, self::LOG_ERROR, $severity);
+    static public function wap_log_error($msg, $fatal = false) {
+        self::print_message($msg, $fatal ? self::LOG_FATAL : self::LOG_ERROR, $fatal);
     }
 
     /**
@@ -78,8 +79,8 @@ class Log {
      * @param string $error_type type of log: error, warning, or debug
      * @return void
      */
-    static private function print_message($msg, $error_type, $severity = '') : void {
-        if (!self::can_debug()) { return; }
+    static private function print_message($msg, $error_type) : void {
+        if (!self::can_debug() && $error_type != self::LOG_FATAL) { return; }
         $backtrace = debug_backtrace();
 
         // collect caller info to print to logfile
@@ -109,14 +110,17 @@ class Log {
     }
 
     /**
-     * Returns the time and date.
-     * Example format: Thu Jul 07, 2022 19:38
+     * Returns the formatted time and date.
+     * Example format: 7/13/2022, 1:46:11 PM
      *
      * @return string
      */
     static private function get_current_datetime() : string {
-        // TODO: fix timezone
-        return date("D M d, Y G:i");
+        $tz = wp_timezone_string();
+        $timestamp = time();
+        $dt = new \DateTime("now", new \DateTimeZone($tz));
+        $dt->setTimestamp($timestamp);
+        return $dt->format('n/j/Y, g:i:s A');
     }
 
     static private function get_filename($filename) {
