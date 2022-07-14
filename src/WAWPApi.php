@@ -11,6 +11,8 @@ class WAWPApi {
 	const ADMIN_API_VERSION = 'v2.2';
 	const MEMBER_API_VERSION = 'v1';
 	const WAWP_USER_AGENT = 'WildApricotPress/1.0';
+	// const API_URL = 'https://api.wildapricot.org/';
+	const API_URL = 'https://google.com';
 
 	// Class variables
     private $access_token;
@@ -33,8 +35,7 @@ class WAWPApi {
 	/**
 	 * Removes CRON job
 	 */
-	public static function unsetCronJob($cron_hook_name, $args = [])
-    {
+	public static function unsetCronJob($cron_hook_name, $args = []) {
 		// Get the timestamp for the next event.
 		$timestamp = wp_next_scheduled($cron_hook_name, $args);
 		// Check that event is already scheduled
@@ -48,10 +49,11 @@ class WAWPApi {
 	 *
 	 * @param  array $response holds the output from the API request, organized in a key-value pattern
 	 * @return array $data is the body of the response
+	 * @throws APIException
 	 */
     private static function response_to_data($response) {
         if (is_wp_error($response)) {
-			throw new APIException('There was an error calling the Wild Apricot API. Please try again.');
+			throw new APIException(APIException::api_connection_error());
 		}
 		// Get body of response
 		$body = wp_remote_retrieve_body($response);
@@ -59,8 +61,7 @@ class WAWPApi {
 		$data = json_decode($body, true);
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
-			// LOG ERROR
-			throw new APIException('There was an error in the Wild Apricot API. Please try again.');
+			throw new APIException(APIException::api_response_error());
 		}
 		// Valid response; return data
 		return $data;
@@ -77,12 +78,11 @@ class WAWPApi {
 		$decrypted_credentials = array();
 		// Ensure that credentials are not empty
 		// Decrypt credentials
-		try {
-			$dataEncryption = new DataEncryption();
-			$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
-			$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
-			$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
-		} catch (EncryptionException $e) {} 
+		// Encryption exceptions will propogate up
+		$dataEncryption = new DataEncryption();
+		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
+		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
+		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
 
 
 		return $decrypted_credentials;
@@ -106,8 +106,7 @@ class WAWPApi {
 
 	/**
 	 * Checks if a new admin access token is required and returns a valid access
-	 * token. If there are any encryption or decryption exceptions, WAP 
-	 * functionality is disabled.
+	 * token. If there are any encryption or decryption exceptions, an empty array will be returned.
 	 *
 	 * @return array $verified_data holds the verified access token and account ID
 	 */
@@ -122,22 +121,18 @@ class WAWPApi {
 		$wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
 		if (!$access_token || !$wa_account_id) { // access token is expired
 
-			try {
-				$dataEncryption = new DataEncryption();
-				// Refresh access token
-				$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
-				$refresh_token = $dataEncryption->decrypt($refresh_token);
-				$new_response = self::get_new_access_token($refresh_token);
-				// Get variables from response
-				$new_access_token = $new_response['access_token'];
-				$new_expiring_time = $new_response['expires_in'];
-				$new_account_id = $new_response['Permissions'][0]['AccountId'];
-				// Set these new values to the transients
-				$new_access_token_enc = $dataEncryption->encrypt($new_access_token);
-				$new_account_id_enc = $dataEncryption->encrypt($new_account_id);
-			} catch (Exception $e) {
-				return $e->WA_creds_handler($verified_data);
-			}
+			$dataEncryption = new DataEncryption();
+			// Refresh access token
+			$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+			$refresh_token = $dataEncryption->decrypt($refresh_token);
+			$new_response = self::get_new_access_token($refresh_token);
+			// Get variables from response
+			$new_access_token = $new_response['access_token'];
+			$new_expiring_time = $new_response['expires_in'];
+			$new_account_id = $new_response['Permissions'][0]['AccountId'];
+			// Set these new values to the transients
+			$new_access_token_enc = $dataEncryption->encrypt($new_access_token);
+			$new_account_id_enc = $dataEncryption->encrypt($new_account_id);
 			
 			set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $new_access_token_enc, $new_expiring_time);
 			set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $new_account_id_enc, $new_expiring_time);
@@ -145,14 +140,9 @@ class WAWPApi {
 			$access_token = $new_access_token;
 			$wa_account_id = $new_account_id;
 		} else {
-			try {
-				$dataEncryption = new DataEncryption();
-				$access_token = $dataEncryption->decrypt($access_token);
-				$wa_account_id = $dataEncryption->decrypt($wa_account_id);
-			} catch (EncryptionException $e) {
-				// returns array with empty access token and account id values
-				return $e->WA_creds_handler($verified_data);
-			}
+			$dataEncryption = new DataEncryption();
+			$access_token = $dataEncryption->decrypt($access_token);
+			$wa_account_id = $dataEncryption->decrypt($wa_account_id);
 		}
 		// Return array of access token and account id
 		$verified_data['access_token'] = $access_token;
@@ -184,7 +174,7 @@ class WAWPApi {
 	 */
 	public function get_account_url_and_id() {
 		$args = $this->request_data_args();
-		$url = 'https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id;
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id;
 		$response_api = wp_remote_get($url, $args);
 		$details_response = self::response_to_data($response_api);
 
@@ -214,7 +204,7 @@ class WAWPApi {
 	public function retrieve_custom_fields() {
 		// Make API request for custom fields
 		$args = $this->request_data_args();
-		$url = 'https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contactfields?showSectionDividers=true';
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contactfields?showSectionDividers=true';
 		$response_api = wp_remote_get($url, $args);
 		$custom_field_response = self::response_to_data($response_api);
 
@@ -273,7 +263,7 @@ class WAWPApi {
 		}
 		// Make API request
 		$args = $this->request_data_args();
-		$url = 'https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
 		$all_contacts_request = wp_remote_get($url, $args);
 		// Ensure that responses are not empty
 		if (!empty($all_contacts_request)) {
@@ -382,6 +372,7 @@ class WAWPApi {
 	public static function get_new_access_token($refresh_token) {
 		// Get decrypted credentials
 		$decrypted_credentials = self::load_user_credentials();
+		
 		// Encode API key
 		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
 		$encoded_authorization_string = base64_encode($authorization_string);
@@ -408,7 +399,7 @@ class WAWPApi {
         // Get details of current WA user with API request
 		// Get user's contact ID
         $args = $this->request_data_args();
-		$contact_info = wp_remote_get('https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
+		$contact_info = wp_remote_get(self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
 		$contact_info = self::response_to_data($contact_info);
 		// Get if user is administrator or not
 		$is_administrator = $contact_info['IsAccountAdministrator'];
@@ -416,7 +407,7 @@ class WAWPApi {
 		$user_data_api = null;
 		if (isset($is_administrator) && $is_administrator == '1') { // user is administrator
 			$contact_id = $contact_info['Id'];
-			$user_data_api = wp_remote_get('https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
+			$user_data_api = wp_remote_get(self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
 		} else { // not administrator
 			$user_data_api = wp_remote_get('https://api.wildapricot.org/publicview/' . self::MEMBER_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
 		}
@@ -434,9 +425,9 @@ class WAWPApi {
     public function get_membership_levels($request_groups = false) {
         $args = $this->request_data_args();
 		// ABSTRACT VARIABLE IN URL
-		$url = 'https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/membershiplevels';
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/membershiplevels';
 		if ($request_groups) {
-        	$url = 'https://api.wildapricot.org/' . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/membergroups';
+        	$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/membergroups';
 		}
         $membership_levels_response = wp_remote_get($url, $args);
 
@@ -492,6 +483,7 @@ class WAWPApi {
 	public static function login_email_password($valid_login) {
 		// Get decrypted credentials
 		$decrypted_credentials = self::load_user_credentials();
+
 		// Encode API key
 		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
 		$encoded_authorization_string = base64_encode($authorization_string);
@@ -506,7 +498,6 @@ class WAWPApi {
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
 		$data = self::response_to_data($response);
-		if (!$data) { throw new Exception(); }
 		return $data;
 	}
 }

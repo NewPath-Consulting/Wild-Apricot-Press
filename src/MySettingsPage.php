@@ -4,7 +4,7 @@ namespace WAWP;
 require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
-
+require_once __DIR__ . '/WAWPException.php';
 
 use WAWP\Addon;
 use WAWP\Log;
@@ -153,7 +153,14 @@ class MySettingsPage
      */
     public function cron_update_wa_memberships() {
         // Ensure that access token is valid
-        $valid_access_credentials = WAWPApi::verify_valid_access_token();
+        try {
+            $valid_access_credentials = WAWPApi::verify_valid_access_token();
+        } catch (Exception $e) {
+            Log::wap_log_error($e->getMessage(), true);
+            
+            return; 
+        }
+        
         
         $access_token = $valid_access_credentials['access_token'];
         $wa_account_id = $valid_access_credentials['wa_account_id'];
@@ -170,7 +177,9 @@ class MySettingsPage
 
                 // Get membership groups
                 $updated_groups = $wawp_api->get_membership_levels(true);
-            } catch (Exception $e) {
+            } catch (APIException $e) {
+                Log::wap_log_error($e->getMessage(), true);
+                disable_core();
                 return;
             }
 
@@ -203,8 +212,7 @@ class MySettingsPage
     /**
      * Add options page
      */
-    public function add_settings_page()
-    {
+    public function add_settings_page() {
         // Create WAWP admin page
         add_menu_page(
             'Wild Apricot Press',
@@ -515,8 +523,7 @@ class MySettingsPage
     /**
      * Settings page callback
      */
-    public function create_admin_page()
-    {
+    public function create_admin_page() {
         $tab = get_current_tab();
         ?>
         <div class="wrap">
@@ -1047,12 +1054,12 @@ class MySettingsPage
             $data_encryption = new DataEncryption();
             $api_key = $data_encryption->decrypt($api_key);   
             self::obtain_and_save_wa_data_from_api($api_key);
+        } catch (APIException | EncryptionException $e) {
+            Log::wap_log_error($e->getMessage(), true);
+            return empty_string_array($input);
         } catch (Exception $e) {
-            /** 
-             * if inputs are invalid or there are other issues, just return empty
-             * string array and disable functionality.
-             */
-            return $e->WA_creds_handler($input);
+            Log::wap_log_warning('Invalid Wild Apricot credentials. Please try again.');
+            return empty_string_array($input);
         }
 
         // Schedule CRON update for updating the available membership levels and groups
@@ -1091,8 +1098,6 @@ class MySettingsPage
 
         return $valid;
     }
-        } 
-    }
 
     /**
      * Gets Wild Apricot membership levels and groups, account URL and ID and
@@ -1104,7 +1109,6 @@ class MySettingsPage
      */
     private static function obtain_and_save_wa_data_from_api($api_key) {
         $valid_api = WAWPApi::is_application_valid($api_key); 
-        Log::wap_log_debug($valid_api);  
         $data_encryption = new DataEncryption();
         // Extract access token and ID, as well as expiring time
         $access_token = $valid_api['access_token'];
@@ -1174,11 +1178,13 @@ class MySettingsPage
         try {
             $data_encryption = new DataEncryption();
         } catch (EncryptionException $e) {
-            return $valid;
+            Log::wap_log_error($e->getMessage(), true);
+            empty_string_array($input);
         }
 
         foreach($input as $slug => $license) {
             $key = Addon::instance()::validate_license_key($license, $slug);
+            // TODO: catch
             if (is_null($key)) { 
                 // invalid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
@@ -1195,8 +1201,9 @@ class MySettingsPage
                 $license_encrypted = '';
                 try {
                     $license_encrypted = $data_encryption->encrypt($key);
-                } catch (\Exception $e) {
+                } catch (EncryptionException $e) {
                     // if license could not be encrypted, just discard it
+                    Log::wap_log_error($e->getMessage(), true);
                     Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
                 }
                 $valid[$slug] = $license_encrypted;
@@ -1231,7 +1238,8 @@ class MySettingsPage
     }
 
     public function print_logfile_info() {
-        print 'By checking this box, error and warning messages will be printed to a log file accessible in wp-content.';
+        print 'By checking this box, error and warning messages will be printed to a file accessible in <code>wp-content/wapdebug.log</code>.';
+        print '<br>Note: log message timezone will be in UTC if timezone is not set in WordPress settings.';
     }
 
     /**

@@ -7,6 +7,8 @@
 
 namespace WAWP;
 
+require_once __DIR__ . '/Addon.php';
+
 const CORE_SLUG = 'wawp';
 const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
 
@@ -102,6 +104,10 @@ function invalid_nonce_error_message() {
     echo "Invalid nonce error. Please try again.";
     echo "</p></div>";
     remove_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+}
+
+function disable_core() {
+    do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
 }
 
 

@@ -130,6 +130,7 @@ class WAIntegration {
 
 			// check for correct license properties
 			$license = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
+			// TODO: catch
 
 			if ($license == Addon::LICENSE_STATUS_ENTERED_EMPTY || !$has_valid_wa_credentials) {
 				$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
@@ -137,9 +138,6 @@ class WAIntegration {
 				$license_status = Addon::LICENSE_STATUS_INVALID;
 			}
 
-			// now check if WA creds invalid
-			// $wa_credentials = get_option(self::WA_CREDENTIALS_KEY);
-			// $has_valid_wa_credentials = WAWPApi::is_application_valid($wa_credentials[self::WA_API_KEY_OPT]);
 		}
 
 		// update new license status
@@ -172,10 +170,9 @@ class WAIntegration {
 			$wawp_api = new WAWPApi($access_token, $wa_account_id);
 			$wild_apricot_info = $wawp_api->get_account_url_and_id();
 		} catch (Exception $e) {
+			Log::wap_log_error($e->getMessage(), true);
 			return false;
 		}
-
-
 
 		// Compare license key information with current site
 		if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { 
@@ -308,6 +305,7 @@ class WAIntegration {
 				}
 			}
 		} else { // Login page does not exist
+			Log::wap_log_debug('creating login page');
 			// Create details of page
 			// See: https://wordpress.stackexchange.com/questions/222810/add-a-do-action-to-post-content-of-wp-insert-post
 			$post_details = array(
@@ -348,7 +346,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Adds error to login shortcode page
+	 * Adds incorrect login error to login shortcode page
 	 *
 	 * @param  string $content Holds the existing content on the page
 	 * @return string $content Holds the new content on the page
@@ -359,6 +357,21 @@ class WAIntegration {
 		if (is_page($login_page_id)) {
 			return $content . '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
 			If you are sure that you entered the correct email and password, please contact your administrator.</p>';
+		}
+		return $content;
+	}
+
+	/**
+	 * Adds fatal API error to login shortcode page
+	 *
+	 * @param  string $content Holds the existing content on the page
+	 * @return string $content Holds the new content with the error on the page
+	 */
+	public function add_login_server_error($content) {
+		// Only run on wa4wp page
+		$login_page_id = get_option('wawp_wal_page_id');
+		if (is_page($login_page_id)) {
+			return $content . '<p style="color:red;">FATAL ERROR: There has been an internal server error and the plugin must be disabled. Please contact the site administrator.</p>';
 		}
 		return $content;
 	}
@@ -494,10 +507,12 @@ class WAIntegration {
 	 * @param WP_Post $post holds the current post
 	 */
 	public function post_access_load_restrictions($post_id, $post) {
+		// if this is the WA login page, return to avoid unneccessary log message
+		if (str_contains(get_the_guid($post), 'wild-apricot-login')) return;
+		
 		// Verify the nonce before proceeding
 		if (!isset($_POST['wawp_post_access_control']) || !wp_verify_nonce($_POST['wawp_post_access_control'], basename(__FILE__))) {
 			// Invalid nonce
-			if (is_wawp_settings()) return;
 			Log::wap_log_error('Your nonce for the post access control input could not be verified');
 			add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
 			return;
@@ -943,7 +958,8 @@ class WAIntegration {
 			// Get info for all Wild Apricot users
 			$wawp_api->get_all_user_info();
 		} catch (Exception $e) {
-			Log::wap_log_error($e->getMessage());
+			Log::wap_log_error($e->getMessage(), true);
+			disable_core();
 			return;
 		}
 
@@ -981,11 +997,7 @@ class WAIntegration {
 		// Get user's contact information
 		$wawp_api = new WAWPApi($access_token, $wa_user_id);
 		$contact_info = array();
-		try {
-			$contact_info = $wawp_api->get_info_on_current_user();
-		} catch (Exception $e){
-			return;
-		}
+		$contact_info = $wawp_api->get_info_on_current_user();
 		
 		// Get membership level
 		$membership_level = '';
@@ -1178,18 +1190,32 @@ class WAIntegration {
 					$remember_user = true;
 				}
 
-				// Send POST request to Wild Apricot API to log in if input is valid
 				try {
 					$login_attempt = WAWPApi::login_email_password($valid_login);
-				} catch (APIException $e) {
-					// If login attempt is false or there's an API error, then the user could not log in
+				} catch (EncryptionException $e) {
+					Log::wap_log_error($e->getMessage(), true);
+					add_filter('the_content', array($this, 'add_login_server_error'));
+					disable_core();
+					return;
+				}
+				
+				if (!$login_attempt) {
 					add_filter('the_content', array($this, 'add_login_error'));
-					return;					
+					return;
+				}
+
+				// Send POST request to Wild Apricot API to log in if input is valid
+				try {
+					$this->add_user_to_wp_database($login_attempt, $valid_login['email'], $remember_user);
+				} catch (APIException $e) {
+					Log::wap_log_error($e->getMessage(), true);
+					add_filter('the_content', array($this, 'add_login_server_error'));
+					disable_core();
+					return;
 				}
 
 				// If we are here, then it means that we have not come across any errors, and the login is successful!
-				$this->add_user_to_wp_database($login_attempt, $valid_login['email'], $remember_user);
-
+				
 				// Redirect user to previous page, or home page if there is no previous page
 				$last_page_id = get_query_var('redirectId', false);
 				$redirect_code_exists = false;
@@ -1222,6 +1248,10 @@ class WAIntegration {
 			$dataEncryption = new DataEncryption();
 			$wild_apricot_url =	esc_url($dataEncryption->decrypt($wild_apricot_url));
 		} catch (EncryptionException $e) {
+			Log::wap_log_error($e->getMessage());
+			add_filter('the_content', array($this, 'add_login_server_error'));
+			// TODO: may want to add action to init so login page can still be seen w/ the error
+			disable_core();
 			return;
 		}
 

@@ -48,16 +48,16 @@ class Addon {
     private function __construct() {
         add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 2);
 
-        try {
-            self::$data_encryption = new DataEncryption();
-        } catch (Exception $e) {
-            Log::wap_log_error('Could not construct addon.');
-            do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
-            return;
-        }
-
         if (!get_option(self::WAWP_LICENSE_KEYS_OPTION)) {
             add_option(self::WAWP_LICENSE_KEYS_OPTION);
+        }
+
+        try {
+            self::$data_encryption = new DataEncryption();
+        } catch (EncryptionException $e) {
+            Log::wap_log_error($e->getMessage(), true);
+            disable_core();
+            return;
         }
     }
 
@@ -215,6 +215,7 @@ class Addon {
             try {
                 $licenses[$slug] = self::$data_encryption->decrypt($license);
             } catch(EncryptionException $e) {
+                Log::wap_log_error('Encryption error: could not encrypt license key', true);
                 $licenses[$slug] = '';
             }
             
@@ -471,6 +472,8 @@ class Addon {
 
         // Ensure that this license key is valid for the associated Wild Apricot ID and website
         $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
+
+        // TODO: catch
 
         if (!$valid_urls_and_ids) {
             Log::wap_log_error('License key for' . $name . 'invalid for your Wild Apricot account and/or website');

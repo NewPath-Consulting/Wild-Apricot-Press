@@ -7,7 +7,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/Log.php';
 
 /**
- * This class and its children implement custom exceptions for WAP-specific errors.
+ * Interface for custom exceptions.
  *
  * @copyright  2022 NewPath Consulting
  * @license    GNU General Public License 2.0
@@ -16,33 +16,90 @@ require_once __DIR__ . '/Log.php';
  */
 class Exception extends \Exception {
 
-    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
-        // TODO: remove error logs in catch blocks
-        if (!empty($message)) {
-            Log::wap_log_error($message);
-        }
-        
-    
-        // make sure everything is assigned properly
-        parent::__construct($message, $code, $previous);
-    }
     /**
-     * General error handler for Wild Apricot credentials errors.
+     * Constructor. To be extended from PHP Exception.
      *
-     * @param string[] $input input from form used to return an array with
-     * empty keys corresponding to the input keys.
-     * @return string[] array of empty strings
+     * @param string $message
+     * @param integer $code
+     * @param \Throwable|null $previous
      */
-    public function WA_creds_handler($input) {
-        Log::wap_log_error($this->getMessage());
-        do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
-        return empty_string_array($input);
+    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
+        parent::__construct($message, $code, $previous);
+
+        add_action('init', array($this ,'error_handler'));
+        add_action('init', array($this, 'admin_notice_error_message'));
+        // remove invalid creds admin notice
     }
+
+    /**
+     * Disables the plugin. Added to init hook when a fatal error has been
+     * encountered.
+     *
+     * @return void
+     */
+    public static function error_handler() {
+        disable_core();
+    }
+
+    /**
+     * Displays appropriate error message on admin screen. Added to admin_notices
+     * hook when a fatal error has been encountered.
+     *
+     * @return void
+     */
+    public static function admin_notice_error_message() {
+        echo "<div class='notice notice-error<p>";
+        echo "FATAL ERROR: Wild Apricot Press has encountered an error with encrypting your data. Please correct the error so the plugin can continue. More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.";
+        echo "<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>";
+        echo "</p></div>";
+    }
+
+
 }
 
-class APIException extends Exception {}
+/**
+ * Handles API exceptions.
+ */
+class APIException extends Exception {
+    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
+        parent::__construct($message, $code, $previous);
+    }
 
+    public static function admin_notice_error_message() {
+        echo "<div class='notice notice-error<p>";
+        echo "FATAL ERROR: There has been an internal error with the Wild Apricot API and the plugin must be disabled. Please contact your site administrator";
+        echo "</p></div>";
+    }
+
+    public static function api_connection_error() {
+        return 'There was an error connecting to the Wild Apricot API and the plugin has to be disabled. Please try again.';
+    }
+
+    public static function api_response_error() {
+        return 'There was an error in the Wild Apricot API and the plugin has to be disabled. Please try again.';
+    }
+
+    public static function get_error_type() {
+        
+    }
+
+}
+
+/**
+ * Handles encryption/decryption exceptions.
+ */
 class EncryptionException extends Exception {
+
+    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
+        parent::__construct($message, $code, $previous);
+    }
+
+    public static function admin_notice_error_message() {
+        echo "<div class='notice notice-error<p>";
+        echo "FATAL ERROR: Wild Apricot Press has encountered an error with encrypting your data. Please correct the error so the plugin can continue. More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.";
+        echo "<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>";
+        echo "</p></div>";
+    }
 
     public static function openssl_error() {
         return 'OpenSSL not installed.';
@@ -54,5 +111,9 @@ class EncryptionException extends Exception {
 
     public static function decrypt_error() {
         return 'There was an error with decryption.';
+    }
+
+    public static function get_error_type() {
+        return 'encrypting your data';
     }
 }
