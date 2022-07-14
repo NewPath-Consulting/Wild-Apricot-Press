@@ -19,6 +19,8 @@ class DataEncryption {
 			throw new EncryptionException(EncryptionException::openssl_error());
 		}
 
+		if (empty($raw_value)) return $value;
+
 		$method = 'aes-256-ctr';
 		$ivlen  = openssl_cipher_iv_length( $method );
 		$iv     = openssl_random_pseudo_bytes( $ivlen );
@@ -36,13 +38,17 @@ class DataEncryption {
 			throw new EncryptionException(EncryptionException::openssl_error());
 		}
 
+		if (empty($raw_value)) return $raw_value;
+
 		$raw_value = base64_decode( $raw_value, true );
 
 		$method = 'aes-256-ctr';
 		$ivlen  = openssl_cipher_iv_length( $method );
 		$iv     = substr( $raw_value, 0, $ivlen );
 
-		$raw_value = substr( $raw_value, $ivlen );
+		
+
+		if (empty($raw_value)) return $raw_value;
 
 		$value = openssl_decrypt( $raw_value, $method, $this->key, 0, $iv );
 		if ( ! $value || substr( $value, - strlen( $this->salt ) ) !== $this->salt ) {
