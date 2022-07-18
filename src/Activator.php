@@ -20,8 +20,14 @@ class Activator {
 	public function __construct($filename) {
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
 
-		add_action('admin_notices', array($this, 'admin_notices_creds_check'));
-
+		// if (Addon::is_plugin_disabled()) {
+			// add_action('admin_notices', 'WAWP\EncryptionException::admin_notice_error_message');
+		// } 
+		// else {
+		add_action('admin_notices','WAWP\Activator::admin_notices_creds_check');
+			
+		// }
+		
 		// Log::wap_log_debug('in construct function');
 
 		Addon::instance()::new_addon(array(
@@ -71,13 +77,17 @@ class Activator {
 
 
 	/**
-	 * Checks the status of the WA Authorization credentials and the license key. Displays 
-	 * appropriate admin notice messages if either one is invalid or missing. 
+	 * Checks the status of the WA Authorization credentials and the license key
+	 * Displays appropriate admin notice messages if either one is invalid or missing. 
+	 * 
+	 * @return void
 	 */
-	public function admin_notices_creds_check() {
-		
-		// Log::wap_log_debug('in activator admin notices function');
+	public static function admin_notices_creds_check() {
 		// only display these messages on wawp settings page or plugin page right after plugin is activated
+		if (Addon::is_plugin_disabled()) {
+			self::fatal_error_message();
+			return;
+		}
 		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
  		if (!is_wawp_settings() && !is_plugin_page()) return;
 
@@ -105,7 +115,7 @@ class Activator {
 
 	}
 
-	private function empty_creds_message() {
+	private static function empty_creds_message() {
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your ";
 		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot credentials</a>";
@@ -116,13 +126,22 @@ class Activator {
 	}
 
 
-	private function empty_wa_message() {
+	private static function empty_wa_message() {
 
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your Wild Apricot credentials in ";
 		echo "<a href=" . esc_html__(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot Press > Authorization</a>";
 		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
 		echo "</p></div>";
+	}
+
+	private static function fatal_error_message() {
+		echo "<div class='notice notice-error'>
+		<h2>FATAL ERROR</h2>
+		<p>Wild Apricot Press has encountered a fatal error and must be deactivated. Please correct the error so the plugin can continue.
+		More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>
+		<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>
+		</p></div>";
 	}
 
 }

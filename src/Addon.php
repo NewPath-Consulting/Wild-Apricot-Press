@@ -31,11 +31,13 @@ class Addon {
     const WAWP_LICENSE_KEYS_OPTION = 'wawp_license_keys';
     const WAWP_ADDON_LIST_OPTION = 'wawp_addons';
     const WAWP_ACTIVATION_NOTICE_OPTION = 'show_activation_notice';
+    const WAWP_DISABLED_OPTION = 'wawp_disabled';
 
     const LICENSE_STATUS_VALID = 'true';
     const LICENSE_STATUS_INVALID = 'invalid';
     const LICENSE_STATUS_ENTERED_EMPTY = 'empty';
     const LICENSE_STATUS_NOT_ENTERED = 'false';
+
 
     private static $instance = null;
 
@@ -56,7 +58,7 @@ class Addon {
             self::$data_encryption = new DataEncryption();
         } catch (EncryptionException $e) {
             Log::wap_log_error($e->getMessage(), true);
-            disable_core();
+            $e->init_disable_plugin();
             return;
         }
     }
@@ -217,6 +219,7 @@ class Addon {
             } catch(EncryptionException $e) {
                 Log::wap_log_error('Encryption error: could not encrypt license key', true);
                 $licenses[$slug] = '';
+                $e->init_disable_plugin();
             }
             
         }
@@ -374,10 +377,16 @@ class Addon {
             }
         }
 
+        if (!Addon::is_plugin_disabled()) {
+            update_option(self::WAWP_DISABLED_OPTION, true);
+        }
+        
         do_action('wawp_wal_set_login_private');
 
+    }
 
-
+    public static function is_plugin_disabled() {
+        return get_option(self::WAWP_DISABLED_OPTION);
     }
 
     /**

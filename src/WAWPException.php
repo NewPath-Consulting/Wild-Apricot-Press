@@ -14,7 +14,7 @@ require_once __DIR__ . '/Log.php';
  * @version    Release: 1.0
  * @since      Class available since Release 1.0
  */
-class Exception extends \Exception {
+abstract class Exception extends \Exception {
 
     /**
      * Constructor. To be extended from PHP Exception.
@@ -25,11 +25,11 @@ class Exception extends \Exception {
      */
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {
         parent::__construct($message, $code, $previous);
-
-        add_action('init', array($this ,'error_handler'));
-        add_action('init', array($this, 'admin_notice_error_message'));
-        // remove invalid creds admin notice
+        update_option(Addon::WAWP_DISABLED_OPTION, true);
+        $this->admin_notice_error_message();
     }
+
+    protected abstract function admin_notice_error_message();
 
     /**
      * Disables the plugin. Added to init hook when a fatal error has been
@@ -37,24 +37,28 @@ class Exception extends \Exception {
      *
      * @return void
      */
-    public static function error_handler() {
+    public function init_disable_plugin() {
         disable_core();
+        // $this->add_fatal_error_message();
     }
 
     /**
      * Displays appropriate error message on admin screen. Added to admin_notices
      * hook when a fatal error has been encountered.
      *
+     * @param string $error_type string containing a short description of the 
+     * error to insert into the template.
      * @return void
      */
-    public static function admin_notice_error_message() {
-        echo "<div class='notice notice-error<p>";
-        echo "FATAL ERROR: Wild Apricot Press has encountered an error with encrypting your data. Please correct the error so the plugin can continue. More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.";
-        echo "<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>";
-        echo "</p></div>";
-    }
-
-
+    protected static function admin_notice_error_message_template($error_type) {
+        return "<div class='notice notice-error'>
+                    <h2>FATAL ERROR</h2>
+                    <p>Wild Apricot Press has encountered an error with " . 
+                    esc_html__($error_type) . ". Please correct the error so the plugin can continue.
+                    More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>
+                    <p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>
+                </p></div>";
+    } 
 }
 
 /**
@@ -63,12 +67,12 @@ class Exception extends \Exception {
 class APIException extends Exception {
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {
         parent::__construct($message, $code, $previous);
+        add_action('admin_notices', 'WAWP\APIException::admin_notice_error_message', 1);
     }
 
-    public static function admin_notice_error_message() {
-        echo "<div class='notice notice-error<p>";
-        echo "FATAL ERROR: There has been an internal error with the Wild Apricot API and the plugin must be disabled. Please contact your site administrator";
-        echo "</p></div>";
+    protected function admin_notice_error_message() {
+        remove_action('admin_notices', 'WAWP\Activator::admin_notices_creds_check');
+        echo parent::admin_notice_error_message_template(self::get_error_type());
     }
 
     public static function api_connection_error() {
@@ -80,7 +84,7 @@ class APIException extends Exception {
     }
 
     public static function get_error_type() {
-        
+        return 'connecting to Wild Apricot';
     }
 
 }
@@ -92,13 +96,11 @@ class EncryptionException extends Exception {
 
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {
         parent::__construct($message, $code, $previous);
+        add_action('admin_notices', 'WAWP\EncryptionException::admin_notice_error_message', 1);
     }
 
-    public static function admin_notice_error_message() {
-        echo "<div class='notice notice-error<p>";
-        echo "FATAL ERROR: Wild Apricot Press has encountered an error with encrypting your data. Please correct the error so the plugin can continue. More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.";
-        echo "<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>";
-        echo "</p></div>";
+    protected function admin_notice_error_message() {
+        echo parent::admin_notice_error_message_template(self::get_error_type());
     }
 
     public static function openssl_error() {
@@ -114,6 +116,6 @@ class EncryptionException extends Exception {
     }
 
     public static function get_error_type() {
-        return 'encrypting your data';
+        return 'securing your data';
     }
 }
