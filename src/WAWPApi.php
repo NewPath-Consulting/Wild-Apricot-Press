@@ -11,8 +11,8 @@ class WAWPApi {
 	const ADMIN_API_VERSION = 'v2.2';
 	const MEMBER_API_VERSION = 'v1';
 	const WAWP_USER_AGENT = 'WildApricotPress/1.0';
-	// const API_URL = 'https://api.wildapricot.org/';
-	const API_URL = 'https://google.com';
+	const API_URL = 'https://api.wildapricot.org/';
+	// const API_URL = 'https://google.com';
 
 	// Class variables
     private $access_token;
