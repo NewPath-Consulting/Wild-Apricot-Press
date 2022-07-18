@@ -959,7 +959,6 @@ class WAIntegration {
 			$wawp_api->get_all_user_info();
 		} catch (Exception $e) {
 			Log::wap_log_error($e->getMessage(), true);
-			disable_core();
 			return;
 		}
 
@@ -1195,7 +1194,6 @@ class WAIntegration {
 				} catch (EncryptionException $e) {
 					Log::wap_log_error($e->getMessage(), true);
 					add_filter('the_content', array($this, 'add_login_server_error'));
-					disable_core();
 					return;
 				}
 				
@@ -1210,7 +1208,6 @@ class WAIntegration {
 				} catch (APIException $e) {
 					Log::wap_log_error($e->getMessage(), true);
 					add_filter('the_content', array($this, 'add_login_server_error'));
-					disable_core();
 					return;
 				}
 
@@ -1251,7 +1248,6 @@ class WAIntegration {
 			Log::wap_log_error($e->getMessage());
 			add_filter('the_content', array($this, 'add_login_server_error'));
 			// TODO: may want to add action to init so login page can still be seen w/ the error
-			disable_core();
 			return;
 		}
 
