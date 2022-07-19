@@ -471,7 +471,7 @@ class Addon {
 
         
         // Check if the addon_slug in in the products list, has support access and is expired
-        if (!in_array(CORE_SLUG, $valid_products) || $support_level != 'support') {
+        if (!in_array(CORE_SLUG, $valid_products) || self::is_expired($exp_date)) {
             return false;
         }
 
