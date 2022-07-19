@@ -52,6 +52,7 @@ class WAWPApi {
 	 * @throws APIException
 	 */
     private static function response_to_data($response) {
+		
         if (is_wp_error($response)) {
 			throw new APIException(APIException::api_connection_error());
 		}
@@ -62,7 +63,11 @@ class WAWPApi {
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
 			throw new APIException(APIException::api_response_error());
+		} else {
+			// remove exception flag so errors don't get incorrectly reported
+			APIException::remove_error();
 		}
+
 		// Valid response; return data
 		return $data;
     }

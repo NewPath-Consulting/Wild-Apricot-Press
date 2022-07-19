@@ -733,9 +733,7 @@ class MySettingsPage
      * Creates the content for the Wild Apricot login page, including instructions
 	 */
 	public function create_login_page() {
-        Log::wap_log_debug('start');
 		$this->options = get_option( 'wawp_wal_name' );
-        Log::wap_log_debug(Addon::is_plugin_disabled());
         
 		?>
         <div class="wrap">
@@ -862,7 +860,6 @@ class MySettingsPage
 			</div>
         </div>
         <?php
-        Log::wap_log_debug('end');
 	}
 
     private function check_wild_apricot_url() {
@@ -1094,8 +1091,6 @@ class MySettingsPage
         update_option(Addon::WAWP_DISABLED_OPTION, false);
 
         // Return array of valid inputs
-        Log::wap_log_debug('return valid inputs');
-        Log::wap_log_debug(Addon::is_plugin_disabled());
         return $valid;
     }
 

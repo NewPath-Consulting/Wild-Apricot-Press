@@ -9,9 +9,12 @@ class DataEncryption {
 	private $salt;
 
 	// Constructor for class
-	public function __construct() {
+	public function __construct() {	
 		$this->key = $this->get_default_key();
 		$this->salt = $this->get_default_salt();
+
+		// remove exception flag if there are no errors
+		EncryptionException::remove_error();
 	}
 
 	public function encrypt( $value ) {
@@ -28,7 +31,10 @@ class DataEncryption {
 		$raw_value = openssl_encrypt( $value . $this->salt, $method, $this->key, 0, $iv );
 		if ( ! $raw_value ) {
 			throw new EncryptionException(EncryptionException::encrypt_error());
+		} else {
+			EncryptionException::remove_error();
 		}
+		
 
 		return base64_encode( $iv . $raw_value );
 	}
@@ -48,12 +54,16 @@ class DataEncryption {
 
 		
 
+		$raw_value = substr( $raw_value, $ivlen );
 		if (empty($raw_value)) return $raw_value;
 
 		$value = openssl_decrypt( $raw_value, $method, $this->key, 0, $iv );
 		if ( ! $value || substr( $value, - strlen( $this->salt ) ) !== $this->salt ) {
 			throw new EncryptionException(EncryptionException::decrypt_error());
+		} else {
+			EncryptionException::remove_error();
 		}
+		
 
 		return substr( $value, 0, - strlen( $this->salt ) );
 	}
@@ -73,5 +83,6 @@ class DataEncryption {
 
 		throw new EncryptionException('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
 	}
+
 }
 ?>

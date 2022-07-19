@@ -32,6 +32,13 @@ abstract class Exception extends \Exception {
 
     }
 
+    /**
+     * Removes exception flag before calling functions that could throw exceptions
+     * so errors don't get incorrectly reported but the flag will stay if 
+     * the error persists.
+     */
+    public static abstract function remove_error();
+
     protected abstract function get_error_type();
 
     /**
@@ -59,6 +66,8 @@ abstract class Exception extends \Exception {
  */
 class APIException extends Exception {
 
+    const ERROR_DESCRIPTION = 'connecting to Wild Apricot';
+
     public static function api_connection_error() {
         return 'There was an error connecting to the Wild Apricot API and the plugin has to be disabled. Please try again.';
     }
@@ -68,7 +77,13 @@ class APIException extends Exception {
     }
 
     protected function get_error_type() {
-        return 'connecting to Wild Apricot';
+        return self::ERROR_DESCRIPTION;
+    }
+
+    public static function remove_error() {
+        if (get_option(self::EXCEPTION_OPTION) == self::ERROR_DESCRIPTION) {
+            delete_option(self::EXCEPTION_OPTION);
+        }
     }
 
 }
@@ -77,6 +92,8 @@ class APIException extends Exception {
  * Handles encryption/decryption exceptions. Child of custom Exception class.
  */
 class EncryptionException extends Exception {
+
+    const ERROR_DESCRIPTION = 'securing your data';
 
     public static function openssl_error() {
         return 'OpenSSL not installed.';
@@ -90,7 +107,13 @@ class EncryptionException extends Exception {
         return 'There was an error with decryption.';
     }
 
+    public static function remove_error() {
+        if (get_option(self::EXCEPTION_OPTION) == self::ERROR_DESCRIPTION) {
+            delete_option(self::EXCEPTION_OPTION);
+        }
+    }
+
     protected function get_error_type() {
-        return 'securing your data';
+        return self::ERROR_DESCRIPTION;
     }
 }
