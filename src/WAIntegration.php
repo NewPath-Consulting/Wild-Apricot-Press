@@ -116,6 +116,10 @@ class WAIntegration {
 	 * Checks that updated Wild Apricot credentials match the registered site on the license key
 	 */
 	public function check_updated_credentials() {
+		if (Addon::is_plugin_disabled()) {
+			disable_core();
+			return;
+		}
 		// Ensure that credentials have been already entered
 		$has_valid_wa_credentials = self::valid_wa_credentials();
 		$has_valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
@@ -128,9 +132,14 @@ class WAIntegration {
 			// Verify that the license still matches the Wild Apricot credentials
 			$current_license_key = Addon::get_license(CORE_SLUG);
 
-			// check for correct license properties
-			$license = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
-			// TODO: catch
+			try {
+				// check for correct license properties
+				$license = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
+			} catch (Exception $e) {
+				Log::wap_log_error($e->getMessage());
+				disable_core();
+				return;
+			}
 
 			if ($license == Addon::LICENSE_STATUS_ENTERED_EMPTY || !$has_valid_wa_credentials) {
 				$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
@@ -152,6 +161,9 @@ class WAIntegration {
 			Log::wap_log_error('Wild Apricot credentials and/or license key found to be invalid. Disabling plugin functionality.');
 		} else {
 			// if neither of the creds are invalid, do creds obtained action
+			// also update plugin disabled option to be false and delete exception option
+			update_option(Addon::WAWP_DISABLED_OPTION, false);
+			delete_option(Exception::EXCEPTION_OPTION);
 			do_action('wawp_wal_credentials_obtained');
 		}
 	}
@@ -1150,7 +1162,8 @@ class WAIntegration {
 				// Check that nonce is valid
 				if (!wp_verify_nonce(wp_unslash($_POST['wawp_login_nonce_name']), 'wawp_login_nonce_action')) {
 					// Redirect
-					wp_die('Your login failed.');
+					add_filter('the_content', array($this, 'add_login_error'));
+					return;
 				}
 
 				// Create array to hold the valid input
@@ -1189,23 +1202,15 @@ class WAIntegration {
 					$remember_user = true;
 				}
 
+				// Check if login is valid and add the user to wp database if it is
 				try {
 					$login_attempt = WAWPApi::login_email_password($valid_login);
-				} catch (EncryptionException $e) {
-					Log::wap_log_error($e->getMessage(), true);
-					add_filter('the_content', array($this, 'add_login_server_error'));
-					return;
-				}
-				
-				if (!$login_attempt) {
-					add_filter('the_content', array($this, 'add_login_error'));
-					return;
-				}
-
-				// Send POST request to Wild Apricot API to log in if input is valid
-				try {
+					if (!$login_attempt) {
+						add_filter('the_content', array($this, 'add_login_error'));
+						return;
+					}
 					$this->add_user_to_wp_database($login_attempt, $valid_login['email'], $remember_user);
-				} catch (APIException $e) {
+				} catch (Exception $e) {
 					Log::wap_log_error($e->getMessage(), true);
 					add_filter('the_content', array($this, 'add_login_server_error'));
 					return;

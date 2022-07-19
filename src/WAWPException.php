@@ -15,9 +15,9 @@ require_once __DIR__ . '/Log.php';
  * @since      Class available since Release 1.0
  */
 abstract class Exception extends \Exception {
-
+    const EXCEPTION_OPTION = 'wawp-exception-type';
     /**
-     * Constructor. To be extended from PHP Exception.
+     * Constructor. Extended from PHP Exception.
      *
      * @param string $message
      * @param integer $code
@@ -25,22 +25,14 @@ abstract class Exception extends \Exception {
      */
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {
         parent::__construct($message, $code, $previous);
-        update_option(Addon::WAWP_DISABLED_OPTION, true);
-        $this->admin_notice_error_message();
+        if (!Addon::is_plugin_disabled()) {
+            update_option(Addon::WAWP_DISABLED_OPTION, true);
+        }
+        update_option(self::EXCEPTION_OPTION, $this->get_error_type());
+
     }
 
-    protected abstract function admin_notice_error_message();
-
-    /**
-     * Disables the plugin. Added to init hook when a fatal error has been
-     * encountered.
-     *
-     * @return void
-     */
-    public function init_disable_plugin() {
-        disable_core();
-        // $this->add_fatal_error_message();
-    }
+    protected abstract function get_error_type();
 
     /**
      * Displays appropriate error message on admin screen. Added to admin_notices
@@ -50,30 +42,22 @@ abstract class Exception extends \Exception {
      * error to insert into the template.
      * @return void
      */
-    protected static function admin_notice_error_message_template($error_type) {
-        return "<div class='notice notice-error'>
-                    <h2>FATAL ERROR</h2>
-                    <p>Wild Apricot Press has encountered an error with " . 
-                    esc_html__($error_type) . ". Please correct the error so the plugin can continue.
-                    More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>
-                    <p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>
-                </p></div>";
+    public static function admin_notice_error_message_template($error_type) {
+        echo "<div class='notice notice-error wawp-exception'>";
+        echo "<h3>FATAL ERROR</h3>";
+        echo "<p>Wild Apricot Press has encountered an error with ";
+        esc_html_e($error_type);
+        echo " and functionality must be disabled. Please correct the error so the plugin can continue. ";
+        echo "More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>";
+        echo "<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>";
+        echo "</p></div>";
     } 
 }
 
 /**
- * Handles API exceptions.
+ * Handles API exceptions. Child of custom Exception class.
  */
 class APIException extends Exception {
-    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
-        parent::__construct($message, $code, $previous);
-        add_action('admin_notices', 'WAWP\APIException::admin_notice_error_message', 1);
-    }
-
-    protected function admin_notice_error_message() {
-        remove_action('admin_notices', 'WAWP\Activator::admin_notices_creds_check');
-        echo parent::admin_notice_error_message_template(self::get_error_type());
-    }
 
     public static function api_connection_error() {
         return 'There was an error connecting to the Wild Apricot API and the plugin has to be disabled. Please try again.';
@@ -83,25 +67,16 @@ class APIException extends Exception {
         return 'There was an error in the Wild Apricot API and the plugin has to be disabled. Please try again.';
     }
 
-    public static function get_error_type() {
+    protected function get_error_type() {
         return 'connecting to Wild Apricot';
     }
 
 }
 
 /**
- * Handles encryption/decryption exceptions.
+ * Handles encryption/decryption exceptions. Child of custom Exception class.
  */
 class EncryptionException extends Exception {
-
-    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
-        parent::__construct($message, $code, $previous);
-        add_action('admin_notices', 'WAWP\EncryptionException::admin_notice_error_message', 1);
-    }
-
-    protected function admin_notice_error_message() {
-        echo parent::admin_notice_error_message_template(self::get_error_type());
-    }
 
     public static function openssl_error() {
         return 'OpenSSL not installed.';
@@ -115,7 +90,7 @@ class EncryptionException extends Exception {
         return 'There was an error with decryption.';
     }
 
-    public static function get_error_type() {
+    protected function get_error_type() {
         return 'securing your data';
     }
 }

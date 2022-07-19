@@ -5,6 +5,7 @@ namespace WAWP;
 require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/WAWPException.php';
 
 // Log::wap_log_debug('not in function');
 
@@ -20,15 +21,7 @@ class Activator {
 	public function __construct($filename) {
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
 
-		// if (Addon::is_plugin_disabled()) {
-			// add_action('admin_notices', 'WAWP\EncryptionException::admin_notice_error_message');
-		// } 
-		// else {
 		add_action('admin_notices','WAWP\Activator::admin_notices_creds_check');
-			
-		// }
-		
-		// Log::wap_log_debug('in construct function');
 
 		Addon::instance()::new_addon(array(
 			'slug' => CORE_SLUG,
@@ -57,14 +50,20 @@ class Activator {
 
 		// Call Addon's activation function
 		// returns false & does disable_plugin if license is invalid/nonexistent
-		$did_activate = Addon::instance()::activate(CORE_SLUG);
-		if (!$did_activate) {
-			Log::wap_log_warning('Missing license key for ' . CORE_NAME . ' plugin functionality disabled.');
-		}
+		
+		$is_disabled = Addon::is_plugin_disabled();
+		if ($is_disabled) return;
 		if (!WAIntegration::valid_wa_credentials()) {
 			do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
 			Log::wap_log_warning('Missing Wild Apricot API credentials. Plugin functionality disabled.');
+			return;
 		}
+		$did_activate = Addon::instance()::activate(CORE_SLUG);
+		if (!$did_activate) {
+			Log::wap_log_warning('Missing license key for ' . CORE_NAME . ' plugin functionality disabled.');
+			return;
+		}
+
 		Log::wap_log_debug('Plugin activated.');
 
 		// **** this code will only run if license AND wa credentials are valid ****
@@ -83,14 +82,17 @@ class Activator {
 	 * @return void
 	 */
 	public static function admin_notices_creds_check() {
-		// only display these messages on wawp settings page or plugin page right after plugin is activated
-		if (Addon::is_plugin_disabled()) {
-			self::fatal_error_message();
-			return;
-		}
-		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
+
  		if (!is_wawp_settings() && !is_plugin_page()) return;
 
+		// only display these messages on wawp settings page or plugin page right after plugin is activated
+		$exception = get_option(Exception::EXCEPTION_OPTION);
+		if ($exception) {
+			Exception::admin_notice_error_message_template($exception);
+			return;
+		}
+
+		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
 		$valid_wa_creds = WAIntegration::valid_wa_credentials();
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 
@@ -112,7 +114,6 @@ class Activator {
 
 		// print out licensing messages
 		Addon::instance()::license_admin_notices();
-
 	}
 
 	private static function empty_creds_message() {
@@ -135,14 +136,9 @@ class Activator {
 		echo "</p></div>";
 	}
 
-	private static function fatal_error_message() {
-		echo "<div class='notice notice-error'>
-		<h2>FATAL ERROR</h2>
-		<p>Wild Apricot Press has encountered a fatal error and must be deactivated. Please correct the error so the plugin can continue.
-		More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>
-		<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>
-		</p></div>";
-	}
+	// private static function fatal_error_message() {
+	// 	Exception::admin_notice_error_message_template();
+	// }
 
 }
 ?>

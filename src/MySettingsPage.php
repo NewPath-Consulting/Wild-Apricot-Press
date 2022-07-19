@@ -157,7 +157,6 @@ class MySettingsPage
             $valid_access_credentials = WAWPApi::verify_valid_access_token();
         } catch (Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
-            $e->init_disable_plugin();
             return; 
         }
         
@@ -179,7 +178,6 @@ class MySettingsPage
                 $updated_groups = $wawp_api->get_membership_levels(true);
             } catch (APIException $e) {
                 Log::wap_log_error($e->getMessage(), true);
-                $e->init_disable_plugin();
                 return;
             }
 
@@ -735,28 +733,19 @@ class MySettingsPage
      * Creates the content for the Wild Apricot login page, including instructions
 	 */
 	public function create_login_page() {
+        Log::wap_log_debug('start');
 		$this->options = get_option( 'wawp_wal_name' );
-        $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
-        $exception = false;
-        try {
-            if ($wild_apricot_url) {
-                $dataEncryption = new DataEncryption();
-                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
-            }
-        } catch (EncryptionException $e) {
-            Log::wap_log_error($e->getMessage(), true);
-            $e->init_disable_plugin();
-            $exception = true;
-        }
+        Log::wap_log_debug(Addon::is_plugin_disabled());
+        
 		?>
         <div class="wrap">
 			<h1>Wild Apricot Authorization</h1>
 			<div class="waSettings">
-				
 				<div class="loginChild">
                     <!-- Wild Apricot credentials form -->
 					<form method="post" action="options.php">
 					<?php
+                        $wild_apricot_url = $this->check_wild_apricot_url();
                         // Nonce for verification
                         wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
 						// This prints out all hidden setting fields
@@ -767,10 +756,15 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
+
+                        if (Addon::is_plugin_disabled()) {
+                            ?> </div> </div> </div> <?php
+                            return;
+                        }
                         // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
-						} else if ($exception) {
+						} else if (Addon::is_plugin_disabled()) {
                             // close divs
                             ?>
                             </div>
@@ -784,7 +778,9 @@ class MySettingsPage
 							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
                             echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
 						}
+
 					?>
+                    
                     <!-- Menu Locations for Login/Logout button -->
                     <form method="post" action="options.php">
 					<?php
@@ -866,9 +862,23 @@ class MySettingsPage
 			</div>
         </div>
         <?php
+        Log::wap_log_debug('end');
 	}
 
-
+    private function check_wild_apricot_url() {
+        if (Addon::is_plugin_disabled()) return false;
+        $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
+        try {
+            if ($wild_apricot_url) {
+                $dataEncryption = new DataEncryption();
+                $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
+            }
+        } catch (EncryptionException $e) {
+            Log::wap_log_error($e->getMessage(), true);
+            return false;
+        }
+        return $wild_apricot_url;
+    }
 
     /**
      * Sanitize restriction status checkboxes
@@ -922,7 +932,6 @@ class MySettingsPage
             <?php
             // Check if Wild Apricot credentials have been entered
             // If credentials have been entered (not empty), then we can present the license page
-            Log::wap_log_debug(Addon::is_plugin_disabled());
             if (!Addon::is_plugin_disabled() || !WAIntegration::valid_wa_credentials()) {
                 ?>
                 <form method="post" action="options.php">
@@ -1075,9 +1084,8 @@ class MySettingsPage
             foreach ($valid as $key => $value) {
                 $valid[$key] = $data_encryption->encrypt($value);
             }
-        } catch (APIException | EncryptionException $e) {
+        } catch (Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
-            $e->init_disable_plugin();
             return empty_string_array($input);
         } 
 
@@ -1086,6 +1094,8 @@ class MySettingsPage
         update_option(Addon::WAWP_DISABLED_OPTION, false);
 
         // Return array of valid inputs
+        Log::wap_log_debug('return valid inputs');
+        Log::wap_log_debug(Addon::is_plugin_disabled());
         return $valid;
     }
 
@@ -1150,7 +1160,6 @@ class MySettingsPage
         $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
 
 
-
         // Save transients and options all at once; by this point all values should be valid.
         // Store access token and account ID as transients
         set_transient('wawp_admin_access_token', $access_token_enc, $expiring_time);
@@ -1198,7 +1207,6 @@ class MySettingsPage
             $data_encryption = new DataEncryption();
         } catch (EncryptionException $e) {
             Log::wap_log_error($e->getMessage(), true);
-            $e->init_disable_plugin();
             return $empty_input_array;
         }
 
@@ -1207,11 +1215,8 @@ class MySettingsPage
                 $key = Addon::instance()::validate_license_key($license, $slug);    
             } catch (Exception $e) {
                 Log::wap_log_error($e->getMessage());
-                $e->init_disable_plugin();
                 return $empty_input_array;
             }
-            $key = Addon::instance()::validate_license_key($license, $slug);
-            // TODO: catch
             if (is_null($key)) { 
                 // invalid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
@@ -1228,7 +1233,6 @@ class MySettingsPage
                 } catch (EncryptionException $e) {
                     // if license could not be encrypted, just discard it
                     Log::wap_log_error($e->getMessage(), true);
-                    $e->init_disable_plugin();
                     return $empty_input_array;
                 }
                 if (is_core($slug)) {

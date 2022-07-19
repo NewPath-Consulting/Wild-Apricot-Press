@@ -19,7 +19,7 @@ class DataEncryption {
 			throw new EncryptionException(EncryptionException::openssl_error());
 		}
 
-		if (empty($raw_value)) return $value;
+		if (empty($value)) return $value;
 
 		$method = 'aes-256-ctr';
 		$ivlen  = openssl_cipher_iv_length( $method );
@@ -59,7 +59,7 @@ class DataEncryption {
 	}
 
 	private function get_default_key() {
-		if ( defined( 'LOGGED_IN_KEY' ) && '' !== LOGGED_IN_KEY ) {
+		if ( defined( 'LOGGED_IN_KEY' ) && !empty(LOGGED_IN_KEY) ) {
 			return LOGGED_IN_KEY;
 		}
 
@@ -67,7 +67,7 @@ class DataEncryption {
 	}
 
 	private function get_default_salt() {
-		if ( defined( 'LOGGED_IN_SALT' ) && '' !== LOGGED_IN_SALT ) {
+		if ( defined( 'LOGGED_IN_SALT' ) && !empty(LOGGED_IN_SALT) ) {
 			return LOGGED_IN_SALT;
 		}
 

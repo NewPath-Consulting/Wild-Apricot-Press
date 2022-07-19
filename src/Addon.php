@@ -58,7 +58,6 @@ class Addon {
             self::$data_encryption = new DataEncryption();
         } catch (EncryptionException $e) {
             Log::wap_log_error($e->getMessage(), true);
-            $e->init_disable_plugin();
             return;
         }
     }
@@ -219,7 +218,6 @@ class Addon {
             } catch(EncryptionException $e) {
                 Log::wap_log_error('Encryption error: could not encrypt license key', true);
                 $licenses[$slug] = '';
-                $e->init_disable_plugin();
             }
             
         }
@@ -336,7 +334,9 @@ class Addon {
      * @param string $slug slug string of the plugin to be disabled. 
      */
     public static function disable_addon($slug) {
-        self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        if (self::instance()::get_license_check_option($slug) != self::LICENSE_STATUS_NOT_ENTERED) {
+            self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        }
 
         $blocks = self::instance()::get_addons()[$slug]['blocks'];
 
@@ -373,7 +373,9 @@ class Addon {
 
                 // change license status only if it is currently valid
                 // this will happen when this function is called during a cron job, which means this license has expired or otherwise become invalid since it had been entered.
-                self::instance()::update_license_check_option($slug, $new_license_status);
+                if (self::instance()::get_license_check_option($slug) != $new_license_status) {
+                    self::instance()::update_license_check_option($slug, $new_license_status);
+                }
             }
         }
 
@@ -510,14 +512,14 @@ class Addon {
 
     public static function valid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
-        echo "<div class='notice notice-success is-dismissible'><p>";
+        echo "<div class='notice notice-success is-dismissible license'><p>";
 		echo "Saved license key for <strong>" . esc_html__($plugin_name) . "</strong>.</p>";
 		echo "</div>";
     }
 
     public static function invalid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
-        echo "<div class='notice notice-error is-dismissible'><p>";
+        echo "<div class='notice notice-error is-dismissible license'><p>";
         echo "Your license key for <strong>" . esc_html__($plugin_name);
         echo "</strong> is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>Wild Apricot for Wordpress website</a>.";
         echo "</div>";
@@ -526,7 +528,7 @@ class Addon {
     public static function empty_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
-        echo "<div class='notice notice-warning'><p>";
+        echo "<div class='notice notice-warning license'><p>";
         echo "Please enter a valid license key for <strong>" . esc_html__($plugin_name) . "</strong>. </p></div>";
         unset($_GET['activate']); // prevents printing "Plugin activated" message
         // deactivate_plugins($filename);
@@ -541,7 +543,7 @@ class Addon {
     public static function license_key_prompt($slug, $is_licensing_page) {
         $plugin_name = self::get_title($slug);
 
-        echo "<div class='notice notice-warning is-dismissable'><p>";
+        echo "<div class='notice notice-warning is-dismissable license'><p>";
         echo "Please enter your license key";
         if (!$is_licensing_page) {
          echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">Wild Apricot Press > Licensing</a>"; 
