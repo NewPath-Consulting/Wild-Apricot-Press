@@ -5,6 +5,7 @@ namespace WAWP;
 require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/WAIntegration.php';
 
 /**
  * Interface for custom exceptions.
@@ -37,9 +38,37 @@ abstract class Exception extends \Exception {
      * so errors don't get incorrectly reported but the flag will stay if 
      * the error persists.
      */
-    public static abstract function remove_error();
+    public static function remove_error() {
+        refresh_credentials();
+        Log::wap_log_debug('wtf');
+        if (Addon::has_valid_license(CORE_SLUG) && WAIntegration::valid_wa_credentials() && self::fatal_error()) {
+            delete_option(self::EXCEPTION_OPTION);
+            Log::wap_log_debug('wtf');
+            update_option(Addon::WAWP_DISABLED_OPTION, false);
+        }
+
+    }
+
+    /**
+     * Returns whether there's been a fatal error or not.
+     *
+     * @return boolean
+     */
+    public static function fatal_error() {
+        return get_option(Exception::EXCEPTION_OPTION);
+    }
 
     protected abstract function get_error_type();
+
+    public static function get_user_facing_error_message() {
+        return "<div class='wawp-exception' style='color:red'>
+        <h3>FATAL ERROR</h3><p>Wild Apricot Press has encountered a fatal error and must be disabled.
+        Please contact your site administrator.</p></div>";
+    }
+
+    public static function error_message_template($error_type) {
+
+    } 
 
     /**
      * Displays appropriate error message on admin screen. Added to admin_notices
@@ -56,7 +85,7 @@ abstract class Exception extends \Exception {
         esc_html_e($error_type);
         echo " and functionality must be disabled. Please correct the error so the plugin can continue. ";
         echo "More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>";
-        echo "<p>Contact the <a href='talk.newpathconsulting.com'>NewPath Consulting team</a> for support.</p>";
+        echo "<p>Contact the <a href='https://talk.newpathconsulting.com/'>NewPath Consulting team</a> for support.</p>";
         echo "</p></div>";
     } 
 }

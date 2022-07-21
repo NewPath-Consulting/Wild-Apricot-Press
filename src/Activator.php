@@ -82,11 +82,10 @@ class Activator {
 	 * @return void
 	 */
 	public static function admin_notices_creds_check() {
-
- 		if (!is_wawp_settings() && !is_plugin_page()) return;
+		if (!is_wawp_settings() && !is_plugin_page() && !is_post_edit_page()) return;
 
 		// only display these messages on wawp settings page or plugin page right after plugin is activated
-		$exception = get_option(Exception::EXCEPTION_OPTION);
+		$exception = Exception::fatal_error();
 		if ($exception) {
 			Exception::admin_notice_error_message_template($exception);
 			return;
@@ -130,8 +129,10 @@ class Activator {
 	private static function empty_wa_message() {
 
 		echo "<div class='notice notice-warning'><p>";
-		echo "Please enter your Wild Apricot credentials in ";
-		echo "<a href=" . esc_html__(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot Press > Authorization</a>";
+		echo "Please enter your Wild Apricot credentials";
+		if (!is_wa_login_menu()) {
+			echo " in <a href=" . esc_html__(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot Press > Authorization</a>";
+		}
 		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
 		echo "</p></div>";
 	}

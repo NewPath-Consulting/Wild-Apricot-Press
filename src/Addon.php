@@ -216,7 +216,7 @@ class Addon {
             try {
                 $licenses[$slug] = self::$data_encryption->decrypt($license);
             } catch(EncryptionException $e) {
-                Log::wap_log_error('Encryption error: could not encrypt license key', true);
+                Log::wap_log_error($e->getMessage(), true);
                 $licenses[$slug] = '';
             }
             
