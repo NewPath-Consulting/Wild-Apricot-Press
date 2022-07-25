@@ -959,11 +959,16 @@ class MySettingsPage
         $licenses = Addon::instance()::get_licenses();
         // Check that slug is valid
         $input_value = '';
-        if (Addon::instance()::has_valid_license($slug)) {
+        $license_valid = Addon::instance()::has_valid_license($slug);
+        if ($license_valid) {
             $input_value = Addon::instance()::get_license($slug);
         } else {
         }
         echo "<input id='license_key " . esc_html__($slug) . "' name='wawp_license_keys[" . esc_html__($slug) ."]' type='text' value='" . $input_value . "'  />" ;
+        if ($license_valid) {
+            echo "<br><p style='color:green;'><span  class='dashicons dashicons-saved'></span> License key valid</p>";
+        }
+        
     }
 
     /**
