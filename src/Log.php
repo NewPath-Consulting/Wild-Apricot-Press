@@ -88,18 +88,26 @@ class Log {
         $line = $backtrace[1]['line'];
         $file = basename($backtrace[1]['file']);
         $plugin = self::get_plugin_name($backtrace[1]['file']);
+        $account_id = WAWPApi::verify_valid_access_token()['wa_account_id'];
 
         $date = self::get_current_datetime();
 
         // use print_r to format arrays and objects
         $msg = print_r($msg, true);
 
-        // TODO: print severity for error messages
+        $log_msg_string = "[%s] %s | %s | ";
+
+        if (!empty($account_id)) {
+            $log_msg_string = $log_msg_string . "Account ID %s | ";
+        }
+
+        $log_msg_string = $log_msg_string . "%s:%s%s\n";
         // format log message and print it to the logfile
-        $log_msg = sprintf("[%s] %s | %s | %s:%s%s | %s\n",
+        $log_msg = sprintf($log_msg_string,
             $date,
             $error_type,
             $plugin,
+            $account_id,
             $file,
             $line,
             $function,
