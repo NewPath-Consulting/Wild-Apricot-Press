@@ -563,49 +563,6 @@ class WAIntegration {
 		return $post_content;
 	}
 
-	private static function display_post_editor_error($is_fatal) {
-		self::display_block_editor_error_message($is_fatal);
-		// if (self::is_block_editor()) {
-		// 	self::display_block_editor_error_message($is_fatal);
-		// 	return;
-		// }
-
-	}
-
-	// todo: add admin notice
-	private static function display_block_editor_error_message($is_fatal) {
-		Log::wap_log_debug('hi');
-		?>
-		<!-- <script>
-			alert('error');
-			console.log('what  ');
-			import { Button, Modal } from '@wordpress/components';
-			import { useState } from '@wordpress/element';
-			
-			const MyModal = () => {
-				const [ isOpen, setOpen ] = useState( false );
-				const openModal = () => setOpen( true );
-				const closeModal = () => setOpen( false );
-			
-				return (
-					<>
-						<Button variant="secondary" onClick={ openModal }>
-							Open Modal
-						</Button>
-						{ isOpen && (
-							<Modal title="This is my modal" onRequestClose={ closeModal }>
-								<Button variant="secondary" onClick={ closeModal }>
-									My custom close button
-								</Button>
-							</Modal>
-						) }
-					</>
-				);
-			};
-		</script> -->
-		<?php
-	}
-
 	/**
 	 * Returns whether the post editor in use is the Gutenberg block editor or not.
 	 * This changes how the error message is displayed.
