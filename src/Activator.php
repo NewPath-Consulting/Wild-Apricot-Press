@@ -91,6 +91,11 @@ class Activator {
 			return;
 		}
 
+		if (Addon::is_plugin_disabled()) {
+			self::empty_wa_message();
+			return;
+		}
+
 		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
 		$valid_wa_creds = WAIntegration::valid_wa_credentials();
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);

@@ -138,6 +138,8 @@ function disable_core() {
 
 /**
  * Checks to see if the current entered credentials are still valid.
+ * 
+ * @return string|null|bool false if there's an exception or status of current license (current license, "empty" or null)
  */
 function refresh_credentials() {
     try {
@@ -159,7 +161,7 @@ function refresh_credentials() {
 
     // if validate_license_key returns the stored license then it's still valid
     Addon::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_VALID);
-    return $current_license_key == $new_license;
+    return $new_license;
 }
 
 

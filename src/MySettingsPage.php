@@ -527,8 +527,10 @@ class MySettingsPage
         <div class="wrap">
             <h2>Wild Apricot Admin Settings</h2>
             <?php 
-            // don't display settings if credentials and/or key are not valid
-            if (!WAIntegration::valid_wa_credentials() || !Addon::instance()::has_valid_license(CORE_SLUG)) { ?> </div> <?php return; } ?>
+            // don't display settings if credentials and/or key are not valid or if there's been a fatal error
+            if (!WAIntegration::valid_wa_credentials() || !Addon::instance()::has_valid_license(CORE_SLUG) 
+                || Addon::is_plugin_disabled() || Exception::fatal_error()) 
+                { ?> </div> <?php return; } ?>
             <!-- Tabs for navigation -->
             <nav class="nav-tab-wrapper">
                 <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null):?>nav-tab-active<?php endif; ?>">Content Restriction Options</a>
@@ -720,8 +722,6 @@ class MySettingsPage
      */
     public function wawp_logfile_flag_form() {
         $checked = Log::can_debug();
-        Log::wap_log_debug('logfile flag ' . print_r($checked,1));
-        // $checked = $logfile_flag ? 'checked' : '';
         ?>
         <input type="checkbox" name="<?php esc_html_e(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked" <?php esc_html_e($checked); ?>></input>
         <?php
@@ -754,8 +754,8 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
-
-                        if (Addon::is_plugin_disabled()) {
+                        // if there's a fatal error don't display anything after credentials form
+                        if (Exception::fatal_error()) {
                             ?> </div> </div> </div> <?php
                             return;
                         }
@@ -928,8 +928,8 @@ class MySettingsPage
         <div class="wrap">
             <?php
             // Check if Wild Apricot credentials have been entered
-            // If credentials have been entered (not empty), then we can present the license page
-            if (!Addon::is_plugin_disabled() || !WAIntegration::valid_wa_credentials()) {
+            // If credentials have been entered (not empty) and plugin is not disabled, then we can present the license page
+            if (!Addon::is_plugin_disabled() && WAIntegration::valid_wa_credentials()) {
                 ?>
                 <form method="post" action="options.php">
                     <?php
@@ -943,7 +943,6 @@ class MySettingsPage
                 <?php
             } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
                 echo "<h2>License Keys</h2>";
-                Log::wap_log_warning('Missing Wild Apricot API credentials -- cannot render license page');
             }
             ?>
         </div>
@@ -1162,8 +1161,8 @@ class MySettingsPage
 
         // Save transients and options all at once; by this point all values should be valid.
         // Store access token and account ID as transients
-        set_transient('wawp_admin_access_token', $access_token_enc, $expiring_time);
-        set_transient('wawp_admin_account_id', $account_id_enc, $expiring_time);
+        set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $access_token_enc, $expiring_time);
+        set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $account_id_enc, $expiring_time);
         // Store refresh token in database
         update_option('wawp_admin_refresh_token', $refresh_token_enc);
         // Save membership levels and groups to options
@@ -1302,7 +1301,7 @@ class MySettingsPage
      */
     public function license_print_info() {
         $link_address = "https://newpathconsulting.com/wap/";
-        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='".$link_address."' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for <b>Wild Apricot Press</b> is 100% free, and we never share your information with any third party!";
+        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='" . esc_url($link_address) . "' target='_blank' rel='noopener noreferrer'>here</a> to get a license key! The license key for <b>Wild Apricot Press</b> is 100% free, and we never share your information with any third party!";
     }
 
     /**

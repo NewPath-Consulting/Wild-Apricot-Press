@@ -65,7 +65,7 @@ class WAIntegration {
 		// Add redirectId to query vars array
 		add_filter('query_vars', array($this, 'add_custom_query_vars'));
 		// Action for making profile page private
-		add_action('wawp_wal_set_login_private', array($this, 'make_login_private'));
+		add_action('remove_wa_integration', array($this, 'remove_wild_apricot_integration'));
 		// Actions for displaying membership levels on user profile
 		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
 		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
@@ -94,6 +94,11 @@ class WAIntegration {
 		require_once('DataEncryption.php');
 		require_once('WAWPApi.php');
 		require_once('Addon.php');
+	}
+
+	public static function delete_transients() {
+		delete_transient(self::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		delete_transient(self::ADMIN_ACCOUNT_ID_TRANSIENT);
 	}
 
 	/**
@@ -125,7 +130,6 @@ class WAIntegration {
 		$has_valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 		$license_status = Addon::get_license_check_option(CORE_SLUG);
 
-		// TODO: use refresh_credentials
 		if ($has_valid_wa_credentials) {
 			try {
 				WAWPApi::verify_valid_access_token();
@@ -134,9 +138,13 @@ class WAIntegration {
 				Log::wap_log_error($e->getMessage(), 1);
 			}
 		}
-		// TODO doesn't disable for api error
 
-		// Verify that the license still matches the Wild Apricot credentials
+		/**
+		 * check the license regardless of the value of $has_valid_license since
+		 * the license could be marked invalid simply because the plugin has been disabled.
+		 * but it should still be checked in the case that the plugin had a fatal
+		 * error that has been corrected
+		 */
 		$current_license_key = Addon::get_license(CORE_SLUG);
 
 		try {
@@ -147,23 +155,23 @@ class WAIntegration {
 			Log::wap_log_error($e->getMessage());
 		}
 
-		if ($new_license_status == Addon::LICENSE_STATUS_ENTERED_EMPTY || !$has_valid_wa_credentials) {
-			$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
-		} else if (is_null($new_license_status)) {
-			$license_status = Addon::LICENSE_STATUS_INVALID;
-		} else if ($new_license_status  == $current_license_key) {
-			Addon::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_VALID);
-			$has_valid_license = true;
-		}
-
 		// update new license status
 		// invalid if license was found to be invalid
 		// not entered if only WA creds are invalid
 		// license status is subject to change based on the request made
+		if ($new_license_status == Addon::LICENSE_STATUS_ENTERED_EMPTY || !$has_valid_wa_credentials) {
+			$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
+		} else if (is_null($new_license_status)) {
+			$license_status = Addon::LICENSE_STATUS_INVALID;
+		} else {
+			Addon::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_VALID);
+			$has_valid_license = true;
+		}
+
+
 		if (Exception::fatal_error() || !$has_valid_license || !$has_valid_wa_credentials) {
 			// disable plugin since one or both of the creds are invalid
 			do_action('disable_plugin', CORE_SLUG, $license_status);
-			Log::wap_log_error('Wild Apricot credentials and/or license key found to be invalid. Disabling plugin functionality.');
 		} else {
 			// if neither of the creds are invalid, do creds obtained action
 			// also update plugin disabled option to be false and delete exception option
@@ -196,7 +204,6 @@ class WAIntegration {
 			return true;
 		}
 		
-		// do_action('wawp_wal_set_login_private');
 		return false;
 
 	}
@@ -361,13 +368,10 @@ class WAIntegration {
 		if ($login_page != 'private') return;
 	}
 
-	// TODO: instead of making login page private, remove it from the admin menu and replace the form with an access denied message
-	// TODO: make more general disable functionality function that also has deleting post meta
 	/**
 	 * Sets the login page to private if the plugin is deactivated or invalid credentials are entered
 	 */
-	public function make_login_private() {
-		Log::wap_log_debug('hello');
+	public function remove_wild_apricot_integration() {
 		delete_metadata('post', 0, self::RESTRICTED_GROUPS, '', true);
 		delete_metadata('post', 0, self::RESTRICTED_LEVELS, '', true);
 		delete_metadata('post', 0, self::IS_POST_RESTRICTED, '', true);
@@ -1320,7 +1324,6 @@ class WAIntegration {
 		} catch (EncryptionException $e) {
 			Log::wap_log_error($e->getMessage());
 			add_filter('the_content', array($this, 'add_login_server_error'));
-			// TODO: may want to add action to init so login page can still be seen w/ the error
 			return;
 		}
 

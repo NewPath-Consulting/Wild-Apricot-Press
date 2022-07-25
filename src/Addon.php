@@ -382,8 +382,10 @@ class Addon {
         if (!Addon::is_plugin_disabled()) {
             update_option(self::WAWP_DISABLED_OPTION, true);
         }
+
+        WAIntegration::delete_transients();
         
-        do_action('wawp_wal_set_login_private');
+        do_action('remove_wa_integration');
 
     }
 
@@ -466,7 +468,7 @@ class Addon {
 
         // Get list of product(s) that this license is valid for
         $valid_products = $response['Products'];
-        $support_level = $response['Support Level'];
+        // $support_level = $response['Support Level'];
         $exp_date = $response['expiration date'];
 
         
@@ -483,8 +485,6 @@ class Addon {
 
         // Ensure that this license key is valid for the associated Wild Apricot ID and website
         $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
-
-        // TODO: catch
 
         if (!$valid_urls_and_ids) {
             Log::wap_log_error('License key for' . $name . 'invalid for your Wild Apricot account and/or website');

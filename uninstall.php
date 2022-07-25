@@ -50,8 +50,8 @@ delete_option('wawp_array_of_restricted_posts');
 delete_option('wawp_admin_refresh_token');
 
 // Delete transients, even if they have not expired yet
-delete_transient('wawp_admin_access_token');
-delete_transient('wawp_admin_account_id');
+delete_transient(WAWP\WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+delete_transient(WAWP\WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
 
 Addon::instance()::delete();
 

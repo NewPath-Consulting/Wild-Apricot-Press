@@ -40,10 +40,8 @@ abstract class Exception extends \Exception {
      */
     public static function remove_error() {
         refresh_credentials();
-        Log::wap_log_debug('wtf');
         if (Addon::has_valid_license(CORE_SLUG) && WAIntegration::valid_wa_credentials() && self::fatal_error()) {
             delete_option(self::EXCEPTION_OPTION);
-            Log::wap_log_debug('wtf');
             update_option(Addon::WAWP_DISABLED_OPTION, false);
         }
 

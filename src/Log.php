@@ -2,6 +2,8 @@
 
 namespace WAWP;
 
+require_once __DIR__ . '/WAWPApi.php';
+
 /**
  * This class manages custom log messages for WAP and its blocks.
  *
