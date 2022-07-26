@@ -1213,7 +1213,8 @@ class MySettingsPage
             try {
                 $key = Addon::instance()::validate_license_key($license, $slug);    
             } catch (Exception $e) {
-                Log::wap_log_error($e->getMessage());
+                Log::wap_log_error($e->getMessage(), true);
+                Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_NOT_ENTERED);
                 return $empty_input_array;
             }
             if (is_null($key)) { 

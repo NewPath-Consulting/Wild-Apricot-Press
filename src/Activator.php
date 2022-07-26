@@ -7,8 +7,6 @@ require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/WAWPException.php';
 
-// Log::wap_log_debug('not in function');
-
 class Activator {
 
 	const SHOW_NOTICE_ACTIVATION = 'show_notice_activation';
@@ -64,8 +62,6 @@ class Activator {
 			return;
 		}
 
-		Log::wap_log_debug('Plugin activated.');
-
 		// **** this code will only run if license AND wa credentials are valid ****
 		// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
 		do_action('wawp_wal_credentials_obtained');
@@ -91,11 +87,6 @@ class Activator {
 			return;
 		}
 
-		if (Addon::is_plugin_disabled()) {
-			self::empty_wa_message();
-			return;
-		}
-
 		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
 		$valid_wa_creds = WAIntegration::valid_wa_credentials();
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
@@ -110,7 +101,7 @@ class Activator {
 				 * to enter both instead of two separate messages
 				 */
 				self::empty_creds_message();
-			} else {
+			} else if (Addon::is_plugin_disabled()) {
 				self::empty_wa_message();
 			}
 			return;

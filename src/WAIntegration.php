@@ -1321,9 +1321,9 @@ class WAIntegration {
 		try {
 			$dataEncryption = new DataEncryption();
 			$wild_apricot_url =	esc_url($dataEncryption->decrypt($wild_apricot_url));
-		} catch (EncryptionException $e) {
-			Log::wap_log_error($e->getMessage());
-			add_filter('the_content', array($this, 'add_login_server_error'));
+		} catch (DecryptionException $e) {
+			Log::wap_log_error($e->getMessage(), true);
+			return Exception::get_user_facing_error_message();
 			return;
 		}
 

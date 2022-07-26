@@ -480,14 +480,14 @@ class Addon {
         $name = self::get_title($slug);
 
         if (self::is_expired($exp_date)) {
-            Log::wap_log_error('License key for ' . $name . ' has expired.');
+            Log::wap_log_warning('License key for ' . $name . ' has expired.');
         }
 
         // Ensure that this license key is valid for the associated Wild Apricot ID and website
         $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
 
         if (!$valid_urls_and_ids) {
-            Log::wap_log_error('License key for' . $name . 'invalid for your Wild Apricot account and/or website');
+            Log::wap_log_warning('License key for' . $name . 'invalid for your Wild Apricot account and/or website');
             return false;
         }
 

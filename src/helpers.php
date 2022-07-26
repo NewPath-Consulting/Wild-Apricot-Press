@@ -144,8 +144,8 @@ function disable_core() {
 function refresh_credentials() {
     try {
         WAWPApi::verify_valid_access_token();
-    } catch (APIException $e) {
-        Log::wap_log_error($e->getMessage(), 1);
+    } catch (Exception $e) {
+        Log::wap_log_error($e->getMessage(), true);
         return false;
     }
     // if we're here the WA creds are still valid
@@ -155,7 +155,7 @@ function refresh_credentials() {
         // check for correct license properties
         $new_license = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
     } catch (Exception $e) {
-        Log::wap_log_error($e->getMessage());
+        Log::wap_log_error($e->getMessage(), true);
         return false;
     }
 
