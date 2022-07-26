@@ -63,7 +63,9 @@ class Log {
      * @param string $msg message to print
      * @return void
      */
-    static public function wap_log_warning($msg) {}
+    static public function wap_log_warning($msg) {
+        self::print_message($msg, self::LOG_WARNING);
+    }
 
     static public function wap_log_debug($msg) {
         self::print_message($msg, self::LOG_DEBUG);
