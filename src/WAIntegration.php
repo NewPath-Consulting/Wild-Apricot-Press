@@ -83,10 +83,10 @@ class WAIntegration {
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
-		add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
+		// add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
 		add_action('init', array($this, 'check_updated_credentials'));
 		// Action for Cron job that refreshes the license check
-		add_action(self::LICENSE_CHECK_HOOK, array($this, 'check_updated_credentials'));
+		add_action(self::LICENSE_CHECK_HOOK, 'WAWP\Addon::update_licenses');
 		// Action for when user tries to access admin page
 		add_action('admin_page_access_denied', array($this, 'tell_user_to_logout'));
 		// add_filter('the_content', array($this, 'login_access_denied'));
@@ -127,47 +127,26 @@ class WAIntegration {
 	public function check_updated_credentials() {
 		// Ensure that credentials have been already entered
 		$has_valid_wa_credentials = self::valid_wa_credentials();
-		$license_status = Addon::get_license_check_option(CORE_SLUG);
 
+		// see if credentials have gone invalid since last check
 		if ($has_valid_wa_credentials) {
 			try {
 				WAWPApi::verify_valid_access_token();
 			} catch (Exception $e) {
 				$has_valid_wa_credentials = false;
-				Log::wap_log_error($e->getMessage(), true);
 			}
 		}
 
-		/**
-		 * check the license regardless of the value of $has_valid_license since
-		 * the license could be marked invalid simply because the plugin has been disabled.
-		 * but it should still be checked in the case that the plugin had a fatal
-		 * error that has been corrected
-		 */
-		try {
-			// check for correct license properties
-			$current_license_key = Addon::get_license(CORE_SLUG);
-			$new_license_status = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
-		} catch (Exception $e) {
-			$has_valid_license = false;
-			Log::wap_log_error($e->getMessage(), true);
+		// re-validate license only if the plugin has been disabled
+		if (Addon::is_plugin_disabled() && !Exception::fatal_error()) {
+			Addon::update_licenses();
 		}
 
-		// update new license status
-		// invalid if license was found to be invalid
-		// not entered if only WA creds are invalid
-		// license status is subject to change based on the request made
-		if ($new_license_status == Addon::LICENSE_STATUS_ENTERED_EMPTY || !$has_valid_wa_credentials) {
-			$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
-		} else if (is_null($new_license_status)) {
-			$license_status = Addon::LICENSE_STATUS_INVALID;
-		} else {
-			Addon::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_VALID);
-			$has_valid_license = true;
-		}
+		$has_valid_license = Addon::has_valid_license(CORE_SLUG);
+		$license_status = Addon::get_license_check_option(CORE_SLUG);
 
+		// if there's been a fatal error or there are invalid creds then disable
 		if (Exception::fatal_error() || !$has_valid_license || !$has_valid_wa_credentials) {
-			// disable plugin since one or both of the creds are invalid
 			do_action('disable_plugin', CORE_SLUG, $license_status);
 		} else {
 			// if neither of the creds are invalid, do creds obtained action
@@ -576,6 +555,7 @@ class WAIntegration {
 	 * @param WP_Post $post holds the current post
 	 */
 	public function post_access_load_restrictions($post_id, $post) {
+		if (Exception::fatal_error()) return;
 		// if this is the WA login page, return to avoid unneccessary invalid nonce log message
 		// if (str_contains(get_the_guid($post), 'wild-apricot-login')) return;
 		// if it's not the post edit page, don't do this

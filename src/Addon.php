@@ -391,6 +391,33 @@ class Addon {
         return get_option(self::WAWP_DISABLED_OPTION);
     }
 
+    public static function update_licenses() {
+
+        $licenses = self::get_licenses();
+        if (is_null($licenses)) {
+            do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
+            return;
+        }
+
+        foreach (self::get_licenses() as $slug => $license) {
+            try {
+                $new_license = self::validate_license_key($license, $slug);    
+            } catch (Exception $e) {
+                Log::wap_log_error($e->getMessage(), true);
+                $new_license = Addon::LICENSE_STATUS_ENTERED_EMPTY;
+            }
+            
+            if ($new_license == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
+                $new_license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
+            } else if (is_null($new_license)) {
+                $new_license_status = Addon::LICENSE_STATUS_INVALID;
+            } else {
+                $new_license_status = Addon::LICENSE_STATUS_VALID;
+            }
+            self::update_license_check_option($slug, $new_license_status);
+        }
+    }  
+
     /**
      * Validates the license key.
      * @param string $license_key_input license key from the input form.
