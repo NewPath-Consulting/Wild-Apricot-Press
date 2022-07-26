@@ -743,7 +743,7 @@ class MySettingsPage
                     <!-- Wild Apricot credentials form -->
 					<form method="post" action="options.php">
 					<?php
-                        $wild_apricot_url = $this->check_wild_apricot_url();
+
                         // Nonce for verification
                         wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
 						// This prints out all hidden setting fields
@@ -754,6 +754,7 @@ class MySettingsPage
 					</form>
 					<!-- Check if form is valid -->
 					<?php
+                        $wild_apricot_url = $this->check_wild_apricot_url();
                         // if there's a fatal error don't display anything after credentials form
                         if (Exception::fatal_error()) {
                             ?> </div> </div> </div> <?php
@@ -762,15 +763,7 @@ class MySettingsPage
                         // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
 						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
-						} else if (Addon::is_plugin_disabled()) {
-                            // close divs
-                            ?>
-                            </div>
-                            </div>
-                            </div>
-                            <?php
-                            return;
-                        } else { 
+						} else if ($wild_apricot_url) { 
                             
                             // successful login
 							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
@@ -929,7 +922,7 @@ class MySettingsPage
             <?php
             // Check if Wild Apricot credentials have been entered
             // If credentials have been entered (not empty) and plugin is not disabled, then we can present the license page
-            if (!Addon::is_plugin_disabled() && WAIntegration::valid_wa_credentials()) {
+            if (!Exception::fatal_error() && WAIntegration::valid_wa_credentials()) {
                 ?>
                 <form method="post" action="options.php">
                     <?php
@@ -1003,7 +996,6 @@ class MySettingsPage
             // wp_die('Your plugin options could not be verified.');
         } 
         $valid = array();
-        Log::wap_log_debug($input);
         // Loop through input array and sanitize each value
         if (!empty($input)) {
             foreach ($input as $in_key => $in_value) {

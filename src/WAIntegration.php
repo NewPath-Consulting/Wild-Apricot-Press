@@ -127,7 +127,6 @@ class WAIntegration {
 	public function check_updated_credentials() {
 		// Ensure that credentials have been already entered
 		$has_valid_wa_credentials = self::valid_wa_credentials();
-		$has_valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 		$license_status = Addon::get_license_check_option(CORE_SLUG);
 
 		if ($has_valid_wa_credentials) {
@@ -166,7 +165,6 @@ class WAIntegration {
 			Addon::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_VALID);
 			$has_valid_license = true;
 		}
-
 
 		if (Exception::fatal_error() || !$has_valid_license || !$has_valid_wa_credentials) {
 			// disable plugin since one or both of the creds are invalid
@@ -328,8 +326,8 @@ class WAIntegration {
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
 			$login_page = get_post($login_page_id, 'ARRAY_A');
 			// restore the login content and title
-			$login_page['post_title'] = 'Login with your Wild Apricot credentials';
-			$login_page['post_content'] = '[wawp_custom_login_form]';
+			$login_page['post_title'] = $login_title;
+			$login_page['post_content'] = $login_content;
 			wp_update_post($login_page);
 			// Add user roles
 			$saved_wa_roles = get_option('wawp_all_levels_key');
@@ -371,11 +369,6 @@ class WAIntegration {
 	 * Sets the login page to private if the plugin is deactivated or invalid credentials are entered
 	 */
 	public function remove_wild_apricot_integration() {
-		delete_metadata('post', 0, self::RESTRICTED_GROUPS, '', true);
-		delete_metadata('post', 0, self::RESTRICTED_LEVELS, '', true);
-		delete_metadata('post', 0, self::IS_POST_RESTRICTED, '', true);
-		delete_metadata('post', 0, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, '', true);
-
 		// TODO don't use jquery
 		// remove from menu page
 		?> <script> jQuery('#wawp_login_logout_button').remove(); </script> <?php
@@ -456,14 +449,13 @@ class WAIntegration {
 	 * @return string $post_content is the new post content - either the original post content if the post is not restricted, or the restriction message if otherwise
 	 */
 	public function restrict_post_wa($post_content) {
-		Log::wap_log_debug('hello');
-		Log::wap_log_debug(Exception::fatal_error());
 		// Get ID of current post
 		$current_post_ID = get_queried_object_id();
 		// Check if valid Wild Apricot credentials have been entered
 		$valid_wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
 		$is_post_restricted = get_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, true); // return single value
 		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
+
 		if (!$is_post_restricted) return $post_content;
 		$wawp_licenses = get_option(self::WAWP_LICENSES_KEY);
 		if (is_singular() && !Addon::is_plugin_disabled() && !Exception::fatal_error() && Addon::has_valid_license(CORE_SLUG) && self::valid_wa_credentials()) {
@@ -588,8 +580,6 @@ class WAIntegration {
 		// if (str_contains(get_the_guid($post), 'wild-apricot-login')) return;
 		// if it's not the post edit page, don't do this
 		if (!is_post_edit_page()) return;
-		Log::wap_log_debug($_POST['wawp_post_access_control']);
-		Log::wap_log_debug($_POST);
 
 		// Verify the nonce before proceeding
 		if (!isset($_POST['wawp_post_access_control']) || !wp_verify_nonce($_POST['wawp_post_access_control'], basename(__FILE__))) {
@@ -749,7 +739,6 @@ class WAIntegration {
 		$all_membership_levels = get_option('wawp_all_levels_key');
 		$all_membership_groups = get_option('wawp_all_groups_key');
 		$current_post_id = $post->ID;
-		Log::wap_log_debug('post access display');
 
 		// Add a nonce field to check on save
 		wp_nonce_field(basename(__FILE__), 'wawp_post_access_control', 10, 2);
@@ -838,7 +827,6 @@ class WAIntegration {
 	 * Adds post meta box when editing a post
 	 */
 	public function post_access_add_post_meta_boxes() {
-		Log::wap_log_debug('post access add post meta boxes');
 		// Get post types to add the meta boxes to
 		// Get all post types, including built-in WordPress post types and custom post types
 		$post_types = get_post_types(array('public' => true));
@@ -868,9 +856,7 @@ class WAIntegration {
 	 * Sets up the post meta data for Wild Apricot access control if valid Wild Apricot credentials have already been entered
 	 */
 	public function post_access_meta_boxes_setup() {
-		Log::wap_log_debug('post access meta boxes setup');
 		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
-		Log::wap_log_debug(Addon::is_plugin_disabled());
 		if (!Addon::is_plugin_disabled() && self::valid_wa_credentials() && Addon::has_valid_license(CORE_SLUG)) {
 			// Add meta boxes on the 'add_meta_boxes' hook
 			add_action('add_meta_boxes', array($this, 'post_access_add_post_meta_boxes'));
@@ -1284,6 +1270,8 @@ class WAIntegration {
 				} catch (Exception $e) {
 					Log::wap_log_error($e->getMessage(), true);
 					add_filter('the_content', array($this, 'add_login_server_error'));
+					// TODO hide login button
+					// client side?
 					return;
 				}
 
@@ -1362,6 +1350,7 @@ class WAIntegration {
 	public function create_wa_login_logout($items, $args) {
 		// First, check if Wild Apricot credentials and the license is valid
 		if (self::valid_wa_credentials() && Addon::has_valid_license(CORE_SLUG)) {
+			self::create_login_page();
 			// Check the restrictions of each item in header IF the header is not blank
 			if (!empty($items)) {
 				// Get navigation items

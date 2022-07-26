@@ -61,10 +61,7 @@ $wa_integration_instance = new WAWP\WAIntegration();
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {
-	// WAWP\Log::wap_log_debug('register deactivation hook');
 	WAWP\Deactivator::deactivate();
 } );
-
-// WAWP\Log::wap_log_debug('in plugin.php');
 
 ?>
