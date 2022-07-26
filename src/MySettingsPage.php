@@ -870,7 +870,7 @@ class MySettingsPage
                 $dataEncryption = new DataEncryption();
                 $wild_apricot_url = esc_url($dataEncryption->decrypt($wild_apricot_url));
             }
-        } catch (EncryptionException $e) {
+        } catch (DecryptionException $e) {
             Log::wap_log_error($e->getMessage(), true);
             return false;
         }

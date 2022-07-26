@@ -10,14 +10,18 @@ class DataEncryption {
 
 	// Constructor for class
 	public function __construct() {	
-		$this->key = $this->get_default_key();
-		$this->salt = $this->get_default_salt();
+		try {
+			$this->key = $this->get_default_key();
+			$this->salt = $this->get_default_salt();
+		} catch (EncryptionException $e) {
+			Log::wap_log_error($e->getMessage(), true);
+		}
 
-		// remove exception flag if there are no errors
-		EncryptionException::remove_error();
+
 	}
 
 	public function encrypt( $value ) {
+		// throw new EncryptionException('encryption error test');
 		if ( ! extension_loaded( 'openssl' ) ) {
 			throw new EncryptionException(EncryptionException::openssl_error());
 		}
@@ -40,8 +44,9 @@ class DataEncryption {
 	}
 
 	public function decrypt( $raw_value ) {
+		// throw new DecryptionException('decryption error test');
 		if ( ! extension_loaded( 'openssl' ) ) {
-			throw new EncryptionException(EncryptionException::openssl_error());
+			throw new DecryptionException(EncryptionException::openssl_error());
 		}
 
 		if (empty($raw_value)) return $raw_value;
@@ -59,9 +64,9 @@ class DataEncryption {
 
 		$value = openssl_decrypt( $raw_value, $method, $this->key, 0, $iv );
 		if ( ! $value || substr( $value, - strlen( $this->salt ) ) !== $this->salt ) {
-			throw new EncryptionException(EncryptionException::decrypt_error());
+			throw new DecryptionException(DecryptionException::decrypt_error());
 		} else {
-			EncryptionException::remove_error();
+			DecryptionException::remove_error();
 		}
 		
 

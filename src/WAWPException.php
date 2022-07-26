@@ -41,7 +41,7 @@ abstract class Exception extends \Exception {
     public static function remove_error() {
         refresh_credentials();
         if (Addon::has_valid_license(CORE_SLUG) && WAIntegration::valid_wa_credentials() && self::fatal_error()) {
-            delete_option(self::EXCEPTION_OPTION);
+            // delete_option(self::EXCEPTION_OPTION);
             update_option(Addon::WAWP_DISABLED_OPTION, false);
         }
 
@@ -108,9 +108,10 @@ class APIException extends Exception {
     }
 
     public static function remove_error() {
-        if (get_option(self::EXCEPTION_OPTION) == self::ERROR_DESCRIPTION) {
-            delete_option(self::EXCEPTION_OPTION);
-        }
+        if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
+       
+        // parent::remove_error();
+        delete_option(self::EXCEPTION_OPTION);
     }
 
 }
@@ -120,7 +121,17 @@ class APIException extends Exception {
  */
 class EncryptionException extends Exception {
 
-    const ERROR_DESCRIPTION = 'securing your data';
+    const ERROR_DESCRIPTION = 'encrypting your data';
+
+    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
+        if (empty($message)) $message = self::encrypt_error();
+        parent::__construct($message, $code, $previous);
+        if (!Addon::is_plugin_disabled()) {
+            update_option(Addon::WAWP_DISABLED_OPTION, true);
+        }
+        update_option(self::EXCEPTION_OPTION, $this->get_error_type());
+
+    }
 
     public static function openssl_error() {
         return 'OpenSSL not installed.';
@@ -130,14 +141,41 @@ class EncryptionException extends Exception {
         return 'There was an error with encryption.';
     }
 
-    public static function decrypt_error() {
-        return 'There was an error with decryption.';
+    public static function remove_error() {
+        if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
+       
+        // parent::remove_error();
+        delete_option(self::EXCEPTION_OPTION);
     }
 
-    public static function remove_error() {
-        if (get_option(self::EXCEPTION_OPTION) == self::ERROR_DESCRIPTION) {
-            delete_option(self::EXCEPTION_OPTION);
+    protected function get_error_type() {
+        return self::ERROR_DESCRIPTION;
+    }
+}
+
+class DecryptionException extends Exception {
+    const ERROR_DESCRIPTION = 'decrypting your data';
+
+    public function __construct($message = '', $code = 0, \Throwable $previous = null) {
+        if (empty($message)) $message = self::decrypt_error();
+        parent::__construct($message, $code, $previous);
+        if (!Addon::is_plugin_disabled()) {
+            update_option(Addon::WAWP_DISABLED_OPTION, true);
         }
+        update_option(self::EXCEPTION_OPTION, $this->get_error_type());
+
+    }
+
+
+    public static function remove_error() {
+        if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
+       
+        // parent::remove_error();
+        delete_option(self::EXCEPTION_OPTION);
+    }
+
+    public static function decrypt_error() {
+        return 'There was an error with decryption.';
     }
 
     protected function get_error_type() {

@@ -131,12 +131,10 @@ class Addon {
         $is_licensing_page = is_licensing_submenu();
         $is_plugin_page = is_plugin_page();
 
-        // Log::wap_log_debug('Addon::license_admin_notices');
         // loop through all addons
         foreach(self::get_addons() as $slug => $data) {
             // grab the license status from options table
             $license_status = self::get_license_check_option($slug);
-            if (is_core($slug)) $core_license_status = $license_status;
 
             // some messages will only be shown as a feedback message when license is entered
             if (license_submitted()) {
@@ -215,7 +213,7 @@ class Addon {
             if (empty($license)) { continue; }
             try {
                 $licenses[$slug] = self::$data_encryption->decrypt($license);
-            } catch(EncryptionException $e) {
+            } catch(DecryptionException $e) {
                 Log::wap_log_error($e->getMessage(), true);
                 $licenses[$slug] = '';
             }

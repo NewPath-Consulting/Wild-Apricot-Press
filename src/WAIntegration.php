@@ -135,7 +135,7 @@ class WAIntegration {
 				WAWPApi::verify_valid_access_token();
 			} catch (Exception $e) {
 				$has_valid_wa_credentials = false;
-				Log::wap_log_error($e->getMessage(), 1);
+				Log::wap_log_error($e->getMessage(), true);
 			}
 		}
 
@@ -145,14 +145,13 @@ class WAIntegration {
 		 * but it should still be checked in the case that the plugin had a fatal
 		 * error that has been corrected
 		 */
-		$current_license_key = Addon::get_license(CORE_SLUG);
-
 		try {
 			// check for correct license properties
+			$current_license_key = Addon::get_license(CORE_SLUG);
 			$new_license_status = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
 		} catch (Exception $e) {
 			$has_valid_license = false;
-			Log::wap_log_error($e->getMessage());
+			Log::wap_log_error($e->getMessage(), true);
 		}
 
 		// update new license status
