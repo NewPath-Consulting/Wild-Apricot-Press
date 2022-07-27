@@ -13,7 +13,7 @@ Wild Apricot Press enables WordPress websites to support the Wild Apricot member
 Wild Apricot Press (WAP) Documentation
 
 ## Version 1.0b4 - July x, 2022
-- adding WAP global debug switch to taggle error logging
+- adding WAP global debug switch to toggle error logging
 - finished all sanitization/escape output text to support submission to WordPress plugin repo
 
 ## Version 1.0b3 - June 30, 2022
