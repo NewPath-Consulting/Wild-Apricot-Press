@@ -76,7 +76,7 @@ class WAIntegration {
 		// Loads in restricted groups/levels when post is saved
 		add_action('save_post', array($this, 'post_access_load_restrictions'), 10, 2); // changed to all types of posts
 		// On post load check if the post can be accessed by the current user
-		add_action('the_content', array($this, 'restrict_post_wa'));
+		add_filter('the_content', array($this, 'restrict_post_wa'));
 		// Action for creating 'select all' checkboxes
 		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 		// Action for user refresh cron hook
@@ -429,6 +429,7 @@ class WAIntegration {
 	 * @return string $post_content is the new post content - either the original post content if the post is not restricted, or the restriction message if otherwise
 	 */
 	public function restrict_post_wa($post_content) {
+		// TODO: fix restriction message appearing in header and footer
 		// Get ID of current post
 		$current_post_ID = get_queried_object_id();
 		
@@ -645,6 +646,8 @@ class WAIntegration {
 			$individual_message = wp_kses_post($individual_message);
 			// Save to post meta data
 			update_post_meta($post_id, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, $individual_message);
+		} else {
+			delete_post_meta($post_id, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
 		}
 	}
 
