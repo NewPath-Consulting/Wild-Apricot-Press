@@ -16,8 +16,8 @@ use \DateTime; // for checking license key expiration dates
  * For managing the Addon plugins for WAWP
  */
 class Addon {
-    // const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
-    const HOOK_URL = 'https://newpathconsulting.com/checkdev';
+
+    const HOOK_URL = 'https://newpathconsulting.com/check';
 
     const FREE_ADDONS = array(0 => CORE_SLUG);
     const PAID_ADDONS = array(0 => 'wawp-addon-wa-iframe');
@@ -400,6 +400,8 @@ class Addon {
         }
 
         foreach (self::get_licenses() as $slug => $license) {
+            // if empty, don't send the request
+            if (empty($license)) return;
             try {
                 $new_license = self::validate_license_key($license, $slug);    
             } catch (Exception $e) {
@@ -427,11 +429,14 @@ class Addon {
     public static function validate_license_key($license_key_input, $addon_slug) {
         // if license key is empty, do nothing
         if (empty($license_key_input)) return self::LICENSE_STATUS_ENTERED_EMPTY;
+        
         // escape input
         $license_key = self::escape_license($license_key_input);
 
-        // if license hasn't changed, return it
-        // avoid making expensive request
+        // if escaped key doesn't match input, it's invalid
+        if ($license_key != $license_key_input) return null;
+
+        // if license hasn't changed, return it to avoid making expensive request
         if (self::get_license($addon_slug) == $license_key) return $license_key;
 
         // check key against integromat scenario
@@ -451,20 +456,13 @@ class Addon {
      * @param array $data request data containing license key and JSON flag
      * @return array JSON response data 
      */
-    public static function post_request($data) {
+    private static function post_request($data) {
 
-        // get integromat hook url from redirect
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, self::HOOK_URL);
-        curl_setopt($curl, CURLOPT_HEADER, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-        curl_exec($curl);
-        $url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
+        $url = self::get_hook_url();
 
         // send request to hook url
         $options = array(
-                'http' => array(
+            'http' => array(
                 'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
                 'method'  => 'POST',
                 'content' => http_build_query($data)
@@ -475,6 +473,27 @@ class Addon {
         $result = json_decode(file_get_contents($url, false, $context), 1);
 
         return $result;
+    }
+
+    private static function get_hook_url() {
+        // check for dev flag
+        $hook_url = self::HOOK_URL;
+
+        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
+            $hook_url = $hook_url . 'dev';
+        }
+        Log::wap_log_debug($hook_url);
+
+        // get integromat hook url from redirect
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $hook_url);
+        curl_setopt($curl, CURLOPT_HEADER, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_exec($curl);
+        $url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
+
+        return $url;
     }
 
     /**

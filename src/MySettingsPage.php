@@ -6,12 +6,6 @@ require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/WAWPException.php';
 
-use WAWP\Addon;
-use WAWP\Log;
-
-
-use function PHPSTORM_META\map;
-
 class MySettingsPage
 {
     const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
@@ -1203,7 +1197,7 @@ class MySettingsPage
 
         foreach($input as $slug => $license) {
             try {
-                $key = Addon::instance()::validate_license_key($license, $slug);    
+                $key = Addon::instance()::validate_license_key($license, $slug); 
             } catch (Exception $e) {
                 Log::wap_log_error($e->getMessage(), true);
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_NOT_ENTERED);
