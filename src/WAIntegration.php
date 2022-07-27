@@ -3,10 +3,6 @@ namespace WAWP;
 
 // For iterating through menu HTML
 use DOMDocument;
-use DOMAttr;
-use WAWP\Log;
-use WAWP\Addon;
-use WP_Screen;
 
 require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/Addon.php';
@@ -18,34 +14,39 @@ require_once __DIR__ . '/helpers.php';
  */
 class WAIntegration {
 	// Constants for keys used for database management
-	const WA_CREDENTIALS_KEY = 'wawp_wal_name';
-	const WAWP_LICENSES_KEY = 'wawp_license_keys';
-	const WA_API_KEY_OPT = 'wawp_wal_api_key';
-	const WA_CLIENT_ID_OPT = 'wawp_wal_client_id';
-	const WA_CLIENT_SECRET_OPT = 'wawp_wal_client_secret';
-	const WA_USER_ID_KEY = 'wawp_wa_user_id';
-	const WA_MEMBERSHIP_LEVEL_KEY = 'wawp_membership_level_key';
-	const WA_MEMBERSHIP_LEVEL_ID_KEY = 'wawp_membership_level_id_key';
-	const WA_USER_STATUS_KEY = 'wawp_user_status_key';
-	const WA_ORGANIZATION_KEY = 'wawp_organization_key';
-	const WA_MEMBER_GROUPS_KEY = 'wawp_list_of_groups_key';
-	const WA_ALL_MEMBERSHIPS_KEY = 'wawp_all_levels_key';
-	const RESTRICTED_GROUPS = 'wawp_restricted_groups';
-	const RESTRICTED_LEVELS = 'wawp_restricted_levels';
-	const IS_POST_RESTRICTED = 'wawp_is_post_restricted';
-	const ARRAY_OF_RESTRICTED_POSTS = 'wawp_array_of_restricted_posts';
-	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY = 'wawp_individual_restriction_message_key';
-	const ADMIN_ACCOUNT_ID_TRANSIENT = 'wawp_admin_account_id';
-	const ADMIN_ACCESS_TOKEN_TRANSIENT = 'wawp_admin_access_token';
-	const ADMIN_REFRESH_TOKEN_OPTION = 'wawp_admin_refresh_token';
-	const LIST_OF_CUSTOM_FIELDS = 'wawp_list_of_custom_fields';
-	const LIST_OF_CHECKED_FIELDS = 'wawp_fields_name';
-	const USER_ADDED_BY_PLUGIN = 'wawp_user_added_by_plugin';
-	const MENU_LOCATIONS_KEY = 'wawp_menu_location_name';
-	const WA_URL_KEY = 'wawp_wa_url_key';
+	const WA_CREDENTIALS_KEY 					= 'wawp_wal_name';
+	const WA_API_KEY_OPT 						= 'wawp_wal_api_key';
+	const WA_CLIENT_ID_OPT 						= 'wawp_wal_client_id';
+	const WA_CLIENT_SECRET_OPT 					= 'wawp_wal_client_secret';
+	const WA_USER_ID_KEY 						= 'wawp_wa_user_id';
+	const WA_MEMBERSHIP_LEVEL_KEY 				= 'wawp_membership_level_key';
+	const WA_MEMBERSHIP_LEVEL_ID_KEY			= 'wawp_membership_level_id_key';
+	const WA_USER_STATUS_KEY 					= 'wawp_user_status_key';
+	const WA_ORGANIZATION_KEY 					= 'wawp_organization_key';
+	const WA_MEMBER_GROUPS_KEY 					= 'wawp_list_of_groups_key';
+	const WA_ALL_MEMBERSHIPS_KEY 				= 'wawp_all_levels_key';
+	const WA_ALL_GROUPS_KEY						= 'wawp_all_groups_key';
+	const RESTRICTED_GROUPS 					= 'wawp_restricted_groups';
+	const RESTRICTED_LEVELS 					= 'wawp_restricted_levels';
+	const IS_POST_RESTRICTED 					= 'wawp_is_post_restricted';
+	const ARRAY_OF_RESTRICTED_POSTS 			= 'wawp_array_of_restricted_posts';
+	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY	= 'wawp_individual_restriction_message_key';
+	const GLOBAL_RESTRICTION_MESSAGE			= 'wawp_global_restriction_message';
+	const RESTRICTION_STATUS					= 'wawp_restriction_status_name';
+	const ADMIN_ACCOUNT_ID_TRANSIENT 			= 'wawp_admin_account_id';
+	const ADMIN_ACCESS_TOKEN_TRANSIENT 			= 'wawp_admin_access_token';
+	const ADMIN_REFRESH_TOKEN_OPTION 			= 'wawp_admin_refresh_token';
+	const LIST_OF_CUSTOM_FIELDS 				= 'wawp_list_of_custom_fields';
+	const LIST_OF_CHECKED_FIELDS 				= 'wawp_fields_name';
+	const USER_ADDED_BY_PLUGIN 					= 'wawp_user_added_by_plugin';
+	const MENU_LOCATIONS_KEY 					= 'wawp_menu_location_name';
+	const WA_URL_KEY 							= 'wawp_wa_url_key';
+	const WA_DELETE_OPTION 						= 'wawp_delete_name';
+	const LOGIN_PAGE_ID_OPT						= 'wawp_wal_page_id';
+	
 	// Custom hooks
-	const USER_REFRESH_HOOK = 'wawp_cron_refresh_user_hook';
-	const LICENSE_CHECK_HOOK = 'wawp_cron_refresh_license_check';
+	const USER_REFRESH_HOOK 					= 'wawp_cron_refresh_user_hook';
+	const LICENSE_CHECK_HOOK 					= 'wawp_cron_refresh_license_check';
 
 	/**
 	 * Constructs an instance of the WAIntegration class
@@ -270,7 +271,7 @@ class WAIntegration {
      * Creates a daily CRON job to check that the license matches
      */
     public static function setup_license_check_cron() {
-        $license_hook_name = WAIntegration::LICENSE_CHECK_HOOK;
+        $license_hook_name = self::LICENSE_CHECK_HOOK;
         if (!wp_next_scheduled($license_hook_name)) {
             wp_schedule_event(time(), 'daily', $license_hook_name);
         }
@@ -301,7 +302,7 @@ class WAIntegration {
 		);
 
 		// Check if Login page exists first
-		$login_page_id = get_option('wawp_wal_page_id');
+		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
 			$login_page = get_post($login_page_id, 'ARRAY_A');
 			// restore the login content and title
@@ -309,7 +310,7 @@ class WAIntegration {
 			$login_page['post_content'] = $login_content;
 			wp_update_post($login_page);
 			// Add user roles
-			$saved_wa_roles = get_option('wawp_all_levels_key');
+			$saved_wa_roles = get_option(self::WA_ALL_MEMBERSHIPS_KEY);
 			// Loop through roles and add them as roles to WordPress
 			if (!empty($saved_wa_roles)) {
 				foreach ($saved_wa_roles as $role) {
@@ -320,12 +321,12 @@ class WAIntegration {
 			// insert the post
 			$page_id = wp_insert_post($post_details, FALSE);
 			// Add page id to options so that it can be removed on deactivation
-			update_option('wawp_wal_page_id', $page_id);
+			update_option(self::LOGIN_PAGE_ID_OPT, $page_id);
 		}
 		// Remove new login page from menu
 		// https://wordpress.stackexchange.com/questions/86868/remove-a-menu-item-in-menu
 		// https://stackoverflow.com/questions/52511534/wordpress-wp-insert-post-adds-page-to-the-menu
-		$page_id = get_option('wawp_wal_page_id');
+		$page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		$menu_item_ids = wp_get_associated_nav_menu_items($page_id, 'post_type');
 		// Loop through ids and remove
 		foreach ($menu_item_ids as $menu_item_id) {
@@ -337,7 +338,7 @@ class WAIntegration {
 	public function login_access_denied() {
 		if (!is_user_login_page()) return;
 		
-		$login_page_id = get_option('wawp_wal_page_id');
+		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (!$login_page_id || empty($login_page_id)) return;
 
 		$login_page = get_post($login_page_id, ARRAY_A);
@@ -362,7 +363,7 @@ class WAIntegration {
 		}
 
 		// Check if login page exists
-		$login_page_id = get_option('wawp_wal_page_id');
+		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (isset($login_page_id) && $login_page_id != '') { // Login page already exists
 			// Make login page private
 			// Set existing login page to publish
@@ -382,7 +383,7 @@ class WAIntegration {
 	 */
 	public function add_login_error($content) {
 		// Only run on wa4wp page
-		$login_page_id = get_option('wawp_wal_page_id');
+		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (is_page($login_page_id)) {
 			return $content . '<p style="color:red;">Invalid credentials! Please check that you have entered the correct email and password.
 			If you are sure that you entered the correct email and password, please contact your administrator.</p>';
@@ -398,7 +399,7 @@ class WAIntegration {
 	 */
 	public function add_login_server_error($content) {
 		// Only run on wa4wp page
-		$login_page_id = get_option('wawp_wal_page_id');
+		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (is_page($login_page_id)) {
 			return Exception::get_user_facing_error_message();
 		}
@@ -430,109 +431,112 @@ class WAIntegration {
 	public function restrict_post_wa($post_content) {
 		// Get ID of current post
 		$current_post_ID = get_queried_object_id();
-		// Check if valid Wild Apricot credentials have been entered
-		$valid_wa_credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
-		$is_post_restricted = get_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, true); // return single value
-		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
-
+		
+		// Check that this current post is restricted
+		$is_post_restricted = get_post_meta($current_post_ID, self::IS_POST_RESTRICTED, true);
 		if (!$is_post_restricted) return $post_content;
-		$wawp_licenses = get_option(self::WAWP_LICENSES_KEY);
-		if (is_singular() && !Addon::is_plugin_disabled() && !Exception::fatal_error() && Addon::has_valid_license(CORE_SLUG) && self::valid_wa_credentials()) {
-			// Check that this current post is restricted
-			
-			// Load in restriction message from message set by user
-			$restriction_message = wpautop(get_option('wawp_restriction_name'));
-			// Check if current post has a custom restriction message
-			$individual_restriction_message = wpautop(get_post_meta($current_post_ID, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true));
-			if (!empty($individual_restriction_message) && $individual_restriction_message != '') { // this post has an individual restriction message
-				$restriction_message = $individual_restriction_message;
-			}
-			// Append 'Log In' button and the styling div to the restriction message
-			$login_url = $this->get_login_link();
-			$restriction_message = '<div class="wawp_restriction_content_div">' . $restriction_message;
 
-			// Automatically restrict the post if user is not logged in
-			if (!is_user_logged_in()) {
-				$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. $login_url .'">Log In</a></li>';
-				$restriction_message .= '</div>';
-				return $restriction_message;
-			}
-			$restriction_message .= '</div>';
-			// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with Wild Apricot
-			// Get user's Wild Apricot ID -> if it does not exist, then the user is not synced with Wild Apricot
-			$current_user_ID = wp_get_current_user()->ID;
-			$user_wa_id = get_user_meta($current_user_ID, WAIntegration::WA_USER_ID_KEY, true);
-			if (empty($user_wa_id)) {
-				// Present notice that user is not synced with Wild Apricot
-				$restriction_message .= '<p style="color:red;">Please note that while you are logged into WordPress, you have not synced your account with Wild Apricot. Please <a href="'. $login_url .'">Log In</a> into your Wild Apricot account to sync your data in your WordPress site.</p>';
-				return $restriction_message;
-			}
-
-			// Get post meta data
-			// Get post's restricted groups
-			$post_restricted_groups = get_post_meta($current_post_ID, WAIntegration::RESTRICTED_GROUPS);
-			// Unserialize
-			$post_restricted_groups = maybe_unserialize($post_restricted_groups[0]);
-			// Get post's restricted levels
-			$post_restricted_levels = get_post_meta($current_post_ID, WAIntegration::RESTRICTED_LEVELS);
-			// Unserialize
-			$post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
-
-			// If no options are selected, then the post is unrestricted, as there cannot be a post with no viewers
-			if (empty($post_restricted_groups) && empty($post_restricted_levels)) {
-				update_post_meta($current_post_ID, WAIntegration::IS_POST_RESTRICTED, false);
-				return $post_content;
-			}
-
-			// Get user meta data
-			$user_groups = get_user_meta($current_user_ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
-			$user_level = get_user_meta($current_user_ID, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
-			$user_status = get_user_meta($current_user_ID, WAIntegration::WA_USER_STATUS_KEY, true);
-
-			// Check if user's status is allowed to view restricted posts
-			// Get restricted status(es) from options table
-			$restricted_statuses = get_option('wawp_restriction_status_name');
-			// If there are restricted statuses, then we must check them against the user's status
-			if (!empty($restricted_statuses)) {
-				// If user's status is not in the restricted statuses, then the user cannot see the post
-				if (!in_array($user_status, $restricted_statuses)) {
-					// User cannot access the post
-					return $restriction_message;
-				}
-			}
-
-			// Find common groups between the user and the post's restrictions
-			// If user_groups is null, then the user is not part of any groups
-			$common_groups = array();
-			if (!empty($user_groups) && !empty($post_restricted_groups)) {
-				$user_groups = maybe_unserialize($user_groups[0]);
-				// Get keys of each group
-				$user_groups = array_keys($user_groups);
-
-				// Check if post groups and user groups overlap
-				$common_groups = array_intersect($user_groups, $post_restricted_groups); // not empty if one or more of the user's groups are within the post's restricted groups
-			}
-
-			// Find common levels between the user and the post's restrictions
-			$common_level = false;
-			if (!empty($post_restricted_levels) && !empty($user_level)) {
-				$common_level = in_array($user_level, $post_restricted_levels); // true if the user's level is one of the post's restricted levels
-			}
-
-			// Determine if post should be restricted
-			if (empty($common_groups) && !$common_level) {
-				// Page should be restricted
-				return $restriction_message;
-			}
-		} else if (Exception::fatal_error()) {
+		if (Exception::fatal_error()) {
 			// if there is an exception, display exception error
 			return Exception::get_user_facing_error_message();
-
 		} else if (Addon::is_plugin_disabled()) {
+			// if plugin is disabled, display error message
 			$message = "<div class='wawp-disabled'>
-				<p>Wild Apricot Press is currently disabled. Please contact your site administrator.</p></div>";
+			<p>Wild Apricot Press is currently disabled. Please contact your site administrator.</p></div>";
 			return $message;
 		}
+
+		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
+		if (!is_singular() || !Addon::has_valid_license(CORE_SLUG) || !self::valid_wa_credentials()) return $post_content;
+
+		
+		
+		// Load in restriction message from message set by user
+		$restriction_message = wpautop(get_option(self::GLOBAL_RESTRICTION_MESSAGE));
+		// Check if current post has a custom restriction message
+		$individual_restriction_message = wpautop(get_post_meta($current_post_ID, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true));
+		if (!empty($individual_restriction_message)) { 
+			$restriction_message = $individual_restriction_message;
+		}
+		
+		// Append 'Log In' button and the styling div to the restriction message
+		$login_url = $this->get_login_link();
+		$restriction_message = '<div class="wawp_restriction_content_div">' . $restriction_message;
+
+		// Automatically restrict the post if user is not logged in
+		if (!is_user_logged_in()) {
+			$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. esc_url($login_url) .'">Log In</a></li>';
+			$restriction_message .= '</div>';
+			return $restriction_message;
+		}
+		$restriction_message .= '</div>';
+		// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with Wild Apricot
+		// Get user's Wild Apricot ID -> if it does not exist, then the user is not synced with Wild Apricot
+		$current_user_ID = wp_get_current_user()->ID;
+		$user_wa_id = get_user_meta($current_user_ID, self::WA_USER_ID_KEY, true);
+		if (empty($user_wa_id)) {
+			// Present notice that user is not synced with Wild Apricot
+			$restriction_message .= '<p style="color:red;">Please note that while you are logged into WordPress, you have not synced your account with Wild Apricot. Please <a href="'. esc_url($login_url) .'">Log In</a> into your Wild Apricot account to sync your data in your WordPress site.</p>';
+			return $restriction_message;
+		}
+
+		// Get post meta data
+		// Get post's restricted groups
+		$post_restricted_groups = get_post_meta($current_post_ID, self::RESTRICTED_GROUPS);
+		// Unserialize
+		$post_restricted_groups = maybe_unserialize($post_restricted_groups[0]);
+		// Get post's restricted levels
+		$post_restricted_levels = get_post_meta($current_post_ID, self::RESTRICTED_LEVELS);
+		// Unserialize
+		$post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
+
+		// If no options are selected, then the post is unrestricted, as there cannot be a post with no viewers
+		if (empty($post_restricted_groups) && empty($post_restricted_levels)) {
+			update_post_meta($current_post_ID, self::IS_POST_RESTRICTED, false);
+			return $post_content;
+		}
+
+		// Get user meta data
+		$user_groups = get_user_meta($current_user_ID, self::WA_MEMBER_GROUPS_KEY);
+		$user_level = get_user_meta($current_user_ID, self::WA_MEMBERSHIP_LEVEL_ID_KEY, true);
+		$user_status = get_user_meta($current_user_ID, self::WA_USER_STATUS_KEY, true);
+
+		// Check if user's status is allowed to view restricted posts
+		// Get restricted status(es) from options table
+		$restricted_statuses = get_option(self::RESTRICTION_STATUS);
+		// If there are restricted statuses, then we must check them against the user's status
+		if (!empty($restricted_statuses)) {
+			// If user's status is not in the restricted statuses, then the user cannot see the post
+			if (!in_array($user_status, $restricted_statuses)) {
+				// User cannot access the post
+				return $restriction_message;
+			}
+		}
+
+		// Find common groups between the user and the post's restrictions
+		// If user_groups is null, then the user is not part of any groups
+		$common_groups = array();
+		if (!empty($user_groups) && !empty($post_restricted_groups)) {
+			$user_groups = maybe_unserialize($user_groups[0]);
+			// Get keys of each group
+			$user_groups = array_keys($user_groups);
+
+			// Check if post groups and user groups overlap
+			$common_groups = array_intersect($user_groups, $post_restricted_groups); // not empty if one or more of the user's groups are within the post's restricted groups
+		}
+
+		// Find common levels between the user and the post's restrictions
+		$common_level = false;
+		if (!empty($post_restricted_levels) && !empty($user_level)) {
+			$common_level = in_array($user_level, $post_restricted_levels); // true if the user's level is one of the post's restricted levels
+		}
+
+		// Determine if post should be restricted
+		if (empty($common_groups) && !$common_level) {
+			// Page should be restricted
+			return $restriction_message;
+		}
+
 		// Return original post content if no changes are made
 		return $post_content;
 	}
@@ -585,16 +589,16 @@ class WAIntegration {
 		$this_post_is_restricted = false;
 		if (!empty($checked_groups_ids) || !empty($checked_levels_ids)) {
 			$this_post_is_restricted = true;
-			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, true);
+			update_post_meta($post_id, self::IS_POST_RESTRICTED, true);
 		}
 		// Set post's meta data to false if it is not restricted
 		if (!$this_post_is_restricted) {
-			update_post_meta($post_id, WAIntegration::IS_POST_RESTRICTED, false);
+			update_post_meta($post_id, self::IS_POST_RESTRICTED, false);
 		}
 
 		// Add this post to the 'restricted' posts in the options table so that its extra post meta data can be deleted upon uninstall
 		// Get current array of restricted post, if applicable
-		$site_restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
+		$site_restricted_posts = get_option(self::ARRAY_OF_RESTRICTED_POSTS);
 		$updated_restricted_posts = array();
 		// Possible cases here:
 		// If this post is NOT restricted and is already in $site_restricted_posts, then remove it
@@ -628,11 +632,11 @@ class WAIntegration {
 		$checked_levels_ids = maybe_serialize($checked_levels_ids);
 
 		// Store these levels and groups to this post's meta data
-		update_post_meta($post_id, WAIntegration::RESTRICTED_GROUPS, $checked_groups_ids); // only add single value
-		update_post_meta($post_id, WAIntegration::RESTRICTED_LEVELS, $checked_levels_ids); // only add single value
+		update_post_meta($post_id, self::RESTRICTED_GROUPS, $checked_groups_ids); // only add single value
+		update_post_meta($post_id, self::RESTRICTED_LEVELS, $checked_levels_ids); // only add single value
 
 		// Save updated restricted posts to options table
-		update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
+		update_option(self::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
 
 		// Save individual restriction message to post meta data
 		$individual_message = $wa_post_meta[self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY];
@@ -640,7 +644,7 @@ class WAIntegration {
 			// Filter restriction message
 			$individual_message = wp_kses_post($individual_message);
 			// Save to post meta data
-			update_post_meta($post_id, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, $individual_message);
+			update_post_meta($post_id, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, $individual_message);
 		}
 	}
 
@@ -648,6 +652,7 @@ class WAIntegration {
 	 * Allows for the 'select all' checkbox to select all boxes
 	 */
 	public function select_all_checkboxes_jquery() {
+		// TODO: issue get rid of jQuery
 		?>
 		<script language="javascript">
 			// Check all levels
@@ -694,7 +699,7 @@ class WAIntegration {
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
-		$initial_message = get_post_meta($current_post_id, WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true); // return single value
+		$initial_message = get_post_meta($current_post_id, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true); // return single value
 		// Set initial message to blank if there is no saved message
 		if (empty($initial_message)) {
 			$initial_message = '';
@@ -716,8 +721,8 @@ class WAIntegration {
 		// INCLUDE CHECKBOX FOR 'ALL MEMBERS AND CONTACTS'
 		// if no boxes are checked, then this post is available to everyone, including logged out users
 		// Load in saved membership levels
-		$all_membership_levels = get_option('wawp_all_levels_key');
-		$all_membership_groups = get_option('wawp_all_groups_key');
+		$all_membership_levels = get_option(self::WA_ALL_MEMBERSHIPS_KEY);
+		$all_membership_groups = get_option(self::WA_ALL_GROUPS_KEY);
 		$current_post_id = $post->ID;
 
 		// Add a nonce field to check on save
@@ -731,7 +736,7 @@ class WAIntegration {
             </li>
 			<?php
 			// Get checked levels from post meta data
-			$already_checked_levels = get_post_meta($current_post_id, WAIntegration::RESTRICTED_LEVELS);
+			$already_checked_levels = get_post_meta($current_post_id, self::RESTRICTED_LEVELS);
 			if (isset($already_checked_levels) && !empty($already_checked_levels)) {
 				$already_checked_levels = $already_checked_levels[0];
 			}
@@ -768,7 +773,7 @@ class WAIntegration {
             </li>
 			<?php
 			// Get checked groups from post meta data
-			$already_checked_groups = get_post_meta($current_post_id, WAIntegration::RESTRICTED_GROUPS);
+			$already_checked_groups = get_post_meta($current_post_id, self::RESTRICTED_GROUPS);
 			if (isset($already_checked_groups) && !empty($already_checked_groups)) {
 				$already_checked_groups = $already_checked_groups[0];
 			}
@@ -876,11 +881,11 @@ class WAIntegration {
 	 */
 	public function show_membership_level_on_profile($user) {
 		// Load in parameters from user's meta data
-		$membership_level = get_user_meta($user->ID, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, true);
-		$user_status = get_user_meta($user->ID, WAIntegration::WA_USER_STATUS_KEY, true);
-		$wa_account_id = get_user_meta($user->ID, WAIntegration::WA_USER_ID_KEY, true);
-		$organization = get_user_meta($user->ID, WAIntegration::WA_ORGANIZATION_KEY, true);
-		$user_groups = get_user_meta($user->ID, WAIntegration::WA_MEMBER_GROUPS_KEY);
+		$membership_level = get_user_meta($user->ID, self::WA_MEMBERSHIP_LEVEL_KEY, true);
+		$user_status = get_user_meta($user->ID, self::WA_USER_STATUS_KEY, true);
+		$wa_account_id = get_user_meta($user->ID, self::WA_USER_ID_KEY, true);
+		$organization = get_user_meta($user->ID, self::WA_ORGANIZATION_KEY, true);
+		$user_groups = get_user_meta($user->ID, self::WA_MEMBER_GROUPS_KEY);
 		// Create list of user groups, if applicable
 		$group_list = '';
 		if (!empty($user_groups)) {
@@ -1136,12 +1141,12 @@ class WAIntegration {
 		}
 
 		// Add Wild Apricot membership level to user's metadata
-		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
-		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
+		update_user_meta($current_wp_user_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
+		update_user_meta($current_wp_user_id, self::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
 		// Add Wild Apricot user status to user's metadata
-		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_STATUS_KEY, $user_status);
+		update_user_meta($current_wp_user_id, self::WA_USER_STATUS_KEY, $user_status);
 		// Add Wild Apricot organization to user's metadata
-		update_user_meta($current_wp_user_id, WAIntegration::WA_ORGANIZATION_KEY, $organization);
+		update_user_meta($current_wp_user_id, self::WA_ORGANIZATION_KEY, $organization);
 
 		// Get list of custom fields that user should import
 		$extra_custom_fields = get_option(self::LIST_OF_CHECKED_FIELDS);
@@ -1178,9 +1183,9 @@ class WAIntegration {
 		// Serialize the user groups array so that it can be added as user meta data
 		$user_groups_array = maybe_serialize($user_groups_array);
 		// Save to user's meta data
-		update_user_meta($current_wp_user_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
+		update_user_meta($current_wp_user_id, self::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 		// Save user id
-		update_user_meta($current_wp_user_id, WAIntegration::WA_USER_ID_KEY, $wild_apricot_user_id);
+		update_user_meta($current_wp_user_id, self::WA_USER_ID_KEY, $wild_apricot_user_id);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, $remember_user, is_ssl());
@@ -1191,7 +1196,7 @@ class WAIntegration {
 	 */
 	public function create_user_and_redirect() {
 		// Check that we are on the login page
-		$login_page_id = get_option('wawp_wal_page_id');
+		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (is_page($login_page_id)) {
 			// Get id of last page from url
 			// https://stackoverflow.com/questions/13652605/extracting-a-parameter-from-a-url-in-wordpress
@@ -1366,7 +1371,7 @@ class WAIntegration {
 									// Check if user's status is within the allowed status(es)
 									$users_status = get_user_meta($current_users_id, self::WA_USER_STATUS_KEY);
 									$users_status = $users_status[0];
-									$allowed_statuses = get_option('wawp_restriction_status_name');
+									$allowed_statuses = get_option(self::RESTRICTION_STATUS);
 									// If some statuses have been checked off, then that means that some statuses are restricted
 									$valid_status = true;
 									if (!empty($allowed_statuses) && !empty($users_status)) {

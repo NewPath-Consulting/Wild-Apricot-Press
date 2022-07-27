@@ -79,15 +79,15 @@ class WAWPApi {
 	 */
 	public static function load_user_credentials() {
 		// Load encrypted credentials from database
-		$credentials = get_option('wawp_wal_name');
+		$credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
 		$decrypted_credentials = array();
 		// Ensure that credentials are not empty
 		// Decrypt credentials
 		// Encryption exceptions will propogate up
 		$dataEncryption = new DataEncryption();
-		$decrypted_credentials['wawp_wal_api_key'] = $dataEncryption->decrypt($credentials['wawp_wal_api_key']);
-		$decrypted_credentials['wawp_wal_client_id'] = $dataEncryption->decrypt($credentials['wawp_wal_client_id']);
-		$decrypted_credentials['wawp_wal_client_secret'] = $dataEncryption->decrypt($credentials['wawp_wal_client_secret']);
+		$decrypted_credentials[WAIntegration::WA_API_KEY_OPT] = $dataEncryption->decrypt($credentials[WAIntegration::WA_API_KEY_OPT]);
+		$decrypted_credentials[WAIntegration::WA_CLIENT_ID_OPT] = $dataEncryption->decrypt($credentials[WAIntegration::WA_CLIENT_ID_OPT]);
+		$decrypted_credentials[WAIntegration::WA_CLIENT_SECRET_OPT] = $dataEncryption->decrypt($credentials[WAIntegration::WA_CLIENT_SECRET_OPT]);
 
 
 		return $decrypted_credentials;
@@ -234,7 +234,7 @@ class WAWPApi {
 	public function get_all_user_info() {
 		// Get all of the Wild Apricot users in the WordPress database
 		$users_args = array(
-			'meta_key' => 'wawp_wa_user_id',
+			'meta_key' => WAIntegration::WA_USER_ID_KEY,
 		);
 		$wa_users = get_users($users_args);
 
@@ -249,7 +249,7 @@ class WAWPApi {
 			// Get user email
 			$user_email = $wa_user->data->user_email;
 			// Get Wild Apricot ID
-			$wa_synced_id = get_user_meta($site_user_id, 'wawp_wa_user_id');
+			$wa_synced_id = get_user_meta($site_user_id, WAIntegration::WA_USER_ID_KEY);
 			$wa_synced_id = $wa_synced_id[0];
 			// Save to email to array indexed by WordPress ID
 			$user_emails_array[$site_user_id] = $user_email;
@@ -373,7 +373,7 @@ class WAWPApi {
 		$decrypted_credentials = self::load_user_credentials();
 		
 		// Encode API key
-		$authorization_string = $decrypted_credentials['wawp_wal_client_id'] . ':' . $decrypted_credentials['wawp_wal_client_secret'];
+		$authorization_string = $decrypted_credentials[WAIntegration::WA_CLIENT_ID_OPT] . ':' . $decrypted_credentials[WAIntegration::WA_CLIENT_SECRET_OPT];
 		$encoded_authorization_string = base64_encode($authorization_string);
 
 		// Perform API request
@@ -419,7 +419,7 @@ class WAWPApi {
 	/**
 	 * Returns the membership levels of the current Wild Apricot organization
 	 *
-	 * @return $membership_levels holds the membership levels from Wild Apricot
+	 * @return array $membership_levels holds the membership levels from Wild Apricot
 	 */
     public function get_membership_levels($request_groups = false) {
         $args = $this->request_data_args();

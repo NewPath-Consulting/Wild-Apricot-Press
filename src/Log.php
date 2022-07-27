@@ -19,10 +19,10 @@ class Log {
      * 
      * @var string
      */
-    const LOG_ERROR = 'ERROR';
-    const LOG_WARNING = 'WARNING';
-    const LOG_DEBUG = 'DEBUG';
-    const LOG_FATAL = 'FATAL ERROR';
+    const LOG_ERROR     = 'ERROR';
+    const LOG_WARNING   = 'WARNING';
+    const LOG_DEBUG     = 'DEBUG';
+    const LOG_FATAL     = 'FATAL ERROR';
 
     /**
      * Path of the log file to which messages will be printed.

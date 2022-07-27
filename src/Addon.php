@@ -28,15 +28,15 @@ class Addon {
         // false: default value, license key hasn't been entered yet
         // empty: license key entered (meaning form has been submitted) and the field was empty
         // invalid: invalid key entered
-    const WAWP_LICENSE_KEYS_OPTION = 'wawp_license_keys';
-    const WAWP_ADDON_LIST_OPTION = 'wawp_addons';
+    const WAWP_LICENSE_KEYS_OPTION      = 'wawp_license_keys';
+    const WAWP_ADDON_LIST_OPTION        = 'wawp_addons';
     const WAWP_ACTIVATION_NOTICE_OPTION = 'show_activation_notice';
-    const WAWP_DISABLED_OPTION = 'wawp_disabled';
+    const WAWP_DISABLED_OPTION          = 'wawp_disabled';
 
-    const LICENSE_STATUS_VALID = 'true';
-    const LICENSE_STATUS_INVALID = 'invalid';
-    const LICENSE_STATUS_ENTERED_EMPTY = 'empty';
-    const LICENSE_STATUS_NOT_ENTERED = 'false';
+    const LICENSE_STATUS_VALID          = 'true';
+    const LICENSE_STATUS_INVALID        = 'invalid';
+    const LICENSE_STATUS_ENTERED_EMPTY  = 'empty';
+    const LICENSE_STATUS_NOT_ENTERED    = 'false';
 
 
     private static $instance = null;
@@ -290,8 +290,8 @@ class Addon {
             delete_option('license-check-' . $slug);
         }
 
-        delete_option('wawp_addons');
-        delete_option('wawp_license_keys');
+        delete_option(self::WAWP_ADDON_LIST_OPTION);
+        delete_option(self::WAWP_LICENSE_KEYS_OPTION);
     }
 
     /**

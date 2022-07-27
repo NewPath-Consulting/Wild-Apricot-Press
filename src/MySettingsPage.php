@@ -32,13 +32,13 @@ class MySettingsPage
         // Activate option in table if it does not exist yet
         // Currently, there is a WordPress bug that calls the 'sanitize' function twice if the option is not already in the database
         // See: https://core.trac.wordpress.org/ticket/21989
-        if (!get_option('wawp_wal_name')) { // does not exist
+        if (!get_option(WAIntegration::WA_CREDENTIALS_KEY)) { // does not exist
             // Create option
-            add_option('wawp_wal_name');
+            add_option(WAIntegration::WA_CREDENTIALS_KEY);
         }
         // Set default global page restriction message
-        if (!get_option('wawp_restriction_name')) {
-            add_option('wawp_restriction_name', '<h2>Restricted Content!</h2> <p>Oops! This post is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the post!</p>');
+        if (!get_option(WAIntegration::GLOBAL_RESTRICTION_MESSAGE)) {
+            add_option(WAIntegration::GLOBAL_RESTRICTION_MESSAGE, '<h2>Restricted Content!</h2> <p>Oops! This post is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the post!</p>');
         }
 
         // Add actions for cron update
@@ -65,12 +65,12 @@ class MySettingsPage
      * Removes the invalid, now deleted groups and levels after the membership levels and groups are updated
      * Please note that, while this function refers to "levels", this function works for both levels and groups
      *
-     * @param $updated_levels        is an array of the new levels obtained from refresh
-     * @param $old_levels            is an array of the previous levels before refresh
-     * @param $restricted_levels_key is the key of the restricted levels to be saved
+     * @param array $updated_levels         new levels obtained from refresh
+     * @param array $old_levels             previous levels before refresh
+     * @param string $restricted_levels_key key of the restricted levels to be saved
      */
     private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key) {
-        $restricted_posts = get_option('wawp_array_of_restricted_posts');
+        $restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
 
         // Convert levels arrays to its keys
         $updated_levels = array_keys($updated_levels);
@@ -93,18 +93,18 @@ class MySettingsPage
                         $post_restricted_levels = array_diff($post_restricted_levels, array($level_to_delete));
                     }
                     // Check if post's restricted groups and levels are now empty
-                    $other_membership_key = 'wawp_restricted_groups';
-                    if ($restricted_levels_key == 'wawp_restricted_groups') {
-                        $other_membership_key = 'wawp_restricted_levels';
+                    $other_membership_key = WAIntegration::RESTRICTED_GROUPS;
+                    if ($restricted_levels_key == WAIntegration::RESTRICTED_GROUPS) {
+                        $other_membership_key = WAIntegration::RESTRICTED_LEVELS;
                     }
                     $other_memberships = get_post_meta($restricted_post, $other_membership_key);
                     $other_memberships = maybe_unserialize($other_memberships[0]);
                     if (empty($other_memberships) && empty($post_restricted_levels)) {
                         // This post should NOT be restricted
-                        update_post_meta($restricted_post, 'wawp_is_post_restricted', false);
+                        update_post_meta($restricted_post, WAIntegration::IS_POST_RESTRICTED, false);
                         // Remove this post from the array of restricted posts
                         $updated_restricted_posts = array_diff($restricted_posts, array($restricted_post));
-                        update_option('wawp_array_of_restricted_posts', $updated_restricted_posts);
+                        update_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
                     }
                     // Save new restricted levels to post meta data
                     $post_restricted_levels = maybe_serialize($post_restricted_levels);
@@ -119,8 +119,8 @@ class MySettingsPage
     /**
      * Removes deleted roles after refreshing new membership levels
      *
-     * @param $updated_levels        is an array of the new levels obtained from refresh
-     * @param $old_levels            is an array of the previous levels before refresh
+     * @param array $updated_levels        the new levels obtained from refresh
+     * @param array $old_levels            the previous levels before refresh
      */
     private function remove_invalid_roles($updated_levels, $old_levels) {
         // Convert levels arrays to its keys
@@ -182,17 +182,18 @@ class MySettingsPage
             }
 
 
+            // TODO: instead of only checking for deleted groups/levels, also check for new ones
             // If the number of updated groups/levels is less than the number of old groups/levels, then this means that one or more group/level has been deleted
             // So, we must find the deleted group/level and remove it from the restriction post meta data of a post, if applicable
-            $old_levels = get_option('wawp_all_levels_key');
-            $old_groups = get_option('wawp_all_groups_key');
-            $restricted_posts = get_option('wawp_array_of_restricted_posts');
+            $old_levels = get_option(WAIntegration::WA_ALL_MEMBERSHIPS_KEY);
+            $old_groups = get_option(WAIntegration::WA_ALL_GROUPS_KEY);
+            $restricted_posts = get_option(WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
             if (!empty($restricted_posts)) {
                 if (!empty($old_levels) && !empty($updated_levels) && (count($updated_levels) < count($old_levels))) {
-                    $this->remove_invalid_groups_levels($updated_levels, $old_levels, 'wawp_restricted_levels');
+                    $this->remove_invalid_groups_levels($updated_levels, $old_levels, WAIntegration::RESTRICTED_LEVELS);
                 }
                 if (!empty($old_groups) && !empty($updated_groups) && (count($updated_groups) < count($old_groups))) {
-                    $this->remove_invalid_groups_levels($updated_groups, $old_groups, 'wawp_restricted_groups');
+                    $this->remove_invalid_groups_levels($updated_groups, $old_groups, WAIntegration::RESTRICTED_GROUPS);
                 }
             }
             // Also, removed deleted roles if one or more membership levels are removed
@@ -201,9 +202,9 @@ class MySettingsPage
             }
 
             // Save updated levels to options table
-            update_option('wawp_all_levels_key', $updated_levels);
+            update_option(WAIntegration::WA_ALL_MEMBERSHIPS_KEY, $updated_levels);
             // Save updated groups to options table
-            update_option('wawp_all_groups_key', $updated_groups);
+            update_option(WAIntegration::WA_ALL_GROUPS_KEY, $updated_groups);
         }
     }
 
@@ -265,7 +266,7 @@ class MySettingsPage
 		// Register setting
         register_setting(
             'wawp_wal_group', // Option group
-            'wawp_wal_name', // Option name
+            WAIntegration::WA_CREDENTIALS_KEY, // Option name
             $register_args // Sanitize
         );
 
@@ -279,7 +280,7 @@ class MySettingsPage
 
 		// Settings for API Key
         add_settings_field(
-            'wawp_wal_api_key', // ID
+            WAIntegration::WA_API_KEY_OPT, // ID
             'API Key:', // Title
             array( $this, 'api_key_callback' ), // Callback
             'wawp-login', // Page
@@ -288,7 +289,7 @@ class MySettingsPage
 
 		// Settings for Client ID
         add_settings_field(
-            'wawp_wal_client_id', // ID
+            WAIntegration::WA_CLIENT_ID_OPT, // ID
             'Client ID:', // Title
             array( $this, 'client_id_callback' ), // Callback
             'wawp-login', // Page
@@ -297,7 +298,7 @@ class MySettingsPage
 
 		// Settings for Client Secret
 		add_settings_field(
-            'wawp_wal_client_secret', // ID
+            WAIntegration::WA_CLIENT_SECRET_OPT, // ID
             'Client Secret:', // Title
             array( $this, 'client_secret_callback' ), // Callback
             'wawp-login', // Page
@@ -314,7 +315,7 @@ class MySettingsPage
 		// Register setting
         register_setting(
             'wawp_menu_location_group', // Option group
-            'wawp_menu_location_name', // Option name
+            WAIntegration::MENU_LOCATIONS_KEY, // Option name
             $register_args // Sanitize
         );
 
@@ -389,7 +390,7 @@ class MySettingsPage
         );
         register_setting(
             'wawp_restriction_status_group', // group name for settings
-            'wawp_restriction_status_name', // name of option to sanitize and save
+            WAIntegration::RESTRICTION_STATUS, // name of option to sanitize and save
             $register_args
         );
         // Add settings section and field for restriction status
@@ -417,7 +418,7 @@ class MySettingsPage
         );
         register_setting(
             'wawp_restriction_group', // group name for settings
-            'wawp_restriction_name', // name of option to sanitize and save
+            WAIntegration::GLOBAL_RESTRICTION_MESSAGE, // name of option to sanitize and save
             $register_args
         );
 
@@ -446,7 +447,7 @@ class MySettingsPage
         );
         register_setting(
             'wawp_fields_group', // group name for settings
-            'wawp_fields_name', // name of option to sanitize and save
+            WAIntegration::LIST_OF_CHECKED_FIELDS, // name of option to sanitize and save
             $register_args
         );
         // Add settings section and field for selecting custom fields
@@ -473,7 +474,7 @@ class MySettingsPage
         );
         register_setting(
             'wawp_delete_group', // group name for settings
-            'wawp_delete_name', // name of option to sanitize and save
+            WAIntegration::WA_DELETE_OPTION, // name of option to sanitize and save
             $register_args
         );
         // Add settings section and field for selecting custom fields
@@ -623,7 +624,7 @@ class MySettingsPage
         // Should 'suspended' and 'archived' be included?
 
         // Load in the list of restricted statuses, if applicable
-        $saved_statuses = get_option('wawp_restriction_status_name');
+        $saved_statuses = get_option(WAIntegration::RESTRICTION_STATUS);
         // Check if saved statuses exists; if not, then create an empty array
         if (empty($saved_statuses)) { // create empty array
             $saved_statuses = array();
@@ -651,9 +652,9 @@ class MySettingsPage
         // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
         // https://developer.wordpress.org/reference/functions/wp_editor/
         // Get default or saved restriction message
-        $initial_content = get_option('wawp_restriction_name');
+        $initial_content = get_option(WAIntegration::GLOBAL_RESTRICTION_MESSAGE);
         $editor_id = 'wawp_restricted_message_textarea';
-        $editor_name = 'wawp_restriction_name';
+        $editor_name = WAIntegration::GLOBAL_RESTRICTION_MESSAGE;
         $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
         // Create WP editor
         wp_editor($initial_content, $editor_id, $editor_settings);
@@ -665,7 +666,7 @@ class MySettingsPage
     public function field_message_callback() {
         // Load in custom fields
         $custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
-        $checked_fields = get_option('wawp_fields_name');
+        $checked_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
         // Display each custom field as a checkbox
         if (!empty($custom_fields)) {
             foreach ($custom_fields as $field_id => $field_name) {
@@ -697,7 +698,7 @@ class MySettingsPage
         // Store each checkbox description in array
         $synced_info = array('wawp_delete_checkbox' => 'Delete all Wild Apricot information from my WordPress site');
         // Load in saved checkboxes
-        $saved_synced_info = get_option('wawp_delete_name');
+        $saved_synced_info = get_option(WAIntegration::WA_DELETE_OPTION);
         // Display checkboxes
         foreach ($synced_info as $key => $attribute) {
             $checked = '';
@@ -733,7 +734,7 @@ class MySettingsPage
      * Creates the content for the Wild Apricot login page, including instructions
 	 */
 	public function create_login_page() {
-		$this->options = get_option( 'wawp_wal_name' );
+		$this->options = get_option( WAIntegration::WA_CREDENTIALS_KEY );
         
 		?>
         <div class="wrap">
@@ -760,11 +761,10 @@ class MySettingsPage
                             ?> </div> </div> </div> <?php
                             return;
                         }
-                        // Delete the license keys, which would then need to be entered for the (potentially) new Wild Apricot site
-						if (!isset($this->options['wawp_wal_api_key']) || !isset($this->options['wawp_wal_client_id']) || !isset($this->options['wawp_wal_client_secret']) || $this->options['wawp_wal_api_key'] == '' || $this->options['wawp_wal_client_id'] == '' || $this->options['wawp_wal_client_secret'] == '') { // not valid
+						if (!WAIntegration::valid_wa_credentials()) { 
+                            // not valid
 							echo '<p style="color:red">Missing valid Wild Apricot credentials! Please enter them above!</p>';
 						} else if ($wild_apricot_url) { 
-                            
                             // successful login
 							echo '<p style="color:green">Valid Wild Apricot credentials have been saved!</p>';
                             echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>!</p>';
@@ -786,7 +786,7 @@ class MySettingsPage
                     <!-- Check if menu location(s) have been submitted -->
                     <?php
                         // Check menu locations in options table
-                        $menu_location_saved = get_option('wawp_menu_location_name');
+                        $menu_location_saved = get_option(WAIntegration::MENU_LOCATIONS_KEY);
                         // If menu locations is not empty, then it has been saved
                         if (!empty($menu_location_saved)) {
                             // Display success statement
@@ -1156,14 +1156,14 @@ class MySettingsPage
         set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $access_token_enc, $expiring_time);
         set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $account_id_enc, $expiring_time);
         // Store refresh token in database
-        update_option('wawp_admin_refresh_token', $refresh_token_enc);
+        update_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION, $refresh_token_enc);
         // Save membership levels and groups to options
-        update_option('wawp_all_levels_key', $all_membership_levels);
-        update_option('wawp_all_groups_key', $all_membership_groups);
+        update_option(WAIntegration::WA_ALL_MEMBERSHIPS_KEY, $all_membership_levels);
+        update_option(WAIntegration::WA_ALL_GROUPS_KEY, $all_membership_groups);
         update_option(WAIntegration::WA_URL_KEY, $wild_apricot_url_enc);
             // Create a new role for each membership level
         // Delete old roles if applicable
-        $old_wa_roles = get_option('wawp_all_levels_key');
+        $old_wa_roles = get_option(WAIntegration::WA_ALL_MEMBERSHIPS_KEY);
         if (isset($old_wa_roles) && !empty($old_wa_roles)) {
             // Loop through each role and delete it
             foreach ($old_wa_roles as $old_role) {
@@ -1304,7 +1304,7 @@ class MySettingsPage
 		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
 			type='text' placeholder='*************' />";
 		// Check if api key has been set; if so, echo that the client secret has been set!
-		if (isset($this->options['wawp_wal_api_key']) && $this->options['wawp_wal_api_key'] != '' && !Addon::is_plugin_disabled()) {
+		if (!empty($this->options[WAIntegration::WA_API_KEY_OPT]) && !Addon::is_plugin_disabled()) {
 			echo "<p>API Key is set!</p>";
 		}
     }
@@ -1316,7 +1316,7 @@ class MySettingsPage
 		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
 			type='text' placeholder='*************' />";
 		// Check if client id has been set; if so, echo that the client secret has been set!
-		if (isset($this->options['wawp_wal_client_id']) && $this->options['wawp_wal_client_id'] != '' && !Addon::is_plugin_disabled()) {
+		if (!empty($this->options[WAIntegration::WA_CLIENT_ID_OPT]) && !Addon::is_plugin_disabled()) {
 			echo "<p>Client ID is set!</p>";
 		}
     }
@@ -1328,7 +1328,7 @@ class MySettingsPage
 		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
 			type='text' placeholder='*************' />";
 		// Check if client secret has been set; if so, echo that the client secret has been set!
-		if (isset($this->options['wawp_wal_client_secret']) && $this->options['wawp_wal_client_secret'] != '' && !Addon::is_plugin_disabled()) {
+		if (!empty($this->options[WAIntegration::WA_CLIENT_SECRET_OPT]) && !Addon::is_plugin_disabled()) {
 			echo "<p>Client Secret is set!</p>";
 		}
     }
@@ -1347,7 +1347,7 @@ class MySettingsPage
         }
 
         // See: https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
-        $wawp_wal_login_logout_button = get_option('wawp_menu_location_name',[]);
+        $wawp_wal_login_logout_button = get_option(WAIntegration::MENU_LOCATIONS_KEY, []);
 
         foreach ($menu_items as $item) {
             echo "<div><input type='checkbox' id='wawp_selected_menu' name='wawp_menu_location_name[]' value='" . esc_html__($item) . "'" . (in_array( esc_html__($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";

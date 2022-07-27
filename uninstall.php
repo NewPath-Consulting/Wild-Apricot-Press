@@ -3,9 +3,8 @@ require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/Addon.php';
 require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
 require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
-
-use WAWP\Activator;
-use WAWP\Addon;
+require_once plugin_dir_path(__FILE__) . 'src/Log.php';
+require_once plugin_dir_path(__FILE__) . 'src/WAWPException.php';
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
 	wp_die(sprintf(__('%s should only be called when uninstalling the plugin.', WAWP\CORE_SLUG), __FILE__ ));
@@ -13,50 +12,56 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 // Remove WAWP Login/Logout page
-$wawp_wal_page_id = get_option('wawp_wal_page_id');
+$wawp_wal_page_id = get_option(WAWP\WAIntegration::LOGIN_PAGE_ID_OPT);
 if (isset($wawp_wal_page_id) && $wawp_wal_page_id != '') {
 	wp_delete_post($wawp_wal_page_id, true); // delete page entirely
 }
-delete_option('wawp_wal_page_id');
+delete_option(WAWP\WAIntegration::LOGIN_PAGE_ID_OPT);
 
 // Delete entries in wp_options table
-delete_option('wawp_wal_name');
-delete_option('wawp_wal_page_id');
+delete_option(WAWP\WAIntegration::WA_CREDENTIALS_KEY);
+delete_option(WAWP\WAIntegration::LOGIN_PAGE_ID_OPT);
 delete_option('wawp_license_form_nonce');
-delete_option('wawp_all_levels_key');
-delete_option('wawp_all_groups_key');
-delete_option('wawp_restriction_name');
-delete_option('wawp_restriction_status_name');
-delete_option('wawp_list_of_custom_fields');
-delete_option('wawp_fields_name');
+delete_option(WAWP\WAIntegration::WA_ALL_MEMBERSHIPS_KEY);
+delete_option(WAWP\WAIntegration::WA_ALL_GROUPS_KEY);
+delete_option(WAWP\WAIntegration::GLOBAL_RESTRICTION_MESSAGE);
+delete_option(WAWP\WAIntegration::RESTRICTION_STATUS);
+delete_option(WAWP\WAIntegration::LIST_OF_CUSTOM_FIELDS);
+delete_option(WAWP\WAIntegration::LIST_OF_CHECKED_FIELDS);
+delete_option(WAWP\Log::LOG_OPTION);
+delete_option(WAWP\Addon::WAWP_LICENSE_KEYS_OPTION);
+delete_option(WAWP\Addon::WAWP_ADDON_LIST_OPTION);
+delete_option(WAWP\Addon::WAWP_ACTIVATION_NOTICE_OPTION);
+delete_option(WAWP\Addon::WAWP_DISABLED_OPTION);
+delete_option(WAWP\Exception::EXCEPTION_OPTION);
 
 // Delete the added post meta data to the restricted pages
 // Get posts that contain the 'wawp_' post meta data
-$wawp_find_posts_args = array('meta_key' => 'wawp_is_post_restricted', 'post_type' => 'any');
+$wawp_find_posts_args = array('meta_key' => WAWP\WAIntegration::IS_POST_RESTRICTED, 'post_type' => 'any');
 $wawp_posts_with_meta = get_posts($wawp_find_posts_args);
 // Loop through each post and delete the associated 'wawp_' meta data from it
 if (!empty($wawp_posts_with_meta)) {
 	foreach ($wawp_posts_with_meta as $wawp_post) {
 		// Get post ID
 		$wawp_post_id = $wawp_post->ID;
-		delete_post_meta($wawp_post_id, 'wawp_restricted_groups');
-		delete_post_meta($wawp_post_id, 'wawp_restricted_levels');
-		delete_post_meta($wawp_post_id, 'wawp_is_post_restricted');
-		delete_post_meta($wawp_post_id, 'wawp_individual_restriction_message_key');
+		delete_post_meta($wawp_post_id, WAWP\WAIntegration::RESTRICTED_GROUPS);
+		delete_post_meta($wawp_post_id, WAWP\WAIntegration::RESTRICTED_LEVELS);
+		delete_post_meta($wawp_post_id, WAWP\WAIntegration::IS_POST_RESTRICTED);
+		delete_post_meta($wawp_post_id, WAWP\WAIntegration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
 	}
 }
 // Delete restricted pages option value
-delete_option('wawp_array_of_restricted_posts');
-delete_option('wawp_admin_refresh_token');
+delete_option(WAWP\WAIntegration::ARRAY_OF_RESTRICTED_POSTS);
+delete_option(WAWP\WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
 
 // Delete transients, even if they have not expired yet
 delete_transient(WAWP\WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
 delete_transient(WAWP\WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
 
-Addon::instance()::delete();
+WAWP\Addon::instance()::delete();
 
 // Get plugin deletion options and check if users and/or roles should be deleted
-$wawp_delete_options = get_option('wawp_delete_name');
+$wawp_delete_options = get_option(WAWP\WAIntegration::WA_DELETE_OPTION);
 if (!empty($wawp_delete_options)) {
 	// Check if checkbox is checked
 	if (in_array('wawp_delete_checkbox', $wawp_delete_options)) {
@@ -112,7 +117,7 @@ if (!empty($wawp_delete_options)) {
 		// Delete user meta data associated with each remaining Wild Apricot user
 		// Get users with Wild Apricot ID
 		$wawp_users_args = array(
-			'meta_key' => 'wawp_wa_user_id',
+			'meta_key' => WAWP\WAIntegration::WA_USER_ID_KEY,
 		);
 		$wawp_users = get_users($wawp_users_args);
 		// Loop through each user and remove their Wild Apricot associated meta data
@@ -133,8 +138,8 @@ if (!empty($wawp_delete_options)) {
 		}
 	}
 }
-delete_option('wawp_delete_name');
-delete_option('wawp_menu_location_name');
-delete_option('wawp_wa_url_key');
+delete_option(WAWP\WAIntegration::WA_DELETE_OPTION);
+delete_option(WAWP\WAIntegration::MENU_LOCATIONS_KEY);
+delete_option(WAWP\WAIntegration::WA_URL_KEY);
 
 ?>

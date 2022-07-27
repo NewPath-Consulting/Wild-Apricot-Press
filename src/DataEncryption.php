@@ -21,7 +21,6 @@ class DataEncryption {
 	}
 
 	public function encrypt( $value ) {
-		// throw new EncryptionException('encryption error test');
 		if ( ! extension_loaded( 'openssl' ) ) {
 			throw new EncryptionException(EncryptionException::openssl_error());
 		}
@@ -44,7 +43,6 @@ class DataEncryption {
 	}
 
 	public function decrypt( $raw_value ) {
-		// throw new DecryptionException('decryption error test');
 		if ( ! extension_loaded( 'openssl' ) ) {
 			throw new DecryptionException(EncryptionException::openssl_error());
 		}
