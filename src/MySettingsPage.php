@@ -850,7 +850,6 @@ class MySettingsPage
 	}
 
     private function check_wild_apricot_url() {
-        if (Addon::is_plugin_disabled()) return false;
         $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
         try {
             if ($wild_apricot_url) {
@@ -1298,7 +1297,7 @@ class MySettingsPage
 		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
 			type='text' placeholder='*************' />";
 		// Check if api key has been set; if so, echo that the client secret has been set!
-		if (!empty($this->options[WAIntegration::WA_API_KEY_OPT]) && !Addon::is_plugin_disabled()) {
+		if (!empty($this->options[WAIntegration::WA_API_KEY_OPT]) && !Exception::fatal_error()) {
 			echo "<p>API Key is set!</p>";
 		}
     }
@@ -1310,7 +1309,7 @@ class MySettingsPage
 		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
 			type='text' placeholder='*************' />";
 		// Check if client id has been set; if so, echo that the client secret has been set!
-		if (!empty($this->options[WAIntegration::WA_CLIENT_ID_OPT]) && !Addon::is_plugin_disabled()) {
+		if (!empty($this->options[WAIntegration::WA_CLIENT_ID_OPT]) && !Exception::fatal_error()) {
 			echo "<p>Client ID is set!</p>";
 		}
     }
@@ -1322,7 +1321,7 @@ class MySettingsPage
 		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
 			type='text' placeholder='*************' />";
 		// Check if client secret has been set; if so, echo that the client secret has been set!
-		if (!empty($this->options[WAIntegration::WA_CLIENT_SECRET_OPT]) && !Addon::is_plugin_disabled()) {
+		if (!empty($this->options[WAIntegration::WA_CLIENT_SECRET_OPT]) && !Exception::fatal_error()) {
 			echo "<p>Client Secret is set!</p>";
 		}
     }
