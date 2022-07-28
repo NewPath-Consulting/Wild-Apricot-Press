@@ -351,7 +351,7 @@ class WAIntegration {
 	public function remove_wild_apricot_integration() {
 		// TODO don't use jquery
 		// remove from menu page
-		?> <script> jQuery('#wawp_login_logout_button').remove(); </script> <?php
+		/*?><script> jQuery('#wawp_login_logout_button').remove(); </script><?php*/
 
 
 		// then change content
@@ -401,7 +401,8 @@ class WAIntegration {
 		// Only run on wa4wp page
 		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (is_page($login_page_id)) {
-			return Exception::get_user_facing_error_message();
+			// return Exception::get_user_facing_error_message();
+			return "<div style='color:red;'><h3>Login Failed</h3><p>Wild Apricot Press has encountered an error and could not complete your request.</p></div>";
 		}
 		return $content;
 	}
@@ -1330,7 +1331,7 @@ class WAIntegration {
 	 * Create login and logout buttons in the menu
 	 *
 	 * @param  string $items  HTML of menu items
-	 * @param  array  $args   Arguments supplied to the filter
+	 * @param  object  $args   Arguments supplied to the filter
 	 * @return string $items  The updated items with the login/logout button
 	 */
 	// see: https://developer.wordpress.org/reference/functions/wp_create_nav_menu/
@@ -1338,7 +1339,7 @@ class WAIntegration {
 	public function create_wa_login_logout($items, $args) {
 		// First, check if Wild Apricot credentials and the license is valid
 		if (self::valid_wa_credentials() && Addon::has_valid_license(CORE_SLUG)) {
-			self::create_login_page();
+			// self::create_login_page();
 			// Check the restrictions of each item in header IF the header is not blank
 			if (!empty($items)) {
 				// Get navigation items

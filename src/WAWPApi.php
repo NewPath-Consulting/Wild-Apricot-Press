@@ -392,7 +392,7 @@ class WAWPApi {
 	/**
 	 * Performs an API request to get data about the current Wild Apricot user
 	 *
-	 * @return $contact_info holds the body of the API response
+	 * @return array $contact_info holds the body of the API response
 	 */
     public function get_info_on_current_user() {
         // Get details of current WA user with API request
