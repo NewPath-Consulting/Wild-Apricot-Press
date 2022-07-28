@@ -308,6 +308,7 @@ class WAIntegration {
 			// restore the login content and title
 			$login_page['post_title'] = $login_title;
 			$login_page['post_content'] = $login_content;
+			$login_page['post_status'] = 'publish';
 			wp_update_post($login_page);
 			// Add user roles
 			$saved_wa_roles = get_option(self::WA_ALL_MEMBERSHIPS_KEY);
@@ -348,7 +349,7 @@ class WAIntegration {
 	/**
 	 * Sets the login page to private if the plugin is deactivated or invalid credentials are entered
 	 */
-	public function remove_wild_apricot_integration() {
+	public function remove_wild_apricot_integration($deactivating = false) {
 		// TODO don't use jquery
 		// remove from menu page
 		/*?><script> jQuery('#wawp_login_logout_button').remove(); </script><?php*/
@@ -358,7 +359,7 @@ class WAIntegration {
 		$content = '';
 		if (Exception::fatal_error()) {
 			$content = Exception::get_user_facing_error_message();
-		} else if (Addon::is_plugin_disabled()) {
+		} else if (Addon::is_plugin_disabled() || $deactivating) {
 			$content = "<p>You do not have access to this page. Please contact your site administrator.</p>";
 		}
 
