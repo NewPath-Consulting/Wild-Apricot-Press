@@ -463,7 +463,7 @@ class WAIntegration {
 		
 		// Append 'Log In' button and the styling div to the restriction message
 		$login_url = $this->get_login_link();
-		$restriction_message = '<div class="wawp_restriction_content_div">' . $restriction_message;
+		$restriction_message = '<div class="wawp_restriction_content_div">' . ($restriction_message);
 
 		// Automatically restrict the post if user is not logged in
 		if (!is_user_logged_in()) {
@@ -474,9 +474,7 @@ class WAIntegration {
 		$restriction_message .= '</div>';
 		// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with Wild Apricot
 		// Get user's Wild Apricot ID -> if it does not exist, then the user is not synced with Wild Apricot
-		$current_user_ID = wp_get_current_user()->ID;
-		$user_wa_id = get_user_meta($current_user_ID, self::WA_USER_ID_KEY, true);
-		if (empty($user_wa_id)) {
+		if (self::is_wa_user_logged_in()) {
 			// Present notice that user is not synced with Wild Apricot
 			$restriction_message .= '<p style="color:red;">Please note that while you are logged into WordPress, you have not synced your account with Wild Apricot. Please <a href="'. esc_url($login_url) .'">Log In</a> into your Wild Apricot account to sync your data in your WordPress site.</p>';
 			return $restriction_message;
@@ -1271,8 +1269,6 @@ class WAIntegration {
 				} catch (Exception $e) {
 					Log::wap_log_error($e->getMessage(), true);
 					add_filter('the_content', array($this, 'add_login_server_error'));
-					// TODO hide login button
-					// client side?
 					return;
 				}
 

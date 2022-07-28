@@ -482,7 +482,6 @@ class Addon {
         if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
             $hook_url = $hook_url . 'dev';
         }
-        Log::wap_log_debug($hook_url);
 
         // get integromat hook url from redirect
         $curl = curl_init();
@@ -582,7 +581,7 @@ class Addon {
      * Prints out a message prompting the user to enter their license key.
      * Called when user has activated the plugin but has NOT YET entered their license key.
      * @param string $slug slug of the plugin for which to display this prompt
-     * @param boolean $is_licensing_page indicating whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
+     * @param boolean $is_licensing_page indicates whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
      */
     public static function license_key_prompt($slug, $is_licensing_page) {
         $plugin_name = self::get_title($slug);
@@ -590,7 +589,7 @@ class Addon {
         echo "<div class='notice notice-warning is-dismissable license'><p>";
         echo "Please enter your license key";
         if (!$is_licensing_page) {
-         echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">Wild Apricot Press > Licensing</a>"; 
+            echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">Wild Apricot Press > Licensing</a>"; 
         }
         
         echo " in order to use the <strong>" . esc_html__($plugin_name) . "</strong> functionality.</p></div>";

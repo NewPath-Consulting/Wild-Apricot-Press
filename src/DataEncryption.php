@@ -43,6 +43,7 @@ class DataEncryption {
 	}
 
 	public function decrypt( $raw_value ) {
+		// throw new DecryptionException('test decryption exception');
 		if ( ! extension_loaded( 'openssl' ) ) {
 			throw new DecryptionException(EncryptionException::openssl_error());
 		}

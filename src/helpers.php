@@ -19,7 +19,7 @@ const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
  */
 function is_licensing_submenu() {
     $current_url = get_current_url();
-    return $current_url == 'admin.php?page=wawp-licensing';
+    return str_contains($current_url, 'admin.php?page=wawp-licensing');
 }
 
 /**
