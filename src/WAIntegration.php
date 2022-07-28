@@ -544,6 +544,18 @@ class WAIntegration {
 	}
 
 	/**
+	 * Returns whether the user is logged in with their Wild Apricot account.
+	 *
+	 * @return boolean
+	 */
+	private static function is_wa_user_logged_in() {
+		if (!is_user_logged_in()) return false;
+		$current_user_ID = wp_get_current_user()->ID;
+		$user_wa_id = get_user_meta($current_user_ID, self::WA_USER_ID_KEY, true);
+		return !empty($user_wa_id);
+	}
+
+	/**
 	 * Returns whether the post editor in use is the Gutenberg block editor or not.
 	 * This changes how the error message is displayed.
 	 *
@@ -1303,9 +1315,11 @@ class WAIntegration {
 			return;
 		}
 
-		// Create page content -> login form
-		ob_start(); ?>
-			<div id="wawp_login-wrap">
+		ob_start();
+		// if WA user is not logged in, display login form
+		if (!self::is_wa_user_logged_in()) {
+			// Create page content -> login form
+			?><div id="wawp_login-wrap">
 				<p id="wawp_wa_login_direction">Log into your Wild Apricot account here to access content exclusive to Wild Apricot members!</p>
 				<form method="post" action="">
 					<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
@@ -1322,8 +1336,16 @@ class WAIntegration {
 					<br><label id="wawp_forgot_password"><a href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank" rel="noopener noreferrer">Forgot Password?</a></label>
 					<br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
 				</form>
-			</div>
-		<?php
+			</div><?php
+		} else {
+			$logout_link = wp_logout_url(esc_url(site_url()));
+			?><div id="wawp_login-wrap">
+				<p>You are already logged in to your Wild Apricot account.</p>
+				<p><a href="<?php echo esc_url($logout_link);?>">Log Out</a></p>
+			</div><?php
+		}
+
+
 		return ob_get_clean();
 	}
 
