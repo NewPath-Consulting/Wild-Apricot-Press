@@ -167,6 +167,8 @@ By selecting the â€œDelete all Wild Apricot information from my WordPress siteâ€
 
 <img width="544" alt="Screen Shot 2021-08-16 at 6 07 21 PM" src="https://user-images.githubusercontent.com/8737691/129635421-3f80bb44-3c03-4659-8b28-2ce2c02125e6.png">
 
+Turn on the Debug Log option to start logging to wp-content/wapdebug.log to troubleshoot plugin issues.
+
 ## Embedding Content from Wild Apricot into WordPress
 
 Wild Apricot content can be embedded into WordPress using a number of WAP add-ons; see the [WAP - Add Ons](#wap---add-ons) section for more.
