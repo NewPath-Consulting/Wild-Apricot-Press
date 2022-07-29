@@ -4,20 +4,20 @@ namespace WAWP;
 require_once __DIR__ . '/WAWPApi.php';
 require_once __DIR__ . '/WAIntegration.php';
 require_once __DIR__ . '/DataEncryption.php';
+require_once __DIR__ . '/WAWPException.php';
 require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 
 
 use \DateTime; // for checking license key expiration dates
-use WAWP\Log;
 
 /**
  * Addon class
  * For managing the Addon plugins for WAWP
  */
 class Addon {
-    // const HOOK_URL = 'https://hook.integromat.com/mauo1z5yn88d94lfvc3wd4qulaqy1tko';
-    const HOOK_URL = 'https://newpathconsulting.com/checkdev';
+
+    const HOOK_URL = 'https://newpathconsulting.com/check';
 
     const FREE_ADDONS = array(0 => CORE_SLUG);
     const PAID_ADDONS = array(0 => 'wawp-addon-wa-iframe');
@@ -28,14 +28,16 @@ class Addon {
         // false: default value, license key hasn't been entered yet
         // empty: license key entered (meaning form has been submitted) and the field was empty
         // invalid: invalid key entered
-    const WAWP_LICENSE_KEYS_OPTION = 'wawp_license_keys';
-    const WAWP_ADDON_LIST_OPTION = 'wawp_addons';
+    const WAWP_LICENSE_KEYS_OPTION      = 'wawp_license_keys';
+    const WAWP_ADDON_LIST_OPTION        = 'wawp_addons';
     const WAWP_ACTIVATION_NOTICE_OPTION = 'show_activation_notice';
+    const WAWP_DISABLED_OPTION          = 'wawp_disabled';
 
-    const LICENSE_STATUS_VALID = 'true';
-    const LICENSE_STATUS_INVALID = 'invalid';
-    const LICENSE_STATUS_ENTERED_EMPTY = 'empty';
-    const LICENSE_STATUS_NOT_ENTERED = 'false';
+    const LICENSE_STATUS_VALID          = 'true';
+    const LICENSE_STATUS_INVALID        = 'invalid';
+    const LICENSE_STATUS_ENTERED_EMPTY  = 'empty';
+    const LICENSE_STATUS_NOT_ENTERED    = 'false';
+
 
     private static $instance = null;
 
@@ -46,13 +48,18 @@ class Addon {
     private static $data_encryption;
 
     private function __construct() {
-        self::$data_encryption = new DataEncryption();
+        add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 2);
 
         if (!get_option(self::WAWP_LICENSE_KEYS_OPTION)) {
             add_option(self::WAWP_LICENSE_KEYS_OPTION);
         }
 
-        add_action('disable_plugin', 'WAWP\Addon::disable_plugin', 10, 2);
+        try {
+            self::$data_encryption = new DataEncryption();
+        } catch (EncryptionException $e) {
+            Log::wap_log_error($e->getMessage(), true);
+            return;
+        }
     }
 
     /**
@@ -68,6 +75,13 @@ class Addon {
         return self::$instance;
     }
 
+    /**
+     * Activates addon functionality. 
+     *
+     * @param string $slug slug of addon to activate.
+     * @return boolean true if addon has valid license and can be activated, 
+     * false if not.
+     */
     public static function activate($slug) {
         $license_exists = self::instance()::has_valid_license($slug);
         if ($license_exists) return true;
@@ -116,13 +130,11 @@ class Addon {
 
         $is_licensing_page = is_licensing_submenu();
         $is_plugin_page = is_plugin_page();
-        $core_license_status = false;
 
         // loop through all addons
         foreach(self::get_addons() as $slug => $data) {
             // grab the license status from options table
             $license_status = self::get_license_check_option($slug);
-            if (is_core($slug)) $core_license_status = $license_status;
 
             // some messages will only be shown as a feedback message when license is entered
             if (license_submitted()) {
@@ -197,7 +209,15 @@ class Addon {
         $licenses = get_option(self::WAWP_LICENSE_KEYS_OPTION);
         if (!$licenses) return null;
         foreach ($licenses as $slug => $license) {
-            $licenses[$slug] = self::$data_encryption->decrypt($license);
+            // decrypt will throw an error when trying to decrypt empty string
+            if (empty($license)) { continue; }
+            try {
+                $licenses[$slug] = self::$data_encryption->decrypt($license);
+            } catch(DecryptionException $e) {
+                Log::wap_log_error($e->getMessage(), true);
+                $licenses[$slug] = '';
+            }
+            
         }
 
         return $licenses;
@@ -257,7 +277,7 @@ class Addon {
         return $addons[$slug]['name'];
 
     }
-    
+
     /**
      * Called in uninstall.php. Deletes the data stored in the options table.
      */
@@ -270,8 +290,8 @@ class Addon {
             delete_option('license-check-' . $slug);
         }
 
-        delete_option('wawp_addons');
-        delete_option('wawp_license_keys');
+        delete_option(self::WAWP_ADDON_LIST_OPTION);
+        delete_option(self::WAWP_LICENSE_KEYS_OPTION);
     }
 
     /**
@@ -312,7 +332,9 @@ class Addon {
      * @param string $slug slug string of the plugin to be disabled. 
      */
     public static function disable_addon($slug) {
-        self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        if (self::instance()::get_license_check_option($slug) != self::LICENSE_STATUS_NOT_ENTERED) {
+            self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        }
 
         $blocks = self::instance()::get_addons()[$slug]['blocks'];
 
@@ -349,15 +371,54 @@ class Addon {
 
                 // change license status only if it is currently valid
                 // this will happen when this function is called during a cron job, which means this license has expired or otherwise become invalid since it had been entered.
-                self::instance()::update_license_check_option($slug, $new_license_status);
+                if (self::instance()::get_license_check_option($slug) != $new_license_status) {
+                    self::instance()::update_license_check_option($slug, $new_license_status);
+                }
             }
         }
 
-        do_action('wawp_wal_set_login_private');
+        if (!Addon::is_plugin_disabled()) {
+            update_option(self::WAWP_DISABLED_OPTION, true);
+        }
 
-
+        WAIntegration::delete_transients();
+        
+        do_action('remove_wa_integration');
 
     }
+
+    public static function is_plugin_disabled() {
+        return get_option(self::WAWP_DISABLED_OPTION);
+    }
+
+    public static function update_licenses() {
+
+        $licenses = self::get_licenses();
+        if (is_null($licenses)) {
+            do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
+            return;
+        }
+
+        foreach (self::get_licenses() as $slug => $license) {
+            // if empty, don't send the request
+            if (empty($license)) return;
+            try {
+                $new_license = self::validate_license_key($license, $slug);    
+            } catch (Exception $e) {
+                Log::wap_log_error($e->getMessage(), true);
+                $new_license = Addon::LICENSE_STATUS_ENTERED_EMPTY;
+            }
+            
+            if ($new_license == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
+                $new_license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
+            } else if (is_null($new_license)) {
+                $new_license_status = Addon::LICENSE_STATUS_INVALID;
+            } else {
+                $new_license_status = Addon::LICENSE_STATUS_VALID;
+            }
+            self::update_license_check_option($slug, $new_license_status);
+        }
+    }  
 
     /**
      * Validates the license key.
@@ -368,18 +429,21 @@ class Addon {
     public static function validate_license_key($license_key_input, $addon_slug) {
         // if license key is empty, do nothing
         if (empty($license_key_input)) return self::LICENSE_STATUS_ENTERED_EMPTY;
+        
         // escape input
         $license_key = self::escape_license($license_key_input);
 
-        // if license hasn't changed, return it
-        // avoid making expensive request
+        // if escaped key doesn't match input, it's invalid
+        if ($license_key != $license_key_input) return null;
+
+        // if license hasn't changed, return it to avoid making expensive request
         if (self::get_license($addon_slug) == $license_key) return $license_key;
 
         // check key against integromat scenario
         $response = self::request_integromat_hook($license_key);
 
         // check that key has the necessary properties to be valid
-        $is_license_valid = self::check_license_properties($response);
+        $is_license_valid = self::check_license_properties($response, $addon_slug);
 
         if (!$is_license_valid) return null;
 
@@ -392,20 +456,13 @@ class Addon {
      * @param array $data request data containing license key and JSON flag
      * @return array JSON response data 
      */
-    public static function post_request($data) {
+    private static function post_request($data) {
 
-        // get integromat hook url from redirect
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, self::HOOK_URL);
-        curl_setopt($curl, CURLOPT_HEADER, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-        curl_exec($curl);
-        $url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
+        $url = self::get_hook_url();
 
         // send request to hook url
         $options = array(
-                'http' => array(
+            'http' => array(
                 'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
                 'method'  => 'POST',
                 'content' => http_build_query($data)
@@ -418,6 +475,26 @@ class Addon {
         return $result;
     }
 
+    private static function get_hook_url() {
+        // check for dev flag
+        $hook_url = self::HOOK_URL;
+
+        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
+            $hook_url = $hook_url . 'dev';
+        }
+
+        // get integromat hook url from redirect
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $hook_url);
+        curl_setopt($curl, CURLOPT_HEADER, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_exec($curl);
+        $url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
+
+        return $url;
+    }
+
     /**
      * Checks the Integromat hook response for the necessary conditions for a valid license.
      * Must have WAWP in products.
@@ -425,7 +502,7 @@ class Addon {
      * Must not be expired.
      * @return bool true if above conditions are valid, false if not.
      */
-    public static function check_license_properties($response) {
+    public static function check_license_properties($response, $slug) {
         // if the license is invalid OR an invalid Wild Apricot URL is being used, return null
         // else return the valid license key
         if (array_key_exists('license-error', $response)) return false;
@@ -434,7 +511,7 @@ class Addon {
 
         // Get list of product(s) that this license is valid for
         $valid_products = $response['Products'];
-        $support_level = $response['Support Level'];
+        // $support_level = $response['Support Level'];
         $exp_date = $response['expiration date'];
 
         
@@ -443,10 +520,17 @@ class Addon {
             return false;
         }
 
+        $name = self::get_title($slug);
+
+        if (self::is_expired($exp_date)) {
+            Log::wap_log_warning('License key for ' . $name . ' has expired.');
+        }
+
         // Ensure that this license key is valid for the associated Wild Apricot ID and website
         $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
 
         if (!$valid_urls_and_ids) {
+            Log::wap_log_warning('License key for' . $name . 'invalid for your Wild Apricot account and/or website');
             return false;
         }
 
@@ -471,14 +555,14 @@ class Addon {
 
     public static function valid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
-        echo "<div class='notice notice-success is-dismissible'><p>";
+        echo "<div class='notice notice-success is-dismissible license'><p>";
 		echo "Saved license key for <strong>" . esc_html__($plugin_name) . "</strong>.</p>";
 		echo "</div>";
     }
 
     public static function invalid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
-        echo "<div class='notice notice-error is-dismissible'><p>";
+        echo "<div class='notice notice-error is-dismissible license'><p>";
         echo "Your license key for <strong>" . esc_html__($plugin_name);
         echo "</strong> is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>Wild Apricot for Wordpress website</a>.";
         echo "</div>";
@@ -487,7 +571,7 @@ class Addon {
     public static function empty_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
-        echo "<div class='notice notice-warning'><p>";
+        echo "<div class='notice notice-warning license'><p>";
         echo "Please enter a valid license key for <strong>" . esc_html__($plugin_name) . "</strong>. </p></div>";
         unset($_GET['activate']); // prevents printing "Plugin activated" message
         // deactivate_plugins($filename);
@@ -497,15 +581,15 @@ class Addon {
      * Prints out a message prompting the user to enter their license key.
      * Called when user has activated the plugin but has NOT YET entered their license key.
      * @param string $slug slug of the plugin for which to display this prompt
-     * @param boolean $is_licensing_page indicating whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
+     * @param boolean $is_licensing_page indicates whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
      */
     public static function license_key_prompt($slug, $is_licensing_page) {
         $plugin_name = self::get_title($slug);
 
-        echo "<div class='notice notice-warning is-dismissable'><p>";
+        echo "<div class='notice notice-warning is-dismissable license'><p>";
         echo "Please enter your license key";
         if (!$is_licensing_page) {
-         echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">Wild Apricot Press > Licensing</a>"; 
+            echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">Wild Apricot Press > Licensing</a>"; 
         }
         
         echo " in order to use the <strong>" . esc_html__($plugin_name) . "</strong> functionality.</p></div>";

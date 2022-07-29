@@ -12,10 +12,11 @@ Wild Apricot Press enables WordPress websites to support the Wild Apricot member
 
 Wild Apricot Press (WAP) Documentation
 
-
+## Version 1.0b4 - July x, 2022
+- adding WAP global debug switch to toggle error logging
+- finished all sanitization/escape output text to support submission to WordPress plugin repo
 
 ## Version 1.0b3 - June 30, 2022
->>>>>>> beta3
 - fixed images in settings page
 - started to escape output text for issue #58
 - refactored licensing code and introduced generic license checker URL
@@ -184,13 +185,6 @@ Want to display a directory of your Wild Apricot users in WordPress? Look no fur
 Derived from GeneratePress, the HUEnique theme works directly with the WAP plugin! HUEnique automatically finds the dominant colors in your company’s logo within seconds, thus customizing the colors in the theme to complement your company’s logo perfectly! [Learn more](https://newpathconsulting.com/wap).
 
 
-# Release History
-
-## Version 1.0b1 - September 2, 2021
-- first release
-
-## Version 1.0b2 - February 17, 2022
-- fixed support for custom themes like Avada
 
 # License
 The License for Wild Apricot Press is completely free, and is used to verify that your Wild Apricot website is connected to your WordPress website. Please visit https://newpathconsulting.com/wap/ to get your free license key or to inquire further about the WAP plugin!

@@ -1,11 +1,14 @@
 <?php
 /**
  * helpers.php
- * The purpose of this class is to hold common constants and functions used across files 
+ * The purpose of this class is to hold common constants and one-off functions used across files 
  * in the WAWP namespace.
  */
 
 namespace WAWP;
+
+require_once __DIR__ . '/Addon.php';
+require_once __DIR__ . '/WAWPApi.php';
 
 const CORE_SLUG = 'wawp';
 const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
@@ -16,7 +19,7 @@ const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
  */
 function is_licensing_submenu() {
     $current_url = get_current_url();
-    return $current_url == 'admin.php?page=wawp-licensing';
+    return str_contains($current_url, 'admin.php?page=wawp-licensing');
 }
 
 /**
@@ -41,6 +44,14 @@ function license_submitted() {
 function is_wa_login_menu() {
     $current_url = get_current_url();
     return $current_url == 'admin.php?page=wawp-login';
+}
+
+/**
+ * @return bool true if the current page is the WA user login page, false if not
+ */
+function is_user_login_page() {
+    $current_url = get_current_url();
+    return str_contains($current_url, 'wawp-wild-apricot-login');
 }
 
 /**
@@ -75,6 +86,12 @@ function is_plugin_page() {
     return str_contains($current_url, 'plugins.php');
 }
 
+function is_post_edit_page() {
+    $current_url = get_current_url();
+    return str_contains($current_url, 'post=') &&
+           str_contains($current_url, 'action=edit');
+}
+
 /**
  * @param string $slug plugin referred to by a slug string
  * @return bool true if the plugin is the core WAP plugin, false if not
@@ -92,9 +109,59 @@ function is_addon($slug) {
 }
 
 /**
- * Escapes HTML output.
+ * Returns an array containing the keys of $arr all mapped to empty strings.
  *
- * @param string $output
- * @return string escaped
+ * @param array $arr
+ * @return array
  */
-function escape_output($output) {}
+function empty_string_array($arr) {
+    $keys = array_keys($arr);
+    $arr = array_fill_keys($keys, '');
+    return $arr;
+}
+
+function invalid_nonce_error_message() {
+    echo "<div class='notice notice-warning is-dismissable'><p>";
+    echo "Invalid nonce error. Please try again.";
+    echo "</p></div>";
+    remove_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+}
+
+/**
+ * Disables the core plugin and resets the license keys.
+ *
+ * @return void
+ */
+function disable_core() {
+    do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
+}
+
+/**
+ * Checks to see if the current entered credentials are still valid.
+ * 
+ * @return string|null|bool false if there's an exception or status of current license (current license, "empty" or null)
+ */
+function refresh_credentials() {
+    try {
+        WAWPApi::verify_valid_access_token();
+    } catch (Exception $e) {
+        Log::wap_log_error($e->getMessage(), true);
+        return false;
+    }
+    // if we're here the WA creds are still valid
+
+    $current_license_key = Addon::get_license(CORE_SLUG);
+    try {
+        // check for correct license properties
+        $new_license = Addon::instance()::validate_license_key($current_license_key, CORE_SLUG);
+    } catch (Exception $e) {
+        Log::wap_log_error($e->getMessage(), true);
+        return false;
+    }
+
+    // if validate_license_key returns the stored license then it's still valid
+    Addon::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_VALID);
+    return $new_license;
+}
+
+
