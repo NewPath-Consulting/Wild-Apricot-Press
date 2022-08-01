@@ -2,10 +2,10 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/Addon.php';
+require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/class-wa-integration.php';
 require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/Log.php';
-require_once __DIR__ . '/WAIntegration.php';
 
 /**
  * Interface for custom exceptions.
@@ -13,7 +13,7 @@ require_once __DIR__ . '/WAIntegration.php';
  * @copyright  2022 NewPath Consulting
  * @license    GNU General Public License 2.0
  * @version    Release: 1.0
- * @since      Class available since Release 1.0
+ * @since      1.0
  */
 abstract class Exception extends \Exception {
     const EXCEPTION_OPTION = 'wawp-exception-type';
@@ -42,7 +42,7 @@ abstract class Exception extends \Exception {
      */
     public static function remove_error() {
         refresh_credentials();
-        if (Addon::has_valid_license(CORE_SLUG) && WAIntegration::valid_wa_credentials() && self::fatal_error()) {
+        if (Addon::has_valid_license(CORE_SLUG) && WA_Integration::valid_wa_credentials() && self::fatal_error()) {
             // delete_option(self::EXCEPTION_OPTION);
             update_option(Addon::WAWP_DISABLED_OPTION, false);
         }
@@ -91,8 +91,10 @@ abstract class Exception extends \Exception {
 
 /**
  * Handles API exceptions. Child of custom Exception class.
+ * 
+ * @since 1.0
  */
-class APIException extends Exception {
+class API_Exception extends Exception {
 
     /**
      * Exception descroption
@@ -144,8 +146,10 @@ class APIException extends Exception {
 
 /**
  * Handles encryption exceptions. Child of custom Exception class.
+ * 
+ * @since 1.0
  */
-class EncryptionException extends Exception {
+class Encryption_Exception extends Exception {
 
     /**
      * Exception descroption
@@ -213,8 +217,10 @@ class EncryptionException extends Exception {
 
 /**
  * Handles decryption errors. Child class of WAWP\Exception.
+ * 
+ * @since 1.0
  */
-class DecryptionException extends Exception {
+class Decryption_Exception extends Exception {
     const ERROR_DESCRIPTION = 'decrypting your data';
 
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {

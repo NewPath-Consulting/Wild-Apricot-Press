@@ -1,12 +1,12 @@
 <?php
 namespace WAWP;
 
-require_once __DIR__ . '/WAWPApi.php';
-require_once __DIR__ . '/WAIntegration.php';
-require_once __DIR__ . '/DataEncryption.php';
-require_once __DIR__ . '/WAWPException.php';
-require_once __DIR__ . '/Log.php';
+require_once __DIR__ . '/class-data-encryption.php';
+require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/class-wa-api.php';
+require_once __DIR__ . '/class-wa-integration.php';
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/wap-exception.php';
 
 // for checking license key expiration dates
 use \DateTime; 
@@ -93,8 +93,8 @@ class Addon {
         }
 
         try {
-            self::$data_encryption = new DataEncryption();
-        } catch (EncryptionException $e) {
+            self::$data_encryption = new Data_Encryption();
+        } catch (Encryption_Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
             return;
         }
@@ -293,7 +293,7 @@ class Addon {
             if (empty($license)) { continue; }
             try {
                 $licenses[$slug] = self::$data_encryption->decrypt($license);
-            } catch(DecryptionException $e) {
+            } catch(Decryption_Exception $e) {
                 Log::wap_log_error($e->getMessage(), true);
                 return null;
             }
@@ -475,7 +475,7 @@ class Addon {
             update_option(self::WAWP_DISABLED_OPTION, true);
         }
 
-        WAIntegration::delete_transients();
+        WA_Integration::delete_transients();
         
         do_action('remove_wa_integration');
 
@@ -650,7 +650,7 @@ class Addon {
         }
 
         // Ensure that this license key is valid for the associated WildApricot ID and website
-        $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
+        $valid_urls_and_ids = WA_Integration::check_licensed_wa_urls_ids($response);
 
         if (!$valid_urls_and_ids) {
             Log::wap_log_warning('License key for ' . $name . ' invalid for your WildApricot account and/or website');

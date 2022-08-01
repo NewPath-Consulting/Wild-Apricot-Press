@@ -1,12 +1,12 @@
 <?php
 namespace WAWP;
 
-require_once __DIR__ . '/WAWPException.php';
+require_once __DIR__ . '/wap-exception.php';
 
 /**
  * Controls data encryption and decryption. Uses OpenSSL.
  */
-class DataEncryption {
+class Data_Encryption {
 	// Holds key and salt values
 	private $key;
 	private $salt;
@@ -16,7 +16,7 @@ class DataEncryption {
 		try {
 			$this->key = $this->get_default_key();
 			$this->salt = $this->get_default_salt();
-		} catch (EncryptionException $e) {
+		} catch (Encryption_Exception $e) {
 			Log::wap_log_error($e->getMessage(), true);
 		}
 
@@ -33,7 +33,7 @@ class DataEncryption {
 	 */
 	public function encrypt( $value ) {
 		if ( ! extension_loaded( 'openssl' ) ) {
-			throw new EncryptionException(EncryptionException::openssl_error());
+			throw new Encryption_Exception(Encryption_Exception::openssl_error());
 		}
 
 		if (empty($value)) return $value;
@@ -44,9 +44,9 @@ class DataEncryption {
 
 		$raw_value = openssl_encrypt( $value . $this->salt, $method, $this->key, 0, $iv );
 		if ( ! $raw_value ) {
-			throw new EncryptionException(EncryptionException::encrypt_error());
+			throw new Encryption_Exception(Encryption_Exception::encrypt_error());
 		} else {
-			EncryptionException::remove_error();
+			Encryption_Exception::remove_error();
 		}
 		
 
@@ -58,13 +58,13 @@ class DataEncryption {
 	 *
 	 * @param mixed $value data to decrypt
 	 * @return string decrypted data
-	 * @throws DecryptionException thrown if OpenSSL does not exist or if
+	 * @throws Decryption_Exception thrown if OpenSSL does not exist or if
 	 * decryption fails.
 	 */
 	public function decrypt( $raw_value ) {
-		throw new DecryptionException('test decryption exception');
+		// throw new Decryption_Exception('test decryption exception');
 		if ( ! extension_loaded( 'openssl' ) ) {
-			throw new DecryptionException(EncryptionException::openssl_error());
+			throw new Decryption_Exception(Encryption_Exception::openssl_error());
 		}
 
 		if (empty($raw_value)) return $raw_value;
@@ -82,9 +82,9 @@ class DataEncryption {
 
 		$value = openssl_decrypt( $raw_value, $method, $this->key, 0, $iv );
 		if ( ! $value || substr( $value, - strlen( $this->salt ) ) !== $this->salt ) {
-			throw new DecryptionException(DecryptionException::decrypt_error());
+			throw new Decryption_Exception(Decryption_Exception::decrypt_error());
 		} else {
-			DecryptionException::remove_error();
+			Decryption_Exception::remove_error();
 		}
 		
 
@@ -95,28 +95,28 @@ class DataEncryption {
 	 * Obtains private key from wp-config.
 	 * 
 	 * @return string private key
-	 * @throws EncryptionException thrown if private key is not set.
+	 * @throws Encryption_Exception thrown if private key is not set.
 	 */
 	private function get_default_key() {
 		if ( defined( 'LOGGED_IN_KEY' ) && !empty(LOGGED_IN_KEY) ) {
 			return LOGGED_IN_KEY;
 		}
 
-		throw new EncryptionException('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
+		throw new Encryption_Exception('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
 	}
 
 	/**
 	 * Obtains private salt from wp-config.
 	 * 
 	 * @return string private salt
-	 * @throws EncryptionException thrown if private salt is not set.
+	 * @throws Encryption_Exception thrown if private salt is not set.
 	 */
 	private function get_default_salt() {
 		if ( defined( 'LOGGED_IN_SALT' ) && !empty(LOGGED_IN_SALT) ) {
 			return LOGGED_IN_SALT;
 		}
 
-		throw new EncryptionException('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
+		throw new Encryption_Exception('No "logged in salt" value set. Please set your LOGGED_IN_SALT in the "wp-config.php" file in your WordPress folder.');
 	}
 
 }

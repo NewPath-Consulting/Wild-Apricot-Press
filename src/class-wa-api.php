@@ -1,12 +1,12 @@
 <?php
 namespace WAWP;
 
-require_once __DIR__ . '/Log.php';
-require_once __DIR__ . '/WAWPException.php';
+require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/wap-exception.php';
 
 use WAWP\Log;
 
-class WAWPApi {
+class WA_API {
 	// Constants
 	const ADMIN_API_VERSION = 'v2.2';
 	const MEMBER_API_VERSION = 'v1';
@@ -27,9 +27,9 @@ class WAWPApi {
     public function __construct($access_token, $wa_user_id) {
         $this->access_token = $access_token;
         $this->wa_user_id = $wa_user_id;
-		// Include WAIntegration and DataEncryption
-		require_once('WAIntegration.php');
-		require_once('DataEncryption.php');
+		// Include WA_Integration and Data_Encryption
+		require_once('class-wa-integration.php');
+		require_once('class-data-encryption.php');
     }
 
 	/**
@@ -52,11 +52,11 @@ class WAWPApi {
 	 *
 	 * @param  array $response holds the output from the API request, organized in a key-value pattern
 	 * @return array|bool $data is the body of the response, false if unauthorized
-	 * @throws APIException
+	 * @throws API_Exception
 	 */
     private static function response_to_data($response) {
         if (is_wp_error($response)) {
-			throw new APIException(APIException::api_connection_error());
+			throw new API_Exception(API_Exception::api_connection_error());
 		}
 		if ($response['response']['code'] == '401') return false;
 		// Get body of response
@@ -65,10 +65,10 @@ class WAWPApi {
 		$data = json_decode($body, true);
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
-			throw new APIException(APIException::api_response_error());
+			throw new API_Exception(API_Exception::api_response_error());
 		} else {
 			// remove exception flag so errors don't get incorrectly reported
-			APIException::remove_error();
+			API_Exception::remove_error();
 		}
 
 		// Valid response; return data
@@ -82,15 +82,15 @@ class WAWPApi {
 	 */
 	public static function load_user_credentials() {
 		// Load encrypted credentials from database
-		$credentials = get_option(WAIntegration::WA_CREDENTIALS_KEY);
+		$credentials = get_option(WA_Integration::WA_CREDENTIALS_KEY);
 		$decrypted_credentials = array();
 		// Ensure that credentials are not empty
 		// Decrypt credentials
 		// Encryption exceptions will propogate up
-		$dataEncryption = new DataEncryption();
-		$decrypted_credentials[WAIntegration::WA_API_KEY_OPT] = $dataEncryption->decrypt($credentials[WAIntegration::WA_API_KEY_OPT]);
-		$decrypted_credentials[WAIntegration::WA_CLIENT_ID_OPT] = $dataEncryption->decrypt($credentials[WAIntegration::WA_CLIENT_ID_OPT]);
-		$decrypted_credentials[WAIntegration::WA_CLIENT_SECRET_OPT] = $dataEncryption->decrypt($credentials[WAIntegration::WA_CLIENT_SECRET_OPT]);
+		$dataEncryption = new Data_Encryption();
+		$decrypted_credentials[WA_Integration::WA_API_KEY_OPT] = $dataEncryption->decrypt($credentials[WA_Integration::WA_API_KEY_OPT]);
+		$decrypted_credentials[WA_Integration::WA_CLIENT_ID_OPT] = $dataEncryption->decrypt($credentials[WA_Integration::WA_CLIENT_ID_OPT]);
+		$decrypted_credentials[WA_Integration::WA_CLIENT_SECRET_OPT] = $dataEncryption->decrypt($credentials[WA_Integration::WA_CLIENT_SECRET_OPT]);
 
 
 		return $decrypted_credentials;
@@ -125,13 +125,13 @@ class WAWPApi {
 			'wa_account_id' => ''
 		);
         // Check if access token is still valid
-		$access_token = get_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT);
-		$wa_account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
+		$access_token = get_transient(WA_Integration::ADMIN_ACCESS_TOKEN_TRANSIENT);
+		$wa_account_id = get_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
 		if (!$access_token || !$wa_account_id) { // access token is expired
 
-			$dataEncryption = new DataEncryption();
+			$dataEncryption = new Data_Encryption();
 			// Refresh access token
-			$refresh_token = get_option(WAIntegration::ADMIN_REFRESH_TOKEN_OPTION);
+			$refresh_token = get_option(WA_Integration::ADMIN_REFRESH_TOKEN_OPTION);
 			$refresh_token = $dataEncryption->decrypt($refresh_token);
 			$new_response = self::get_new_access_token($refresh_token);
 			// Get variables from response
@@ -142,13 +142,13 @@ class WAWPApi {
 			$new_access_token_enc = $dataEncryption->encrypt($new_access_token);
 			$new_account_id_enc = $dataEncryption->encrypt($new_account_id);
 			
-			set_transient(WAIntegration::ADMIN_ACCESS_TOKEN_TRANSIENT, $new_access_token_enc, $new_expiring_time);
-			set_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT, $new_account_id_enc, $new_expiring_time);
+			set_transient(WA_Integration::ADMIN_ACCESS_TOKEN_TRANSIENT, $new_access_token_enc, $new_expiring_time);
+			set_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT, $new_account_id_enc, $new_expiring_time);
 			// Update values
 			$access_token = $new_access_token;
 			$wa_account_id = $new_account_id;
 		} else {
-			$dataEncryption = new DataEncryption();
+			$dataEncryption = new Data_Encryption();
 			$access_token = $dataEncryption->decrypt($access_token);
 			$wa_account_id = $dataEncryption->decrypt($wa_account_id);
 		}
@@ -230,7 +230,7 @@ class WAWPApi {
 			}
 		}
 		// Save custom fields in the options table
-		update_option(WAIntegration::LIST_OF_CUSTOM_FIELDS, $custom_fields);
+		update_option(WA_Integration::LIST_OF_CUSTOM_FIELDS, $custom_fields);
 	}
 
 	/**
@@ -241,7 +241,7 @@ class WAWPApi {
 	public function get_all_user_info() {
 		// Get all of the WildApricot users in the WordPress database
 		$users_args = array(
-			'meta_key' => WAIntegration::WA_USER_ID_KEY,
+			'meta_key' => WA_Integration::WA_USER_ID_KEY,
 		);
 		$wa_users = get_users($users_args);
 
@@ -256,7 +256,7 @@ class WAWPApi {
 			// Get user email
 			$user_email = $wa_user->data->user_email;
 			// Get WildApricot ID
-			$wa_synced_id = get_user_meta($site_user_id, WAIntegration::WA_USER_ID_KEY);
+			$wa_synced_id = get_user_meta($site_user_id, WA_Integration::WA_USER_ID_KEY);
 			$wa_synced_id = $wa_synced_id[0];
 			// Save to email to array indexed by WordPress ID
 			$user_emails_array[$site_user_id] = $user_email;
@@ -308,8 +308,8 @@ class WAWPApi {
 					}
 					// Get membership groups through field values
 					$contact_fields = $contact['FieldValues'];
-					$checked_custom_fields = get_option(WAIntegration::LIST_OF_CHECKED_FIELDS);
-					$all_custom_fields = get_option(WAIntegration::LIST_OF_CUSTOM_FIELDS);
+					$checked_custom_fields = get_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
+					$all_custom_fields = get_option(WA_Integration::LIST_OF_CUSTOM_FIELDS);
 					if (!empty($contact_fields)) {
 						$user_groups_array = array();
 						// Loop through the fields until 'Group participation' is found
@@ -340,13 +340,13 @@ class WAWPApi {
 							}
 						}
 						// Set user's groups to meta data
-						update_user_meta($site_id, WAIntegration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
+						update_user_meta($site_id, WA_Integration::WA_MEMBER_GROUPS_KEY, $user_groups_array);
 					}
 					// Update user meta data
-					update_user_meta($site_id, WAIntegration::WA_USER_STATUS_KEY, $updated_status);
-					update_user_meta($site_id, WAIntegration::WA_ORGANIZATION_KEY, $updated_organization);
-					update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_KEY, $updated_membership_level);
-					update_user_meta($site_id, WAIntegration::WA_MEMBERSHIP_LEVEL_ID_KEY, $updated_membership_level_id);
+					update_user_meta($site_id, WA_Integration::WA_USER_STATUS_KEY, $updated_status);
+					update_user_meta($site_id, WA_Integration::WA_ORGANIZATION_KEY, $updated_organization);
+					update_user_meta($site_id, WA_Integration::WA_MEMBERSHIP_LEVEL_KEY, $updated_membership_level);
+					update_user_meta($site_id, WA_Integration::WA_MEMBERSHIP_LEVEL_ID_KEY, $updated_membership_level_id);
 					// Update user's role to their new membership level
 					// Get user's current role(s)
 					$current_user_data = get_userdata($site_id);
@@ -378,7 +378,7 @@ class WAWPApi {
 		$decrypted_credentials = self::load_user_credentials();
 		
 		// Encode API key
-		$authorization_string = $decrypted_credentials[WAIntegration::WA_CLIENT_ID_OPT] . ':' . $decrypted_credentials[WAIntegration::WA_CLIENT_SECRET_OPT];
+		$authorization_string = $decrypted_credentials[WA_Integration::WA_CLIENT_ID_OPT] . ':' . $decrypted_credentials[WA_Integration::WA_CLIENT_SECRET_OPT];
 		$encoded_authorization_string = base64_encode($authorization_string);
 
 		// Perform API request

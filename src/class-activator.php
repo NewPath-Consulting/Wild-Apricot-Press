@@ -2,11 +2,11 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/Addon.php';
-require_once __DIR__ . '/WAIntegration.php';
-require_once __DIR__ . '/Log.php';
-require_once __DIR__ . '/WAWPException.php';
-require_once __DIR__ . '/MySettingsPage.php';
+require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/class-admin-settings.php';
+require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/class-wa-integration.php';
+require_once __DIR__ . '/wap-exception.php';
 
 /**
  * Activation controller class
@@ -57,7 +57,7 @@ class Activator {
 		// Call Addon's activation function
 		// returns false & does disable_plugin if license is invalid/nonexistent
 		
-		if (!WAIntegration::valid_wa_credentials()) {
+		if (!WA_Integration::valid_wa_credentials()) {
 			do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
 			Log::wap_log_warning('Activation failed: missing WildApricot API credentials.');
 		} else if (Addon::instance()::activate(CORE_SLUG)) {
@@ -70,10 +70,10 @@ class Activator {
 		}
 
 		// **** this code will only run if license AND wa credentials are valid ****
-		// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
+		// Run credentials obtained hook, which will read in the credentials in class-wa-integration.php
 		do_action('wawp_wal_credentials_obtained');
 		// Also create CRON event to refresh the membership levels/groups
-		MySettingsPage::setup_cron_job();
+		Admin_Settings::setup_cron_job();
 	}
 
 
@@ -95,7 +95,7 @@ class Activator {
 			return;
 		}
 		
-		$valid_wa_creds = WAIntegration::valid_wa_credentials();
+		$valid_wa_creds = WA_Integration::valid_wa_credentials();
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 
 		// TODO: add is_post_editor to this conditional

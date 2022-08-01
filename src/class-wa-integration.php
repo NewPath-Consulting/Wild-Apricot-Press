@@ -4,15 +4,16 @@ namespace WAWP;
 // For iterating through menu HTML
 use DOMDocument;
 
-require_once __DIR__ . '/Log.php';
-require_once __DIR__ . '/Addon.php';
+require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/class-wa-api.php';
 require_once __DIR__ . '/helpers.php';
 
 
 /**
  * Class for managing the user's WildApricot account
  */
-class WAIntegration {
+class WA_Integration {
 	// Constants for keys used for database management
 	const WA_CREDENTIALS_KEY 					= 'wawp_wal_name';
 	const WA_API_KEY_OPT 						= 'wawp_wal_api_key';
@@ -49,7 +50,7 @@ class WAIntegration {
 	const LICENSE_CHECK_HOOK 					= 'wawp_cron_refresh_license_check';
 
 	/**
-	 * Constructs an instance of the WAIntegration class
+	 * Constructs an instance of the WA_Integration class
 	 *
 	 * Adds the actions and filters required. Includes other required files. Initializes class variables.
 	 *
@@ -92,9 +93,9 @@ class WAIntegration {
 		add_action('admin_page_access_denied', array($this, 'tell_user_to_logout'));
 		
 		// Include any required files
-		require_once('DataEncryption.php');
-		require_once('WAWPApi.php');
-		require_once('Addon.php');
+		require_once('class-data-encryption.php');
+		require_once('class-wa-api.php');
+		require_once('class-addon.php');
 	}
 
 	/**
@@ -139,7 +140,7 @@ class WAIntegration {
 		// see if credentials have gone invalid since last check
 		if ($has_valid_wa_credentials) {
 			try {
-				WAWPApi::verify_valid_access_token();
+				WA_API::verify_valid_access_token();
 			} catch (Exception $e) {
 				$has_valid_wa_credentials = false;
 			}
@@ -179,11 +180,11 @@ class WAIntegration {
 
 		try {
 			// Get access token and account id
-			$access_and_account = WAWPApi::verify_valid_access_token();
+			$access_and_account = WA_API::verify_valid_access_token();
 			$access_token = $access_and_account['access_token'];
 			$wa_account_id = $access_and_account['wa_account_id'];
 			// Get account url from API
-			$wawp_api = new WAWPApi($access_token, $wa_account_id);
+			$wawp_api = new WA_API($access_token, $wa_account_id);
 			$wild_apricot_info = $wawp_api->get_account_url_and_id();
 		} catch (Exception $e) {
 			Log::wap_log_error($e->getMessage(), true);
@@ -958,11 +959,11 @@ class WAIntegration {
 	 */
 	public function refresh_user_wa_info() {
 		try {
-			// Create WAWPApi with valid credentials
-			$verified_data = WAWPApi::verify_valid_access_token();
+			// Create WA_API with valid credentials
+			$verified_data = WA_API::verify_valid_access_token();
 			$admin_access_token = $verified_data['access_token'];
 			$admin_account_id = $verified_data['wa_account_id'];
-			$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
+			$wawp_api = new WA_API($admin_access_token, $admin_account_id);
 			// Refresh custom fields first
 			$wawp_api->retrieve_custom_fields();
 			// Get info for all WildApricot users
@@ -1006,7 +1007,7 @@ class WAIntegration {
 		// https://gethelp.wildapricot.com/en/articles/391-user-id-aka-member-id
 		$wa_user_id = $member_permissions['AccountId'];
 		// Get user's contact information
-		$wawp_api = new WAWPApi($access_token, $wa_user_id);
+		$wawp_api = new WA_API($access_token, $wa_user_id);
 		$contact_info = array();
 		$contact_info = $wawp_api->get_info_on_current_user();
 		
@@ -1208,7 +1209,7 @@ class WAIntegration {
 
 		// Check if login is valid and add the user to wp database if it is
 		try {
-			$login_attempt = WAWPApi::login_email_password($valid_login);
+			$login_attempt = WA_API::login_email_password($valid_login);
 			if (!$login_attempt) {
 				add_filter('the_content', array($this, 'add_login_error'));
 				return;
@@ -1249,9 +1250,9 @@ class WAIntegration {
 		// Get WildApricot URL
 		$wild_apricot_url = get_option(self::WA_URL_KEY);
 		try {
-			$dataEncryption = new DataEncryption();
+			$dataEncryption = new Data_Encryption();
 			$wild_apricot_url =	esc_url($dataEncryption->decrypt($wild_apricot_url));
-		} catch (DecryptionException $e) {
+		} catch (Decryption_Exception $e) {
 			Log::wap_log_error($e->getMessage(), true);
 			return Exception::get_user_facing_error_message();
 		}
@@ -1449,7 +1450,7 @@ class WAIntegration {
 		// Sanitize urls, if necessary
 		foreach ($licensed_wa_urls as $url_key => $url_value) {
 			// Lowercase and remove https://, http://, and/or www. from url
-			$licensed_wa_urls[$url_key] = WAWPApi::create_consistent_url($url_value);
+			$licensed_wa_urls[$url_key] = WA_API::create_consistent_url($url_value);
 		}
 
 		return $licensed_wa_urls;

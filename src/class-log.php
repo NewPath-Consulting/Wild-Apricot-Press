@@ -2,7 +2,7 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/WAWPApi.php';
+require_once __DIR__ . '/class-wa-api.php';
 
 /**
  * This class manages custom log messages for WAP and its blocks.
@@ -110,10 +110,10 @@ class Log {
 
         // try to obtain WA account ID
         try {
-            $account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
-            $decryption = new DataEncryption();
+            $account_id = get_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
+            $decryption = new Data_Encryption();
             $account_id = $decryption->decrypt($account_id);
-        } catch (DecryptionException $e) {
+        } catch (Decryption_Exception $e) {
             $account_id = '';
         }
 

@@ -7,8 +7,8 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/Addon.php';
-require_once __DIR__ . '/WAWPApi.php';
+require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/class-wa-api.php';
 
 const CORE_SLUG = 'wawp';
 const CORE_NAME = 'WildApricot Press (WAP)';
@@ -151,7 +151,7 @@ function disable_core() {
  */
 function refresh_credentials() {
     try {
-        WAWPApi::verify_valid_access_token();
+        WA_API::verify_valid_access_token();
     } catch (Exception $e) {
         Log::wap_log_error($e->getMessage(), true);
         return false;
