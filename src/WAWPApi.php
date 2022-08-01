@@ -19,10 +19,10 @@ class WAWPApi {
     private $wa_user_id;
 
 	/**
-	 * Creates instance of class based on the user's access token and Wild Apricot user ID
+	 * Creates instance of class based on the user's access token and WildApricot user ID
 	 *
-	 * @param string $access_token is the user's access token obtained from the Wild Apricot API
-	 * @param string $wa_user_id is the user's Wild Apricot ID
+	 * @param string $access_token is the user's access token obtained from the WildApricot API
+	 * @param string $wa_user_id is the user's WildApricot ID
 	 */
     public function __construct($access_token, $wa_user_id) {
         $this->access_token = $access_token;
@@ -76,9 +76,9 @@ class WAWPApi {
     }
 
     /**
-	 * Load Wild Apricot credentials that user has input in the WAP settings
+	 * Load WildApricot credentials that user has input in the WAP settings
 	 *
-	 * @return array Decrypted Wild Apricot credentials
+	 * @return array Decrypted WildApricot credentials
 	 */
 	public static function load_user_credentials() {
 		// Load encrypted credentials from database
@@ -159,7 +159,7 @@ class WAWPApi {
 	}
 
 	/**
-	 * Lowercases and removes prefix to url for easy comparison between the license url and Wild Apricot url
+	 * Lowercases and removes prefix to url for easy comparison between the license url and WildApricot url
 	 *
 	 * @param string  $original_url is the url to modify
 	 * @return string $modified_url is the url that is all lowercase and has the prefix removed
@@ -177,8 +177,8 @@ class WAWPApi {
 	/**
 	 * Retrieves url and id for the account
 	 *
-	 * @return array $wild_apricot_values holds the Wild Apricot URL, indexed
-	 * by 'Url', and the Wild Apricot ID, indexed by 'Id'
+	 * @return array $wild_apricot_values holds the WildApricot URL, indexed
+	 * by 'Url', and the WildApricot ID, indexed by 'Id'
 	 */
 	public function get_account_url_and_id() {
 		$args = $this->request_data_args();
@@ -234,12 +234,12 @@ class WAWPApi {
 	}
 
 	/**
-	 * Gets user information for all Wild Apricot users in the WordPress database
+	 * Gets user information for all WildApricot users in the WordPress database
 	 * 
 	 * @return void
 	 */
 	public function get_all_user_info() {
-		// Get all of the Wild Apricot users in the WordPress database
+		// Get all of the WildApricot users in the WordPress database
 		$users_args = array(
 			'meta_key' => WAIntegration::WA_USER_ID_KEY,
 		);
@@ -248,14 +248,14 @@ class WAWPApi {
 		// Loop through each WP_User and create filter
 		$filter_string = 'filter=';
 		$i = 0;
-		// Create array that stores the Wild Apricot ID associated with the WordPress ID
+		// Create array that stores the WildApricot ID associated with the WordPress ID
 		$user_emails_array = array();
 		foreach ($wa_users as $wa_user) {
 			// Get user's WordPress ID
 			$site_user_id = $wa_user->ID;
 			// Get user email
 			$user_email = $wa_user->data->user_email;
-			// Get Wild Apricot ID
+			// Get WildApricot ID
 			$wa_synced_id = get_user_meta($site_user_id, WAIntegration::WA_USER_ID_KEY);
 			$wa_synced_id = $wa_synced_id[0];
 			// Save to email to array indexed by WordPress ID
@@ -395,7 +395,7 @@ class WAWPApi {
 	}
 
 	/**
-	 * Performs an API request to get data about the current Wild Apricot user
+	 * Performs an API request to get data about the current WildApricot user
 	 *
 	 * @return array $contact_info holds the body of the API response
 	 */
@@ -422,9 +422,9 @@ class WAWPApi {
     }
 
 	/**
-	 * Returns the membership levels of the current Wild Apricot organization
+	 * Returns the membership levels of the current WildApricot organization
 	 *
-	 * @return array $membership_levels holds the membership levels from Wild Apricot
+	 * @return array $membership_levels holds the membership levels from WildApricot
 	 */
     public function get_membership_levels($request_groups = false) {
         $args = $this->request_data_args();
@@ -455,7 +455,7 @@ class WAWPApi {
     /**
 	 * Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
 	 *
-	 * @param string $entered_api_key The Wild Apricot API Key to check
+	 * @param string $entered_api_key The WildApricot API Key to check
 	 * @return array|bool $data An array of the response from the WA API
 	 */
 	public static function is_application_valid($entered_api_key) {
@@ -477,7 +477,7 @@ class WAWPApi {
 	}
 
     /**
-	 * Connect user to Wild Apricot API after obtaining their email and password
+	 * Connect user to WildApricot API after obtaining their email and password
 	 *
 	 * https://gethelp.wildapricot.com/en/articles/484
 	 *

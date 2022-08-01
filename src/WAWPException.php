@@ -65,7 +65,7 @@ abstract class Exception extends \Exception {
 
     public static function get_user_facing_error_message() {
         return "<div class='wawp-exception' style='color:red'>
-        <h3>FATAL ERROR</h3><p>Wild Apricot Press has encountered a fatal error and must be disabled.
+        <h3>FATAL ERROR</h3><p>WildApricot Press has encountered a fatal error and must be disabled.
         Please contact your site administrator.</p></div>";
     }
 
@@ -80,7 +80,7 @@ abstract class Exception extends \Exception {
     public static function admin_notice_error_message_template($error_type) {
         echo "<div class='notice notice-error wawp-exception'>";
         echo "<h3>FATAL ERROR</h3>";
-        echo "<p>Wild Apricot Press has encountered an error with ";
+        echo "<p>WildApricot Press has encountered an error with ";
         esc_html_e($error_type);
         echo " and functionality must be disabled. Please correct the error so the plugin can continue. ";
         echo "More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>";
@@ -99,7 +99,7 @@ class APIException extends Exception {
      * 
      * @var string
      */
-    const ERROR_DESCRIPTION = 'connecting to Wild Apricot';
+    const ERROR_DESCRIPTION = 'connecting to WildApricot';
 
     /**
      * Returns description for API connection error.
@@ -107,7 +107,7 @@ class APIException extends Exception {
      * @return string
      */
     public static function api_connection_error() {
-        return 'There was an error connecting to the Wild Apricot API and the plugin has to be disabled. Please try again.';
+        return 'There was an error connecting to the WildApricot API and the plugin has to be disabled. Please try again.';
     }
 
     /**
@@ -116,7 +116,7 @@ class APIException extends Exception {
      * @return string
      */
     public static function api_response_error() {
-        return 'There was an error in the Wild Apricot API and the plugin has to be disabled. Please try again.';
+        return 'There was an error in the WildApricot API and the plugin has to be disabled. Please try again.';
     }
 
     /**

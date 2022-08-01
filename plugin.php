@@ -1,9 +1,9 @@
 <?php
 
 /*
- * Plugin Name:       NewPath Wild Apricot Press (WAP)
+ * Plugin Name:       WildApricot Press (WAP)
  * Plugin URI:        https://newpathconsulting.com/wap
- * Description:       Integrates your Wild Apricot-powered organization with a WordPress website! Powered by Wild Apricot's API.
+ * Description:       Integrates your WildApricot-powered organization with a WordPress website! Powered by WildApricot's API.
  * Version:           1.0b4
  * Requires at least: 5.0
  * Requires PHP:      7.4

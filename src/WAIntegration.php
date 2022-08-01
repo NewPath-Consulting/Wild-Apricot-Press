@@ -10,7 +10,7 @@ require_once __DIR__ . '/helpers.php';
 
 
 /**
- * Class for managing the user's Wild Apricot account
+ * Class for managing the user's WildApricot account
  */
 class WAIntegration {
 	// Constants for keys used for database management
@@ -55,7 +55,7 @@ class WAIntegration {
 	 *
 	 */
 	public function __construct() {
-		// Hook that runs after Wild Apricot credentials are saved
+		// Hook that runs after WildApricot credentials are saved
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
 		// Action for when login page is updated when submit button is pressed
 		add_action('template_redirect', array($this, 'create_user_and_redirect'));
@@ -83,7 +83,7 @@ class WAIntegration {
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
 		// Action for hiding admin bar for non-admin users
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
-		// Action when user views the settings page -> check that Wild Apricot credentials and license still match
+		// Action when user views the settings page -> check that WildApricot credentials and license still match
 		// add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
 		add_action('init', array($this, 'check_updated_credentials'));
 		// Action for Cron job that refreshes the license check
@@ -108,7 +108,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Checks for valid Wild Apricot credentials.
+	 * Checks for valid WildApricot credentials.
 	 * 
 	 * @return bool true if valid authorization creds, false if not
 	 */
@@ -128,7 +128,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Checks that updated Wild Apricot credentials match the registered site on the license key and that the credentials are still valid.
+	 * Checks that updated WildApricot credentials match the registered site on the license key and that the credentials are still valid.
 	 * 
 	 * @return void
 	 */
@@ -211,21 +211,22 @@ class WAIntegration {
 	}
 
 	/**
-	 * Tell user to logout of Wild Apricot if they are trying to access the admin menu
+	 * Tell user to logout of WildApricot if they are trying to access the admin menu
 	 * 
 	 * @return void
 	 */
 	public function tell_user_to_logout() {
-		// Check if user is logged into Wild Apricot
+		// Check if user is logged into WildApricot
 		if (is_user_logged_in()) {
 			$user_id = get_current_user_id();
-			// Check if user has Wild Apricot ID
+			// Check if user has WildApricot ID
 			$wild_apricot_id = get_user_meta($user_id, self::WA_USER_ID_KEY);
 			if (!empty($wild_apricot_id)) {
-				// User is still logged into Wild Apricot
+				// User is still logged into WildApricot
 				$logout_link = wp_logout_url(esc_url(site_url()));
-				Log::wap_log_warning('Please log out of your Wild Apricot account before accessing the Wordpress admin menu.');
-				echo 'Are you trying to access the WordPress administrator menu while still logged into your Wild Apricot account? If so, ensure that you are logged out of your Wild Apricot account by clicking <a href="' . esc_url($logout_link). '">Log Out</a>.';
+				Log::wap_log_warning('Please log out of your WildApricot account before accessing the Wordpress admin menu.');
+				echo 'Are you trying to access the WordPress administrator menu while still logged into your WildApricot account?';
+				echo 'If so, ensure that you are logged out of your WildApricot account by clicking <a href="' . esc_url($logout_link). '">Log Out</a>.';
 			}
 		}
 	}
@@ -256,7 +257,7 @@ class WAIntegration {
     }
 
 	/**
-	 * Creates user-facing Wild Apricot login page
+	 * Creates user-facing WildApricot login page
 	 *
 	 * @see https://stackoverflow.com/questions/32314278/how-to-create-a-new-wordpress-page-programmatically
 	 * @see https://stackoverflow.com/questions/13848052/create-a-new-page-with-wp-insert-post
@@ -268,7 +269,7 @@ class WAIntegration {
 		// Create event for checking license
 		self::setup_license_check_cron();
 
-		$login_title = 'Login with your Wild Apricot credentials';
+		$login_title = 'Login with your WildApricot credentials';
 		$login_content = '[wawp_custom_login_form]';
 
 		$post_details = array(
@@ -366,7 +367,7 @@ class WAIntegration {
 		$login_page_id = get_option(self::LOGIN_PAGE_ID_OPT);
 		if (is_page($login_page_id)) {
 			// return Exception::get_user_facing_error_message();
-			return "<div style='color:red;'><h3>Login Failed</h3><p>Wild Apricot Press has encountered an error and could not complete your request.</p></div>";
+			return "<div style='color:red;'><h3>Login Failed</h3><p>WildApricot Press has encountered an error and could not complete your request.</p></div>";
 		}
 		return $content;
 	}
@@ -412,11 +413,11 @@ class WAIntegration {
 		} else if (Addon::is_plugin_disabled()) {
 			// if plugin is disabled, display error message
 			$message = "<div class='wawp-disabled'>
-			<p>Wild Apricot Press is currently disabled. Please contact your site administrator.</p></div>";
+			<p>WildApricot Press is currently disabled. Please contact your site administrator.</p></div>";
 			return $message;
 		}
 
-		// Make sure a page/post is requested and the user has already entered their valid Wild Apricot credentials
+		// Make sure a page/post is requested and the user has already entered their valid WildApricot credentials
 		if (!is_singular() || !Addon::has_valid_license(CORE_SLUG) || !self::valid_wa_credentials()) return $post_content;
 
 		
@@ -440,11 +441,12 @@ class WAIntegration {
 			return $restriction_message;
 		}
 		
-		// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with Wild Apricot
-		// Get user's Wild Apricot ID -> if it does not exist, then the user is not synced with Wild Apricot
+		// Show a warning/notice on the restriction page if the user is logged into WordPress but is not synced with WildApricot
+		// Get user's WildApricot ID -> if it does not exist, then the user is not synced with WildApricot
 		if (!self::is_wa_user_logged_in()) {
-			// Present notice that user is not synced with Wild Apricot
-			$restriction_message .= '<p style="color:red;">Please note that while you are logged into WordPress, you have not synced your account with Wild Apricot. Please <a href="'. esc_url($login_url) .'">Log In</a> into your Wild Apricot account to sync your data in your WordPress site.</p>';
+			// Present notice that user is not synced with WildApricot
+			$restriction_message .= '<p style="color:red;">Please note that while you are logged into WordPress, you have not synced your account with WildApricot. ';
+			$restriction_message .= 'Please <a href="'. esc_url($login_url) .'">Log In</a> into your WildApricot account to sync your data to your WordPress site.</p>';
 			$restriction_message .= '</div>';
 			return $restriction_message;
 		}
@@ -667,7 +669,7 @@ class WAIntegration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-		<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this field blank - the global restriction message set under <a href="<?php echo esc_url($global_restriction_link) ?>">Wild Apricot Press > Settings</a> will be displayed to restricted users.</p>
+		<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this field blank - the global restriction message set under <a href="<?php echo esc_url($global_restriction_link) ?>">WildApricot Press > Settings</a> will be displayed to restricted users.</p>
 		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
@@ -703,7 +705,7 @@ class WAIntegration {
 		?>
 			<!-- Membership Levels -->
 			<ul>
-			<p>If you would like everyone (including non Wild Apricot users) to see the current post, then leave all the checkboxes blank! You can restrict this post to specific Wild Apricot groups and levels by selecting the checkboxes below!</p>
+			<p>If you would like everyone (including non WildApricot users) to see the current post, then leave all the checkboxes blank! You can restrict this post to specific WildApricot groups and levels by selecting the checkboxes below.</p>
 			<li style="margin:0;font-weight: 600;">
                 <label for="wawp_check_all_levels"><input type="checkbox" value="wawp_check_all_levels" id='wawp_check_all_levels' name="wawp_check_all_levels" /> Select All Membership Levels</label>
             </li>
@@ -794,7 +796,7 @@ class WAIntegration {
 		// Add meta box for post access
 		add_meta_box(
 			'wawp_post_access_meta_box_id', // ID
-			'Wild Apricot Access Control', // title
+			'WildApricot Access Control', // title
 			array($this, 'post_access_display'), // callback
 			$post_types, // screen
 			'side', // location of meta box
@@ -813,13 +815,13 @@ class WAIntegration {
 	}
 
 	/**
-	 * Sets up the post meta data for Wild Apricot access control if valid 
-	 * Wild Apricot credentials have already been entered.
+	 * Sets up the post meta data for WildApricot access control if valid 
+	 * WildApricot credentials have already been entered.
 	 * 
 	 * @return void
 	 */
 	public function post_access_meta_boxes_setup() {
-		// Add meta boxes if and only if the Wild Apricot credentials have been entered and are valid
+		// Add meta boxes if and only if the WildApricot credentials have been entered and are valid
 		if (!Addon::is_plugin_disabled() && self::valid_wa_credentials() && Addon::has_valid_license(CORE_SLUG)) {
 			// Add meta boxes on the 'add_meta_boxes' hook
 			add_action('add_meta_boxes', array($this, 'post_access_add_post_meta_boxes'));
@@ -860,16 +862,16 @@ class WAIntegration {
 			// Set user groups to empty array
 			$user_groups = array();
 		}
-		// Check if user has valid Wild Apricot credentials, and if so, display them
+		// Check if user has valid WildApricot credentials, and if so, display them
 		if (isset($membership_level) && isset($user_status) && isset($wa_account_id) && isset($organization) && isset($user_groups)) { // valid
 			// Get custom fields
 			$checked_custom_fields = get_option(self::LIST_OF_CHECKED_FIELDS);
 			$all_custom_fields = get_option(self::LIST_OF_CUSTOM_FIELDS);
-			// Display Wild Apricot parameters
+			// Display WildApricot parameters
 			?>
-			<h2>Wild Apricot Membership Details</h2>
+			<h2>WildApricot Membership Details</h2>
 			<table class="form-table">
-				<!-- Wild Apricot Account ID -->
+				<!-- WildApricot Account ID -->
 				<tr>
 					<th><label>Account ID</label></th>
 					<td>
@@ -949,7 +951,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Updates the user's Wild Apricot information in WordPress.
+	 * Updates the user's WildApricot information in WordPress.
 	 *
 	 * @param int $current_user_id The user's WordPress ID
 	 * @return void
@@ -963,7 +965,7 @@ class WAIntegration {
 			$wawp_api = new WAWPApi($admin_access_token, $admin_account_id);
 			// Refresh custom fields first
 			$wawp_api->retrieve_custom_fields();
-			// Get info for all Wild Apricot users
+			// Get info for all WildApricot users
 			$wawp_api->get_all_user_info();
 		} catch (Exception $e) {
 			Log::wap_log_error($e->getMessage(), true);
@@ -972,7 +974,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Schedules the hourly event to update the user's Wild Apricot information
+	 * Schedules the hourly event to update the user's WildApricot information
 	 * in their WordPress profile.
 	 *
 	 * @param int $user_id  User's WordPress ID
@@ -986,7 +988,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Syncs Wild Apricot logged in user with WordPress user database.
+	 * Syncs WildApricot logged in user with WordPress user database.
 	 *
 	 * @param string $login_data  The login response from the API
 	 * @param string $login_email The email that the user has logged in with
@@ -1057,7 +1059,7 @@ class WAIntegration {
 					'last_name' => $last_name
 				]);
 			}
-			// Add user's Wild Apricot membership level as another role
+			// Add user's WildApricot membership level as another role
 			$another_role = 'wawp_' . str_replace(' ', '', $membership_level);
 			$current_wp_user->add_role($another_role);
 			// Set user's status of being added by the plugin to FALSE
@@ -1096,12 +1098,12 @@ class WAIntegration {
 			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, true);
 		}
 
-		// Add Wild Apricot membership level to user's metadata
+		// Add WildApricot membership level to user's metadata
 		update_user_meta($current_wp_user_id, self::WA_MEMBERSHIP_LEVEL_ID_KEY, $membership_level_id);
 		update_user_meta($current_wp_user_id, self::WA_MEMBERSHIP_LEVEL_KEY, $membership_level);
-		// Add Wild Apricot user status to user's metadata
+		// Add WildApricot user status to user's metadata
 		update_user_meta($current_wp_user_id, self::WA_USER_STATUS_KEY, $user_status);
-		// Add Wild Apricot organization to user's metadata
+		// Add WildApricot organization to user's metadata
 		update_user_meta($current_wp_user_id, self::WA_ORGANIZATION_KEY, $organization);
 
 		// Get list of custom fields that user should import
@@ -1184,7 +1186,7 @@ class WAIntegration {
 		}
 
 		// Check password form
-		// Wild Apricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
+		// WildApricot password requirements: https://gethelp.wildapricot.com/en/articles/22-passwords
 		// Any combination of letters, numbers, and characters (except spaces)
 		$password_input = sanitize_text_field($_POST['wawp_login_password']);
 		// https://stackoverflow.com/questions/1384965/how-do-i-use-preg-match-to-test-for-spaces
@@ -1244,7 +1246,7 @@ class WAIntegration {
 	 * @return string Holds the HTML content of the form
 	 */
 	public function custom_login_form_shortcode() {
-		// Get Wild Apricot URL
+		// Get WildApricot URL
 		$wild_apricot_url = get_option(self::WA_URL_KEY);
 		try {
 			$dataEncryption = new DataEncryption();
@@ -1259,7 +1261,7 @@ class WAIntegration {
 		if (!self::is_wa_user_logged_in()) {
 			// Create page content -> login form
 			?><div id="wawp_login-wrap">
-				<p id="wawp_wa_login_direction">Log into your Wild Apricot account here to access content exclusive to Wild Apricot members!</p>
+				<p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot members!</p>
 				<form method="post" action="">
 					<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
 					<label for="wawp_login_email">Email:</label>
@@ -1280,7 +1282,7 @@ class WAIntegration {
 			// display you are already logged in message and give option to logout
 			$logout_link = wp_logout_url(esc_url(site_url()));
 			?><div id="wawp_login-wrap">
-				<p>You are already logged in to your Wild Apricot account.</p>
+				<p>You are already logged in to your WildApricot account.</p>
 				<p><a href="<?php echo esc_url($logout_link);?>">Log Out</a></p>
 			</div><?php
 		}
@@ -1299,7 +1301,7 @@ class WAIntegration {
 	 * @see https://www.wpbeginner.com/wp-themes/how-to-add-custom-items-to-specific-wordpress-menus/
 	 */
 	public function create_wa_login_logout($items, $args) {
-		// First, check if Wild Apricot credentials and the license is valid
+		// First, check if WildApricot credentials and the license is valid
 		if (self::valid_wa_credentials() && Addon::has_valid_license(CORE_SLUG)) {
 			// self::create_login_page();
 			// Check the restrictions of each item in header IF the header is not blank
@@ -1329,11 +1331,11 @@ class WAIntegration {
 						// If post is restricted, then check if the current has access to it
 						if (!empty($nav_item_is_restricted) && $nav_item_is_restricted[0]) {
 							if (is_user_logged_in()) { // user is logged in
-								// Check that user is synced with Wild Apricot
+								// Check that user is synced with WildApricot
 								$current_users_id = get_current_user_id();
 								$users_wa_id = get_user_meta($current_users_id, self::WA_USER_ID_KEY);
 								// Check if user ID actually exists
-								if (!empty($users_wa_id) && $users_wa_id != '') { // User has been synced with Wild Apricot
+								if (!empty($users_wa_id) && $users_wa_id != '') { // User has been synced with WildApricot
 									// Check if user's status is within the allowed status(es)
 									$users_status = get_user_meta($current_users_id, self::WA_USER_STATUS_KEY);
 									$users_status = $users_status[0];
@@ -1365,7 +1367,7 @@ class WAIntegration {
 										$user_can_see = false;
 									}
 								} else {
-									// User has not been synced with Wild Apricot; they therefore cannot see this in the menu
+									// User has not been synced with WildApricot; they therefore cannot see this in the menu
 									$user_can_see = false;
 								}
 							} else {
@@ -1437,7 +1439,7 @@ class WAIntegration {
 		$licensed_wa_urls = array();
 
 		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
-			Log::wap_log_warning('Licensed Wild Apricot URLs missing from hook response.');
+			Log::wap_log_warning('Licensed WildApricot URLs missing from hook response.');
 			return null;
 		}
 
@@ -1463,7 +1465,7 @@ class WAIntegration {
 		$licensed_wa_ids = array();
 
 		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
-			Log::wap_log_warning('License Wild Apricot IDs missing from hook response');
+			Log::wap_log_warning('License WildApricot IDs missing from hook response');
 			return null;
 		}
 
@@ -1479,7 +1481,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Returns whether the user is logged in with their Wild Apricot account.
+	 * Returns whether the user is logged in with their WildApricot account.
 	 *
 	 * @return bool
 	 */
@@ -1585,7 +1587,7 @@ class WAIntegration {
 	}
 
 	/**
-	 * Returns the post meta values pertaining to Wild Apricot.
+	 * Returns the post meta values pertaining to WildApricot.
 	 * The list of restricted groups and levels, flag of whether the post is 
 	 * restricted or not, and the restriction message.
 	 *

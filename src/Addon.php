@@ -626,7 +626,7 @@ class Addon {
      * @return bool true if above conditions are valid, false if not.
      */
     public static function check_license_properties($response, $slug) {
-        // if the license is invalid OR an invalid Wild Apricot URL is being used, return null
+        // if the license is invalid OR an invalid WildApricot URL is being used, return null
         // else return the valid license key
         if (array_key_exists('license-error', $response)) return false;
 
@@ -649,11 +649,11 @@ class Addon {
             Log::wap_log_warning('License key for ' . $name . ' has expired.');
         }
 
-        // Ensure that this license key is valid for the associated Wild Apricot ID and website
+        // Ensure that this license key is valid for the associated WildApricot ID and website
         $valid_urls_and_ids = WAIntegration::check_licensed_wa_urls_ids($response);
 
         if (!$valid_urls_and_ids) {
-            Log::wap_log_warning('License key for' . $name . 'invalid for your Wild Apricot account and/or website');
+            Log::wap_log_warning('License key for ' . $name . ' invalid for your WildApricot account and/or website');
             return false;
         }
 
@@ -700,7 +700,7 @@ class Addon {
         $plugin_name = self::get_title($slug);
         echo "<div class='notice notice-error is-dismissible license'><p>";
         echo "Your license key for <strong>" . esc_html__($plugin_name);
-        echo "</strong> is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>Wild Apricot for Wordpress website</a>.";
+        echo "</strong> is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>WildApricot for Wordpress website</a>.";
         echo "</div>";
     }
 
@@ -732,7 +732,7 @@ class Addon {
         echo "<div class='notice notice-warning is-dismissable license'><p>";
         echo "Please enter your license key";
         if (!$is_licensing_page) {
-            echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">Wild Apricot Press > Licensing</a>"; 
+            echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">WildApricot Press > Licensing</a>"; 
         }
         
         echo " in order to use the <strong>" . esc_html__($plugin_name) . "</strong> functionality.</p></div>";

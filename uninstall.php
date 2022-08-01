@@ -81,7 +81,7 @@ if (!empty($wawp_delete_options)) {
 				}
 			}
 		}
-		// Get Wild Apricot users by looping through each plugin role
+		// Get WildApricot users by looping through each plugin role
 		foreach ($wawp_plugin_roles as $wawp_plugin_role) {
 			$wawp_plugin_args = array('role' => $wawp_plugin_role);
 			$wawp_users_by_role = get_users($wawp_plugin_args);
@@ -114,13 +114,13 @@ if (!empty($wawp_delete_options)) {
 			}
 		}
 
-		// Delete user meta data associated with each remaining Wild Apricot user
-		// Get users with Wild Apricot ID
+		// Delete user meta data associated with each remaining WildApricot user
+		// Get users with WildApricot ID
 		$wawp_users_args = array(
 			'meta_key' => WAWP\WAIntegration::WA_USER_ID_KEY,
 		);
 		$wawp_users = get_users($wawp_users_args);
-		// Loop through each user and remove their Wild Apricot associated meta data
+		// Loop through each user and remove their WildApricot associated meta data
 		if (!empty($wawp_users)) {
 			foreach ($wawp_users as $wawp_user) {
 				// Get ID

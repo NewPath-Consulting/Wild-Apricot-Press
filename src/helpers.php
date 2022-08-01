@@ -11,7 +11,7 @@ require_once __DIR__ . '/Addon.php';
 require_once __DIR__ . '/WAWPApi.php';
 
 const CORE_SLUG = 'wawp';
-const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
+const CORE_NAME = 'WildApricot Press (WAP)';
 
 
 /**

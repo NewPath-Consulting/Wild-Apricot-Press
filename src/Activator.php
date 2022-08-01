@@ -44,14 +44,14 @@ class Activator {
 	/**
 	 * Activates the WAWP plugin.
 	 *
-	 * Checks if user has already entered valid Wild Apricot credentials
-	 * and license key. If so, then the full Wild Apricot functionality is run.
+	 * Checks if user has already entered valid WildApricot credentials
+	 * and license key. If so, then the full WildApricot functionality is run.
 	 * 
 	 * @return void
 	 */
 	public static function activate_plugin_callback() {
 		/**
-		 * Log back into Wild Apricot if credentials are entered and a valid license key is provided
+		 * Log back into WildApricot if credentials are entered and a valid license key is provided
 		 */
 
 		// Call Addon's activation function
@@ -59,13 +59,13 @@ class Activator {
 		
 		if (!WAIntegration::valid_wa_credentials()) {
 			do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
-			Log::wap_log_warning('Activation failed: missing Wild Apricot API credentials.');
+			Log::wap_log_warning('Activation failed: missing WildApricot API credentials.');
 		} else if (Addon::instance()::activate(CORE_SLUG)) {
 			Log::wap_log_warning('Activation failed: missing license key for ' . CORE_NAME . '. Plugin functionality disabled.');
 		}
 
 		if (Addon::is_plugin_disabled()) {
-			update_option(self::SHOW_NOTICE_ACTIVATION, true);
+			update_option(Addon::WAWP_ACTIVATION_NOTICE_OPTION, true);
 			return;
 		}
 
@@ -129,7 +129,7 @@ class Activator {
 	private static function empty_creds_message() {
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your ";
-		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot credentials</a>";
+		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-login')) . ">WildApricot credentials</a>";
 		echo " and ";
 		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . "> license key</a>";
 		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
@@ -145,9 +145,9 @@ class Activator {
 	private static function empty_wa_message() {
 
 		echo "<div class='notice notice-warning'><p>";
-		echo "Please enter your Wild Apricot credentials";
+		echo "Please enter your WildApricot credentials";
 		if (!is_wa_login_menu()) {
-			echo " in <a href=" . esc_html__(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot Press > Authorization</a>";
+			echo " in <a href=" . esc_html__(admin_url('admin.php?page=wawp-login')) . ">WildApricot Press > Authorization</a>";
 		}
 		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
 		echo "</p></div>";

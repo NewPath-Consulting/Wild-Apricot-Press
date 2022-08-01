@@ -30,7 +30,7 @@ class MySettingsPage {
         }
         // Set default global page restriction message
         if (!get_option(WAIntegration::GLOBAL_RESTRICTION_MESSAGE)) {
-            add_option(WAIntegration::GLOBAL_RESTRICTION_MESSAGE, '<h2>Restricted Content</h2> <p>This post is restricted to specific Wild Apricot users. Log into your Wild Apricot account or ask your administrator to add you to the post.</p>');
+            add_option(WAIntegration::GLOBAL_RESTRICTION_MESSAGE, '<h2>Restricted Content</h2> <p>This post is restricted to specific WildApricot users. Log into your WildApricot account or ask your administrator to add you to the post.</p>');
         }
 
         // Add actions for cron update
@@ -145,7 +145,7 @@ class MySettingsPage {
     }
 
     /**
-     * Updates the membership levels and groups from Wild Apricot into WordPress upon each CRON job.
+     * Updates the membership levels and groups from WildApricot into WordPress upon each CRON job.
      * 
      * @return void
      */
@@ -214,8 +214,8 @@ class MySettingsPage {
     public function add_settings_page() {
         // Create WAWP admin page
         add_menu_page(
-            'Wild Apricot Press',
-            'Wild Apricot Press',
+            'WildApricot Press',
+            'WildApricot Press',
             'manage_options',
             'wawp-wal-admin',
             array( $this, 'create_admin_page' ),
@@ -235,7 +235,7 @@ class MySettingsPage {
 		// Create Login sub-menu under WAWP
 		add_submenu_page(
 			'wawp-wal-admin',
-			'Wild Apricot Authorization',
+			'WildApricot Authorization',
 			'Authorization',
 			'manage_options',
 			'wawp-login',
@@ -275,7 +275,7 @@ class MySettingsPage {
 		// Create settings section
         add_settings_section(
             'wawp_wal_id', // ID
-            'Wild Apricot Authorized Application Credentials', // Title
+            'WildApricot Authorized Application Credentials', // Title
             array( $this, 'wal_print_section_info' ), // Callback
             'wawp-login' // Page
         );
@@ -331,7 +331,7 @@ class MySettingsPage {
         // Render the WAWP license form
         add_settings_field(
             'wawp_license_form', // ID
-            'Wild Apricot Press', // title
+            'WildApricot Press', // title
             array($this, 'license_key_input'), // callback
             'wawp_licensing', // page
             'wawp_license', // section
@@ -398,7 +398,7 @@ class MySettingsPage {
         // Add settings section and field for restriction status
         add_settings_section(
             'wawp_restriction_status_id', // ID
-            'Wild Apricot Status Restriction', // title
+            'WildApricot Status Restriction', // title
             array($this, 'print_restriction_status_info'), // callback
             'wawp-wal-admin' // page
         );
@@ -530,7 +530,7 @@ class MySettingsPage {
         $tab = get_current_tab();
         ?>
         <div class="wrap">
-            <h2>Wild Apricot Admin Settings</h2>
+            <h2>WildApricot Admin Settings</h2>
             <?php 
             // don't display settings if credentials and/or key are not valid or if there's been a fatal error
             if (!WAIntegration::valid_wa_credentials() || !Addon::instance()::has_valid_license(CORE_SLUG) 
@@ -643,7 +643,7 @@ class MySettingsPage {
      * @return void
      */
     public function restriction_status_callback() {
-        // Display checkboxes for each Wild Apricot status
+        // Display checkboxes for each WildApricot status
         // List of statuses here: https://gethelp.wildapricot.com/en/articles/137-member-and-contact-statuses
         $list_of_statuses = array(
             'Active' => 'Active',
@@ -694,7 +694,7 @@ class MySettingsPage {
     }
 
     /**
-     * Displays the checkboxes for the Wild Apricot custom fields.
+     * Displays the checkboxes for the WildApricot custom fields.
      * 
      * @return void
      */
@@ -720,20 +720,20 @@ class MySettingsPage {
         } else { // no custom fields
             $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
             ?>
-            <p>Your Wild Apricot site does not have any contact fields! Please ensure that you have correctly entered your Wild Apricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">Wild Apricot Press -> Authorization</a></p>
+            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">WildApricot Press -> Authorization</a></p>
             <?php
         }
     }
 
     /**
      * Displays the options for deleting the plugin, including if the 
-     * Wild Apricot synced users should be retained, etc.
+     * WildApricot synced users should be retained, etc.
      * 
      * @return void
      */
     public function plugin_delete_callback() {
         // Store each checkbox description in array
-        $synced_info = array('wawp_delete_checkbox' => 'Delete all Wild Apricot information from my WordPress site');
+        $synced_info = array('wawp_delete_checkbox' => 'Delete all WildApricot information from my WordPress site');
         // Load in saved checkboxes
         $saved_synced_info = get_option(WAIntegration::WA_DELETE_OPTION);
         // Display checkboxes
@@ -747,7 +747,7 @@ class MySettingsPage {
             }
             ?>
             <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php esc_html_e($key); ?>" <?php esc_html_e($checked); ?>/> <?php esc_html_e($attribute); ?> </input><br>
-            <p><b><br>Please note that this information will never be deleted from your Wild Apricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your Wild Apricot site.
+            <p><b><br>Please note that this information will never be deleted from your WildApricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your WildApricot site.
             So, don't worry - you are not permanently deleting information that you cannot recover later.</b></p>
             <?php
         }
@@ -768,7 +768,7 @@ class MySettingsPage {
 	/**
      * API credentials settings page callback. Renders form for API credentials,
      * checkbox for login button location on the website menu, and tutorial 
-     * for obtaining Wild Apricot API credentials.
+     * for obtaining WildApricot API credentials.
      * 
      * @return void
 	 */
@@ -777,10 +777,10 @@ class MySettingsPage {
         
 		?>
         <div class="wrap">
-			<h1>Wild Apricot Authorization</h1>
+			<h1>WildApricot Authorization</h1>
 			<div class="waSettings">
 				<div class="loginChild">
-                    <!-- Wild Apricot credentials form -->
+                    <!-- WildApricot credentials form -->
 					<form method="post" action="options.php">
 					<?php
 
@@ -802,10 +802,10 @@ class MySettingsPage {
                         }
 						if (!WAIntegration::valid_wa_credentials()) { 
                             // not valid
-							echo '<p style="color:red">Missing valid Wild Apricot credentials. Please enter them above.</p>';
+							echo '<p style="color:red">Missing valid WildApricot credentials. Please enter them above.</p>';
 						} else if ($wild_apricot_url) { 
                             // successful login
-							echo '<p style="color:green">Valid Wild Apricot credentials have been saved.</p>';
+							echo '<p style="color:green">Valid WildApricot credentials have been saved.</p>';
                             echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>.</p>';
 						}
                         return;
@@ -814,7 +814,7 @@ class MySettingsPage {
 
 				</div>
                 <div class="loginChild">
-					<p>In order to connect your Wild Apricot with your WordPress website, <b>Wild Apricot Press</b> requires the following credentials from your Wild Apricot account:</p>
+					<p>In order to connect your WildApricot with your WordPress website, <b>WildApricot Press</b> requires the following credentials from your WildApricot account:</p>
 					<ul class="wawp_list">
 					   <li>API Key</li>
 					   <li>Client ID</li>
@@ -822,7 +822,7 @@ class MySettingsPage {
 					</ul>
 					<p>If you currently do not have these credentials, no problem! Please follow the steps below to obtain them.</p>
 					<ol>
-					   <li>In the admin view on your Wild Apricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
+					   <li>In the admin view on your WildApricot site, in the left hand menu, select <b>Settings</b>. On the Global settings screen, select the <b>Authorized applications</b> option (under Integration). <br><br>
 					      <img src="/wp-content/plugins/Wild-Apricot-Press/images/authorized-applications.png" alt="Settings > Integration > Authorized applications" class="wawp_authorization_img"> <br>
 					   </li>
 					   <li>On the Authorized applications screen, click the <b>Authorize application</b> button in the top left corner.
@@ -845,7 +845,7 @@ class MySettingsPage {
 						 <li>
 						    <b>Access Level</b>
 						    <ul class="wawp_list">
-						       <li>Choose full access as the <b>Wild Apricot Press</b> plugin requires ability to read and write to your Wild Apricot database.
+						       <li>Choose full access as the <b>WildApricot Press</b> plugin requires ability to read and write to your WildApricot database.
 						       </li>
 						    </ul>
 						 </li>
@@ -880,7 +880,7 @@ class MySettingsPage {
         ?>
         <div class="wrap">
             <?php
-            // Check if Wild Apricot credentials have been entered
+            // Check if WildApricot credentials have been entered
             // If credentials have been entered (not empty) and plugin is not disabled, then we can present the license page
             if (!Exception::fatal_error() && WAIntegration::valid_wa_credentials()) {
                 ?>
@@ -894,7 +894,7 @@ class MySettingsPage {
                     ?>
                 </form>
                 <?php
-            } else { // credentials have not been entered -> tell user to enter Wild Apricot credentials
+            } else { // credentials have not been entered -> tell user to enter WildApricot credentials
                 echo "<h2>License Keys</h2>";
             }
             ?>
@@ -1074,7 +1074,7 @@ class MySettingsPage {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_credentials_nonce_name'], 'wawp_credentials_nonce_action')) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
-            Log::wap_log_error('Your nonce for the Wild Apricot credentials could not be verified.');
+            Log::wap_log_error('Your nonce for the WildApricot credentials could not be verified.');
             return empty_string_array($input);
         }
 
@@ -1189,8 +1189,8 @@ class MySettingsPage {
      * @return void
      */
     public function print_restriction_status_info() {
-        print 'Please select the Wild Apricot member/contact status(es) that will be able to see the restricted posts.';
-        print '<br>If no statuses are selected, then all membership statuses can view the restricted posts.';
+        print 'Please select the WildApricot member/contact status(es) that will be able to see the restricted posts.<br>';
+        print 'If no statuses are selected, then all membership statuses can view the restricted posts.';
     }
 
     /**
@@ -1199,7 +1199,7 @@ class MySettingsPage {
      * @return void
      */
     public function print_fields_info() {
-        print 'Please select the Wild Apricot Contact Fields that you would like to sync with your WordPress site.';
+        print 'Please select the WildApricot Contact Fields that you would like to sync with your WordPress site.';
     }
 
     /**
@@ -1208,10 +1208,10 @@ class MySettingsPage {
      * @return void
      */
     public function print_delete_info() {
-        print 'By default, upon deletion of the <b>Wild Apricot Press</b> plugin, the WordPress users and roles that you have synced from Wild Apricot are retained (not deleted).';
-        print 'If you like, you can remove all Wild Apricot information from your WordPress site after deleting the <b>Wild Apricot Press</b> plugin by checking the checkbox below.<br><br>';
-        print 'Then, all of the Wild Apricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>Wild Apricot Press</b> plugin.';
-        print 'If you would like to keep your Wild Apricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked.';
+        print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, the WordPress users and roles that you have synced from WildApricot are retained (not deleted).';
+        print 'If you like, you can remove all WildApricot information from your WordPress site after deleting the <b>WildApricot Press</b> plugin by checking the checkbox below.<br><br>';
+        print 'Then, all of the WildApricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>WildApricot Press</b> plugin.';
+        print 'If you would like to keep your WildApricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked.';
     }
 
     /**
@@ -1230,7 +1230,7 @@ class MySettingsPage {
      * @return void
      */
     public function print_restriction_info() {
-        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the Wild Apricot membership level(s) or group(s) required to access a restricted post.';
+        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the WildApricot membership level(s) or group(s) required to access a restricted post.';
         print 'Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post.'; 
         print 'You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
     }
@@ -1241,17 +1241,17 @@ class MySettingsPage {
      * @return void
      */
     public function menu_location_print_section_info() {
-        print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their Wild Apricot account on your WordPress site!';
+        print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their WildApricot account on your WordPress site!';
     }
 
     /**
-     * Print the instructions text for entering your Wild Apricot credentials
+     * Print the instructions text for entering your WildApricot credentials
      * 
      * @return void
      */
     public function wal_print_section_info() {
-        print 'Please enter your Wild Apricot authorization credentials here. Your data is encrypted for your safety.<br>';
-        print 'To obtain your Wild Apricot authorization credentials, please refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">Wild Apricot support</a>.';
+        print 'Please enter your WildApricot authorization credentials here. Your data is encrypted for your safety.<br>';
+        print 'To obtain your WildApricot authorization credentials, please refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a>.';
     }
 
     /**
@@ -1261,7 +1261,7 @@ class MySettingsPage {
      */
     public function license_print_info() {
         $link_address = "https://newpathconsulting.com/wap/";
-        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='" . esc_url($link_address) . "' target='_blank' rel='noopener noreferrer'>here</a> to get a license key. The license key for <b>Wild Apricot Press</b> is 100% free, and we never share your information with any third party.";
+        print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='" . esc_url($link_address) . "' target='_blank' rel='noopener noreferrer'>here</a> to get a license key. The license key for <b>WildApricot Press</b> is 100% free, and we never share your information with any third party.";
     }
 
     /**
@@ -1331,9 +1331,9 @@ class MySettingsPage {
     }
 
     /**
-     * Obtain Wild Apricot URL corresponding to the entered API credentials.
+     * Obtain WildApricot URL corresponding to the entered API credentials.
      *
-     * @return string|bool Wild Apricot URL, false if it could not be obtained
+     * @return string|bool WildApricot URL, false if it could not be obtained
      */
     private function check_wild_apricot_url() {
         $wild_apricot_url = get_option(WAIntegration::WA_URL_KEY);
@@ -1350,7 +1350,7 @@ class MySettingsPage {
     }
 
     /**
-     * Sanitize and validate each input value for the Wild Apricot API 
+     * Sanitize and validate each input value for the WildApricot API 
      * Credentials.
      *
      * @param string[] $input
@@ -1377,11 +1377,11 @@ class MySettingsPage {
     }
 
     /**
-     * Gets Wild Apricot membership levels and groups, account URL and ID and
+     * Gets WildApricot membership levels and groups, account URL and ID and
      * sets transients and updates options. Data encryption and API calls could
      * throw exceptions which are caught in the caller function.
      *
-     * @param string[] $valid_api response from initial connection to Wild Apricot API
+     * @param string[] $valid_api response from initial connection to WildApricot API
      * @return void
      */
     private static function obtain_and_save_wa_data_from_api($valid_api) {
@@ -1403,7 +1403,7 @@ class MySettingsPage {
 
         $all_membership_groups = $wawp_api_instance->get_membership_levels(true);
 
-        // Get Wild Apricot URL
+        // Get WildApricot URL
         $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
         $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
         $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
