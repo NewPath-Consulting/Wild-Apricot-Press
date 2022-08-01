@@ -798,7 +798,7 @@ class WAIntegration {
 			array($this, 'post_access_display'), // callback
 			$post_types, // screen
 			'side', // location of meta box
-			'high' // priority in comparison to other meta boxes
+			'default' // priority in comparison to other meta boxes
 		);
 
 		// Add meta box for post's custom restriction message
