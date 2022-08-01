@@ -299,37 +299,6 @@ class MySettingsPage
             'wawp_wal_id' // Section
         );
 
-        // ---------------------------- Login/Logout button location ------------------------------
-        $register_args = array(
-            'type' => 'string',
-            'sanitize_callback' => array( $this, 'menu_location_sanitize'),
-            'default' => null
-        );
-
-		// Register setting
-        register_setting(
-            'wawp_menu_location_group', // Option group
-            WAIntegration::MENU_LOCATIONS_KEY, // Option name
-            $register_args // Sanitize
-        );
-
-		// Create settings section
-        add_settings_section(
-            'wawp_menu_location_id', // ID
-            'Login/Logout Button Location', // Title
-            array( $this, 'menu_location_print_section_info' ), // Callback
-            'wawp-login-menu-location' // Page
-        );
-
-		// Settings for Menu to add Login/Logout button
-        add_settings_field(
-            'wawp_wal_login_logout_button', // ID
-            'Menu Location(s):', // Title
-            array( $this, 'login_logout_menu_callback' ), // Callback
-            'wawp-login-menu-location', // Page // Possibly put somewhere else
-            'wawp_menu_location_id' // Section
-        );
-
         // -------------------------- License Keys -------------------------
         // Registering and adding settings for the license key forms
         $register_args = array(
@@ -376,7 +345,38 @@ class MySettingsPage
             );
         }
 
-        // ------------------------ Restriction status ---------------------------
+        // ------------------ Login/Logout button location ---------------------
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'menu_location_sanitize'),
+            'default' => null
+        );
+
+        // Register setting
+        register_setting(
+            'wawp_menu_location_group', // Option group
+            WAIntegration::MENU_LOCATIONS_KEY, // Option name
+            $register_args // Sanitize
+        );
+
+        // Create settings section
+        add_settings_section(
+            'wawp_menu_location_id', // ID
+            'Login/Logout Button Location', // Title
+            array( $this, 'menu_location_print_section_info' ), // Callback
+            'wawp-wal-admin-login-location' // Page
+        );
+
+        // Settings for Menu to add Login/Logout button
+        add_settings_field(
+            'wawp_wal_login_logout_button', // ID
+            'Menu Location(s):', // Title
+            array( $this, 'login_logout_menu_callback' ), // Callback
+            'wawp-wal-admin-login-location', // Page 
+            'wawp_menu_location_id' // Section
+        );
+
+        // ------------------------ Restriction status -------------------------
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'restriction_status_sanitize'),
@@ -571,6 +571,30 @@ class MySettingsPage
                         <?php
                         break;
                     default:
+                        ?>
+                        <!-- Menu Locations for Login/Logout button -->
+                        <form method="post" action="options.php">
+                        <?php
+                            // Nonce for verification
+                            wp_nonce_field('wawp_menu_location_nonce_action', 'wawp_menu_location_nonce_name');
+                            // This prints out all hidden setting fields
+                            settings_fields( 'wawp_menu_location_group' );
+                            do_settings_sections( 'wawp-wal-admin-login-location' );
+                            submit_button();
+                        ?>
+                        </form>
+                        <!-- Check if menu location(s) have been submitted -->
+                        <?php
+                            // Check menu locations in options table
+                            $menu_location_saved = get_option(WAIntegration::MENU_LOCATIONS_KEY);
+                            // If menu locations is not empty, then it has been saved
+                            if (!empty($menu_location_saved)) {
+                                // Display success statement
+                                echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
+                            } else {
+                                Log::wap_log_warning('No menu location for the login/logout button selected. Please select so the button will appear on your site.');
+                                echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
+                            }
                         ?>
                         <!-- Form for Restriction Status(es) -->
                         <form method="post" action="options.php">
