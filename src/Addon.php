@@ -8,8 +8,8 @@ require_once __DIR__ . '/WAWPException.php';
 require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/helpers.php';
 
-
-use \DateTime; // for checking license key expiration dates
+// for checking license key expiration dates
+use \DateTime; 
 
 /**
  * Addon class
@@ -17,32 +17,70 @@ use \DateTime; // for checking license key expiration dates
  */
 class Addon {
 
+    /**
+     * Base hook url.
+     * 
+     * @var string
+     */
     const HOOK_URL = 'https://newpathconsulting.com/check';
 
+    /**
+     * Array of free addons.
+     * 
+     * @var string[]
+     */
     const FREE_ADDONS = array(0 => CORE_SLUG);
-    const PAID_ADDONS = array(0 => 'wawp-addon-wa-iframe');
 
-    // option used to keep track of license key status
-    // possible values:
-        // true: license key entered
-        // false: default value, license key hasn't been entered yet
-        // empty: license key entered (meaning form has been submitted) and the field was empty
-        // invalid: invalid key entered
+    /**
+     * Option name for the license key list.
+     * 
+     * @var string
+     */
     const WAWP_LICENSE_KEYS_OPTION      = 'wawp_license_keys';
+
+    /**
+     * Option name for the list of addons.
+     * 
+     * @var string
+     */
     const WAWP_ADDON_LIST_OPTION        = 'wawp_addons';
+    
+    /**
+	 * @var string prefix for the activation notice toggle option name
+	 */
     const WAWP_ACTIVATION_NOTICE_OPTION = 'show_activation_notice';
     const WAWP_DISABLED_OPTION          = 'wawp_disabled';
 
+    /**
+     * Options used to keep track of license key status.
+     * 
+     * @var string
+     */
+
+    /**
+     * License key entered.
+     */
     const LICENSE_STATUS_VALID          = 'true';
+
+    /**
+     * License key invalid.
+     */
     const LICENSE_STATUS_INVALID        = 'invalid';
+
+    /**
+     * Empty license key entered..
+     */
     const LICENSE_STATUS_ENTERED_EMPTY  = 'empty';
+
+    /**
+     * License key hasn't been entered.
+     */
     const LICENSE_STATUS_NOT_ENTERED    = 'false';
 
 
     private static $instance = null;
 
 
-    private static $addons_to_license = array();
     private static $addon_list = array();
     private static $license_check_options = array();
     private static $data_encryption;
@@ -65,9 +103,10 @@ class Addon {
     /**
      * Returns the instance of this class (singleton)
      * If the instance does not exist, creates one.
+     * 
+     * @return Addon
      */
-    public static function instance()
-    {
+    public static function instance() {
         if (null === self::$instance) {
             self::$instance = new self();
         }
@@ -79,7 +118,7 @@ class Addon {
      * Activates addon functionality. 
      *
      * @param string $slug slug of addon to activate.
-     * @return boolean true if addon has valid license and can be activated, 
+     * @return bool true if addon has valid license and can be activated, 
      * false if not.
      */
     public static function activate($slug) {
@@ -98,6 +137,8 @@ class Addon {
      *      [title] => Display title,
      *      [filename] => Filename of main plugin file relative to plugin directory
      * )
+     * 
+     * @return void
      */
     public static function new_addon($addon) {
         $option = get_option('wawp_addons');
@@ -122,10 +163,21 @@ class Addon {
         self::update_addons($option);
     }
 
+    /**
+     * Updates the addon list in the options table.
+     *
+     * @param string[] $new_list updated list of addons
+     * @return void
+     */
     public static function update_addons($new_list) {
         update_option(self::WAWP_ADDON_LIST_OPTION, $new_list);
     }
 
+    /**
+     * Prints appropriate admin notices displaying the license status.
+     *
+     * @return void
+     */
     public static function license_admin_notices() {
 
         $is_licensing_page = is_licensing_submenu();
@@ -172,20 +224,46 @@ class Addon {
 
     }
 
-
-
+    /**
+     * Returns the license status from the options table.
+     *
+     * @param string $slug plugin slug for which to find the license status
+     * @return string|bool license status, false if license status option
+     * doesn't exist or is empty.
+     */
     public static function get_license_check_option($slug) {
         return get_option(self::$license_check_options[$slug]);
     }
 
+    /**
+     * Updates the license status in the options table.
+     *
+     * @param string $slug plugin slug for which to update the license status
+     * @param string $val new status
+     * @return void
+     */
     public static function update_license_check_option($slug, $val) {
         update_option(self::$license_check_options[$slug], $val);
     }
 
+    /**
+     * Returns the show activation notice toggle.
+     *
+     * @param string $slug plugin slug for which to return the toggle.
+     * @return bool true if toggle is on, false if it's off or option doesn't
+     * exist or is empty. 
+     */
     public static function get_show_activation_notice_option($slug) {
         return get_option(self::get_addons()[$slug][self::WAWP_ACTIVATION_NOTICE_OPTION]);
     }
 
+    /**
+     * Updates the show notice activation toggle.
+     * 
+     * @param bool $slug plugin slug for which to update the toggle. true to 
+     * enable the toggle, false to disable.
+     * @return void
+     */
     public static function update_show_activation_notice_option($slug, $val) {
         update_option(self::$addon_list[$slug][self::WAWP_ACTIVATION_NOTICE_OPTION], $val);
     }
@@ -194,7 +272,8 @@ class Addon {
     /**
      * Returns the array of addons stored in the options table.
      *
-     * @return array of add-ons
+     * @return string[]|bool array of add-ons. returns false if option does not
+     * exist or is empty.
      */
     public static function get_addons() {
         return get_option(self::WAWP_ADDON_LIST_OPTION);
@@ -203,7 +282,8 @@ class Addon {
     /**
      * Returns the array of license keys stored in the options table.
      *
-     * @return array of license keys
+     * @return array|null array of license keys. returns null if option
+     * doesn't exist, is empty, or couldn't be decrypted.
      */
     public static function get_licenses() {
         $licenses = get_option(self::WAWP_LICENSE_KEYS_OPTION);
@@ -215,7 +295,7 @@ class Addon {
                 $licenses[$slug] = self::$data_encryption->decrypt($license);
             } catch(DecryptionException $e) {
                 Log::wap_log_error($e->getMessage(), true);
-                $licenses[$slug] = '';
+                return null;
             }
             
         }
@@ -224,9 +304,10 @@ class Addon {
     }
 
     /**
-     * Gets the license key based on the slug name
+     * Gets the license key based on the slug name.
      *
      * @param string $slug is the slug name of the add-on
+     * @return string|null license key for the add-on, null if it doesn't exist
      */
     public static function get_license($slug) {
         $licenses = self::get_licenses();
@@ -237,10 +318,11 @@ class Addon {
     }
 
     /**
-     * Checks if plugin currently has a license. License status must also be valid.
+     * Checks if plugin currently has a valid license. License must not be
+     * empty and status must be valid.
      *
      * @param string $slug is the slug name of the add-on
-     * @return boolean true if license is valid, false if not
+     * @return bool true if license is valid, false if not
      */
     public static function has_valid_license($slug) {
         $license = self::get_license($slug);
@@ -253,6 +335,7 @@ class Addon {
      * Gets filename of add-on based on slug name
      *
      * @param string $slug is the slug name of the add-on
+     * @return string filename of the addon
      */
     public static function get_filename($slug) {
         $addons = self::get_addons();
@@ -271,6 +354,7 @@ class Addon {
      * Gets title of add-on based on slug name
      *
      * @param string $slug is the slug name of the add-on
+     * @return string title of the add-on
      */
     public static function get_title($slug) {
         $addons = self::get_addons();
@@ -279,7 +363,9 @@ class Addon {
     }
 
     /**
-     * Called in uninstall.php. Deletes the data stored in the options table.
+     * Called in uninstall.php. Deletes the add-on data stored in the options table.
+     * 
+     * @return void
      */
     public static function delete() {
         $addons = self::get_addons();
@@ -296,6 +382,7 @@ class Addon {
 
     /**
      * Removes non alphanumeric, non-hyphen characters from license key input.
+     * 
      * @param string $license_key_input input from license key form to escape.
      * @return string escaped license key.
      */
@@ -311,7 +398,9 @@ class Addon {
     }
 
     /**
-     * Constructs array of license key data to send to the Integromat license key scenario. Sends request to the Integromat hook URL.
+     * Constructs array of license key data to send to the Integromat 
+     * license key scenario. Sends request to the Integromat hook URL.
+     * 
      * @param string $license_key license key to check against the hook.
      * @return string[] response from the scenario.
      */
@@ -329,7 +418,9 @@ class Addon {
      * Disables addon referred to by the slug parameter.
      * Updates the license status to be false.
      * Addon blocks are unregistered. 
+     * 
      * @param string $slug slug string of the plugin to be disabled. 
+     * @return void
      */
     public static function disable_addon($slug) {
         if (self::instance()::get_license_check_option($slug) != self::LICENSE_STATUS_NOT_ENTERED) {
@@ -347,9 +438,12 @@ class Addon {
      * Disables plugins. 
      * If the slug is the core plugin, all NewPath addons will be disabled along with the core plugin.
      * If the slug is an addon, disable_addon will be called.
-     * Make login page private.
+     * Make login page private and prevent uses from accessing the login form
+     * 
      * @param string $slug slug string of the plugin to disable.
-     * @param string $new_license_status new, accurate status for the license. Will be invalid if license was found to be invalid or expired. Will be "not entered" if license has not been entered or WA credentials are invalid.
+     * @param string $new_license_status new, accurate status for the license.
+     * Will be invalid if license was found to be invalid or expired. Will be 
+     * "not entered" if license has not been entered or WA credentials are invalid.
      */
     public static function disable_plugin($slug, $new_license_status) {
         // if slug == core
@@ -387,10 +481,22 @@ class Addon {
 
     }
 
+    /**
+     * Returns whether the plugin is currently disabled.
+     * Plugin will be disabled if any of the credentials are invalid/nonexistent
+     * or if there's been an unresolved fatal error.
+     *
+     * @return bool
+     */
     public static function is_plugin_disabled() {
         return get_option(self::WAWP_DISABLED_OPTION);
     }
 
+    /**
+     * Refresh license keys.
+     * 
+     * @return void
+     */
     public static function update_licenses() {
 
         $licenses = self::get_licenses();
@@ -399,16 +505,21 @@ class Addon {
             return;
         }
 
+        // loop through all saved licenses
         foreach (self::get_licenses() as $slug => $license) {
             // if empty, don't send the request
-            if (empty($license)) return;
+            if (empty($license)) continue;
+            
+            // try validating license key
             try {
                 $new_license = self::validate_license_key($license, $slug);    
             } catch (Exception $e) {
+                // if there's a fatal error, clear the status
                 Log::wap_log_error($e->getMessage(), true);
                 $new_license = Addon::LICENSE_STATUS_ENTERED_EMPTY;
             }
             
+            // update status
             if ($new_license == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
                 $new_license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
             } else if (is_null($new_license)) {
@@ -421,10 +532,13 @@ class Addon {
     }  
 
     /**
-     * Validates the license key.
+     * Validates the license key. License key must not be expired, user must have
+     * WAP licensed, correct URL and user ID for their WA account
+     * 
      * @param string $license_key_input license key from the input form.
      * @param string $addon_slug Respective add-on for the key.
-     * @return string|null the license key if the input is valid, null if not. 
+     * @return string|null the license key if the input is valid, "empty" 
+     * if entered license is empty, and null if it's invalid. 
      */
     public static function validate_license_key($license_key_input, $addon_slug) {
         // if license key is empty, do nothing
@@ -453,6 +567,7 @@ class Addon {
 
     /**
      * Sends a POST request to the license key validation hook, returns response data
+     * 
      * @param array $data request data containing license key and JSON flag
      * @return array JSON response data 
      */
@@ -475,6 +590,12 @@ class Addon {
         return $result;
     }
 
+    /**
+     * Returns correct Make license check hook url. Returns dev url if dev
+     * flag exists in wp-config, production url if not.
+     *
+     * @return string hook url
+     */
     private static function get_hook_url() {
         // check for dev flag
         $hook_url = self::HOOK_URL;
@@ -497,9 +618,11 @@ class Addon {
 
     /**
      * Checks the Integromat hook response for the necessary conditions for a valid license.
-     * Must have WAWP in products.
-     * Must have support.
+     * Must have WAP in products.
+     * Must have correct URL and user ID for their WA account associated with
+     * the API credentials
      * Must not be expired.
+     * 
      * @return bool true if above conditions are valid, false if not.
      */
     public static function check_license_properties($response, $slug) {
@@ -539,8 +662,9 @@ class Addon {
 
     /**
      * Returns whether the license key is expired or not.
+     * 
      * @param string $exp_date_string the expiry date of the license entered
-     * @return boolean true if license is expired, false if not. 
+     * @return bool true if license is expired, false if not. 
      */
     private static function is_expired($exp_date_string) {
         $now = new DateTime();
@@ -553,6 +677,12 @@ class Addon {
         return $is_expired;
     }
 
+    /**
+     * Displays valid license notice.
+     *
+     * @param string $slug plugin slug for which the entered license is valid
+     * @return void
+     */
     public static function valid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         echo "<div class='notice notice-success is-dismissible license'><p>";
@@ -560,6 +690,12 @@ class Addon {
 		echo "</div>";
     }
 
+    /**
+     * Displays valid license notice.
+     *
+     * @param string $slug plugin slug for which the license is invalid
+     * @return void
+     */
     public static function invalid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         echo "<div class='notice notice-error is-dismissible license'><p>";
@@ -568,20 +704,27 @@ class Addon {
         echo "</div>";
     }
 
+    /**
+     * Displays valid license notice.
+     *
+     * @param string $slug plugin slug for which the license is empty
+     * @return void
+     */
     public static function empty_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
         echo "<div class='notice notice-warning license'><p>";
         echo "Please enter a valid license key for <strong>" . esc_html__($plugin_name) . "</strong>. </p></div>";
-        unset($_GET['activate']); // prevents printing "Plugin activated" message
-        // deactivate_plugins($filename);
+        // prevents printing "Plugin activated" message
+        unset($_GET['activate']); 
     }
 
     /**
      * Prints out a message prompting the user to enter their license key.
      * Called when user has activated the plugin but has NOT YET entered their license key.
+     * 
      * @param string $slug slug of the plugin for which to display this prompt
-     * @param boolean $is_licensing_page indicates whether or not the current page is the licensing form page. if it isn't, print a link to the licensing form page. 
+     * @param void
      */
     public static function license_key_prompt($slug, $is_licensing_page) {
         $plugin_name = self::get_title($slug);
@@ -597,10 +740,4 @@ class Addon {
         unset($_GET['activate']);
     }
 
-
-
-
-
 } // end of Addon class
-
-?>

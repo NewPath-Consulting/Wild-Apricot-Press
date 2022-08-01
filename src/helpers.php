@@ -86,6 +86,9 @@ function is_plugin_page() {
     return str_contains($current_url, 'plugins.php');
 }
 
+/**
+ * @return bool true if the current page is the post editor, false if not
+ */
 function is_post_edit_page() {
     $current_url = get_current_url();
     return str_contains($current_url, 'post=') &&
@@ -120,6 +123,11 @@ function empty_string_array($arr) {
     return $arr;
 }
 
+/**
+ * Displays invalid nonce admin notice.
+ *
+ * @return void
+ */
 function invalid_nonce_error_message() {
     echo "<div class='notice notice-warning is-dismissable'><p>";
     echo "Invalid nonce error. Please try again.";

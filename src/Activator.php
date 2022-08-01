@@ -8,14 +8,19 @@ require_once __DIR__ . '/Log.php';
 require_once __DIR__ . '/WAWPException.php';
 require_once __DIR__ . '/MySettingsPage.php';
 
+/**
+ * Activation controller class
+ */
 class Activator {
 
-	const SHOW_NOTICE_ACTIVATION = 'show_notice_activation';
+	/**
+	 * @var string prefix for the license status option name
+	 */
 	const LICENSE_CHECK_OPTION = 'license-check-' . CORE_SLUG;
 
 
 	/**
-	 * Constructor for Activator class
+	 * Constructor for Activator class.
 	 */
 	public function __construct($filename) {
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
@@ -27,8 +32,8 @@ class Activator {
 			'name' => CORE_NAME,
 			'filename' => $filename,
 			'license_check_option' => self::LICENSE_CHECK_OPTION,
-			'show_activation_notice' => self::SHOW_NOTICE_ACTIVATION,
-			'is_addon' => 0 // only core calls activator, so is_addon will always be false here
+			'show_activation_notice' => Addon::WAWP_ACTIVATION_NOTICE_OPTION,
+			'is_addon' => 0
 		));
 
 
@@ -39,8 +44,10 @@ class Activator {
 	/**
 	 * Activates the WAWP plugin.
 	 *
-	 * Checks if user has already entered valid Wild Apricot credentials and license key
-	 * -> If so, then the full Wild Apricot functionality is run
+	 * Checks if user has already entered valid Wild Apricot credentials
+	 * and license key. If so, then the full Wild Apricot functionality is run.
+	 * 
+	 * @return void
 	 */
 	public static function activate_plugin_callback() {
 		/**
@@ -77,7 +84,7 @@ class Activator {
 	 * @return void
 	 */
 	public static function admin_notices_creds_check() {
-		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
+		$should_activation_show_notice = get_option(Addon::WAWP_ACTIVATION_NOTICE_OPTION);
 		// only show wap notices on relevant pages: wap settings, installed plugins, and post editor
 		if (!is_wawp_settings() && (!is_plugin_page() && !$should_activation_show_notice) && !is_post_edit_page()) return;
 
@@ -113,6 +120,12 @@ class Activator {
 		Addon::instance()::license_admin_notices();
 	}
 
+	/**
+	 * Prints admin notice prompting the user to enter their WA credentials and
+	 * license key.
+	 *
+	 * @return void
+	 */
 	private static function empty_creds_message() {
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your ";
@@ -124,6 +137,11 @@ class Activator {
 	}
 
 
+	/**
+	 * Prints admin notice prompting the user to enter their WA credentials.
+	 *
+	 * @return void
+	 */
 	private static function empty_wa_message() {
 
 		echo "<div class='notice notice-warning'><p>";
@@ -135,9 +153,4 @@ class Activator {
 		echo "</p></div>";
 	}
 
-	// private static function fatal_error_message() {
-	// 	Exception::admin_notice_error_message_template();
-	// }
-
 }
-?>

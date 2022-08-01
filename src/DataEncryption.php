@@ -3,6 +3,9 @@ namespace WAWP;
 
 require_once __DIR__ . '/WAWPException.php';
 
+/**
+ * Controls data encryption and decryption. Uses OpenSSL.
+ */
 class DataEncryption {
 	// Holds key and salt values
 	private $key;
@@ -20,6 +23,14 @@ class DataEncryption {
 
 	}
 
+	/**
+	 * Encrypts data.
+	 *
+	 * @param mixed $value data to encrypt
+	 * @return string encrypted data
+	 * @throws EncryptionExcption thrown if OpenSSL does not exist or if encryption
+	 * fails.
+	 */
 	public function encrypt( $value ) {
 		if ( ! extension_loaded( 'openssl' ) ) {
 			throw new EncryptionException(EncryptionException::openssl_error());
@@ -42,6 +53,14 @@ class DataEncryption {
 		return base64_encode( $iv . $raw_value );
 	}
 
+	/**
+	 * Decrypts data.
+	 *
+	 * @param mixed $value data to decrypt
+	 * @return string decrypted data
+	 * @throws DecryptionException thrown if OpenSSL does not exist or if
+	 * decryption fails.
+	 */
 	public function decrypt( $raw_value ) {
 		// throw new DecryptionException('test decryption exception');
 		if ( ! extension_loaded( 'openssl' ) ) {
@@ -72,6 +91,12 @@ class DataEncryption {
 		return substr( $value, 0, - strlen( $this->salt ) );
 	}
 
+	/**
+	 * Obtains private key from wp-config.
+	 * 
+	 * @return string private key
+	 * @throws EncryptionException thrown if private key is not set.
+	 */
 	private function get_default_key() {
 		if ( defined( 'LOGGED_IN_KEY' ) && !empty(LOGGED_IN_KEY) ) {
 			return LOGGED_IN_KEY;
@@ -80,6 +105,12 @@ class DataEncryption {
 		throw new EncryptionException('No "logged in key" value set. Please set your LOGGED_IN_KEY in the "wp-config.php" file in your WordPress folder.');
 	}
 
+	/**
+	 * Obtains private salt from wp-config.
+	 * 
+	 * @return string private salt
+	 * @throws EncryptionException thrown if private salt is not set.
+	 */
 	private function get_default_salt() {
 		if ( defined( 'LOGGED_IN_SALT' ) && !empty(LOGGED_IN_SALT) ) {
 			return LOGGED_IN_SALT;

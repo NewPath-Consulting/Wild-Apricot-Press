@@ -37,6 +37,8 @@ abstract class Exception extends \Exception {
      * Removes exception flag before calling functions that could throw exceptions
      * so errors don't get incorrectly reported but the flag will stay if 
      * the error persists.
+     * 
+     * @return void
      */
     public static function remove_error() {
         refresh_credentials();
@@ -50,12 +52,15 @@ abstract class Exception extends \Exception {
     /**
      * Returns whether there's been a fatal error or not.
      *
-     * @return boolean
+     * @return string|bool option value, false if empty or DNE
      */
     public static function fatal_error() {
         return get_option(Exception::EXCEPTION_OPTION);
     }
 
+    /**
+     * Abstract function for child classes to implement.
+     */
     protected abstract function get_error_type();
 
     public static function get_user_facing_error_message() {
@@ -63,10 +68,6 @@ abstract class Exception extends \Exception {
         <h3>FATAL ERROR</h3><p>Wild Apricot Press has encountered a fatal error and must be disabled.
         Please contact your site administrator.</p></div>";
     }
-
-    public static function error_message_template($error_type) {
-
-    } 
 
     /**
      * Displays appropriate error message on admin screen. Added to admin_notices
@@ -93,20 +94,45 @@ abstract class Exception extends \Exception {
  */
 class APIException extends Exception {
 
+    /**
+     * Exception descroption
+     * 
+     * @var string
+     */
     const ERROR_DESCRIPTION = 'connecting to Wild Apricot';
 
+    /**
+     * Returns description for API connection error.
+     *
+     * @return string
+     */
     public static function api_connection_error() {
         return 'There was an error connecting to the Wild Apricot API and the plugin has to be disabled. Please try again.';
     }
 
+    /**
+     * Returns description for API response error.
+     *
+     * @return string
+     */
     public static function api_response_error() {
         return 'There was an error in the Wild Apricot API and the plugin has to be disabled. Please try again.';
     }
 
+    /**
+     * Returns API exception description.
+     *
+     * @return string
+     */
     protected function get_error_type() {
         return self::ERROR_DESCRIPTION;
     }
 
+    /**
+     * Removes exception option.
+     *
+     * @return void
+     */
     public static function remove_error() {
         if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
        
@@ -117,12 +143,24 @@ class APIException extends Exception {
 }
 
 /**
- * Handles encryption/decryption exceptions. Child of custom Exception class.
+ * Handles encryption exceptions. Child of custom Exception class.
  */
 class EncryptionException extends Exception {
 
+    /**
+     * Exception descroption
+     * 
+     * @var string
+     */
     const ERROR_DESCRIPTION = 'encrypting your data';
 
+    /**
+     * Constructor.
+     *
+     * @param string $message
+     * @param integer $code
+     * @param \Throwable|null $previous
+     */
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {
         if (empty($message)) $message = self::encrypt_error();
         parent::__construct($message, $code, $previous);
@@ -133,14 +171,29 @@ class EncryptionException extends Exception {
 
     }
 
+    /**
+     * Returns description of OpenSSL error.
+     *
+     * @return string
+     */
     public static function openssl_error() {
         return 'OpenSSL not installed.';
     }
 
+    /**
+     * Returns description of encryption error.
+     *
+     * @return string
+     */
     public static function encrypt_error() {
         return 'There was an error with encryption.';
     }
 
+    /**
+     * Removes exception option.
+     *
+     * @return void
+     */
     public static function remove_error() {
         if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
        
@@ -148,11 +201,19 @@ class EncryptionException extends Exception {
         delete_option(self::EXCEPTION_OPTION);
     }
 
+    /**
+     * Returns error description.
+     *
+     * @return string
+     */
     protected function get_error_type() {
         return self::ERROR_DESCRIPTION;
     }
 }
 
+/**
+ * Handles decryption errors. Child class of WAWP\Exception.
+ */
 class DecryptionException extends Exception {
     const ERROR_DESCRIPTION = 'decrypting your data';
 
@@ -166,7 +227,11 @@ class DecryptionException extends Exception {
 
     }
 
-
+    /**
+     * Removes exception option.
+     *
+     * @return void
+     */
     public static function remove_error() {
         if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
        
@@ -174,10 +239,18 @@ class DecryptionException extends Exception {
         delete_option(self::EXCEPTION_OPTION);
     }
 
+    /**
+     * Returns decryption error description.
+     *
+     * @return string
+     */
     public static function decrypt_error() {
         return 'There was an error with decryption.';
     }
 
+    /** 
+     * Returns error description.
+     */
     protected function get_error_type() {
         return self::ERROR_DESCRIPTION;
     }

@@ -8,6 +8,11 @@ require_once __DIR__ . '/MySettingsPage.php';
 
 class Deactivator {
 
+	/**
+	 * Deactivate function. Makes login page private and removes cron jobs.
+	 *
+	 * @return void
+	 */
 	public static function deactivate() {
 		// Set WAWP Wild Apricot Login page to a Private page so that users cannot access it
 		// https://wordpress.stackexchange.com/questions/273557/how-to-set-post-status-to-delete
