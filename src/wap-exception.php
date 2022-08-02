@@ -9,11 +9,10 @@ require_once __DIR__ . '/helpers.php';
 
 /**
  * Interface for custom exceptions.
- *
+ * 
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
  * @copyright  2022 NewPath Consulting
- * @license    GNU General Public License 2.0
- * @version    Release: 1.0
- * @since      1.0
  */
 abstract class Exception extends \Exception {
     const EXCEPTION_OPTION = 'wawp-exception-type';
@@ -92,7 +91,9 @@ abstract class Exception extends \Exception {
 /**
  * Handles API exceptions. Child of custom Exception class.
  * 
- * @since 1.0
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
+ * @copyright  2022 NewPath Consulting
  */
 class API_Exception extends Exception {
 
@@ -147,7 +148,9 @@ class API_Exception extends Exception {
 /**
  * Handles encryption exceptions. Child of custom Exception class.
  * 
- * @since 1.0
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
+ * @copyright  2022 NewPath Consulting
  */
 class Encryption_Exception extends Exception {
 
@@ -216,9 +219,11 @@ class Encryption_Exception extends Exception {
 }
 
 /**
- * Handles decryption errors. Child class of WAWP\Exception.
+ * Handles decryption exceptions. Child class of custom Exception class.
  * 
- * @since 1.0
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
+ * @copyright  2022 NewPath Consulting
  */
 class Decryption_Exception extends Exception {
     const ERROR_DESCRIPTION = 'decrypting your data';

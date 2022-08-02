@@ -4,13 +4,18 @@ namespace WAWP;
 require_once __DIR__ . '/class-log.php';
 require_once __DIR__ . '/wap-exception.php';
 
-use WAWP\Log;
-
+/**
+ * Manages connections to and retrieves data from the WildApricot API.
+ * 
+ * @since 1.0b1
+ * @author Spencer Gable-Cook
+ * @copyright 2022 NewPath Consulting
+ */
 class WA_API {
 	// Constants
 	const ADMIN_API_VERSION = 'v2.2';
 	const MEMBER_API_VERSION = 'v1';
-	const WAWP_USER_AGENT = 'WildApricotPress/1.0';
+	const WAP_USER_AGENT = 'WildApricotPress/1.0';
 	const API_URL = 'https://api.wildapricot.org/';
 	// const API_URL = 'https://google.com';
 

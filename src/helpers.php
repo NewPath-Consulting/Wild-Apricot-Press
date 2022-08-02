@@ -1,8 +1,12 @@
 <?php
 /**
  * helpers.php
- * The purpose of this class is to hold common constants and one-off functions used across files 
- * in the WAWP namespace.
+ * The purpose of this file is to hold common constants and one-off
+ * functions used across files in the WAWP namespace.
+ * 
+ * @since 1.0b3
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
  */
 
 namespace WAWP;

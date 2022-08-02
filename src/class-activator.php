@@ -10,6 +10,10 @@ require_once __DIR__ . '/wap-exception.php';
 
 /**
  * Activation controller class
+ * 
+ * @since 1.0b1
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
  */
 class Activator {
 
@@ -35,8 +39,6 @@ class Activator {
 			'show_activation_notice' => Addon::WAWP_ACTIVATION_NOTICE_OPTION,
 			'is_addon' => 0
 		));
-
-
 
 	}
 

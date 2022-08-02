@@ -6,6 +6,13 @@ require_once __DIR__ . '/class-admin-settings.php';
 require_once __DIR__ . '/class-wa-api.php';
 require_once __DIR__ . '/class-wa-integration.php';
 
+/**
+ * Deactivation controller.
+ * 
+ * @since 1.0b1
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
+ */
 class Deactivator {
 
 	/**

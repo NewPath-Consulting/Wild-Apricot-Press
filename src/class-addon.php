@@ -14,6 +14,10 @@ use \DateTime;
 /**
  * Addon class
  * For managing the Addon plugins for WAWP
+ * 
+ * @since 1.0b1
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
  */
 class Addon {
 

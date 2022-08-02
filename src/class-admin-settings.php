@@ -6,6 +6,13 @@ require_once __DIR__ . '/class-log.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/wap-exception.php';
 
+/**
+ * Manages and renders plugin settings on the admin screen.
+ *
+ * @since 1.0b1
+ * @author Spencer Gable-Cook and Natalie Brotherton
+ * @copyright 2022 NewPath Consulting
+ */
 class Admin_Settings {
     const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
 
@@ -1230,8 +1237,8 @@ class Admin_Settings {
      * @return void
      */
     public function print_restriction_info() {
-        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the WildApricot membership level(s) or group(s) required to access a restricted post.';
-        print 'Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post.'; 
+        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the WildApricot membership level(s) or group(s) required to access a restricted post. ';
+        print 'Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. '; 
         print 'You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
     }
 

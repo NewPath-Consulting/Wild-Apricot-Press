@@ -7,10 +7,9 @@ require_once __DIR__ . '/class-wa-api.php';
 /**
  * This class manages custom log messages for WAP and its blocks.
  *
- * @copyright  2022 NewPath Consulting
- * @license    GNU General Public License 2.0
- * @version    Release: 1.0
- * @since      Class available since Release 1.0
+ * @since 1.0b4
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
  */
 class Log {
 

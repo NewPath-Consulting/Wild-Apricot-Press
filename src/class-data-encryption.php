@@ -5,6 +5,10 @@ require_once __DIR__ . '/wap-exception.php';
 
 /**
  * Controls data encryption and decryption. Uses OpenSSL.
+ * 
+ * @since 1.0b1
+ * @author Spencer Gable-Cook
+ * @copyright 2022 NewPath Consulting
  */
 class Data_Encryption {
 	// Holds key and salt values

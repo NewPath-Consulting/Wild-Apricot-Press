@@ -11,7 +11,10 @@ require_once __DIR__ . '/helpers.php';
 
 
 /**
- * Class for managing the user's WildApricot account
+ * Class for managing the user's WildApricot account and post restriction
+ * @since 1.0b1
+ * @author Spencer Gable-Cook and Natalie Brotherton
+ * @copyright 2022 NewPath Consulting
  */
 class WA_Integration {
 	// Constants for keys used for database management
