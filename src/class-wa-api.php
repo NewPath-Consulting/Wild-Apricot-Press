@@ -111,7 +111,7 @@ class WA_API {
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $this->access_token,
 				'Accept' => 'application/json',
-				'User-Agent' => self::WAWP_USER_AGENT
+				'User-Agent' => self::WAP_USER_AGENT
 			),
 		);
         return $args;
