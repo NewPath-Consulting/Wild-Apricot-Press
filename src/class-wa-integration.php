@@ -541,7 +541,7 @@ class WA_Integration {
 			// Invalid nonce
 			Log::wap_log_error('Your nonce for the post access control input could not be verified');
 			add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
-			// return;
+			return;
 		}
 
 		// Return if user does not have permission to edit the post
