@@ -347,8 +347,7 @@ class Admin_Settings {
      * @return void
      */
     public function login_menu_location_print_section_info() {
-        print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their WildApricot account on your WordPress site.<br>';
-        print 'By default, the button will appear on the primary menu of your site.';
+        print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their WildApricot account on your WordPress site.';
     }
 
     /**
@@ -360,6 +359,9 @@ class Admin_Settings {
         // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
         $menu_locations = get_nav_menu_locations();
         $menu_items = array();
+        
+        // sort menu in ascending order so the primary menu appears first
+        asort($menu_locations);
         // Save each menu name in menu_items
         foreach ($menu_locations as $key => $value) {
             // Append key to menu_items
@@ -369,12 +371,14 @@ class Admin_Settings {
         // See: https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
         $wawp_wal_login_logout_button = get_login_menu_location();
 
+
         foreach ($menu_items as $item) {
             $is_checked = in_array($item, $wawp_wal_login_logout_button);
+            $menu_name = wp_get_nav_menu_name($item);
             $checked = '';
             if ($is_checked) { $checked = 'checked'; }
-            echo "<div><input type='checkbox' id='wawp_selected_menu' name='wawp_menu_location_name[]' value='" . esc_html__($item) . "' " . esc_html__($checked) . ">";
-            echo "<label for= '" . esc_html__($item) . "'>" . esc_html__($item) . "</label></div>";
+            echo '<div><input type="checkbox" id="wawp_selected_menu" name="wawp_menu_location_name[]" value="' . esc_html__($item) . '" ' . esc_html__($checked) . '>';
+            echo '<label for= "' . esc_html__($item) . '">' . esc_html__($menu_name) . ' ('. esc_html__($item) . ')</label></div>';
         }
     }
 
@@ -396,8 +400,6 @@ class Admin_Settings {
 
         // Create valid array that will hold valid inputs
         $valid = array();
-        Log::wap_log_debug($input);
-        Log::wap_log_debug(get_nav_menu_locations());
         // Sanitize each element
         if (!empty($input)) {
             foreach ($input as $menu_key => $menu_value) {
@@ -726,7 +728,7 @@ class Admin_Settings {
         // Create settings section
         add_settings_section(
             'wawp_menu_location_id', // ID
-            'Login/Logout Button Location', // Title
+            'Login/Logout Button Menu Location', // Title
             array( $this, 'login_menu_location_print_section_info' ), // Callback
             self::LOGIN_BUTTON_LOCATION_PAGE // Page
         );

@@ -174,6 +174,10 @@ function get_primary_menu() {
 
 /**
  * Retrieves the login/logout button menu location.
+ * If the menu location is not saved in the options table, returns the primary
+ * menu.
+ * If the saved menu location does not exist in the current theme, returns
+ * the primary menu of the current theme.
  * 
  * @return array an array containing a single element corresponding to the
  * primary menu name of the current theme.
