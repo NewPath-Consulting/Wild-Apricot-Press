@@ -11,6 +11,7 @@
 
 namespace WAWP;
 
+require_once __DIR__ . '/admin-settings.php';
 require_once __DIR__ . '/class-addon.php';
 require_once __DIR__ . '/class-wa-api.php';
 
@@ -23,7 +24,7 @@ const CORE_NAME = 'WildApricot Press (WAP)';
  */
 function is_licensing_submenu() {
     $current_url = get_current_url();
-    return str_contains($current_url, 'admin.php?page=wawp-licensing');
+    return str_contains($current_url, License_Settings::SUBMENU_PAGE);
 }
 
 /**
@@ -31,7 +32,7 @@ function is_licensing_submenu() {
  */
 function is_wawp_settings() {
     $current_url = get_current_url();
-    return str_contains($current_url, CORE_SLUG);
+    return str_contains($current_url, CORE_SLUG) || str_contains($current_url, 'wap');
 }
 
 /**
@@ -39,15 +40,15 @@ function is_wawp_settings() {
  */
 function license_submitted() {
     $current_url = get_current_url();
-    return $current_url == 'admin.php?page=wawp-licensing&settings-updated=true';
+    return is_licensing_submenu() && str_contains($current_url, 'settings-updated=true');
 }
 
 /**
- * @return bool true if the current page is the wawp login page, false if not
+ * @return bool true if the current page is the wa auth login page, false if not
  */
 function is_wa_login_menu() {
     $current_url = get_current_url();
-    return $current_url == 'admin.php?page=wawp-login';
+    return str_contains($current_url, WA_Auth_Settings::SUBMENU_PAGE);
 }
 
 /**

@@ -2,7 +2,7 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/class-admin-settings.php';
+require_once __DIR__ . '/admin-settings.php';
 require_once __DIR__ . '/class-wa-api.php';
 require_once __DIR__ . '/class-wa-integration.php';
 
@@ -32,7 +32,7 @@ class Deactivator {
 		}
 
 		// Unschedule the CRON events
-		WA_API::unsetCronJob(Admin_Settings::CRON_HOOK);
+		WA_API::unsetCronJob(Settings::CRON_HOOK);
 		WA_API::unsetCronJob(WA_Integration::USER_REFRESH_HOOK);
 		WA_API::unsetCronJob(WA_Integration::LICENSE_CHECK_HOOK);
 	}

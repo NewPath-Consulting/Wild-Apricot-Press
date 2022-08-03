@@ -3,7 +3,7 @@
 namespace WAWP;
 
 require_once __DIR__ . '/class-addon.php';
-require_once __DIR__ . '/class-admin-settings.php';
+require_once __DIR__ . '/admin-settings.php';
 require_once __DIR__ . '/class-log.php';
 require_once __DIR__ . '/class-wa-integration.php';
 require_once __DIR__ . '/wap-exception.php';
@@ -75,7 +75,7 @@ class Activator {
 		// Run credentials obtained hook, which will read in the credentials in class-wa-integration.php
 		do_action('wawp_wal_credentials_obtained');
 		// Also create CRON event to refresh the membership levels/groups
-		Admin_Settings::setup_cron_job();
+		Settings::setup_cron_job();
 	}
 
 

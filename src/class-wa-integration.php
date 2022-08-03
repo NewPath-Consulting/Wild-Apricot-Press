@@ -63,7 +63,7 @@ class WA_Integration {
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
 		// Action for when login page is updated when submit button is pressed
 		add_action('template_redirect', array($this, 'create_user_and_redirect'));
-		// Filter for adding to menu
+		// Filter for adding login button to menu
 		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
 		// Shortcode for login form
 		add_shortcode('wawp_custom_login_form', array($this, 'custom_login_form_shortcode'));
