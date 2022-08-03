@@ -361,7 +361,10 @@ class Admin_Settings {
         $wawp_wal_login_logout_button = get_option(WA_Integration::MENU_LOCATIONS_KEY, []);
 
         foreach ($menu_items as $item) {
-            echo "<div><input type='checkbox' id='wawp_selected_menu' name='wawp_menu_location_name[]' value='" . esc_html__($item) . "'" . (in_array( esc_html__($item), $wawp_wal_login_logout_button )?"checked='checked'":"") . ">";
+            $is_checked = in_array($item, $wawp_wal_login_logout_button);
+            $checked = '';
+            if ($is_checked) { $checked = 'checked'; }
+            echo "<div><input type='checkbox' id='wawp_selected_menu' name='wawp_menu_location_name[]' value='" . esc_html__($item) . "' " . esc_html__($checked) . ">";
             echo "<label for= '" . esc_html__($item) . "'>" . esc_html__($item) . "</label></div>";
         }
     }
@@ -1556,7 +1559,7 @@ class License_Settings {
             $input_value = Addon::instance()::get_license($slug);
         } else {
         }
-        echo "<input id='license_key " . esc_html__($slug) . "' name='wawp_license_keys[" . esc_html__($slug) ."]' type='text' value='" . $input_value . "'  />" ;
+        echo "<input id='license_key " . esc_html__($slug) . "' name='wawp_license_keys[" . esc_html__($slug) ."]' type='text' value='" . esc_html__($input_value) . "'  />" ;
         if ($license_valid) {
             echo "<br><p style='color:green;'><span class='dashicons dashicons-saved'></span> License key valid</p>";
         } 

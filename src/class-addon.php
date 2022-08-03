@@ -736,7 +736,7 @@ class Addon {
         echo "<div class='notice notice-warning is-dismissable license'><p>";
         echo "Please enter your license key";
         if (!$is_licensing_page) {
-            echo " in <a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . ">WildApricot Press > Licensing</a>"; 
+            echo " in <a href=" . esc_url(get_licensing_menu_url()) . ">WildApricot Press > Licensing</a>"; 
         }
         
         echo " in order to use the <strong>" . esc_html__($plugin_name) . "</strong> functionality.</p></div>";

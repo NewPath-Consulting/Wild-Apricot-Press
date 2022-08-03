@@ -67,6 +67,20 @@ function get_current_url() {
 }
 
 /**
+ * @return string url to the licensing settings menu
+ */
+function get_licensing_menu_url() {
+    return admin_url('admin.php?page=' . License_Settings::SUBMENU_PAGE);
+}
+
+/**
+ * @return string url of the authorization settings menu
+ */
+function get_auth_menu_url() {
+    return admin_url('admin.php?page=' . WA_Auth_Settings::SUBMENU_PAGE);
+}
+
+/**
  * Returns the current tab. Used for finding which tab of the admin settings page
  * the user is on.
  *
