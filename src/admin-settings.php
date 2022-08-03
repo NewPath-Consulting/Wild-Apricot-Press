@@ -341,13 +341,22 @@ class Admin_Settings {
         <?php
     }
 
+    /**
+     * Print the menu location description text
+     * 
+     * @return void
+     */
+    public function login_menu_location_print_section_info() {
+        print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their WildApricot account on your WordPress site.<br>';
+        print 'By default, the button will appear on the primary menu of your site.';
+    }
 
     /**
      * Display the checkboxes for the login menu location 
      * 
      * @return void
      */
-    public function login_logout_menu_callback() {
+    public function login_menu_location_input_box() {
         // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
         $menu_locations = get_nav_menu_locations();
         $menu_items = array();
@@ -370,12 +379,55 @@ class Admin_Settings {
     }
 
     /**
+     * Sanitize the login/logout menu location checkboxes
+     *
+     * @param array $input Contains all checkboxes in an array
+     * @return array array of sanitized input
+     */
+    public function login_menu_location_sanitize($input) {
+        // Verify nonce
+        if (!wp_verify_nonce(
+            $_POST['wawp_menu_location_nonce_name'], 'wawp_menu_location_nonce_action')
+        ) {
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the menu location(s) could not be verified.');
+            return empty_string_array($input);
+        }
+
+        // Create valid array that will hold valid inputs
+        $valid = array();
+        Log::wap_log_debug($input);
+        Log::wap_log_debug(get_nav_menu_locations());
+        // Sanitize each element
+        if (!empty($input)) {
+            foreach ($input as $menu_key => $menu_value) {
+                $valid[$menu_key] = sanitize_text_field($menu_value);
+            }
+        } else {
+            // save primary menu location as default
+            $menu_locations = get_nav_menu_locations();
+            $valid= array_keys($menu_locations, min($menu_locations));
+        }
+        return $valid;
+    }
+
+    /**
+     * Print instructions on how to use the restriction status checkboxes
+     * 
+     * @return void
+     */
+    public function restriction_status_print_info() {
+        print 'Please select the WildApricot member/contact status(es) that will be able to see the restricted posts.<br>';
+        print 'If no statuses are selected, then all membership statuses can view the restricted posts.';
+    }
+
+    /**
      * Displays the checkboxes for selecting the membership statuses to restrict
      * from posts.
      * 
      * @return void
      */
-    public function restriction_status_callback() {
+    public function restriction_status_input_box() {
         // Display checkboxes for each WildApricot status
         // List of statuses here: https://gethelp.wildapricot.com/en/articles/137-member-and-contact-statuses
         $list_of_statuses = array(
@@ -406,126 +458,6 @@ class Admin_Settings {
             <?php
         }
     }
-
-    /**
-     * Displays the global restriction message text area.
-     * 
-     * @return void
-     */
-    public function restriction_message_callback() {
-        // Add wp editor
-        // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
-        // https://developer.wordpress.org/reference/functions/wp_editor/
-        // Get default or saved restriction message
-        $initial_content = get_option(WA_Integration::GLOBAL_RESTRICTION_MESSAGE);
-        $editor_id = 'wawp_restricted_message_textarea';
-        $editor_name = WA_Integration::GLOBAL_RESTRICTION_MESSAGE;
-        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
-        // Create WP editor
-        wp_editor($initial_content, $editor_id, $editor_settings);
-    }
-
-    /**
-     * Displays the checkboxes for the WildApricot custom fields.
-     * 
-     * @return void
-     */
-    public function field_message_callback() {
-        // Load in custom fields
-        $custom_fields = get_option(WA_Integration::LIST_OF_CUSTOM_FIELDS);
-        $checked_fields = get_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
-        // Display each custom field as a checkbox
-        if (!empty($custom_fields)) {
-            foreach ($custom_fields as $field_id => $field_name) {
-                // Check if this field is in the list of checked fields
-                $is_checked = '';
-                if (!empty($checked_fields)) {
-                    if (in_array($field_id, $checked_fields)) {
-                        // This field should be checked
-                        $is_checked = 'checked';
-                    }
-                }
-                ?>
-					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php esc_html_e($field_id); ?>" <?php esc_html_e($is_checked); ?>/> <?php esc_html_e($field_name); ?> </input><br>
-				<?php
-            }
-        } else { // no custom fields
-            $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
-            ?>
-            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">WildApricot Press -> Authorization</a></p>
-            <?php
-        }
-    }
-
-    /**
-     * Displays the options for deleting the plugin, including if the 
-     * WildApricot synced users should be retained, etc.
-     * 
-     * @return void
-     */
-    public function plugin_delete_callback() {
-        // Store each checkbox description in array
-        $synced_info = array('wawp_delete_checkbox' => 'Delete all WildApricot information from my WordPress site');
-        // Load in saved checkboxes
-        $saved_synced_info = get_option(WA_Integration::WA_DELETE_OPTION);
-        // Display checkboxes
-        foreach ($synced_info as $key => $attribute) {
-            $checked = '';
-            // Check if this attribute has already been checked
-            if (!empty($saved_synced_info)) {
-                if (in_array($key, $saved_synced_info)) {
-                    $checked = 'checked';
-                }
-            }
-            ?>
-            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php esc_html_e($key); ?>" <?php esc_html_e($checked); ?>/> <?php esc_html_e($attribute); ?> </input><br>
-            <p><b><br>Please note that this information will never be deleted from your WildApricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your WildApricot site.
-            So, don't worry - you are not permanently deleting information that you cannot recover later.</b></p>
-            <?php
-        }
-    }
-
-    /**
-     * Renders the log file toggle checkbox.
-     *
-     * @return void
-     */
-    public function wawp_logfile_flag_form() {
-        $checked = Log::can_debug();
-        ?>
-        <input type="checkbox" name="<?php esc_html_e(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked" <?php esc_html_e($checked); ?>></input>
-        <?php
-    }
-
-    /**
-     * Sanitize the login/logout menu location checkboxes
-     *
-     * @param array $input Contains all checkboxes in an array
-     * @return array array of sanitized input
-     */
-    public function menu_location_sanitize($input) {
-        // Verify nonce
-        if (!wp_verify_nonce(
-            $_POST['wawp_menu_location_nonce_name'], 'wawp_menu_location_nonce_action')
-        ) {
-            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
-            Log::wap_log_error('Your nonce for the menu location(s) could not be verified.');
-            return empty_string_array($input);
-        }
-
-        // Create valid array that will hold valid inputs
-        $valid = array();
-        // Sanitize each element
-        if (!empty($input)) {
-            foreach ($input as $menu_key => $menu_value) {
-                $valid[$menu_key] = sanitize_text_field($menu_value);
-            }
-        } else {
-            // save primary menu location as default
-            $menu_locations = get_nav_menu_locations();
-        }
-        return $valid;
-    }
     
     /**
      * Sanitize restriction status checkboxes.
@@ -553,12 +485,41 @@ class Admin_Settings {
     }
 
     /**
+     * Print the Global Restriction description
+     * 
+     * @return void
+     */
+    public function restriction_message_print_info() {
+        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the WildApricot membership level(s) or group(s) required to access a restricted post. ';
+        print 'Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. '; 
+        print 'You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
+    }
+    
+    /**
+     * Displays the global restriction message text area.
+     * 
+     * @return void
+     */
+    public function restriction_message_input_box() {
+        // Add wp editor
+        // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
+        // https://developer.wordpress.org/reference/functions/wp_editor/
+        // Get default or saved restriction message
+        $initial_content = get_option(WA_Integration::GLOBAL_RESTRICTION_MESSAGE);
+        $editor_id = 'wawp_restricted_message_textarea';
+        $editor_name = WA_Integration::GLOBAL_RESTRICTION_MESSAGE;
+        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
+        // Create WP editor
+        wp_editor($initial_content, $editor_id, $editor_settings);
+    }
+
+    /**
      * Sanitize restriction message.
      *
      * @param array $input Contains all settings fields as array keys
      * @return array array of sanitized inputs
      */
-    public function restriction_sanitize($input) {
+    public function restriction_message_sanitize($input) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
             // wp_die('Your nonce for the restriction message could not be verified.');
@@ -572,6 +533,46 @@ class Admin_Settings {
         return $valid;
     }
 
+    /**
+     * Print the Custom Fields introductory text
+     * 
+     * @return void
+     */
+    public function custom_fields_print_info() {
+        print 'Please select the WildApricot Contact Fields that you would like to sync with your WordPress site.';
+    }
+
+    /**
+     * Displays the checkboxes for the WildApricot custom fields.
+     * 
+     * @return void
+     */
+    public function custom_fields_input() {
+        // Load in custom fields
+        $custom_fields = get_option(WA_Integration::LIST_OF_CUSTOM_FIELDS);
+        $checked_fields = get_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
+        // Display each custom field as a checkbox
+        if (!empty($custom_fields)) {
+            foreach ($custom_fields as $field_id => $field_name) {
+                // Check if this field is in the list of checked fields
+                $is_checked = '';
+                if (!empty($checked_fields)) {
+                    if (in_array($field_id, $checked_fields)) {
+                        // This field should be checked
+                        $is_checked = 'checked';
+                    }
+                }
+                ?>
+					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php esc_html_e($field_id); ?>" <?php esc_html_e($is_checked); ?>/> <?php esc_html_e($field_name); ?> </input><br>
+				<?php
+            }
+        } else { // no custom fields
+            $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
+            ?>
+            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">WildApricot Press -> Authorization</a></p>
+            <?php
+        }
+    }
 
     /**
      * Sanitize custom fields input.
@@ -598,12 +599,52 @@ class Admin_Settings {
     }
 
     /**
+     * Print description of the plugin options
+     * 
+     * @return void
+     */
+    public function deletion_option_print_info() {
+        print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, the WordPress users and roles that you have synced from WildApricot are retained (not deleted).';
+        print 'If you like, you can remove all WildApricot information from your WordPress site after deleting the <b>WildApricot Press</b> plugin by checking the checkbox below.<br><br>';
+        print 'Then, all of the WildApricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>WildApricot Press</b> plugin.';
+        print 'If you would like to keep your WildApricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked.';
+    }
+
+    /**
+     * Displays the options for deleting the plugin, including if the 
+     * WildApricot synced users should be retained, etc.
+     * 
+     * @return void
+     */
+    public function deletion_option_input() {
+        // Store each checkbox description in array
+        $synced_info = array('wawp_delete_checkbox' => 'Delete all WildApricot information from my WordPress site');
+        // Load in saved checkboxes
+        $saved_synced_info = get_option(WA_Integration::WA_DELETE_OPTION);
+        // Display checkboxes
+        foreach ($synced_info as $key => $attribute) {
+            $checked = '';
+            // Check if this attribute has already been checked
+            if (!empty($saved_synced_info)) {
+                if (in_array($key, $saved_synced_info)) {
+                    $checked = 'checked';
+                }
+            }
+            ?>
+            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php esc_html_e($key); ?>" <?php esc_html_e($checked); ?>/> <?php esc_html_e($attribute); ?> </input><br>
+            <p><b><br>Please note that this information will never be deleted from your WildApricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your WildApricot site.
+            So, don't worry - you are not permanently deleting information that you cannot recover later.</b></p>
+            <?php
+        }
+    }
+
+    /**
      * Sanitize the plugin deletion option.
      * 
      * @param array $input contains settings input as array keys
      * @return array array of sanitized inputs
      */
-    public function deletion_options_sanitize($input) {
+    public function deletion_option_sanitize($input) {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_delete_nonce_name'], 'wawp_delete_nonce_action')) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
@@ -622,12 +663,34 @@ class Admin_Settings {
     }
 
     /**
+     * Print settings information for the logfile toggle.
+     *
+     * @return void
+     */
+    public function logfile_option_print_info() {
+        print 'By checking this box, error and warning messages will be printed to a file accessible in <code>wp-content/wapdebug.log</code>.';
+        print '<br>Note: log message timezone will be in UTC if timezone is not set in WordPress settings.';
+    }
+
+    /**
+     * Renders the log file toggle checkbox.
+     *
+     * @return void
+     */
+    public function logfile_option_input() {
+        $checked = Log::can_debug();
+        ?>
+        <input type="checkbox" name="<?php esc_html_e(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked" <?php esc_html_e($checked); ?>></input>
+        <?php
+    }
+
+    /**
      * Sanitize the logfile toggle input.
      *
      * @param string $input
      * @return string sanitized input
      */
-    public function logfile_options_sanitize($input) {
+    public function logfile_option_sanitize($input) {
         if (!wp_verify_nonce($_POST['wawp_logfile_flag_nonce_name'], 'wawp_logfile_flag_nonce_action')) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
             Log::wap_log_error('Your nonce for the logfile option could not be verified.');
@@ -649,7 +712,7 @@ class Admin_Settings {
     private function register_login_button_location() {
         $register_args = array(
             'type' => 'string',
-            'sanitize_callback' => array( $this, 'menu_location_sanitize'),
+            'sanitize_callback' => array( $this, 'login_menu_location_sanitize'),
             'default' => null
         );
 
@@ -664,7 +727,7 @@ class Admin_Settings {
         add_settings_section(
             'wawp_menu_location_id', // ID
             'Login/Logout Button Location', // Title
-            array( $this, 'menu_location_print_section_info' ), // Callback
+            array( $this, 'login_menu_location_print_section_info' ), // Callback
             self::LOGIN_BUTTON_LOCATION_PAGE // Page
         );
 
@@ -672,7 +735,7 @@ class Admin_Settings {
         add_settings_field(
             'wawp_wal_login_logout_button', // ID
             'Menu Location(s):', // Title
-            array( $this, 'login_logout_menu_callback' ), // Callback
+            array( $this, 'login_menu_location_input_box' ), // Callback
             self::LOGIN_BUTTON_LOCATION_PAGE, // Page 
             'wawp_menu_location_id' // Section
         );
@@ -698,14 +761,14 @@ class Admin_Settings {
         add_settings_section(
             'wawp_restriction_status_id', // ID
             'WildApricot Status Restriction', // title
-            array($this, 'print_restriction_status_info'), // callback
+            array($this, 'restriction_status_print_info'), // callback
             Settings::SETTINGS_URL // page
         );
         // Field for membership statuses
         add_settings_field(
             'wawp_restriction_status_field_id', // ID
             'Membership Status(es):', // title
-            array($this, 'restriction_status_callback'), // callback
+            array($this, 'restriction_status_input_box'), // callback
             Settings::SETTINGS_URL, // page
             'wawp_restriction_status_id' // section
         );
@@ -720,7 +783,7 @@ class Admin_Settings {
         // Register setting
         $register_args = array(
             'type' => 'string',
-            'sanitize_callback' => array( $this, 'restriction_sanitize'),
+            'sanitize_callback' => array( $this, 'restriction_message_sanitize'),
             'default' => null
         );
         register_setting(
@@ -733,14 +796,14 @@ class Admin_Settings {
         add_settings_section(
             'wawp_restriction_id', // ID
             'Global Restriction Message', // title
-            array($this, 'print_restriction_info'), // callback
+            array($this, 'restriction_message_print_info'), // callback
             'wawp-wal-admin-message' // page
         );
         // Field for restriction message
         add_settings_field(
             'wawp_restriction_field_id', // ID
             'Restriction Message:', // title
-            array($this, 'restriction_message_callback'), // callback
+            array($this, 'restriction_message_input_box'), // callback
             'wawp-wal-admin-message', // page
             'wawp_restriction_id' // section
         );
@@ -768,13 +831,13 @@ class Admin_Settings {
         add_settings_section(
             'wawp_fields_id', // ID
             'Custom Fields', // title
-            array($this, 'print_fields_info'), // callback
+            array($this, 'custom_fields_print_info'), // callback
             'wawp-wal-admin&tab=fields' // page
         );
         add_settings_field(
             'wawp_custom_field_id', // ID
             'Custom Fields to Include:', // title
-            array($this, 'field_message_callback'), // callback
+            array($this, 'custom_fields_input'), // callback
             'wawp-wal-admin&tab=fields', // page
             'wawp_fields_id' // section
         );
@@ -790,7 +853,7 @@ class Admin_Settings {
         // Register setting
         $register_args = array(
             'type' => 'string',
-            'sanitize_callback' => array( $this, 'deletion_options_sanitize'),
+            'sanitize_callback' => array( $this, 'deletion_option_sanitize'),
             'default' => null
         );
         register_setting(
@@ -802,13 +865,13 @@ class Admin_Settings {
         add_settings_section(
             'wawp_delete_id', // ID
             'Plugin Deletion Options', // title
-            array($this, 'print_delete_info'), // callback
+            array($this, 'deletion_option_print_info'), // callback
             'wawp-wal-admin&tab=plugin' // page
         );
         add_settings_field(
             'wawp_delete_options_id', // ID
             'Attributes to Remove Upon Plugin Deletion:', // title
-            array($this, 'plugin_delete_callback'), // callback
+            array($this, 'deletion_option_input'), // callback
             'wawp-wal-admin&tab=plugin', // page
             'wawp_delete_id' // section
         );
@@ -822,7 +885,7 @@ class Admin_Settings {
     private function register_logfile_option() {
         $register_args = array(
             'type' => 'string',
-            'sanitize_callback' => array($this, 'logfile_options_sanitize'),
+            'sanitize_callback' => array($this, 'logfile_option_sanitize'),
             'default' => null
         );
         register_setting(
@@ -833,13 +896,13 @@ class Admin_Settings {
         add_settings_section(
             'wawp_logfile_id',
             'Plugin Log Messages',
-            array($this, 'print_logfile_info'),
+            array($this, 'logfile_option_print_info'),
             'wawp-wal-admin&tab=plugin#log'
         );
         add_settings_field(
             'wawp_logfile_flag_id',
             'Print log messages to log file',
-            array($this, 'wawp_logfile_flag_form'),
+            array($this, 'logfile_option_input'),
             'wawp-wal-admin&tab=plugin#log',
             'wawp_logfile_id',
         );
@@ -851,6 +914,7 @@ class Admin_Settings {
      * @return void
      */
     private function create_content_restriction_options_tab() {
+
         ?>
         <!-- Menu Locations for Login/Logout button -->
         <form method="post" action="options.php">
@@ -865,16 +929,16 @@ class Admin_Settings {
         </form>
         <!-- Check if menu location(s) have been submitted -->
         <?php
-            // Check menu locations in options table
-            $menu_location_saved = get_option(WA_Integration::MENU_LOCATIONS_KEY);
-            // If menu locations is not empty, then it has been saved
-            if (!empty($menu_location_saved)) {
-                // Display success statement
-                echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
-            } else {
-                Log::wap_log_warning('No menu location for the login/logout button selected. Please select so the button will appear on your site.');
-                echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
-            }
+            // // Check menu locations in options table
+            // $menu_location_saved = get_option(WA_Integration::MENU_LOCATIONS_KEY);
+            // // If menu locations is not empty, then it has been saved
+            // if (!empty($menu_location_saved)) {
+            //     // Display success statement
+            //     echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
+            // } else {
+            //     Log::wap_log_warning('No menu location for the login/logout button selected. Please select so the button will appear on your site.');
+            //     echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
+            // }
         ?>
         <!-- Form for Restriction Status(es) -->
         <form method="post" action="options.php">
@@ -947,67 +1011,6 @@ class Admin_Settings {
             ?>
         </form>
         <?php
-    }
-
-    /**
-     * Print the menu location description text
-     * 
-     * @return void
-     */
-    public function menu_location_print_section_info() {
-        print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their WildApricot account on your WordPress site!';
-    }
-
-    /**
-     * Print instructions on how to use the restriction status checkboxes
-     * 
-     * @return void
-     */
-    public function print_restriction_status_info() {
-        print 'Please select the WildApricot member/contact status(es) that will be able to see the restricted posts.<br>';
-        print 'If no statuses are selected, then all membership statuses can view the restricted posts.';
-    }
-
-    /**
-     * Print the Custom Fields introductory text
-     * 
-     * @return void
-     */
-    public function print_fields_info() {
-        print 'Please select the WildApricot Contact Fields that you would like to sync with your WordPress site.';
-    }
-
-    /**
-     * Print description of the plugin options
-     * 
-     * @return void
-     */
-    public function print_delete_info() {
-        print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, the WordPress users and roles that you have synced from WildApricot are retained (not deleted).';
-        print 'If you like, you can remove all WildApricot information from your WordPress site after deleting the <b>WildApricot Press</b> plugin by checking the checkbox below.<br><br>';
-        print 'Then, all of the WildApricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>WildApricot Press</b> plugin.';
-        print 'If you would like to keep your WildApricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked.';
-    }
-
-    /**
-     * Print settings information for the logfile toggle.
-     *
-     * @return void
-     */
-    public function print_logfile_info() {
-        print 'By checking this box, error and warning messages will be printed to a file accessible in <code>wp-content/wapdebug.log</code>.';
-        print '<br>Note: log message timezone will be in UTC if timezone is not set in WordPress settings.';
-    }
-
-    /**
-     * Print the Global Restriction description
-     * 
-     * @return void
-     */
-    public function print_restriction_info() {
-        print 'The "Global Restriction Message" is the message that is shown to users who are not members of the WildApricot membership level(s) or group(s) required to access a restricted post. ';
-        print 'Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. '; 
-        print 'You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
     }
 
 }

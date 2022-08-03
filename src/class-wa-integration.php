@@ -1307,7 +1307,6 @@ class WA_Integration {
 	public function create_wa_login_logout($items, $args) {
 		// First, check if WildApricot credentials and the license is valid
 		if (self::valid_wa_credentials() && Addon::has_valid_license(CORE_SLUG)) {
-			// self::create_login_page();
 			// Check the restrictions of each item in header IF the header is not blank
 			if (!empty($items)) {
 				// Get navigation items
