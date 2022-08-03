@@ -1405,7 +1405,7 @@ class WA_Integration {
 			// Get login url
 			$login_url = $this->get_login_link();
 			// Check if user is logged in or logged out, now an array
-			$menus_to_add_button = get_option(self::MENU_LOCATIONS_KEY);
+			$menus_to_add_button = get_login_menu_location();
 
 			// EDIT: Feb. 17, 2021
 			// If the theme location is empty, then we will just add the login button by default
@@ -1413,7 +1413,7 @@ class WA_Integration {
 				if (is_user_logged_in()) {
 					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
 				} else {
-					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $login_url .'">Log In</a></li>';
+					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($login_url) .'">Log In</a></li>';
 				}
 			}
 
@@ -1423,7 +1423,7 @@ class WA_Integration {
 					if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
 						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
 					} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
-						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. $login_url .'">Log In</a></li>';
+						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($login_url) .'">Log In</a></li>';
 					}
 				}
 			}

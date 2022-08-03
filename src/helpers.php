@@ -164,6 +164,42 @@ function disable_core() {
 }
 
 /**
+ * @return array an array containing a single element corresponding to the
+ * primary menu name of the current theme.
+ */
+function get_primary_menu() {
+    $menu_locations = get_nav_menu_locations();
+    return array_keys($menu_locations, min($menu_locations));
+}
+
+/**
+ * Retrieves the login/logout button menu location.
+ * 
+ * @return array an array containing a single element corresponding to the
+ * primary menu name of the current theme.
+ */
+function get_login_menu_location() {
+    // retrieve set menu location from the options table
+    $wawp_wal_login_logout_button = get_option(WA_Integration::MENU_LOCATIONS_KEY, []);
+    $menu_locations = get_nav_menu_locations();
+
+    // see if any of the saved locations are in the theme's locations 
+    foreach ($wawp_wal_login_logout_button as $idx => $location) {
+        if (!array_key_exists($location, $menu_locations)) {
+            // if the location is not in the current theme, remove it
+            unset($wawp_wal_login_logout_button[$idx]);
+        }
+    }
+
+    // if empty, then get the primary menu as a default
+    if (empty($wawp_wal_login_logout_button)) {
+        $wawp_wal_login_logout_button = get_primary_menu();
+    }
+
+    return $wawp_wal_login_logout_button;
+}
+
+/**
  * Checks to see if the current entered credentials are still valid.
  * 
  * @return string|null|bool false if there's an exception or status of current license (current license, "empty" or null)

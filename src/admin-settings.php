@@ -358,7 +358,7 @@ class Admin_Settings {
         }
 
         // See: https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
-        $wawp_wal_login_logout_button = get_option(WA_Integration::MENU_LOCATIONS_KEY, []);
+        $wawp_wal_login_logout_button = get_login_menu_location();
 
         foreach ($menu_items as $item) {
             $is_checked = in_array($item, $wawp_wal_login_logout_button);
