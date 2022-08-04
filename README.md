@@ -53,13 +53,13 @@ WildApricot Press (WAP) Documentation
 
 ## Installing and Configuring the WAP Plugin
 
-On the WordPress admin dashboard, using the left menu, navigate to to Plugins > Add New. Upload the plugin compressed archive (zip) and activate.
+On the WordPress admin dashboard, using the left menu, navigate to to Plugins > Add New. Upload the plugin compressed archive (zip) and ensure the plugin is activated.
 
 To configure the WildApricot Press, the WildApricot API settings must be configured.
 
 ### Create an Authorized Application in WildApricot
 
-WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, navigate to WAP Settings > Authorization, and follow the instructions there to acquire the authorized application credentials.
+WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a WordPress authorized application](https://gethelp.wildapricot.com/en/articles/199). With your API key, client ID and client secret, navigate to WAP Settings > Authorization, and follow the instructions there to apply the WildApricot keys.
 
 <img width="946" alt="wap authorization" src="https://user-images.githubusercontent.com/458134/131910967-158c659d-9f73-4be2-b84a-4683bd6b8975.png">
 
