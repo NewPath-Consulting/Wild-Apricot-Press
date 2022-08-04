@@ -1,8 +1,10 @@
 # WildApricot Press Developer's Guide
 
-*By Spencer Gable-Cook, Edited August 2022 by Natalie Brotherton*
+#### *By Spencer Gable-Cook and Natalie Brotherton*
 
-WildApricot Press (WAP) is a WordPress plugin written primary in PHP. It also contains two CSS files for formatting custom content.
+##### *Edited August 2022*
+
+WildApricot Press (WAP) is a WordPress plugin written primarily in PHP. It also contains two CSS files for formatting custom content.
 
 This document describes the design of WAP as a guide for maintenance and extension.
 
@@ -76,8 +78,12 @@ The class constructs the following settings pages the code for which is containe
 * `WA_Auth_Settings` WildApricot Authorization credentials form
 * `License_Settings` License keys form
 
-### `WA_Integration`
+### `WA_API`
+This class manages the API calls to the WildApricot API. Each instance of the `WA_API` class requires the user’s access token and WildApricot account ID. (You can see this in the constructor of the class). 
 
+After passing in the access token and account ID, the plugin can access data from WildApricot, including membership levels, groups, users, and more. 
+
+### `WA_Integration`
 `WA_Integration` controls all the plugin's functionality relating to WildApricot including:
 * Post restriction
   * Creating post meta boxes and saving the data
@@ -89,19 +95,16 @@ The class constructs the following settings pages the code for which is containe
   * Displaying WA user data on the WP user profile
 * CRON jobs updating WA user data
 
-### `WA_API`
-This class manages the API calls to the WildApricot API. Each instance of the `WA_API` class requires the user’s access token and WildApricot account ID. (You can see this in the constructor of the class). 
-
-After passing in the access token and account ID, the plugin can access data from WildApricot, including membership levels, groups, users, and more. 
-
 ### `Log`
-This class manages debug logging for WAP. It contains three main functions in its interface:
+This class manages debug and error logging for WAP. 
+
+It contains three main functions in its interface:
 * `wap_log_debug($msg)`
 * `wap_log_error($msg, $fatal = false)`
   * Pass in true after the log message to indicate a fatal error.
 * `wap_log_warning($msg)`
 
-Each of these functions is used to log a different type of error. Errors are logged automatically to a custom log file located in the WordPress website directory under `wp-content/wapdebug.log`. 
+Each of these functions is used to log a different type of message. Log messages are logged automatically to a custom log file located in the WordPress website directory under `wp-content/wapdebug.log`. 
 
 By default, all log messages are disabled except for fatal errors. They can be enabled in **WildApricot Press > Settings > Plugin Options**.
 
@@ -109,17 +112,17 @@ By default, all log messages are disabled except for fatal errors. They can be e
 This class manages custom exceptions. 
 
 There is an `Exception` parent class extended from the PHP `Exception` type and the more specific exception types are all derived from that class. 
-T
-he child classes cover the two primary types of errors that interrupt normal WAP function: API errors and encryption errors. The child classes are as follows:
+
+The child classes cover the two primary types of errors that interrupt normal WAP function: API errors and encryption errors. The child classes are as follows:
 * `API_Exception`
 * `Encryption_Exception`
 * `Decryption_Exception`
 
 These exceptions are thrown in the following functions:
 
-Exception |  Functions
---- | ---
-`API_Exception` | `WA_API::response_to_data()`
+Exception type         | Functions
+---------------------- | -----------------------------
+`API_Exception`        | `WA_API::response_to_data()`
 `Encryption_Exception` | `Data_Encryption->encrypt()`, `Data_Encryption->get_default_key()`, `Data_Encryption->get_default_salt()`
 `Decryption_Exception` | `Data_Encryption->decrypt()`
 
