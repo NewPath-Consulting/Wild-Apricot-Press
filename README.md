@@ -20,6 +20,11 @@ WildApricot Press enables WordPress websites to support the WildApricot membersh
 
 WildApricot Press (WAP) Documentation
 
+## Version 1.0b5 - August 4, 2022
+- added selection of default menu item for login/logout link
+- Renamed plugin to WildApricot Press
+- Added WAP Developer's Guide
+
 ## Version 1.0b4 - July 29, 2022
 - adding WAP switch to toggle error logging to wp-content/wapdebug.log file
 - added a ton of error checking routines to log errors in various conditions where plugin errors or has an API error
