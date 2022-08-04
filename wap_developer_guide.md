@@ -8,18 +8,16 @@ WildApricot Press (WAP) is a WordPress plugin written primarily in PHP. It also 
 
 This document describes the design of WAP as a guide for maintenance and extension.
 
-<!-- ---------------------------------------------------------------------- -->
 
 ## Required plugin files
 
 ### `plugin.php`
-`plugin.php` is the main file of WAP required by WordPress. The plugin information that displays to users (title, description, version) are all defined here. 
-This file does not contain much raw functionality for the plugin, but rather creates the classes that do: `Activator`, `Settings`, and `WA_Integration`. 
+`plugin.php` is the main file of WAP required by WordPress. The plugin information that displays to users (title, description, version) are all defined here. This file does not contain much  functionality for the plugin, but rather creates the classes that do: `Activator`, `Settings`, and `WA_Integration`. 
 
 ### `uninstall.php` 
-Like `plugin.php`, this is another standard file required by WordPress. When the plugin is deleted from the WordPress site, the `uninstall.php` file is run to clean up any variables or other data that the plugin may have been using (but would no longer require at this point since the plugin is deleted). 
+Like `plugin.php`, this is another standard file required by WordPress. When the plugin is deleted from the WordPress site, the `uninstall.php` file is run to clean up any variables or other data that the plugin may have been using, but that are  no longer required since the plugin is deleted. 
 
-In `uninstall.php`, we can see that all of the `wp_options` table entries added by the plugin are deleted from the user’s database. Depending on if the user selected this setting, the WildApricot synced users are deleted from the WordPress user database as well. Learn more about this setting in `admin-settings.php`. 
+In `uninstall.php`, all of the `wp_options` table entries added by the plugin are deleted from the user’s database. Depending on the plugin options setting "Attributes to Remove Upon Plugin Deletion", the WildApricot synced users are deleted from the WordPress user database as well. Learn more about this setting in `admin-settings.php`. 
 
 ## Classes
 All classes and files in the `src/` folder are under the `WAWP` namespace.
@@ -85,9 +83,11 @@ After passing in the access token and account ID, the plugin can access data fro
 
 ### `WA_Integration`
 `WA_Integration` controls all the plugin's functionality relating to WildApricot including:
+
 * Post restriction
   * Creating post meta boxes and saving the data
   * Modifying post content if post is restricted
+
 * User-facing WildApricot functionality
   * Creating the user login page and adding it to the website menu
     * Adds to primary menu by default, can be changed in **WildApricot Press > Settings > Content Restriction Options > Login/Logout Button Menu Location**
@@ -106,7 +106,7 @@ It contains three main functions in its interface:
 
 Each of these functions is used to log a different type of message. Log messages are logged automatically to a custom log file located in the WordPress website directory under `wp-content/wapdebug.log`. 
 
-By default, all log messages are disabled except for fatal errors. They can be enabled in **WildApricot Press > Settings > Plugin Options**.
+By default, all log messages are disabled except for fatal errors. They can be enabled in **WildApricot Press > Settings > Plugin Log Messages**.
 
 ### `Exception`
 This class manages custom exceptions. 
@@ -125,6 +125,3 @@ Exception type         | Functions
 `API_Exception`        | `WA_API::response_to_data()`
 `Encryption_Exception` | `Data_Encryption->encrypt()`, `Data_Encryption->get_default_key()`, `Data_Encryption->get_default_salt()`
 `Decryption_Exception` | `Data_Encryption->decrypt()`
-
-
-                
