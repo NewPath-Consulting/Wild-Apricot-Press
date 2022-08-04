@@ -22,7 +22,8 @@ WildApricot Press (WAP) Documentation
 
 ## Version 1.0b5 - August 4, 2022
 - added selection of default menu item for login/logout link
-- Renamed plugin to WildApricot Press
+- renamed plugin to WildApricot Press
+- cleaned up Authorization screen cosmetically
 - Added WAP Developer's Guide
 
 ## Version 1.0b4 - July 29, 2022
