@@ -2,20 +2,29 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/Addon.php';
-require_once __DIR__ . '/WAIntegration.php';
-require_once __DIR__ . '/Log.php';
-require_once __DIR__ . '/WAWPException.php';
-require_once __DIR__ . '/MySettingsPage.php';
+require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/admin-settings.php';
+require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/class-wa-integration.php';
+require_once __DIR__ . '/wap-exception.php';
 
+/**
+ * Activation controller class
+ * 
+ * @since 1.0b1
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
+ */
 class Activator {
 
-	const SHOW_NOTICE_ACTIVATION = 'show_notice_activation';
+	/**
+	 * @var string prefix for the license status option name
+	 */
 	const LICENSE_CHECK_OPTION = 'license-check-' . CORE_SLUG;
 
 
 	/**
-	 * Constructor for Activator class
+	 * Constructor for Activator class.
 	 */
 	public function __construct($filename) {
 		register_activation_hook($filename, array($this, 'activate_plugin_callback'));
@@ -27,11 +36,9 @@ class Activator {
 			'name' => CORE_NAME,
 			'filename' => $filename,
 			'license_check_option' => self::LICENSE_CHECK_OPTION,
-			'show_activation_notice' => self::SHOW_NOTICE_ACTIVATION,
-			'is_addon' => 0 // only core calls activator, so is_addon will always be false here
+			'show_activation_notice' => Addon::WAWP_ACTIVATION_NOTICE_OPTION,
+			'is_addon' => 0
 		));
-
-
 
 	}
 
@@ -39,34 +46,36 @@ class Activator {
 	/**
 	 * Activates the WAWP plugin.
 	 *
-	 * Checks if user has already entered valid Wild Apricot credentials and license key
-	 * -> If so, then the full Wild Apricot functionality is run
+	 * Checks if user has already entered valid WildApricot credentials
+	 * and license key. If so, then the full WildApricot functionality is run.
+	 * 
+	 * @return void
 	 */
 	public static function activate_plugin_callback() {
 		/**
-		 * Log back into Wild Apricot if credentials are entered and a valid license key is provided
+		 * Log back into WildApricot if credentials are entered and a valid license key is provided
 		 */
 
 		// Call Addon's activation function
 		// returns false & does disable_plugin if license is invalid/nonexistent
 		
-		if (!WAIntegration::valid_wa_credentials()) {
+		if (!WA_Integration::valid_wa_credentials()) {
 			do_action('disable_plugin', CORE_SLUG, Addon::LICENSE_STATUS_NOT_ENTERED);
-			Log::wap_log_warning('Activation failed: missing Wild Apricot API credentials.');
+			Log::wap_log_warning('Activation failed: missing WildApricot API credentials.');
 		} else if (Addon::instance()::activate(CORE_SLUG)) {
 			Log::wap_log_warning('Activation failed: missing license key for ' . CORE_NAME . '. Plugin functionality disabled.');
 		}
 
 		if (Addon::is_plugin_disabled()) {
-			update_option(self::SHOW_NOTICE_ACTIVATION, true);
+			update_option(Addon::WAWP_ACTIVATION_NOTICE_OPTION, true);
 			return;
 		}
 
 		// **** this code will only run if license AND wa credentials are valid ****
-		// Run credentials obtained hook, which will read in the credentials in WAIntegration.php
+		// Run credentials obtained hook, which will read in the credentials in class-wa-integration.php
 		do_action('wawp_wal_credentials_obtained');
 		// Also create CRON event to refresh the membership levels/groups
-		MySettingsPage::setup_cron_job();
+		Settings::setup_cron_job();
 	}
 
 
@@ -77,7 +86,7 @@ class Activator {
 	 * @return void
 	 */
 	public static function admin_notices_creds_check() {
-		$should_activation_show_notice = get_option(self::SHOW_NOTICE_ACTIVATION);
+		$should_activation_show_notice = get_option(Addon::WAWP_ACTIVATION_NOTICE_OPTION);
 		// only show wap notices on relevant pages: wap settings, installed plugins, and post editor
 		if (!is_wawp_settings() && (!is_plugin_page() && !$should_activation_show_notice) && !is_post_edit_page()) return;
 
@@ -88,7 +97,7 @@ class Activator {
 			return;
 		}
 		
-		$valid_wa_creds = WAIntegration::valid_wa_credentials();
+		$valid_wa_creds = WA_Integration::valid_wa_credentials();
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 
 		// TODO: add is_post_editor to this conditional
@@ -113,31 +122,37 @@ class Activator {
 		Addon::instance()::license_admin_notices();
 	}
 
+	/**
+	 * Prints admin notice prompting the user to enter their WA credentials and
+	 * license key.
+	 *
+	 * @return void
+	 */
 	private static function empty_creds_message() {
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your ";
-		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot credentials</a>";
+		echo "<a href=" . esc_url(get_auth_menu_url()) . ">WildApricot credentials</a>";
 		echo " and ";
-		echo "<a href=" . esc_url(admin_url('admin.php?page=wawp-licensing')) . "> license key</a>";
-		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
+		echo "<a href=" . esc_url(get_licensing_menu_url()) . "> license key</a>";
+		echo " in order to use the <strong>" . esc_html__(CORE_NAME) . "</strong> functionality.";
 		echo "</p></div>";
 	}
 
 
+	/**
+	 * Prints admin notice prompting the user to enter their WA credentials.
+	 *
+	 * @return void
+	 */
 	private static function empty_wa_message() {
 
 		echo "<div class='notice notice-warning'><p>";
-		echo "Please enter your Wild Apricot credentials";
+		echo "Please enter your WildApricot credentials";
 		if (!is_wa_login_menu()) {
-			echo " in <a href=" . esc_html__(admin_url('admin.php?page=wawp-login')) . ">Wild Apricot Press > Authorization</a>";
+			echo " in <a href=" . esc_html__(get_auth_menu_url()) . ">WildApricot Press > Authorization</a>";
 		}
-		echo " in order to use the <strong>" . CORE_NAME . "</strong> functionality.";
+		echo " in order to use the <strong>" . esc_html__(CORE_NAME) . "</strong> functionality.";
 		echo "</p></div>";
 	}
 
-	// private static function fatal_error_message() {
-	// 	Exception::admin_notice_error_message_template();
-	// }
-
 }
-?>

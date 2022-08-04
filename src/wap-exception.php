@@ -2,18 +2,17 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/Addon.php';
+require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/class-wa-integration.php';
 require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/Log.php';
-require_once __DIR__ . '/WAIntegration.php';
 
 /**
  * Interface for custom exceptions.
- *
+ * 
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
  * @copyright  2022 NewPath Consulting
- * @license    GNU General Public License 2.0
- * @version    Release: 1.0
- * @since      Class available since Release 1.0
  */
 abstract class Exception extends \Exception {
     const EXCEPTION_OPTION = 'wawp-exception-type';
@@ -37,10 +36,12 @@ abstract class Exception extends \Exception {
      * Removes exception flag before calling functions that could throw exceptions
      * so errors don't get incorrectly reported but the flag will stay if 
      * the error persists.
+     * 
+     * @return void
      */
     public static function remove_error() {
         refresh_credentials();
-        if (Addon::has_valid_license(CORE_SLUG) && WAIntegration::valid_wa_credentials() && self::fatal_error()) {
+        if (Addon::has_valid_license(CORE_SLUG) && WA_Integration::valid_wa_credentials() && self::fatal_error()) {
             // delete_option(self::EXCEPTION_OPTION);
             update_option(Addon::WAWP_DISABLED_OPTION, false);
         }
@@ -50,23 +51,22 @@ abstract class Exception extends \Exception {
     /**
      * Returns whether there's been a fatal error or not.
      *
-     * @return boolean
+     * @return string|bool option value, false if empty or DNE
      */
     public static function fatal_error() {
         return get_option(Exception::EXCEPTION_OPTION);
     }
 
+    /**
+     * Abstract function for child classes to implement.
+     */
     protected abstract function get_error_type();
 
     public static function get_user_facing_error_message() {
         return "<div class='wawp-exception' style='color:red'>
-        <h3>FATAL ERROR</h3><p>Wild Apricot Press has encountered a fatal error and must be disabled.
+        <h3>FATAL ERROR</h3><p>WildApricot Press has encountered a fatal error and must be disabled.
         Please contact your site administrator.</p></div>";
     }
-
-    public static function error_message_template($error_type) {
-
-    } 
 
     /**
      * Displays appropriate error message on admin screen. Added to admin_notices
@@ -79,7 +79,7 @@ abstract class Exception extends \Exception {
     public static function admin_notice_error_message_template($error_type) {
         echo "<div class='notice notice-error wawp-exception'>";
         echo "<h3>FATAL ERROR</h3>";
-        echo "<p>Wild Apricot Press has encountered an error with ";
+        echo "<p>WildApricot Press has encountered an error with ";
         esc_html_e($error_type);
         echo " and functionality must be disabled. Please correct the error so the plugin can continue. ";
         echo "More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>";
@@ -90,23 +90,52 @@ abstract class Exception extends \Exception {
 
 /**
  * Handles API exceptions. Child of custom Exception class.
+ * 
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
+ * @copyright  2022 NewPath Consulting
  */
-class APIException extends Exception {
+class API_Exception extends Exception {
 
-    const ERROR_DESCRIPTION = 'connecting to Wild Apricot';
+    /**
+     * Exception descroption
+     * 
+     * @var string
+     */
+    const ERROR_DESCRIPTION = 'connecting to WildApricot';
 
+    /**
+     * Returns description for API connection error.
+     *
+     * @return string
+     */
     public static function api_connection_error() {
-        return 'There was an error connecting to the Wild Apricot API and the plugin has to be disabled. Please try again.';
+        return 'There was an error connecting to the WildApricot API and the plugin has to be disabled. Please try again.';
     }
 
+    /**
+     * Returns description for API response error.
+     *
+     * @return string
+     */
     public static function api_response_error() {
-        return 'There was an error in the Wild Apricot API and the plugin has to be disabled. Please try again.';
+        return 'There was an error in the WildApricot API and the plugin has to be disabled. Please try again.';
     }
 
+    /**
+     * Returns API exception description.
+     *
+     * @return string
+     */
     protected function get_error_type() {
         return self::ERROR_DESCRIPTION;
     }
 
+    /**
+     * Removes exception option.
+     *
+     * @return void
+     */
     public static function remove_error() {
         if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
        
@@ -117,12 +146,28 @@ class APIException extends Exception {
 }
 
 /**
- * Handles encryption/decryption exceptions. Child of custom Exception class.
+ * Handles encryption exceptions. Child of custom Exception class.
+ * 
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
+ * @copyright  2022 NewPath Consulting
  */
-class EncryptionException extends Exception {
+class Encryption_Exception extends Exception {
 
+    /**
+     * Exception descroption
+     * 
+     * @var string
+     */
     const ERROR_DESCRIPTION = 'encrypting your data';
 
+    /**
+     * Constructor.
+     *
+     * @param string $message
+     * @param integer $code
+     * @param \Throwable|null $previous
+     */
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {
         if (empty($message)) $message = self::encrypt_error();
         parent::__construct($message, $code, $previous);
@@ -133,14 +178,29 @@ class EncryptionException extends Exception {
 
     }
 
+    /**
+     * Returns description of OpenSSL error.
+     *
+     * @return string
+     */
     public static function openssl_error() {
         return 'OpenSSL not installed.';
     }
 
+    /**
+     * Returns description of encryption error.
+     *
+     * @return string
+     */
     public static function encrypt_error() {
         return 'There was an error with encryption.';
     }
 
+    /**
+     * Removes exception option.
+     *
+     * @return void
+     */
     public static function remove_error() {
         if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
        
@@ -148,12 +208,24 @@ class EncryptionException extends Exception {
         delete_option(self::EXCEPTION_OPTION);
     }
 
+    /**
+     * Returns error description.
+     *
+     * @return string
+     */
     protected function get_error_type() {
         return self::ERROR_DESCRIPTION;
     }
 }
 
-class DecryptionException extends Exception {
+/**
+ * Handles decryption exceptions. Child class of custom Exception class.
+ * 
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @since 1.0b4
+ * @copyright  2022 NewPath Consulting
+ */
+class Decryption_Exception extends Exception {
     const ERROR_DESCRIPTION = 'decrypting your data';
 
     public function __construct($message = '', $code = 0, \Throwable $previous = null) {
@@ -166,7 +238,11 @@ class DecryptionException extends Exception {
 
     }
 
-
+    /**
+     * Removes exception option.
+     *
+     * @return void
+     */
     public static function remove_error() {
         if (get_option(self::EXCEPTION_OPTION) != self::ERROR_DESCRIPTION) return;
        
@@ -174,10 +250,18 @@ class DecryptionException extends Exception {
         delete_option(self::EXCEPTION_OPTION);
     }
 
+    /**
+     * Returns decryption error description.
+     *
+     * @return string
+     */
     public static function decrypt_error() {
         return 'There was an error with decryption.';
     }
 
+    /** 
+     * Returns error description.
+     */
     protected function get_error_type() {
         return self::ERROR_DESCRIPTION;
     }

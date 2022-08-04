@@ -2,15 +2,14 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/WAWPApi.php';
+require_once __DIR__ . '/class-wa-api.php';
 
 /**
  * This class manages custom log messages for WAP and its blocks.
  *
- * @copyright  2022 NewPath Consulting
- * @license    GNU General Public License 2.0
- * @version    Release: 1.0
- * @since      Class available since Release 1.0
+ * @since 1.0b4
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
  */
 class Log {
 
@@ -40,7 +39,7 @@ class Log {
     /**
      * Returns the log file flag. 
      *
-     * @return boolean true if log file is enabled, false if not.
+     * @return string|bool true if log file is enabled, false if not.
      */
     static public function can_debug() {
         return get_option(Log::LOG_OPTION);
@@ -49,8 +48,10 @@ class Log {
     /**
      * Print an error message to the log file.
      *
-     * @param string $msg message to print
-     * @param bool $fatal whether the error is a fatal error or not.
+     * @param mixed $msg message to print
+     * @param bool $fatal whether the error is a fatal error or not. Fatal errors
+     * will print to the log file regardless of whether the user has enabled
+     * log messages.
      * @return void
      */
     static public function wap_log_error($msg, $fatal = false) {
@@ -60,35 +61,41 @@ class Log {
     /**
      * Prints a warning message to the log file.
      *
-     * @param string $msg message to print
+     * @param mixed $msg message to print
      * @return void
      */
     static public function wap_log_warning($msg) {
         self::print_message($msg, self::LOG_WARNING);
     }
 
+    /**
+     * Prints a debug message to the log file
+     *
+     * @param mixed $msg message to print
+     * @return void
+     */
     static public function wap_log_debug($msg) {
         self::print_message($msg, self::LOG_DEBUG);
     }
 
     /**
      * Prints a log message to the designated log file defined in LOGFILE 
-     * in the following format
+     * in the following format:
      * 
      * [date] TYPE OF LOG MESSAGE | Name-of-Plugin | file.php:line# function() | message
      * 
-     * see get_function_string for specifics on function format.
+     * see get_function_name_string for specifics on function format.
      * 
      * @param mixed $msg message to print to log file
      * @param string $error_type type of log: error, warning, or debug
      * @return void
      */
-    static private function print_message($msg, $error_type) : void {
+    static private function print_message($msg, $error_type) {
         if (!self::can_debug() && $error_type != self::LOG_FATAL) { return; }
         $backtrace = debug_backtrace();
 
         // collect caller info to print to logfile
-        $function = self::get_function($backtrace[2]);
+        $function = self::get_function_name($backtrace[2]);
         $line = $backtrace[1]['line'];
         $file = basename($backtrace[1]['file']);
         $plugin = self::get_plugin_name($backtrace[1]['file']);
@@ -100,14 +107,17 @@ class Log {
         // use print_r to format arrays and objects
         $msg = print_r($msg, true);
 
+        // try to obtain WA account ID
         try {
-            $account_id = get_transient(WAIntegration::ADMIN_ACCOUNT_ID_TRANSIENT);
-            $decryption = new DataEncryption();
+            $account_id = get_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
+            $decryption = new Data_Encryption();
             $account_id = $decryption->decrypt($account_id);
-        } catch (DecryptionException $e) {
+        } catch (Decryption_Exception $e) {
             $account_id = '';
         }
 
+        // conditionally construct log message based on whether the WA account
+        // ID is present or not
         if (!empty($account_id)) {
             // format log message and print it to the logfile
             $log_msg = sprintf("[%s] %s | %s | Account ID: %s | %s:%s%s | %s\n",
@@ -142,16 +152,12 @@ class Log {
      *
      * @return string
      */
-    static private function get_current_datetime() : string {
+    static private function get_current_datetime() {
         $tz = wp_timezone_string();
         $timestamp = time();
         $dt = new \DateTime("now", new \DateTimeZone($tz));
         $dt->setTimestamp($timestamp);
         return $dt->format('n/j/Y, g:i:s A');
-    }
-
-    static private function get_filename($filename) {
-
     }
 
     /**
@@ -171,7 +177,7 @@ class Log {
      * from the debug backtrace
      * @return string formatted class string
      */
-    static private function get_function($backtrace) {
+    static private function get_function_name($backtrace) {
         $function = $backtrace['function'];
 
         if ($function == 'include_once' || $function == 'require_once') return '';
@@ -202,7 +208,6 @@ class Log {
         return $name;
     }
 
-    static private function set_debug() {}
 }
 
 ?>

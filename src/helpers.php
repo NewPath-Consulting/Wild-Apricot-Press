@@ -1,17 +1,22 @@
 <?php
 /**
  * helpers.php
- * The purpose of this class is to hold common constants and one-off functions used across files 
- * in the WAWP namespace.
+ * The purpose of this file is to hold common constants and one-off
+ * functions used across files in the WAWP namespace.
+ * 
+ * @since 1.0b3
+ * @author Natalie Brotherton <natalie@newpathconsulting.com>
+ * @copyright 2022 NewPath Consulting
  */
 
 namespace WAWP;
 
-require_once __DIR__ . '/Addon.php';
-require_once __DIR__ . '/WAWPApi.php';
+require_once __DIR__ . '/admin-settings.php';
+require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/class-wa-api.php';
 
 const CORE_SLUG = 'wawp';
-const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
+const CORE_NAME = 'WildApricot Press (WAP)';
 
 
 /**
@@ -19,7 +24,7 @@ const CORE_NAME = 'NewPath Wild Apricot Press (WAP)';
  */
 function is_licensing_submenu() {
     $current_url = get_current_url();
-    return str_contains($current_url, 'admin.php?page=wawp-licensing');
+    return str_contains($current_url, License_Settings::SUBMENU_PAGE);
 }
 
 /**
@@ -27,7 +32,7 @@ function is_licensing_submenu() {
  */
 function is_wawp_settings() {
     $current_url = get_current_url();
-    return str_contains($current_url, CORE_SLUG);
+    return str_contains($current_url, CORE_SLUG) || str_contains($current_url, 'wap');
 }
 
 /**
@@ -35,15 +40,15 @@ function is_wawp_settings() {
  */
 function license_submitted() {
     $current_url = get_current_url();
-    return $current_url == 'admin.php?page=wawp-licensing&settings-updated=true';
+    return is_licensing_submenu() && str_contains($current_url, 'settings-updated=true');
 }
 
 /**
- * @return bool true if the current page is the wawp login page, false if not
+ * @return bool true if the current page is the wa auth login page, false if not
  */
 function is_wa_login_menu() {
     $current_url = get_current_url();
-    return $current_url == 'admin.php?page=wawp-login';
+    return str_contains($current_url, WA_Auth_Settings::SUBMENU_PAGE);
 }
 
 /**
@@ -59,6 +64,20 @@ function is_user_login_page() {
  */
 function get_current_url() {
     return basename(home_url($_SERVER['REQUEST_URI']));
+}
+
+/**
+ * @return string url to the licensing settings menu
+ */
+function get_licensing_menu_url() {
+    return admin_url('admin.php?page=' . License_Settings::SUBMENU_PAGE);
+}
+
+/**
+ * @return string url of the authorization settings menu
+ */
+function get_auth_menu_url() {
+    return admin_url('admin.php?page=' . WA_Auth_Settings::SUBMENU_PAGE);
 }
 
 /**
@@ -86,6 +105,9 @@ function is_plugin_page() {
     return str_contains($current_url, 'plugins.php');
 }
 
+/**
+ * @return bool true if the current page is the post editor, false if not
+ */
 function is_post_edit_page() {
     $current_url = get_current_url();
     return str_contains($current_url, 'post=') &&
@@ -120,6 +142,11 @@ function empty_string_array($arr) {
     return $arr;
 }
 
+/**
+ * Displays invalid nonce admin notice.
+ *
+ * @return void
+ */
 function invalid_nonce_error_message() {
     echo "<div class='notice notice-warning is-dismissable'><p>";
     echo "Invalid nonce error. Please try again.";
@@ -137,13 +164,68 @@ function disable_core() {
 }
 
 /**
+ * @return array an array containing a single element corresponding to the
+ * primary menu name of the current theme.
+ */
+function get_primary_menu() {
+    $menu_locations = get_nav_menu_locations();
+    return min($menu_locations);
+}
+
+/**
+ * Retrieves the login/logout button menu location.
+ * If the menu location is not saved in the options table, returns the primary
+ * menu.
+ * 
+ * @return array an array containing a single element corresponding to the
+ * primary menu name of the current theme.
+ */
+function get_login_menu_location() {
+    // retrieve set menu location from the options table
+    $wawp_wal_login_logout_button = get_option(WA_Integration::MENU_LOCATIONS_KEY, []);
+
+    // if empty, then get the primary menu as a default
+    if (empty($wawp_wal_login_logout_button)) {
+        $wawp_wal_login_logout_button[] =  get_primary_menu();
+    }
+
+    return $wawp_wal_login_logout_button;
+}
+
+/**
+ * Returns menu location array with keys and values flipped. So the menus 
+ * correspond to their assigned locations.
+ *
+ * @return array 
+ */
+function flipped_menu_location_array() {
+    $menu_locations = get_nav_menu_locations();
+    $location_names = get_registered_nav_menus();
+    $flipped_array = array();
+
+    foreach ($menu_locations as $location => $menu_id) {
+        $location_name = $location_names[$location];
+        if (!array_key_exists($menu_id, $flipped_array)) {
+            // if menu doesn't exist yet, add it
+            $flipped_array[$menu_id] = $location_name;
+        } else {
+            // if it does, add the additional location separated by a comma
+            $flipped_array[$menu_id] = $flipped_array[$menu_id] . ', ' . 
+                $location_name;
+        }
+    }
+
+    return $flipped_array;
+}
+
+/**
  * Checks to see if the current entered credentials are still valid.
  * 
  * @return string|null|bool false if there's an exception or status of current license (current license, "empty" or null)
  */
 function refresh_credentials() {
     try {
-        WAWPApi::verify_valid_access_token();
+        WA_API::verify_valid_access_token();
     } catch (Exception $e) {
         Log::wap_log_error($e->getMessage(), true);
         return false;

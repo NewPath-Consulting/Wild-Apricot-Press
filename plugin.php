@@ -1,9 +1,9 @@
 <?php
 
 /*
- * Plugin Name:       NewPath Wild Apricot Press (WAP)
+ * Plugin Name:       WildApricot Press (WAP)
  * Plugin URI:        https://newpathconsulting.com/wap
- * Description:       Integrates your Wild Apricot-powered organization with a WordPress website! Powered by Wild Apricot's API.
+ * Description:       Integrates your WildApricot-powered organization with a WordPress website! Powered by WildApricot's API.
  * Version:           1.0b4
  * Requires at least: 5.0
  * Requires PHP:      7.4
@@ -35,10 +35,10 @@ For further inquires, contact NewPath Consulting at support@newpathconsulting.co
 or at 5000 Yonge Street, Suite 1901, Toronto, Ontario, M2N 7E9, Canada.
 */
 
-require_once plugin_dir_path(__FILE__) . 'src/Activator.php';
-require_once plugin_dir_path(__FILE__) . 'src/WAIntegration.php';
-require_once plugin_dir_path(__FILE__) . 'src/MySettingsPage.php';
-require_once plugin_dir_path(__FILE__) . 'src/Deactivator.php';
+require_once plugin_dir_path(__FILE__) . 'src/class-activator.php';
+require_once plugin_dir_path(__FILE__) . 'src/admin-settings.php';
+require_once plugin_dir_path(__FILE__) . 'src/class-deactivator.php';
+require_once plugin_dir_path(__FILE__) . 'src/class-wa-integration.php';
 require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 
 $activator = new WAWP\Activator(plugin_basename(__FILE__));
@@ -54,10 +54,10 @@ function wawp_enqueue_shortcode_css() {
 }
 
 // Create settings page
-$my_settings_page = new WAWP\MySettingsPage();
+$settings = new WAWP\Settings();
 
 // Create WA Integration instance
-$wa_integration_instance = new WAWP\WAIntegration();
+$wa_integration_instance = new WAWP\WA_Integration();
 
 // Deactivation hook
 register_deactivation_hook(__FILE__, function() {

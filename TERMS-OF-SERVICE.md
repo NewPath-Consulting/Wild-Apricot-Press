@@ -10,7 +10,7 @@ The following appendices forms an inseparable part of and is governed by the ter
 In the event of any conflicting terms in the Terms and its appendices, the Terms shall take precedence over the appendices, except in any matters relating to the processing of personal data, in which case Schedule 1 (Data Processing Agreement) shall take precedence.
 
 ### 1. The Service
-The Service is a collection of plugins for WordPress content management system helps customers integrate WordPress with the Wild Apricot database.
+The Service is a collection of plugins for WordPress content management system helps customers integrate WordPress with the WildApricot database.
 
 ### 2. Eligibility
 The Service is not intended for users that are consumers (being an individual acting primarily for purposes other than a trade, business or profession) and the applicability of consumer protection legislation is therefore excluded. You must be 18 years of age or older to enter into this agreement and use the Service. You represent and warrant that any information you submit is true and accurate and that you are 18 years of age or older and are fully able and competent to enter into, and abide by these Terms.
