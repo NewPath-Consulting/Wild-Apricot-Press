@@ -1,6 +1,6 @@
 # WildApricot Press (WAP)
 
-Contributors: asirota
+Contributors: 1cookspe, nataliebrotherton, asirota
 
 Tags: wildapricot, wild apricot, sso, membership
 
