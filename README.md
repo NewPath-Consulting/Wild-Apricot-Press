@@ -1,19 +1,11 @@
-# WildApricot Press (WAP)
-
+=== WildApricot Press (WAP) ===
 Contributors: 1cookspe, nataliebrotherton, asirota
-
 Tags: wap, wildapricot, wild apricot, sso, membership
-
 Requires at least: 5.0
-
 Tested up to: 6.0
-
 Requires PHP: 7.4
-
 Stable Tag: 1.0.0
-
 License: GPL v2 or later
-
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 WildApricot Press enables WordPress websites to support the WildApricot membership management system.
