@@ -73,7 +73,7 @@ You can also configure specify which WordPress menu(s) you would like to add the
 
 You can find this setting in **WildApricot Press > Settings** under the **Content Restriction** tab.
 <!-- TODO update photo -->
-<img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://user-images.githubusercontent.com/8737691/129612544-ff19e86c-5395-4bc4-b82b-a1fa914f4057.png">
+<img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://raw.githubusercontent.com/NewPath-Consulting/Wild-Apricot-Press/markdown-dev-guide/images/login-button-menu-location.png">
 
 ### Licensing WAP
 
