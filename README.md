@@ -2,7 +2,7 @@
 
 Contributors: 1cookspe, nataliebrotherton, asirota
 
-Tags: wildapricot, wild apricot, sso, membership
+Tags: wap, wildapricot, wild apricot, sso, membership
 
 Requires at least: 5.0
 

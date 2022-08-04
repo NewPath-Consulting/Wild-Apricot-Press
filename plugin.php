@@ -4,18 +4,18 @@
  * Plugin Name:       WildApricot Press (WAP)
  * Plugin URI:        https://newpathconsulting.com/wap
  * Description:       Integrates your WildApricot-powered organization with a WordPress website! Powered by WildApricot's API.
- * Version:           1.0b4
+ * Version:           1.0b5
  * Requires at least: 5.0
  * Requires PHP:      7.4
  * Author:            NewPath Consulting
  * Author URI:        https://newpathconsulting.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       wawp
+ * Text Domain:       wap
  */
 
 /*
-Copyright (C) 2022 NewPath Consulting
+Copyright (C) 2021-22 NewPath Consulting
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
