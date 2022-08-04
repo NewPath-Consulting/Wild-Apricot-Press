@@ -1,11 +1,19 @@
-=== WildApricot Press (WAP) ===
+# WildApricot Press (WAP)
+
 Contributors: asirota
+
 Tags: wildapricot, wild apricot, sso, membership
+
 Requires at least: 5.0
+
 Tested up to: 6.0
+
 Requires PHP: 7.4
+
 Stable Tag: 1.0.0
+
 License: GPL v2 or later
+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 WildApricot Press enables WordPress websites to support the WildApricot membership management system.
@@ -56,10 +64,15 @@ Once you have created an authorized application in WildApricot, enter the API ke
 
 <img width="540" alt="Screen Shot 2021-08-16 at 7 20 41 PM" src="https://user-images.githubusercontent.com/8737691/129640967-bbfc72e8-a9d4-4a1e-aa1e-990c45f1539f.png">
 
-After entering these credentials and pressing the "Save Changes" button, a green success message will display the WildApricot website that you have connected to! You can ensure that this matches your WildApricot URL. If you do not see this green success message, then please make sure that you have the correct authorized application credentials (without any extra spaces or gremlin characters) and re-enter them.
+After entering these credentials and pressing the "Save Changes" button, a green success message will display the WildApricot website that you have connected to! You can ensure that this matches your WildApricot URL. 
 
+If you do not see this green success message, then please make sure that you have the correct authorized application credentials (without any extra spaces or gremlin characters) and re-enter them.
+
+#### WildApricot user login/logout button
 You can also configure specify which WordPress menu(s) you would like to add the "single signon" login/logout button to by selecting the appropriate checkboxes. WAP will automatically configure your menu(s) with the login/logout links.
 
+You can find this setting in **WildApricot Press > Settings** under the **Content Restriction** tab.
+<!-- TODO update photo -->
 <img width="620" alt="Screen Shot 2021-08-16 at 12 40 34 PM" src="https://user-images.githubusercontent.com/8737691/129612544-ff19e86c-5395-4bc4-b82b-a1fa914f4057.png">
 
 ### Licensing WAP
@@ -73,7 +86,7 @@ The WAP core plugin license is available at no cost, with no credit card or paym
 
 <img width="198" alt="wap license saved" src="https://user-images.githubusercontent.com/458134/131911442-01c4c614-2ffa-49f9-8ce9-049d322c5e51.png">
 
-Once activated, a login/logout button will appear on your configured menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner.
+Once activated, a login/logout button will appear on your configured menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner. 
 
 <img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
 
