@@ -351,34 +351,45 @@ class Admin_Settings {
     }
 
     /**
-     * Display the checkboxes for the login menu location 
+     * Display the checkboxes corresponding to each visible menu on the site
+     * for the user to choose from to place the WA user login button
      * 
      * @return void
      */
     public function login_menu_location_input_box() {
-        // Get menu items: https://wordpress.stackexchange.com/questions/111060/retrieving-a-list-of-menu-items-in-an-array
-        $menu_locations = get_nav_menu_locations();
-        $menu_items = array();
-        
-        // sort menu in ascending order so the primary menu appears first
-        asort($menu_locations);
-        // Save each menu name in menu_items
-        foreach ($menu_locations as $key => $value) {
-            // Append key to menu_items
-            $menu_items[] = $key;
-        }
+        // get saved menu for the login button
+        $saved_login_menu = get_login_menu_location();
 
-        // See: https://wordpress.stackexchange.com/questions/328648/saving-multiple-checkboxes-with-wordpress-settings-api
-        $wawp_wal_login_logout_button = get_login_menu_location();
+        // list of existing menus
+        $menus = wp_get_nav_menus();
+        // array of menu ids => assigned locations
+        $menu_id_to_location = flipped_menu_location_array();
+        Log::wap_log_debug(get_registered_nav_menus());
 
+        // loop through list of menus
+        foreach ($menus as $menu) {
+            $menu_id = $menu->term_id;
+            if (!array_key_exists($menu_id, $menu_id_to_location)) {
+                // if menu is not assigned to a location, it's not present on the site, skip it
+                continue;
+            }
 
-        foreach ($menu_items as $item) {
-            $is_checked = in_array($item, $wawp_wal_login_logout_button);
-            $menu_name = wp_get_nav_menu_name($item);
+            // if menu is saved in options, check the input box
+            $is_checked = in_array($menu_id, $saved_login_menu);
             $checked = '';
-            if ($is_checked) { $checked = 'checked'; }
-            echo '<div><input type="checkbox" id="wawp_selected_menu" name="wawp_menu_location_name[]" value="' . esc_html__($item) . '" ' . esc_html__($checked) . '>';
-            echo '<label for= "' . esc_html__($item) . '">' . esc_html__($menu_name) . ' ('. esc_html__($item) . ')</label></div>';
+            if ($is_checked) {
+                $checked = 'checked';
+            }
+
+            // output checkbox and label with the format menu name (location(s))
+            echo '<div><input type="checkbox" id="wap_menu_option" 
+                name="wawp_menu_location_name[]" value="' . 
+                esc_html__($menu_id) . '" ' . esc_html__($checked) . '>';
+            echo '<label for="' . esc_html__($menu_id) . '">' . 
+                esc_html__($menu->name) . ' (' . 
+                esc_html__($menu_id_to_location[$menu_id]) . 
+                ')</label></div>';
+
         }
     }
 
@@ -391,7 +402,8 @@ class Admin_Settings {
     public function login_menu_location_sanitize($input) {
         // Verify nonce
         if (!wp_verify_nonce(
-            $_POST['wawp_menu_location_nonce_name'], 'wawp_menu_location_nonce_action')
+            $_POST['wawp_menu_location_nonce_name'], 
+            'wawp_menu_location_nonce_action')
         ) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
             Log::wap_log_error('Your nonce for the menu location(s) could not be verified.');
@@ -407,8 +419,7 @@ class Admin_Settings {
             }
         } else {
             // save primary menu location as default
-            $menu_locations = get_nav_menu_locations();
-            $valid= array_keys($menu_locations, min($menu_locations));
+            $valid[] = get_primary_menu();
         }
         return $valid;
     }
@@ -736,7 +747,7 @@ class Admin_Settings {
         // Settings for Menu to add Login/Logout button
         add_settings_field(
             'wawp_wal_login_logout_button', // ID
-            'Menu Location(s):', // Title
+            'Menu:', // Title
             array( $this, 'login_menu_location_input_box' ), // Callback
             self::LOGIN_BUTTON_LOCATION_PAGE, // Page 
             'wawp_menu_location_id' // Section

@@ -169,15 +169,13 @@ function disable_core() {
  */
 function get_primary_menu() {
     $menu_locations = get_nav_menu_locations();
-    return array_keys($menu_locations, min($menu_locations));
+    return min($menu_locations);
 }
 
 /**
  * Retrieves the login/logout button menu location.
  * If the menu location is not saved in the options table, returns the primary
  * menu.
- * If the saved menu location does not exist in the current theme, returns
- * the primary menu of the current theme.
  * 
  * @return array an array containing a single element corresponding to the
  * primary menu name of the current theme.
@@ -185,22 +183,39 @@ function get_primary_menu() {
 function get_login_menu_location() {
     // retrieve set menu location from the options table
     $wawp_wal_login_logout_button = get_option(WA_Integration::MENU_LOCATIONS_KEY, []);
-    $menu_locations = get_nav_menu_locations();
-
-    // see if any of the saved locations are in the theme's locations 
-    foreach ($wawp_wal_login_logout_button as $idx => $location) {
-        if (!array_key_exists($location, $menu_locations)) {
-            // if the location is not in the current theme, remove it
-            unset($wawp_wal_login_logout_button[$idx]);
-        }
-    }
 
     // if empty, then get the primary menu as a default
     if (empty($wawp_wal_login_logout_button)) {
-        $wawp_wal_login_logout_button = get_primary_menu();
+        $wawp_wal_login_logout_button[] =  get_primary_menu();
     }
 
     return $wawp_wal_login_logout_button;
+}
+
+/**
+ * Returns menu location array with keys and values flipped. So the menus 
+ * correspond to their assigned locations.
+ *
+ * @return array 
+ */
+function flipped_menu_location_array() {
+    $menu_locations = get_nav_menu_locations();
+    $location_names = get_registered_nav_menus();
+    $flipped_array = array();
+
+    foreach ($menu_locations as $location => $menu_id) {
+        $location_name = $location_names[$location];
+        if (!array_key_exists($menu_id, $flipped_array)) {
+            // if menu doesn't exist yet, add it
+            $flipped_array[$menu_id] = $location_name;
+        } else {
+            // if it does, add the additional location separated by a comma
+            $flipped_array[$menu_id] = $flipped_array[$menu_id] . ', ' . 
+                $location_name;
+        }
+    }
+
+    return $flipped_array;
 }
 
 /**

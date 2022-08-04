@@ -1403,28 +1403,26 @@ class WA_Integration {
 			$current_page_id = get_queried_object_id();
 			// Get login url
 			$login_url = $this->get_login_link();
+			$logout_url = wp_logout_url(esc_url(get_permalink($current_page_id)));
 			// Check if user is logged in or logged out, now an array
-			$menus_to_add_button = get_login_menu_location();
+			$selected_login_button_locations = get_login_menu_location();
+			// $selected_login_button_locations = get_option(WA_Integration::MENU_LOCATIONS_KEY);
 
-			// EDIT: Feb. 17, 2021
-			// If the theme location is empty, then we will just add the login button by default
-			if (empty($args->theme_location)) {
-				if (is_user_logged_in()) {
-					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
-				} else {
-					$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($login_url) .'">Log In</a></li>';
-				}
-			}
 
-			//class hardcoded in to match theme. in the future, give users text box so they could put this themselves?
-			if(!empty($menus_to_add_button)) {
-				foreach ($menus_to_add_button as $menu_to_add_button) {
-					if (is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Logout
-						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. wp_logout_url(esc_url(get_permalink($current_page_id))) .'">Log Out</a></li>';
-					} elseif (!is_user_logged_in() && $args->theme_location == $menu_to_add_button) { // Login
-						$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($login_url) .'">Log In</a></li>';
-					}
+			if (empty($selected_login_button_locations)) return $items;
+
+			foreach ($selected_login_button_locations as $menu) {
+				if ($args->menu->term_id != $menu) continue;
+				if (is_user_logged_in()) { 
+					// Logout
+					$url = $logout_url;
+					$button_text = 'Log Out';
+				} elseif (!is_user_logged_in()) { 
+					// Login
+					$url = $login_url;
+					$button_text = 'Log In';
 				}
+				$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($url) .'">' . esc_html__($button_text) . '</a></li>';
 			}
 		}
 		return $items;
