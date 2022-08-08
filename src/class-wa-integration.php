@@ -436,11 +436,11 @@ class WA_Integration {
 		
 		// Append 'Log In' button and the styling div to the restriction message
 		$login_url = $this->get_login_link();
-		$restriction_message = '<div class="wawp_restriction_content_div">' . ($restriction_message);
+		$restriction_message = '<div class="wawp_restriction_content_div">' . wp_kses_post($restriction_message);
 
 		// Automatically restrict the post if user is not logged in
 		if (!is_user_logged_in()) {
-			$restriction_message .= '<li id="wawp_restriction_login_button"><a href="'. esc_url($login_url) .'">Log In</a></li>';
+			$restriction_message .= '<a id="wawp_restriction_login_button" href="'. esc_url($login_url) .'">Log In</a>';
 			$restriction_message .= '</div>';
 			return $restriction_message;
 		}
@@ -739,7 +739,7 @@ class WA_Integration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php echo esc_html($membership_key); ?>" <?php echo esc_html($level_checked); ?>/> <?php echo esc_html($membership_level); ?> </input>
+						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php echo esc_attr($membership_key); ?>" <?php echo esc_attr($level_checked); ?>/> <?php echo esc_html($membership_level); ?> </input>
 					</li>
 				<?php
 			}
@@ -776,7 +776,7 @@ class WA_Integration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php echo esc_html($membership_key); ?>" <?php echo esc_html($group_checked); ?>/> <?php echo esc_html($membership_group); ?> </input>
+						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php echo esc_attr($membership_key); ?>" <?php echo esc_attr($group_checked); ?>/> <?php echo esc_html($membership_group); ?> </input>
 					</li>
 				<?php
 			}

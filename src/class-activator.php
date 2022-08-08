@@ -149,7 +149,7 @@ class Activator {
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your WildApricot credentials";
 		if (!is_wa_login_menu()) {
-			echo " in <a href=" . esc_html(get_auth_menu_url()) . ">WildApricot Press > Authorization</a>";
+			echo " in <a href=" . esc_url(get_auth_menu_url()) . ">WildApricot Press > Authorization</a>";
 		}
 		echo " in order to use the <strong>" . esc_html(CORE_NAME) . "</strong> functionality.";
 		echo "</p></div>";
