@@ -421,10 +421,10 @@ class WA_Integration {
 			return $message;
 		}
 
-		// Make sure a page/post is requested and the user has already entered their valid WildApricot credentials
-		if (!is_singular() || !Addon::has_valid_license(CORE_SLUG) || !self::valid_wa_credentials()) return $post_content;
-
-		
+		// If post is not singular or it's the login page, don't restrict
+		if (!is_singular() || is_user_login_page()) {
+			return $post_content;
+		}
 		
 		// Load in restriction message from message set by user
 		$restriction_message = wpautop(get_option(self::GLOBAL_RESTRICTION_MESSAGE));
