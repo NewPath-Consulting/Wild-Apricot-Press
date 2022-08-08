@@ -185,7 +185,7 @@ class Addon {
     public static function license_admin_notices() {
 
         $is_licensing_page = is_licensing_submenu();
-        $is_plugin_page = is_plugin_page();
+        $is_plugin_page = is_plugin_admin_page();
 
         // loop through all addons
         foreach(self::get_addons() as $slug => $data) {

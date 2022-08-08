@@ -88,7 +88,12 @@ class Activator {
 	public static function admin_notices_creds_check() {
 		$should_activation_show_notice = get_option(Addon::WAWP_ACTIVATION_NOTICE_OPTION);
 		// only show wap notices on relevant pages: wap settings, installed plugins, and post editor
-		if (!is_wawp_settings() && (!is_plugin_page() && !$should_activation_show_notice) && !is_post_edit_page()) return;
+		if (!is_wawp_settings() && 
+		   (!is_plugin_admin_page() && !$should_activation_show_notice) &&
+		   !is_post_edit_page())
+		{
+			return;
+		}
 
 		// if there's been a fatal error, display message 
 		$exception = Exception::fatal_error();
