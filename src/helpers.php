@@ -99,7 +99,7 @@ function get_current_tab() {
 /**
  * @return bool true if the current page is the plugins admin page, false if not
  */
-function is_plugin_page() {
+function is_plugin_admin_page() {
     $current_url = get_current_url();
 
     return str_contains($current_url, 'plugins.php');
