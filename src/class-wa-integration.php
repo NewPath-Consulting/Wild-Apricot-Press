@@ -739,7 +739,7 @@ class WA_Integration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php esc_html_e($membership_key); ?>" <?php esc_html_e($level_checked); ?>/> <?php esc_html_e($membership_level); ?> </input>
+						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php echo esc_html($membership_key); ?>" <?php echo esc_html($level_checked); ?>/> <?php echo esc_html($membership_level); ?> </input>
 					</li>
 				<?php
 			}
@@ -776,7 +776,7 @@ class WA_Integration {
 				}
 				?>
 					<li>
-						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php esc_html_e($membership_key); ?>" <?php esc_html_e($group_checked); ?>/> <?php esc_html_e($membership_group); ?> </input>
+						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php echo esc_html($membership_key); ?>" <?php echo esc_html($group_checked); ?>/> <?php echo esc_html($membership_group); ?> </input>
 					</li>
 				<?php
 			}
@@ -880,7 +880,7 @@ class WA_Integration {
 					<th><label>Account ID</label></th>
 					<td>
 					<?php
-						echo '<label>' . esc_html__($wa_account_id) . '</label>';
+						echo '<label>' . esc_html($wa_account_id) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -889,7 +889,7 @@ class WA_Integration {
 					<th><label>Membership Level</label></th>
 					<td>
 					<?php
-						echo '<label>' . esc_html__($membership_level) . '</label>';
+						echo '<label>' . esc_html($membership_level) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -898,7 +898,7 @@ class WA_Integration {
 					<th><label>User Status</label></th>
 					<td>
 					<?php
-						echo '<label>' . esc_html__($user_status) . '</label>';
+						echo '<label>' . esc_html($user_status) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -907,7 +907,7 @@ class WA_Integration {
 					<th><label>Organization</label></th>
 					<td>
 					<?php
-						echo '<label>' . esc_html__($organization) . '</label>';
+						echo '<label>' . esc_html($organization) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -916,7 +916,7 @@ class WA_Integration {
 					<th><label>Groups</label></th>
 					<td>
 					<?php
-						echo '<label>' . esc_html__($group_list) . '</label>';
+						echo '<label>' . esc_html($group_list) . '</label>';
 					?>
 					</td>
 				</tr>
@@ -938,10 +938,10 @@ class WA_Integration {
 						}
 						?>
 						<tr>
-							<th><label><?php esc_html_e($all_custom_fields[$custom_field]); ?></label></th>
+							<th><label><?php echo esc_html($all_custom_fields[$custom_field]); ?></label></th>
 							<td>
 							<?php
-								echo '<label>' . esc_html__($field_saved_value) . '</label>';
+								echo '<label>' . esc_html($field_saved_value) . '</label>';
 							?>
 							</td>
 						</tr>
@@ -1096,7 +1096,7 @@ class WA_Integration {
 			$current_wp_user_id = wp_insert_user($user_data); // returns user ID
 			// Show error if necessary
 			if (is_wp_error($current_wp_user_id)) {
-				esc_html_e($current_wp_user_id->get_error_message());
+				echo esc_html($current_wp_user_id->get_error_message());
 			}
 			// Set user's status of being added by the plugin to true
 			update_user_meta($current_wp_user_id, self::USER_ADDED_BY_PLUGIN, true);
@@ -1422,7 +1422,7 @@ class WA_Integration {
 					$url = $login_url;
 					$button_text = 'Log In';
 				}
-				$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($url) .'">' . esc_html__($button_text) . '</a></li>';
+				$items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($url) .'">' . esc_html($button_text) . '</a></li>';
 			}
 		}
 		return $items;

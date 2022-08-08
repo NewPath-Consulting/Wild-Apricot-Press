@@ -384,10 +384,10 @@ class Admin_Settings {
             // output checkbox and label with the format menu name (location(s))
             echo '<div><input type="checkbox" id="wap_menu_option" 
                 name="wawp_menu_location_name[]" value="' . 
-                esc_html__($menu_id) . '" ' . esc_html__($checked) . '>';
-            echo '<label for="' . esc_html__($menu_id) . '">' . 
-                esc_html__($menu->name) . ' (' . 
-                esc_html__($menu_id_to_location[$menu_id]) . 
+                esc_html($menu_id) . '" ' . esc_html($checked) . '>';
+            echo '<label for="' . esc_html($menu_id) . '">' . 
+                esc_html($menu->name) . ' (' . 
+                esc_html($menu_id_to_location[$menu_id]) . 
                 ')</label></div>';
 
         }
@@ -467,7 +467,7 @@ class Admin_Settings {
                 $status_checked = 'checked';
             }
             ?>
-            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php esc_html_e($status_key); ?>" <?php esc_html_e($status_checked); ?>/> <?php esc_html_e($status); ?> </input><br>
+            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo esc_html($status_key); ?>" <?php echo esc_html($status_checked); ?>/> <?php echo esc_html($status); ?> </input><br>
             <?php
         }
     }
@@ -576,13 +576,13 @@ class Admin_Settings {
                     }
                 }
                 ?>
-					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php esc_html_e($field_id); ?>" <?php esc_html_e($is_checked); ?>/> <?php esc_html_e($field_name); ?> </input><br>
+					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php echo esc_html($field_id); ?>" <?php echo esc_html($is_checked); ?>/> <?php echo esc_html($field_name); ?> </input><br>
 				<?php
             }
         } else { // no custom fields
             $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
             ?>
-            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php esc_html_e($authorization_link); ?>">WildApricot Press -> Authorization</a></p>
+            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php echo esc_html($authorization_link); ?>">WildApricot Press -> Authorization</a></p>
             <?php
         }
     }
@@ -644,7 +644,7 @@ class Admin_Settings {
                 }
             }
             ?>
-            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php esc_html_e($key); ?>" <?php esc_html_e($checked); ?>/> <?php esc_html_e($attribute); ?> </input><br>
+            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo esc_html($key); ?>" <?php echo esc_html($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br>
             <p><b><br>Please note that this information will never be deleted from your WildApricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your WildApricot site.
             So, don't worry - you are not permanently deleting information that you cannot recover later.</b></p>
             <?php
@@ -693,7 +693,7 @@ class Admin_Settings {
     public function logfile_option_input() {
         $checked = Log::can_debug();
         ?>
-        <input type="checkbox" name="<?php esc_html_e(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked" <?php esc_html_e($checked); ?>></input>
+        <input type="checkbox" name="<?php echo esc_html(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked" <?php echo esc_html($checked); ?>></input>
         <?php
     }
 
@@ -1575,7 +1575,7 @@ class License_Settings {
             $input_value = Addon::instance()::get_license($slug);
         } else {
         }
-        echo "<input id='license_key " . esc_html__($slug) . "' name='wawp_license_keys[" . esc_html__($slug) ."]' type='text' value='" . esc_html__($input_value) . "'  />" ;
+        echo "<input id='license_key " . esc_html($slug) . "' name='wawp_license_keys[" . esc_html($slug) ."]' type='text' value='" . esc_html($input_value) . "'  />" ;
         if ($license_valid) {
             echo "<br><p style='color:green;'><span class='dashicons dashicons-saved'></span> License key valid</p>";
         } 

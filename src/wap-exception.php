@@ -80,7 +80,7 @@ abstract class Exception extends \Exception {
         echo "<div class='notice notice-error wawp-exception'>";
         echo "<h3>FATAL ERROR</h3>";
         echo "<p>WildApricot Press has encountered an error with ";
-        esc_html_e($error_type);
+        echo esc_html($error_type);
         echo " and functionality must be disabled. Please correct the error so the plugin can continue. ";
         echo "More details can be found in the log file located in your WordPress directory in <code>wp-content/wapdebug.log</code>.</p>";
         echo "<p>Contact the <a href='https://talk.newpathconsulting.com/'>NewPath Consulting team</a> for support.</p>";
