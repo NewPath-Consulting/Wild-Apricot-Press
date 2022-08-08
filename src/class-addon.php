@@ -655,7 +655,7 @@ class Addon {
     public static function valid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         echo "<div class='notice notice-success is-dismissible license'><p>";
-		echo "Saved license key for <strong>" . esc_html__($plugin_name) . "</strong>.</p>";
+		echo "Saved license key for <strong>" . esc_html($plugin_name) . "</strong>.</p>";
 		echo "</div>";
     }
 
@@ -668,7 +668,7 @@ class Addon {
     public static function invalid_license_key_notice($slug) {
         $plugin_name = self::get_title($slug);
         echo "<div class='notice notice-error is-dismissible license'><p>";
-        echo "Your license key for <strong>" . esc_html__($plugin_name);
+        echo "Your license key for <strong>" . esc_html($plugin_name);
         echo "</strong> is invalid or expired. To get a new key please visit the <a href='https://newpathconsulting.com/wild-apricot-for-wordpress/'>WildApricot for Wordpress website</a>.";
         echo "</div>";
     }
@@ -683,7 +683,7 @@ class Addon {
         $plugin_name = self::get_title($slug);
         $filename = self::get_filename($slug);
         echo "<div class='notice notice-warning license'><p>";
-        echo "Please enter a valid license key for <strong>" . esc_html__($plugin_name) . "</strong>. </p></div>";
+        echo "Please enter a valid license key for <strong>" . esc_html($plugin_name) . "</strong>. </p></div>";
         // prevents printing "Plugin activated" message
         unset($_GET['activate']); 
     }
@@ -704,7 +704,7 @@ class Addon {
             echo " in <a href=" . esc_url(get_licensing_menu_url()) . ">WildApricot Press > Licensing</a>"; 
         }
         
-        echo " in order to use the <strong>" . esc_html__($plugin_name) . "</strong> functionality.</p></div>";
+        echo " in order to use the <strong>" . esc_html($plugin_name) . "</strong> functionality.</p></div>";
 
         unset($_GET['activate']);
     }

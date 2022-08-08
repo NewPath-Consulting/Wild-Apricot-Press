@@ -134,7 +134,7 @@ class Activator {
 		echo "<a href=" . esc_url(get_auth_menu_url()) . ">WildApricot credentials</a>";
 		echo " and ";
 		echo "<a href=" . esc_url(get_licensing_menu_url()) . "> license key</a>";
-		echo " in order to use the <strong>" . esc_html__(CORE_NAME) . "</strong> functionality.";
+		echo " in order to use the <strong>" . esc_html(CORE_NAME) . "</strong> functionality.";
 		echo "</p></div>";
 	}
 
@@ -149,9 +149,9 @@ class Activator {
 		echo "<div class='notice notice-warning'><p>";
 		echo "Please enter your WildApricot credentials";
 		if (!is_wa_login_menu()) {
-			echo " in <a href=" . esc_html__(get_auth_menu_url()) . ">WildApricot Press > Authorization</a>";
+			echo " in <a href=" . esc_url(get_auth_menu_url()) . ">WildApricot Press > Authorization</a>";
 		}
-		echo " in order to use the <strong>" . esc_html__(CORE_NAME) . "</strong> functionality.";
+		echo " in order to use the <strong>" . esc_html(CORE_NAME) . "</strong> functionality.";
 		echo "</p></div>";
 	}
 
