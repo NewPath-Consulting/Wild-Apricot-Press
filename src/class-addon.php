@@ -402,23 +402,6 @@ class Addon {
     }
 
     /**
-     * Constructs array of license key data to send to the Integromat 
-     * license key scenario. Sends request to the Integromat hook URL.
-     * 
-     * @param string $license_key license key to check against the hook.
-     * @return string[] response from the scenario.
-     */
-    public static function request_integromat_hook($license_key) {
-        // construct array of data to send
-        $data = array('key' => $license_key, 'json' => 1);
-
-        // send request, receive response in $response
-        $response = self::post_request($data);
-
-        return $response;
-    }
-
-    /**
      * Disables addon referred to by the slug parameter.
      * Updates the license status to be false.
      * Addon blocks are unregistered. 
@@ -558,66 +541,48 @@ class Addon {
         if (self::get_license($addon_slug) == $license_key) return $license_key;
 
         // check key against integromat scenario
-        $response = self::request_integromat_hook($license_key);
+        $response = self::post_request($license_key);
 
         // check that key has the necessary properties to be valid
         $is_license_valid = self::check_license_properties($response, $addon_slug);
-
         if (!$is_license_valid) return null;
-
 
         return $license_key;
     }
 
     /**
-     * Sends a POST request to the license key validation hook, returns response data
+     * Sends a POST request to the license key validation hook,
+     * returns response data.
      * 
-     * @param array $data request data containing license key and JSON flag
+     * @param string $license_key key license key to check against the Make scenario
      * @return array JSON response data 
      */
-    private static function post_request($data) {
+    private static function post_request($license_key) {
 
-        $url = self::get_hook_url();
-
-        // send request to hook url
-        $options = array(
-            'http' => array(
-                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-                'method'  => 'POST',
-                'content' => http_build_query($data)
-            )
-        );
-        $context  = stream_context_create($options);
-
-        $result = json_decode(file_get_contents($url, false, $context), 1);
-
-        return $result;
-    }
-
-    /**
-     * Returns correct Make license check hook url. Returns dev url if dev
-     * flag exists in wp-config, production url if not.
-     *
-     * @return string hook url
-     */
-    private static function get_hook_url() {
-        // check for dev flag
-        $hook_url = self::HOOK_URL;
-
+        // check for dev flag, construct appropriate url
+        $url = self::HOOK_URL;
         if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
-            $hook_url = $hook_url . 'dev';
+            $url = $url . 'dev';
         }
 
-        // get integromat hook url from redirect
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $hook_url);
-        curl_setopt($curl, CURLOPT_HEADER, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-        curl_exec($curl);
-        $url = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);
+        // construct array of data to send
+        $data = array('key' => $license_key, 'json' => 1);
+        $args = array(
+            'body'        => $data,
+            'timeout'     => '5',
+            'redirection' => '5',
+            'httpversion' => '1.0',
+            'blocking'    => true,
+            'headers'     => array(),
+            'cookies'     => array(),
+        );
 
-        return $url;
+        // make post request to hook and decode response data
+        $response = wp_remote_post($url, $args);
+        $response_data = $response['body'];
+
+        return json_decode($response_data, true);
+
     }
 
     /**
