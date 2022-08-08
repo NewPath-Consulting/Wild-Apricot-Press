@@ -7,7 +7,7 @@ require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 require_once plugin_dir_path(__FILE__) . 'src/wap-exception.php';
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
-	wp_die(sprintf(__('%s should only be called when uninstalling the plugin.', WAWP\CORE_SLUG), __FILE__ ));
+	wp_die(sprintf('%s should only be called when uninstalling the plugin.', __FILE__ ));
 	exit;
 }
 
