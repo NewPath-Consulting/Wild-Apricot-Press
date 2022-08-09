@@ -1,4 +1,4 @@
-=== WildApricot Press (WAP) ===
+=== WildApricot Press ===
 Contributors: 1cookspe, nataliebrotherton, asirota
 Tags: wap, wildapricot, wild apricot, sso, membership
 Requires at least: 5.0
