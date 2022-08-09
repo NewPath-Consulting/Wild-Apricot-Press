@@ -4,13 +4,16 @@ Tags: wap, wildapricot, wild apricot, sso, membership
 Requires at least: 5.0
 Tested up to: 6.0
 Requires PHP: 7.4
-Stable Tag: 1.0b5
+Stable Tag: 1.0.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 WildApricot Press enables WordPress websites to support the WildApricot membership management system.
 
 WildApricot Press (WAP) Documentation
+
+## Version 1.0.0 - August 9, 2022
+- release to WordPress repository
 
 ## Version 1.0b5 - August 4, 2022
 - added selection of default menu item for login/logout link
