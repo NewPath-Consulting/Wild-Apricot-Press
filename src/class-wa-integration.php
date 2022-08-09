@@ -20,6 +20,7 @@ require_once __DIR__ . '/helpers.php';
 class WA_Integration {
 	// Keys for data stored in WP databases.
 
+	// TODO: move constants to separate WA_Integration_Constants class
 	/**
 	 * Stores encrypted WA authorization credentials.
 	 * 
@@ -289,9 +290,6 @@ class WA_Integration {
 
 		// Fires when post is loaded, restricts post content based on custom meta
 		add_filter('the_content', array($this, 'restrict_post_wa'));
-
-		// Action for creating 'select all' checkboxes
-		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
 
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
@@ -827,47 +825,6 @@ class WA_Integration {
 		} else {
 			delete_post_meta($post_id, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
 		}
-	}
-
-	/**
-	 * Allows for the 'select all' checkbox to select all boxes.
-	 * 
-	 * @return void
-	 * @todo issue get rid of jQuery
-	 * @todo uncheck all checkboxes when this box is unchecked
-	 */
-	public function select_all_checkboxes_jquery() {
-		?>
-		<script language="javascript">
-			// Check all levels
-			jQuery('#wawp_check_all_levels').click(function () {
-				jQuery('.wawp_case_level').prop('checked', true);
-			});
-
-			// Check all groups
-			jQuery('#wawp_check_all_groups').click(function () {
-				jQuery('.wawp_case_group').prop('checked', true);
-			});
-
-			// If all checkboxes are selected, check the select-all checkbox, and vice versa
-			// Levels
-			jQuery(".wawp_case_level").click(function() {
-				if(jQuery(".wawp_case_level").length == jQuery(".wawp_case_level:checked").length) {
-					jQuery("#wawp_check_all_levels").attr("checked", "checked");
-				} else {
-					jQuery("#wawp_check_all_levels").removeAttr("checked");
-				}
-			});
-			// Groups
-			jQuery(".wawp_case_group").click(function() {
-				if(jQuery(".wawp_case_group").length == jQuery(".wawp_case_group:checked").length) {
-					jQuery("#wawp_check_all_groups").attr("checked", "checked");
-				} else {
-					jQuery("#wawp_check_all_groups").removeAttr("checked");
-				}
-			});
-    	</script>
-		<?php
 	}
 
 	/**
@@ -1849,4 +1806,5 @@ class WA_Integration {
 	}
 
 }
+
 ?>
