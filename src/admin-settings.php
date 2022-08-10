@@ -357,7 +357,9 @@ class Admin_Settings {
      * @return void
      */
     public function login_menu_location_no_menus_info() {
-        print 'You must have at least one menu added to your WordPress site.';
+        print '<p class="wap-error"><strong>Please add at least one menu in <a href=' . 
+                esc_url(admin_url('nav-menus.php')) . '>Appearance > Menus</a> in 
+                order to display the Login/Logout button on your website.</strong></p>';
     }
 
     /**
