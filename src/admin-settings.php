@@ -351,6 +351,16 @@ class Admin_Settings {
     }
 
     /**
+     * Inform user there are no menus so the login button location cannot be
+     * chose.
+     *
+     * @return void
+     */
+    public function login_menu_location_no_menus_info() {
+        print 'You must have at least one menu added to your WordPress site.';
+    }
+
+    /**
      * Display the checkboxes corresponding to each visible menu on the site
      * for the user to choose from to place the WA user login button
      * 
@@ -736,6 +746,19 @@ class Admin_Settings {
             $register_args // Sanitize
         );
 
+        // if menus are empty, display separate message and don't add fields
+        $menus = wp_get_nav_menus();
+        if (empty($menus)) {
+            // Create settings section
+            add_settings_section(
+                'wawp_menu_location_id', // ID
+                'Login/Logout Button Menu Location', // Title
+                array( $this, 'login_menu_location_no_menus_info' ), // Callback
+                self::LOGIN_BUTTON_LOCATION_PAGE // Page
+            );
+            return;
+        }
+
         // Create settings section
         add_settings_section(
             'wawp_menu_location_id', // ID
@@ -937,7 +960,11 @@ class Admin_Settings {
             // This prints out all hidden setting fields
             settings_fields( self::LOGIN_BUTTON_LOCATION_SECTION );
             do_settings_sections( self::LOGIN_BUTTON_LOCATION_PAGE );
-            submit_button();
+            $menus = wp_get_nav_menus();
+            if (!empty($menus)) {
+                // don't display submit button if there are no menus
+                submit_button();
+            }
         ?>
         </form>
         <!-- Check if menu location(s) have been submitted -->
