@@ -164,8 +164,12 @@ function disable_core() {
 }
 
 /**
- * @return array an array containing a single element corresponding to the
- * primary menu name of the current theme.
+ * Retrieves the primary menu ID by finding the menu with the lowest ID number
+ * in the locations to menus list.
+ * If there are no menus assigned to locations, finds the primary menu by
+ * searching through the list of all menus.
+ * 
+ * @return int the ID of the primary menu
  */
 function get_primary_menu() {
     $nav_menu_locations = get_nav_menu_locations();
@@ -183,6 +187,11 @@ function get_primary_menu() {
     return $min_menu;
 }
 
+/**
+ * Retrieves the ID of the primary menu found in the list of all menus.
+ * 
+ * @return int primary menu ID
+ */
 function get_primary_menu_from_menu_list() {
     $menus = wp_get_nav_menus();
 
@@ -200,12 +209,21 @@ function get_primary_menu_from_menu_list() {
  * If the menu location is not saved in the options table, returns the primary
  * menu.
  * 
- * @return array an array containing a single element corresponding to the
- * primary menu name of the current theme.
+ * @return array array of the selected menu(s) in which to place the login
+ * buttton.
  */
 function get_login_menu_location() {
     // retrieve set menu location from the options table
     $wawp_wal_login_logout_button = get_option(WA_Integration::MENU_LOCATIONS_KEY, []);
+
+    // check that saved menus still exist
+    foreach ($wawp_wal_login_logout_button as $i => $menu_id) {
+        $menu_exists = wp_get_nav_menu_object($menu_id);
+        // if menu no longer exists, remove it
+        if (!$menu_exists) {
+            unset($wawp_wal_login_logout_button[$i]);
+        }
+    }
 
     // if empty, then get the primary menu as a default
     if (empty($wawp_wal_login_logout_button)) {
