@@ -737,8 +737,8 @@ class WA_Integration {
 	public function post_access_load_restrictions($post_id, $post) {
 		if (Exception::fatal_error()) return;
 
-		// if hook is running before wap meta box data is entered and saved, return
-		if (empty($_POST)) return;
+		// if post isn't being saved *by the user*, return
+		if (empty($_POST) || $_POST['action'] != 'editpost') return;
 
 		// Verify the nonce before proceeding
 		if (!isset($_POST['wawp_post_access_control']) || !wp_verify_nonce($_POST['wawp_post_access_control'], basename(__FILE__))) {
