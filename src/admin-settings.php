@@ -374,15 +374,11 @@ class Admin_Settings {
         $menus = wp_get_nav_menus();
         // array of menu ids => assigned locations
         $menu_id_to_location = flipped_menu_location_array();
-        // Log::wap_log_debug(get_registered_nav_menus());
 
         // loop through list of menus
         foreach ($menus as $menu) {
             $menu_id = $menu->term_id;
-            if (!array_key_exists($menu_id, $menu_id_to_location)) {
-                // if menu is not assigned to a location, it's not present on the site, skip it
-                continue;
-            }
+            $display_name = $menu->name;
 
             // if menu is saved in options, check the input box
             $is_checked = in_array($menu_id, $saved_login_menu);
@@ -391,14 +387,32 @@ class Admin_Settings {
                 $checked = 'checked';
             }
 
+            $menu_has_location = array_key_exists($menu_id, $menu_id_to_location);
+
+            // if menu has a location, display it
+            if ($menu_has_location) {
+                $display_name = $display_name . ' (' . $menu_id_to_location[$menu_id] . ')';
+            } else if (!empty($menu_id_to_location) && !$is_checked) {
+                /**
+                 * if menu does not have locations but there are other menus 
+                 * registered to locations AND the menu is not currently 
+                 * selected, don't display it
+                 */
+                continue;
+            }
+            // if no menus have locations, display all of them
+
+
             // output checkbox and label with the format menu name (location(s))
             echo '<div><input type="checkbox" id="wap_menu_option" 
                 name="wawp_menu_location_name[]" value="' . 
                 esc_attr($menu_id) . '" ' . esc_attr($checked) . '>';
             echo '<label for="' . esc_attr($menu_id) . '">' . 
-                esc_html($menu->name) . ' (' . 
-                esc_html($menu_id_to_location[$menu_id]) . 
-                ')</label></div>';
+                esc_html($display_name);
+            if (!$menu_has_location && $is_checked) {
+                echo '<span style="color:red;"> (Menu not assigned to a location)</span>';
+            }
+            echo '</label></div>';
 
         }
     }

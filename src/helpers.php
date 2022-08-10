@@ -168,8 +168,31 @@ function disable_core() {
  * primary menu name of the current theme.
  */
 function get_primary_menu() {
-    $menu_locations = get_nav_menu_locations();
-    return min($menu_locations);
+    $nav_menu_locations = get_nav_menu_locations();
+
+    // remove empty locations (0 means empty)
+    $nav_menu_locations = array_filter($nav_menu_locations, function($loc) {
+        return $loc;
+    });
+
+    // if there are no menus registered in locations, use menu list
+    if (empty($nav_menu_locations)) return get_primary_menu_from_menu_list();
+
+    // find primary menu
+    $min_menu = min($nav_menu_locations);
+    return $min_menu;
+}
+
+function get_primary_menu_from_menu_list() {
+    $menus = wp_get_nav_menus();
+
+    // use array_reduce to find the minimum term ID
+    $primary_menu = array_reduce($menus, function($menu1, $menu2) {
+        if ($menu1->term_id < $menu2->term_id) return $menu1;
+        else return $menu2;
+    }, $menus[0]);
+
+    return $primary_menu->term_id;
 }
 
 /**
@@ -194,7 +217,8 @@ function get_login_menu_location() {
 
 /**
  * Returns menu location array with keys and values flipped. So the menus 
- * correspond to their assigned locations.
+ * correspond to their assigned locations. Returns an empty array if no
+ * locations have menus assigned.
  *
  * @return array 
  */
@@ -205,6 +229,10 @@ function flipped_menu_location_array() {
 
     foreach ($menu_locations as $location => $menu_id) {
         $location_name = $location_names[$location];
+
+        // if location does not have any menus, do not add it
+        if (!$menu_id) continue;
+
         if (!array_key_exists($menu_id, $flipped_array)) {
             // if menu doesn't exist yet, add it
             $flipped_array[$menu_id] = $location_name;
