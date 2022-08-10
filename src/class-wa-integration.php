@@ -5,100 +5,306 @@ namespace WAWP;
 use DOMDocument;
 
 require_once __DIR__ . '/class-addon.php';
+require_once __DIR__ . '/class-data-encryption.php';
 require_once __DIR__ . '/class-log.php';
 require_once __DIR__ . '/class-wa-api.php';
 require_once __DIR__ . '/helpers.php';
 
-
 /**
- * Class for managing the user's WildApricot account and post restriction
+ * Class for managing WildApricot user accounts and post restriction.
+ * 
  * @since 1.0b1
  * @author Spencer Gable-Cook and Natalie Brotherton
  * @copyright 2022 NewPath Consulting
  */
 class WA_Integration {
-	// Constants for keys used for database management
+	// Keys for data stored in WP databases.
+
+	// TODO: move constants to separate WA_Integration_Constants class
+	/**
+	 * Stores encrypted WA authorization credentials.
+	 * 
+	 * @var string
+	 */
 	const WA_CREDENTIALS_KEY 					= 'wawp_wal_name';
+
+	/**
+	 * Key in `WA_CREDENTIALS_KEY` option storing the encrypted API key.
+	 * 
+	 * @var string
+	 */
 	const WA_API_KEY_OPT 						= 'wawp_wal_api_key';
+
+	/**
+	 * Key in `WA_CREDENTIALS_KEY` option storing the encrypted client ID.
+	 * 
+	 * @var string
+	 */
 	const WA_CLIENT_ID_OPT 						= 'wawp_wal_client_id';
+
+	/**
+	 * Key in `WA_CREDENTIALS_KEY` option storing the encrypted client secret.
+	 * 
+	 * @var string
+	 */
 	const WA_CLIENT_SECRET_OPT 					= 'wawp_wal_client_secret';
+
+	/**
+	 * Stores user's WA user ID in the user meta data.
+	 * 
+	 * @var string
+	 */
 	const WA_USER_ID_KEY 						= 'wawp_wa_user_id';
+
+	/**
+	 * Stores user's WA membership level(s) in the user meta data.
+	 * 
+	 * @var string
+	 */
 	const WA_MEMBERSHIP_LEVEL_KEY 				= 'wawp_membership_level_key';
+
+	/**
+	 * Stores user's WA membership ID(s) in the user meta data.
+	 * 
+	 * @var string
+	 */
 	const WA_MEMBERSHIP_LEVEL_ID_KEY			= 'wawp_membership_level_id_key';
+
+	/**
+	 * Stores user's WA status in the user meta data.
+	 * 
+	 * @var string
+	 */
 	const WA_USER_STATUS_KEY 					= 'wawp_user_status_key';
+
+	/**
+	 * Stores user's WA organization(s) in the user meta data.
+	 * 
+	 * @var string
+	 */
 	const WA_ORGANIZATION_KEY 					= 'wawp_organization_key';
+
+	/**
+	 * Stores user's WA group(s) in the user meta data.
+	 * 
+	 * @var string
+	 */
 	const WA_MEMBER_GROUPS_KEY 					= 'wawp_list_of_groups_key';
+
+	/**
+	 * Stores all existing membership levels in the linked WA admin account
+	 * in the options table.
+	 * 
+	 * @var string
+	 */
 	const WA_ALL_MEMBERSHIPS_KEY 				= 'wawp_all_levels_key';
+
+	/**
+	 * Stores all existing membership groups in the linked WA admin account
+	 * in the options table.
+	 * 
+	 * @var string
+	 */
 	const WA_ALL_GROUPS_KEY						= 'wawp_all_groups_key';
+
+	/**
+	 * Stores restricted groups in the post meta data.
+	 * 
+	 * @var string
+	 */
 	const RESTRICTED_GROUPS 					= 'wawp_restricted_groups';
+
+	/**
+	 * Stores restricted levels in the post meta data.
+	 * 
+	 * @var string
+	 */
 	const RESTRICTED_LEVELS 					= 'wawp_restricted_levels';
+
+	/**
+	 * Stores whether the post is restricted or not in the post meta data.
+	 * 
+	 * @var string
+	 */
 	const IS_POST_RESTRICTED 					= 'wawp_is_post_restricted';
+
+	/**
+	 * Stores array of all restricted posts in the options table. Used for
+	 * deleting custom post metadata upon plugin deletion.
+	 * 
+	 * @var string
+	 */
 	const ARRAY_OF_RESTRICTED_POSTS 			= 'wawp_array_of_restricted_posts';
+
+	/**
+	 * Stores custom restriction message in post meta data.
+	 * 
+	 * @var string
+	 */
 	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY	= 'wawp_individual_restriction_message_key';
+
+	/**
+	 * Stores global restriction message in options table.
+	 * 
+	 * @var string
+	 */
 	const GLOBAL_RESTRICTION_MESSAGE			= 'wawp_global_restriction_message';
+
+	/**
+	 * Stores WA statuses for which posts are not restricted. 
+	 * Controlled in the admin settings.
+	 * 
+	 * @var string
+	 */
 	const RESTRICTION_STATUS					= 'wawp_restriction_status_name';
+
+	/**
+	 * Stores transient for the WA admin account ID. Deleted after 30 minutes.
+	 * 
+	 * @var string
+	 */
 	const ADMIN_ACCOUNT_ID_TRANSIENT 			= 'wawp_admin_account_id';
+
+	/**
+	 * Stores transient for the encrypted WA admin access token.
+	 * Deleted after 30 minutes.
+	 * 
+	 * @var string
+	 */
 	const ADMIN_ACCESS_TOKEN_TRANSIENT 			= 'wawp_admin_access_token';
+
+	/**
+	 * Stores transient for the encrypted WA admin refresh token.
+	 * Deleted after 30 minutes.
+	 * 
+	 * @var string
+	 */
 	const ADMIN_REFRESH_TOKEN_OPTION 			= 'wawp_admin_refresh_token';
+
+	/**
+	 * Stores all WA fields. Displayed in admin settings.
+	 * 
+	 * @var string
+	 */
 	const LIST_OF_CUSTOM_FIELDS 				= 'wawp_list_of_custom_fields';
+
+	/**
+	 * Stores WA fields selected by user to sync with WordPress. Controlled in
+	 * admin settings.
+	 * 
+	 * @var string
+	 */
 	const LIST_OF_CHECKED_FIELDS 				= 'wawp_fields_name';
+
+	/**
+	 * Stores whether the user is a WA user added by the plugin in the user meta 
+	 * data. Called when a user logs in with the WAP login shortcode.
+	 * 
+	 * @var string
+	 */
 	const USER_ADDED_BY_PLUGIN 					= 'wawp_user_added_by_plugin';
+
+	/**
+	 * Stores menu IDs on which the WAP login/logout button will appear. 
+	 * Controlled in admin settings.
+	 * 
+	 * @var string
+	 */
 	const MENU_LOCATIONS_KEY 					= 'wawp_menu_location_name';
+
+	/**
+	 * Stores the encrypted WA URL to which the WP site is connected to. 
+	 * Corresponds to the WA authorization credentials.
+	 * 
+	 * @var string
+	 */
 	const WA_URL_KEY 							= 'wawp_wa_url_key';
+
+	/**
+	 * Stores the flag indicating whether all WildApricot information should be 
+	 * deleted when the plugin is deleted. Controlled in admin settings.
+	 * 
+	 * @var string
+	 */
 	const WA_DELETE_OPTION 						= 'wawp_delete_name';
+
+	/**
+	 * Stores the page ID of the WAP login page created by the plugin in the
+	 * options table.
+	 *
+	 * @var string
+	 */
 	const LOGIN_PAGE_ID_OPT						= 'wawp_wal_page_id';
 	
-	// Custom hooks
+	// Custom hook names
+	/**
+	 * User data refresh hook. Scheduled to run daily.
+	 * 
+	 * @var string
+	 */
 	const USER_REFRESH_HOOK 					= 'wawp_cron_refresh_user_hook';
+
+	/**
+	 * License data refresh hook. Scheduled to run daily.
+	 * 
+	 * @var string
+	 */
 	const LICENSE_CHECK_HOOK 					= 'wawp_cron_refresh_license_check';
 
 	/**
-	 * Constructs an instance of the WA_Integration class
+	 * Constructs an instance of the WA_Integration class.
 	 *
-	 * Adds the actions and filters required. Includes other required files. Initializes class variables.
+	 * Adds the actions and filters required.
 	 *
+	 * @return WA_Integration new WA_Integration instance
 	 */
 	public function __construct() {
-		// Hook that runs after WildApricot credentials are saved
+		// Custom hook that runs after WildApricot credentials are saved
 		add_action('wawp_wal_credentials_obtained', array($this, 'create_login_page'));
-		// Action for when login page is updated when submit button is pressed
+
+		// Fires before WordPress loads the page; creates user using login information and redirects to the previous page 
 		add_action('template_redirect', array($this, 'create_user_and_redirect'));
-		// Filter for adding login button to menu
-		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2); // 2 arguments
+		
+		// Filters the navigation menu(s)
+		add_filter('wp_nav_menu_items', array($this, 'create_wa_login_logout'), 10, 2);
+
 		// Shortcode for login form
 		add_shortcode('wawp_custom_login_form', array($this, 'custom_login_form_shortcode'));
-		// Add redirectId to query vars array
+
+		// Filter query variables to redirectId to query vars array
 		add_filter('query_vars', array($this, 'add_custom_query_vars'));
-		// Action for making profile page private
+
+		// Custon action for restricting access to login page
 		add_action('remove_wa_integration', array($this, 'remove_wild_apricot_integration'));
-		// Actions for displaying membership levels on user profile
+
+		// Fires when displaying or editing user profile, adds WA user data
 		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
 		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
-		// Fire our meta box setup function on the post editor screen
+
+		// Fires on the post editor screen, adds custom meta boxes
 		add_action('load-post.php', array($this, 'post_access_meta_boxes_setup'));
 		add_action('load-post-new.php', array($this, 'post_access_meta_boxes_setup'));
-		// Loads in restricted groups/levels when post is saved
-		add_action('save_post', array($this, 'post_access_load_restrictions'), 10, 2); // changed to all types of posts
-		// On post load check if the post can be accessed by the current user
+
+		// Fires when post is saved, processes custom post metadata
+		add_action('save_post', array($this, 'post_access_load_restrictions'), 10, 2);
+
+		// Fires when post is loaded, restricts post content based on custom meta
 		add_filter('the_content', array($this, 'restrict_post_wa'));
-		// Action for creating 'select all' checkboxes
-		add_action('wawp_create_select_all_checkboxes', array($this, 'select_all_checkboxes_jquery'));
+
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
-		// Action for hiding admin bar for non-admin users
+
+		// Action for hiding admin bar for non-admin users, fires after the theme is loaded
 		add_action('after_setup_theme', array($this, 'hide_admin_bar'));
-		// Action when user views the settings page -> check that WildApricot credentials and license still match
-		// add_action('load-toplevel_page_wawp-wal-admin', array($this, 'check_updated_credentials'));
+
+		// Fires on every page, checks credentials and disables plugin if necessary
 		add_action('init', array($this, 'check_updated_credentials'));
+
 		// Action for Cron job that refreshes the license check
 		add_action(self::LICENSE_CHECK_HOOK, 'WAWP\Addon::update_licenses');
-		// Action for when user tries to access admin page
+
+		// Fires when access to the admin page is denied, displays message prompting user to log out of their WA account
 		add_action('admin_page_access_denied', array($this, 'tell_user_to_logout'));
-		
-		// Include any required files
-		require_once('class-data-encryption.php');
-		require_once('class-wa-api.php');
-		require_once('class-addon.php');
 	}
 
 	/**
@@ -619,47 +825,6 @@ class WA_Integration {
 		} else {
 			delete_post_meta($post_id, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
 		}
-	}
-
-	/**
-	 * Allows for the 'select all' checkbox to select all boxes.
-	 * 
-	 * @return void
-	 * @todo issue get rid of jQuery
-	 * @todo uncheck all checkboxes when this box is unchecked
-	 */
-	public function select_all_checkboxes_jquery() {
-		?>
-		<script language="javascript">
-			// Check all levels
-			jQuery('#wawp_check_all_levels').click(function () {
-				jQuery('.wawp_case_level').prop('checked', true);
-			});
-
-			// Check all groups
-			jQuery('#wawp_check_all_groups').click(function () {
-				jQuery('.wawp_case_group').prop('checked', true);
-			});
-
-			// If all checkboxes are selected, check the select-all checkbox, and vice versa
-			// Levels
-			jQuery(".wawp_case_level").click(function() {
-				if(jQuery(".wawp_case_level").length == jQuery(".wawp_case_level:checked").length) {
-					jQuery("#wawp_check_all_levels").attr("checked", "checked");
-				} else {
-					jQuery("#wawp_check_all_levels").removeAttr("checked");
-				}
-			});
-			// Groups
-			jQuery(".wawp_case_group").click(function() {
-				if(jQuery(".wawp_case_group").length == jQuery(".wawp_case_group:checked").length) {
-					jQuery("#wawp_check_all_groups").attr("checked", "checked");
-				} else {
-					jQuery("#wawp_check_all_groups").removeAttr("checked");
-				}
-			});
-    	</script>
-		<?php
 	}
 
 	/**
@@ -1641,4 +1806,5 @@ class WA_Integration {
 	}
 
 }
+
 ?>

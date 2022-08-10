@@ -42,15 +42,25 @@ require_once plugin_dir_path(__FILE__) . 'src/class-wa-integration.php';
 require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 
 $activator = new WAWP\Activator(plugin_basename(__FILE__));
-// Enqueue stylesheet
+
+// Enqueue stylesheet for styling admin settings page
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook) {
     wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
 }
-// Enqueue stylesheet for shortcode
+// Enqueue stylesheet for styling login shortcode
 add_action('wp_enqueue_scripts', 'wawp_enqueue_shortcode_css');
 function wawp_enqueue_shortcode_css() {
 	wp_enqueue_style('wawp-styles-shortcode', plugin_dir_url(__FILE__) . 'css/wawp-styles-shortcode.css', array(), '1.0');
+}
+
+/**
+ * Enqueue jQuery script for selecting all membership level and group checkboxes in 
+ * custom post meta box.
+ */
+add_action('admin_enqueue_scripts', 'wawp_enqueue_jquery');
+function wawp_enqueue_jquery() {
+	wp_enqueue_script('wawp-script-select-all-checkboxes', plugin_dir_url(__FILE__) . 'js/script.js', array('jquery'), null, true);
 }
 
 // Create settings page
