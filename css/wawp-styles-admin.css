@@ -5,16 +5,23 @@
 	}
 }
 
-.loginChild {
-	flex: 1;
-}
-
-.loginChild:first-child {
-	margin-right: 20px;
-}
-
-.errorAlert {
+.wap-error, .wap-exception {
 	color: red;
+}
+
+.wap-success {
+	color: green;
+}
+
+/* Width for WA authorization credentials input boxes */
+.wap-wa-auth-creds {
+	width: 75%;
+}
+
+@media only screen and (max-width: 1200px) {
+	.wap-wa-auth-creds {
+		width: 100%;
+	}
 }
 
 #wawp_restricted_message_textarea {
@@ -44,38 +51,6 @@
 ul.wawp_list {
 	list-style-type: disc;
 	margin-left: 5%;
-}
-
-/* Formatting for the API Key, Client ID, and Client Secret inputs */
-#wawp_wal_api_key {
-	width: 80%;
-}
-
-#wawp_wal_client_id {
-	width: 80%;
-}
-
-#wawp_wal_client_secret {
-	width: 80%;
-}
-
-@media only screen and (max-width: 1200px) {
-	#wawp_wal_api_key {
-		width: 100%;
-	}
-
-	#wawp_wal_client_id {
-		width: 100%;
-	}
-
-	#wawp_wal_client_secret {
-		width: 100%;
-	}
-}
-
-.wawp_authorization_img {
-	max-width: 500px;
-	width: 100%;
 }
 
 .form-table th {

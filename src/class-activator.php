@@ -134,13 +134,13 @@ class Activator {
 	 * @return void
 	 */
 	private static function empty_creds_message() {
-		echo "<div class='notice notice-warning'><p>";
-		echo "Please enter your ";
-		echo "<a href=" . esc_url(get_auth_menu_url()) . ">WildApricot credentials</a>";
-		echo " and ";
-		echo "<a href=" . esc_url(get_licensing_menu_url()) . "> license key</a>";
-		echo " in order to use the <strong>" . esc_html(CORE_NAME) . "</strong> functionality.";
-		echo "</p></div>";
+		echo '<div class="notice notice-warning"><p>';
+		echo 'Please enter your ';
+		echo '<a href=' . esc_url(get_auth_menu_url()) . '>WildApricot credentials</a>';
+		echo ' and ';
+		echo '<a href=' . esc_url(get_licensing_menu_url()) . '> license key</a>';
+		echo ' in order to use the <strong>' . esc_html(CORE_NAME) . '</strong> functionality.';
+		echo '</p></div>';
 	}
 
 

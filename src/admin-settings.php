@@ -217,7 +217,7 @@ class Settings {
     }
 
     /**
-     * Add WAP settings page page.
+     * Add WAP settings page.
      * 
      * @return void.
      */
@@ -351,6 +351,18 @@ class Admin_Settings {
     }
 
     /**
+     * Inform user there are no menus so the login button location cannot be
+     * chose.
+     *
+     * @return void
+     */
+    public function login_menu_location_no_menus_info() {
+        print '<p class="wap-error"><strong>Please add at least one menu in <a href=' . 
+                esc_url(admin_url('nav-menus.php')) . '>Appearance > Menus</a> in 
+                order to display the Login/Logout button on your website.</strong></p>';
+    }
+
+    /**
      * Display the checkboxes corresponding to each visible menu on the site
      * for the user to choose from to place the WA user login button
      * 
@@ -364,15 +376,11 @@ class Admin_Settings {
         $menus = wp_get_nav_menus();
         // array of menu ids => assigned locations
         $menu_id_to_location = flipped_menu_location_array();
-        // Log::wap_log_debug(get_registered_nav_menus());
 
         // loop through list of menus
         foreach ($menus as $menu) {
             $menu_id = $menu->term_id;
-            if (!array_key_exists($menu_id, $menu_id_to_location)) {
-                // if menu is not assigned to a location, it's not present on the site, skip it
-                continue;
-            }
+            $display_name = $menu->name;
 
             // if menu is saved in options, check the input box
             $is_checked = in_array($menu_id, $saved_login_menu);
@@ -381,14 +389,32 @@ class Admin_Settings {
                 $checked = 'checked';
             }
 
+            $menu_has_location = array_key_exists($menu_id, $menu_id_to_location);
+
+            // if menu has a location, display it
+            if ($menu_has_location) {
+                $display_name = $display_name . ' (' . $menu_id_to_location[$menu_id] . ')';
+            } else if (!empty($menu_id_to_location) && !$is_checked) {
+                /**
+                 * if menu does not have locations but there are other menus 
+                 * registered to locations AND the menu is not currently 
+                 * selected, don't display it
+                 */
+                continue;
+            }
+            // if no menus have locations, display all of them
+
+
             // output checkbox and label with the format menu name (location(s))
             echo '<div><input type="checkbox" id="wap_menu_option" 
                 name="wawp_menu_location_name[]" value="' . 
                 esc_attr($menu_id) . '" ' . esc_attr($checked) . '>';
             echo '<label for="' . esc_attr($menu_id) . '">' . 
-                esc_html($menu->name) . ' (' . 
-                esc_html($menu_id_to_location[$menu_id]) . 
-                ')</label></div>';
+                esc_html($display_name);
+            if (!$menu_has_location && $is_checked) {
+                echo '<span class="wap-error"> (Menu not assigned to a location)</span>';
+            }
+            echo '</label></div>';
 
         }
     }
@@ -736,6 +762,19 @@ class Admin_Settings {
             $register_args // Sanitize
         );
 
+        // if menus are empty, display separate message and don't add fields
+        $menus = wp_get_nav_menus();
+        if (empty($menus)) {
+            // Create settings section
+            add_settings_section(
+                'wawp_menu_location_id', // ID
+                'Login/Logout Button Menu Location', // Title
+                array( $this, 'login_menu_location_no_menus_info' ), // Callback
+                self::LOGIN_BUTTON_LOCATION_PAGE // Page
+            );
+            return;
+        }
+
         // Create settings section
         add_settings_section(
             'wawp_menu_location_id', // ID
@@ -937,22 +976,13 @@ class Admin_Settings {
             // This prints out all hidden setting fields
             settings_fields( self::LOGIN_BUTTON_LOCATION_SECTION );
             do_settings_sections( self::LOGIN_BUTTON_LOCATION_PAGE );
-            submit_button();
+            $menus = wp_get_nav_menus();
+            if (!empty($menus)) {
+                // don't display submit button if there are no menus
+                submit_button();
+            }
         ?>
         </form>
-        <!-- Check if menu location(s) have been submitted -->
-        <?php
-            // // Check menu locations in options table
-            // $menu_location_saved = get_option(WA_Integration::MENU_LOCATIONS_KEY);
-            // // If menu locations is not empty, then it has been saved
-            // if (!empty($menu_location_saved)) {
-            //     // Display success statement
-            //     echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
-            // } else {
-            //     Log::wap_log_warning('No menu location for the login/logout button selected. Please select so the button will appear on your site.');
-            //     echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
-            // }
-        ?>
         <!-- Form for Restriction Status(es) -->
         <form method="post" action="options.php">
         <?php
@@ -1156,11 +1186,11 @@ class WA_Auth_Settings {
                         }
 						if (!WA_Integration::valid_wa_credentials()) { 
                             // not valid
-							echo '<p style="color:red">Missing valid WildApricot credentials. Please enter them above.</p>';
+							echo '<p class="wap-error">Missing valid WildApricot credentials. Please enter them above.</p>';
 						} else if ($wild_apricot_url) { 
                             // successful login
-							echo '<p style="color:green">Valid WildApricot credentials have been saved.</p>';
-                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>.</p>';
+							echo '<p class="wap-success">Valid WildApricot credentials have been saved.</p>';
+                            echo '<p class="wap-success">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>.</p>';
 						}
                         return;
 					?>
@@ -1235,11 +1265,11 @@ class WA_Auth_Settings {
      * @return void
      */
     public function api_key_callback() {
-		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
-			type='text' placeholder='*************' />";
+		echo '<input class="wap-wa-auth-creds" id="wawp_wal_api_key" name="wawp_wal_name[wawp_wal_api_key]"
+			type="text" placeholder="*************" />';
 		// Check if api key has been set; if so, echo that the client secret has been set!
 		if (!empty($this->options[WA_Integration::WA_API_KEY_OPT]) && !Exception::fatal_error()) {
-			echo "<p>API Key is set</p>";
+			echo '<p>API Key is set</p>';
 		}
     }
 
@@ -1249,11 +1279,11 @@ class WA_Auth_Settings {
      * @return void
      */
     public function client_id_callback() {
-		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
-			type='text' placeholder='*************' />";
+		echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_id" name="wawp_wal_name[wawp_wal_client_id]"
+			type="text" placeholder="*************" />';
 		// Check if client id has been set; if so, echo that the client secret has been set!
 		if (!empty($this->options[WA_Integration::WA_CLIENT_ID_OPT]) && !Exception::fatal_error()) {
-			echo "<p>Client ID is set</p>";
+			echo '<p>Client ID is set</p>';
 		}
     }
 
@@ -1263,11 +1293,11 @@ class WA_Auth_Settings {
      * @return void
      */
     public function client_secret_callback() {
-		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
-			type='text' placeholder='*************' />";
+		echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_secret" name="wawp_wal_name[wawp_wal_client_secret]"
+			type="text" placeholder="*************" />';
 		// Check if client secret has been set; if so, echo that the client secret has been set!
 		if (!empty($this->options[WA_Integration::WA_CLIENT_SECRET_OPT]) && !Exception::fatal_error()) {
-			echo "<p>Client Secret is set</p>";
+			echo '<p>Client Secret is set</p>';
 		}
     }
 
@@ -1575,9 +1605,9 @@ class License_Settings {
             $input_value = Addon::instance()::get_license($slug);
         }
         
-        echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . esc_attr($input_value) . "'  />" ;
+        echo '<input id="license_key "' . esc_attr($slug) . '" name="wawp_license_keys[' . esc_attr($slug) .']" type="text" value="' . esc_attr($input_value) . '"  />' ;
         if ($license_valid) {
-            echo "<br><p style='color:green;'><span class='dashicons dashicons-saved'></span> License key valid</p>";
+            echo '<br><p class="wap-success"><span class="dashicons dashicons-saved"></span> License key valid</p>';
         } 
     }
 }
