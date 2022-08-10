@@ -1,6 +1,6 @@
 === WildApricot Press ===
 Contributors: 1cookspe, nataliebrotherton, asirota
-Tags: wap, wildapricot, wild apricot, sso, membership
+Tags: wildapricot, wild apricot, sso, membership, event management, events, membership management, login, OAuth 2.0, Single Sign-on, WordPress SSO
 Requires at least: 5.0
 Tested up to: 6.0
 Requires PHP: 7.4
@@ -9,40 +9,6 @@ License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 WildApricot Press enables WordPress websites to support the WildApricot membership management system.
-
-WildApricot Press (WAP) Documentation
-
-## Version 1.0.0 - August 9, 2022
-- release to WordPress repository
-
-## Version 1.0b5 - August 4, 2022
-- added selection of default menu item for login/logout link
-- renamed plugin to WildApricot Press
-- cleaned up Authorization screen cosmetically
-- Added WAP Developer's Guide
-
-## Version 1.0b4 - July 29, 2022
-- adding WAP switch to toggle error logging to wp-content/wapdebug.log file
-- added a ton of error checking routines to log errors in various conditions where plugin errors or has an API error
-- finished all sanitization/escape output text to support submission to WordPress plugin repo
-
-## Version 1.0b3 - June 30, 2022
-- fixed images in settings page
-- started to escape output text for issue #58
-- refactored licensing code and introduced generic license checker URL
-
-## Version 1.0b2b - June 15, 2022
-- modified to new production webhook for licensing
-
-## Version 1.0b2a - March 11, 2022
-
-## Version 1.0b2 - February 17, 2022
-- fixed support for custom themes like Avada
-
-## Version 1.0b1 - September 2, 2021
-- first release
-- fixed images in settings page
-- started to escape output text for issue #58
 
 # Administrator's Guide
 
@@ -211,3 +177,36 @@ After installing each add-on, you can enter the license key for the WAP plugin a
 
 <img width="422" alt="wap licensing of add ons" src="https://user-images.githubusercontent.com/458134/131912822-42e0d808-c21f-4ea2-a612-94501254a728.png">
 
+# Release History
+
+## Version 1.0.0 - August 9, 2022
+- first public release
+
+## Version 1.0b5 - August 4, 2022
+- added selection of default menu item for login/logout link
+- renamed plugin to WildApricot Press
+- cleaned up Authorization screen cosmetically
+- Added WAP Developer's Guide
+
+## Version 1.0b4 - July 29, 2022
+- adding WAP switch to toggle error logging to wp-content/wapdebug.log file
+- added a ton of error checking routines to log errors in various conditions where plugin errors or has an API error
+- finished all sanitization/escape output text to support submission to WordPress plugin repo
+
+## Version 1.0b3 - June 30, 2022
+- fixed images in settings page
+- started to escape output text for issue #58
+- refactored licensing code and introduced generic license checker URL
+
+## Version 1.0b2b - June 15, 2022
+- modified to new production webhook for licensing
+
+## Version 1.0b2a - March 11, 2022
+
+## Version 1.0b2 - February 17, 2022
+- fixed support for custom themes like Avada
+
+## Version 1.0b1 - September 2, 2021
+- first release
+- fixed images in settings page
+- started to escape output text for issue #58
