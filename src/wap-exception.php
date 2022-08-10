@@ -63,9 +63,9 @@ abstract class Exception extends \Exception {
     protected abstract function get_error_type();
 
     public static function get_user_facing_error_message() {
-        return "<div class='wawp-exception' style='color:red'>
+        return '<div class="wap-exception">
         <h3>FATAL ERROR</h3><p>WildApricot Press has encountered a fatal error and must be disabled.
-        Please contact your site administrator.</p></div>";
+        Please contact your site administrator.</p></div>';
     }
 
     /**
@@ -77,7 +77,7 @@ abstract class Exception extends \Exception {
      * @return void
      */
     public static function admin_notice_error_message_template($error_type) {
-        echo "<div class='notice notice-error wawp-exception'>";
+        echo "<div class='notice notice-error wap-exception'>";
         echo "<h3>FATAL ERROR</h3>";
         echo "<p>WildApricot Press has encountered an error with ";
         echo esc_html($error_type);

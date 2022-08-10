@@ -217,7 +217,7 @@ class Settings {
     }
 
     /**
-     * Add WAP settings page page.
+     * Add WAP settings page.
      * 
      * @return void.
      */
@@ -410,7 +410,7 @@ class Admin_Settings {
             echo '<label for="' . esc_attr($menu_id) . '">' . 
                 esc_html($display_name);
             if (!$menu_has_location && $is_checked) {
-                echo '<span style="color:red;"> (Menu not assigned to a location)</span>';
+                echo '<span class="wap-error"> (Menu not assigned to a location)</span>';
             }
             echo '</label></div>';
 
@@ -981,19 +981,6 @@ class Admin_Settings {
             }
         ?>
         </form>
-        <!-- Check if menu location(s) have been submitted -->
-        <?php
-            // // Check menu locations in options table
-            // $menu_location_saved = get_option(WA_Integration::MENU_LOCATIONS_KEY);
-            // // If menu locations is not empty, then it has been saved
-            // if (!empty($menu_location_saved)) {
-            //     // Display success statement
-            //     echo '<p style="color:green">Menu Location(s) for the Login/Logout button have been saved!</p>';
-            // } else {
-            //     Log::wap_log_warning('No menu location for the login/logout button selected. Please select so the button will appear on your site.');
-            //     echo '<p style="color:red">Missing Menu Location(s) for the Login/Logout button! Please check off your desired menu locations above!</p>';
-            // }
-        ?>
         <!-- Form for Restriction Status(es) -->
         <form method="post" action="options.php">
         <?php
@@ -1197,11 +1184,11 @@ class WA_Auth_Settings {
                         }
 						if (!WA_Integration::valid_wa_credentials()) { 
                             // not valid
-							echo '<p style="color:red">Missing valid WildApricot credentials. Please enter them above.</p>';
+							echo '<p class="wap-error">Missing valid WildApricot credentials. Please enter them above.</p>';
 						} else if ($wild_apricot_url) { 
                             // successful login
-							echo '<p style="color:green">Valid WildApricot credentials have been saved.</p>';
-                            echo '<p style="color:green">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>.</p>';
+							echo '<p class="wap-success">Valid WildApricot credentials have been saved.</p>';
+                            echo '<p class="wap-success">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>.</p>';
 						}
                         return;
 					?>
@@ -1276,11 +1263,11 @@ class WA_Auth_Settings {
      * @return void
      */
     public function api_key_callback() {
-		echo "<input id='wawp_wal_api_key' name='wawp_wal_name[wawp_wal_api_key]'
-			type='text' placeholder='*************' />";
+		echo '<input class="wap-wa-auth-creds" id="wawp_wal_api_key" name="wawp_wal_name[wawp_wal_api_key]"
+			type="text" placeholder="*************" />';
 		// Check if api key has been set; if so, echo that the client secret has been set!
 		if (!empty($this->options[WA_Integration::WA_API_KEY_OPT]) && !Exception::fatal_error()) {
-			echo "<p>API Key is set</p>";
+			echo '<p>API Key is set</p>';
 		}
     }
 
@@ -1290,11 +1277,11 @@ class WA_Auth_Settings {
      * @return void
      */
     public function client_id_callback() {
-		echo "<input id='wawp_wal_client_id' name='wawp_wal_name[wawp_wal_client_id]'
-			type='text' placeholder='*************' />";
+		echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_id" name="wawp_wal_name[wawp_wal_client_id]"
+			type="text" placeholder="*************" />';
 		// Check if client id has been set; if so, echo that the client secret has been set!
 		if (!empty($this->options[WA_Integration::WA_CLIENT_ID_OPT]) && !Exception::fatal_error()) {
-			echo "<p>Client ID is set</p>";
+			echo '<p>Client ID is set</p>';
 		}
     }
 
@@ -1304,11 +1291,11 @@ class WA_Auth_Settings {
      * @return void
      */
     public function client_secret_callback() {
-		echo "<input id='wawp_wal_client_secret' name='wawp_wal_name[wawp_wal_client_secret]'
-			type='text' placeholder='*************' />";
+		echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_secret" name="wawp_wal_name[wawp_wal_client_secret]"
+			type="text" placeholder="*************" />';
 		// Check if client secret has been set; if so, echo that the client secret has been set!
 		if (!empty($this->options[WA_Integration::WA_CLIENT_SECRET_OPT]) && !Exception::fatal_error()) {
-			echo "<p>Client Secret is set</p>";
+			echo '<p>Client Secret is set</p>';
 		}
     }
 
@@ -1616,9 +1603,9 @@ class License_Settings {
             $input_value = Addon::instance()::get_license($slug);
         }
         
-        echo "<input id='license_key " . esc_attr($slug) . "' name='wawp_license_keys[" . esc_attr($slug) ."]' type='text' value='" . esc_attr($input_value) . "'  />" ;
+        echo '<input id="license_key "' . esc_attr($slug) . '" name="wawp_license_keys[' . esc_attr($slug) .']" type="text" value="' . esc_attr($input_value) . '"  />' ;
         if ($license_valid) {
-            echo "<br><p style='color:green;'><span class='dashicons dashicons-saved'></span> License key valid</p>";
+            echo '<br><p class="wap-success"><span class="dashicons dashicons-saved"></span> License key valid</p>';
         } 
     }
 }
