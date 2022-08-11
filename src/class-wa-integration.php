@@ -358,7 +358,11 @@ class WA_Integration {
 		$license_status = Addon::get_license_check_option(CORE_SLUG);
 
 		// re-validate license only if the plugin has been disabled and if the authorization credentials have not changed
-		if (Addon::is_plugin_disabled() && !Exception::fatal_error() && $license_status != Addon::LICENSE_STATUS_AUTH_CHANGED) {
+		if (Addon::is_plugin_disabled() && 
+			!Exception::fatal_error() && 
+			$license_status != Addon::LICENSE_STATUS_AUTH_CHANGED && 
+			$has_valid_wa_credentials) 
+		{
 			Addon::update_licenses();
 			// obtain new status
 			$license_status = Addon::get_license_check_option(CORE_SLUG);
