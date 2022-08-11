@@ -1233,17 +1233,23 @@ class WA_Auth_Settings {
 
             // encrypt valid credentials
             $data_encryption = new Data_Encryption();
+            $saved_auth_creds = WA_API::load_user_credentials();
+            $auth_creds_changed = false;
             foreach ($valid as $key => $value) {
+                if ($valid[$key] != $saved_auth_creds[$key]) {
+                    $auth_creds_changed = true;
+                }
                 $valid[$key] = $data_encryption->encrypt($value);
+
             }
         } catch (Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
             return empty_string_array($input);
         } 
 
-        // Schedule CRON update for updating the available membership levels and groups
-        Settings::setup_cron_job();
-        update_option(Addon::WAWP_DISABLED_OPTION, false);
+        if ($auth_creds_changed) {
+            Addon::wa_auth_changed_update_status();
+        }
 
         // Return array of valid inputs
         return $valid;

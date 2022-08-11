@@ -68,18 +68,32 @@ class Addon {
 
     /**
      * License key invalid.
+     * 
+     * @var string
      */
     const LICENSE_STATUS_INVALID        = 'invalid';
 
     /**
-     * Empty license key entered..
+     * Empty license key entered.
+     * 
+     * @var string
      */
     const LICENSE_STATUS_ENTERED_EMPTY  = 'empty';
 
     /**
      * License key hasn't been entered.
+     * 
+     * @var string
      */
     const LICENSE_STATUS_NOT_ENTERED    = 'false';
+
+    /**
+     * WildApricot authorization credentials have changed-- current license
+     * is no longer valid.
+     * 
+     * @var string
+     */
+    const LICENSE_STATUS_AUTH_CHANGED   = 'auth_changed';
 
 
     private static $instance = null;
@@ -222,6 +236,8 @@ class Addon {
             } else if ($license_status == self::LICENSE_STATUS_INVALID) {
                 // show invalid license message on any wawp settings page
                 self::invalid_license_key_notice($slug);
+            } else if ($license_status == self::LICENSE_STATUS_AUTH_CHANGED) {
+                self::license_wa_auth_changed_notice($slug, $is_licensing_page);
             }
         }
             
@@ -270,6 +286,24 @@ class Addon {
      */
     public static function update_show_activation_notice_option($slug, $val) {
         update_option(self::$addon_list[$slug][self::WAWP_ACTIVATION_NOTICE_OPTION], $val);
+    }
+
+    /**
+     * Called when the WildApricot credentials have changed. Updates the core
+     * plugin's status to `License::LICENSE_STATUS_AUTH_CHANGED` and all the
+     * blocks' statuses to `License::LICENSE_STATUS_NOT_ENTERED`.
+     *
+     * @return void
+     */
+    public static function wa_auth_changed_update_status() {
+        // update core status to auth changed
+        self::update_license_check_option(CORE_SLUG, self::LICENSE_STATUS_AUTH_CHANGED);
+
+        // update block status to not entered
+        foreach (self::get_addons() as $slug => $addon) {
+            if (is_core($slug)) continue;
+            self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        }
     }
 
 
@@ -538,7 +572,11 @@ class Addon {
         if ($license_key != $license_key_input) return null;
 
         // if license hasn't changed, return it to avoid making expensive request
-        if (self::get_license($addon_slug) == $license_key) return $license_key;
+        if (self::get_license($addon_slug) == $license_key && 
+            self::has_valid_license($addon_slug)) 
+        {
+            return $license_key;
+        } 
 
         // check key against integromat scenario
         $response = self::post_request($license_key);
@@ -707,6 +745,31 @@ class Addon {
         echo " in order to use the <strong>" . esc_html($plugin_name) . "</strong> functionality.</p></div>";
 
         unset($_GET['activate']);
+    }
+
+    /**
+     * Prints out a message informing the user that their license key(s) are now
+     * invalid because there are new WA authorization credentials.
+     *
+     * @param string $slug plugin slug for which to output this message
+     * @param bool $is_licensing_page whether the user is currently on the 
+     * license settings page or not
+     * @return void
+     */
+    public static function license_wa_auth_changed_notice($slug, $is_licensing_page) {
+        $plugin_name = self::get_title($slug);
+
+        echo '<div class="notice notice-warning license"><p>';
+        echo 'Your WildApricot authorization credentials have changed. ';
+        echo 'Please re-enter your license key(s)';
+        // if the user is not on the license settings, print the url
+        if (!$is_licensing_page) {
+            echo ' in <a href=' . esc_url(get_licensing_menu_url()) . 
+            '>WildApricot Press > Licensing</a>';
+        }
+        echo ' in order to continue using the <strong>' . esc_html($plugin_name)
+        . '</strong> functionality.</p></div>';
+
     }
 
 } // end of Addon class
