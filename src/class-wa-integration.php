@@ -281,9 +281,8 @@ class WA_Integration {
 		add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
 		add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
 
-		// Fires on the post editor screen, adds custom meta boxes
-		add_action('load-post.php', array($this, 'post_access_meta_boxes_setup'));
-		add_action('load-post-new.php', array($this, 'post_access_meta_boxes_setup'));
+		// Fires on the add meta boxes hook, adds custom WAP meta boxes
+		add_action('add_meta_boxes', array($this, 'post_access_add_post_meta_boxes'));
 
 		// Fires when post is saved, processes custom post metadata
 		add_action('save_post', array($this, 'post_access_load_restrictions'), 10, 2);
@@ -737,10 +736,9 @@ class WA_Integration {
 	 */
 	public function post_access_load_restrictions($post_id, $post) {
 		if (Exception::fatal_error()) return;
-		// if this is the WA login page, return to avoid unneccessary invalid nonce log message
-		// if (str_contains(get_the_guid($post), 'wild-apricot-login')) return;
-		// if it's not the post edit page, don't do this
-		if (!is_post_edit_page()) return;
+
+		// if post isn't being saved *by the user*, return
+		if (!isset($_POST['action']) || $_POST['action'] != 'editpost') return;
 
 		// Verify the nonce before proceeding
 		if (!isset($_POST['wawp_post_access_control']) || !wp_verify_nonce($_POST['wawp_post_access_control'], basename(__FILE__))) {
