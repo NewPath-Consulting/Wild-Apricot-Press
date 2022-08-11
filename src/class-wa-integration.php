@@ -482,6 +482,8 @@ class WA_Integration {
 		self::create_cron_for_user_refresh();
 		// Create event for checking license
 		self::setup_license_check_cron();
+		// schedule cron update for updating the membership levels and groups
+		Settings::setup_cron_job();
 
 		$login_title = 'Login with your WildApricot credentials';
 		$login_content = '[wawp_custom_login_form]';

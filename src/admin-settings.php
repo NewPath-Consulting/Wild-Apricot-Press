@@ -1222,9 +1222,9 @@ class WA_Auth_Settings {
             if (!$valid) {
                 return empty_string_array($input);
             }
+
             $api_key = $valid[WA_Integration::WA_API_KEY_OPT];
             $valid_api = WA_API::is_application_valid($api_key); 
-
             // credentials invalid
             if (!$valid_api) {
                 return empty_string_array($input);

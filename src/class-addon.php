@@ -160,7 +160,7 @@ class Addon {
      */
     public static function new_addon($addon) {
         $option = get_option('wawp_addons');
-        if ($option == false) {
+        if (!$option) {
             $option = array();
         }
 
@@ -178,17 +178,7 @@ class Addon {
 
         self::$license_check_options[$slug] = $addon['license_check_option'];
         self::$addon_list[$slug] = $option[$slug];
-        self::update_addons($option);
-    }
-
-    /**
-     * Updates the addon list in the options table.
-     *
-     * @param string[] $new_list updated list of addons
-     * @return void
-     */
-    public static function update_addons($new_list) {
-        update_option(self::WAWP_ADDON_LIST_OPTION, $new_list);
+        update_option(self::WAWP_ADDON_LIST_OPTION, $option);
     }
 
     /**
@@ -728,9 +718,12 @@ class Addon {
 
     /**
      * Prints out a message prompting the user to enter their license key.
-     * Called when user has activated the plugin but has NOT YET entered their license key.
+     * Called when user has activated the plugin but has NOT YET entered their 
+     * license key.
      * 
      * @param string $slug slug of the plugin for which to display this prompt
+     * @param bool $is_licensing_page whether the user is currently on the
+     * license settings page or not
      * @param void
      */
     public static function license_key_prompt($slug, $is_licensing_page) {
@@ -738,6 +731,7 @@ class Addon {
 
         echo "<div class='notice notice-warning is-dismissable license'><p>";
         echo "Please enter your license key";
+        // if the user is not on the license settings, print the url
         if (!$is_licensing_page) {
             echo " in <a href=" . esc_url(get_licensing_menu_url()) . ">WildApricot Press > Licensing</a>"; 
         }
