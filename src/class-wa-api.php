@@ -55,19 +55,28 @@ class WA_API {
 	/**
 	 * Converts the API response to the body from which data can be extracted
 	 *
-	 * @param  array $response holds the output from the API request, organized in a key-value pattern
-	 * @return array|bool $data is the body of the response, false if unauthorized
+	 * @param array $response holds the output from the API request, organized
+	 *  in a key-value pattern
+	 * @return array|bool $data is the body of the response, empty array if
+	 * unauthorized
 	 * @throws API_Exception
 	 */
     private static function response_to_data($response) {
         if (is_wp_error($response)) {
 			throw new API_Exception(API_Exception::api_connection_error());
 		}
-		if ($response['response']['code'] == '401') return false;
+
+		// if user is unauthorized, return empty array
+		if ($response['response']['code'] == '401') 
+		{
+			return array();
+		} 
+
 		// Get body of response
 		$body = wp_remote_retrieve_body($response);
 		// Get data from json response
 		$data = json_decode($body, true);
+
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
 			throw new API_Exception(API_Exception::api_response_error());
