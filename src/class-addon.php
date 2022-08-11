@@ -68,18 +68,32 @@ class Addon {
 
     /**
      * License key invalid.
+     * 
+     * @var string
      */
     const LICENSE_STATUS_INVALID        = 'invalid';
 
     /**
-     * Empty license key entered..
+     * Empty license key entered.
+     * 
+     * @var string
      */
     const LICENSE_STATUS_ENTERED_EMPTY  = 'empty';
 
     /**
      * License key hasn't been entered.
+     * 
+     * @var string
      */
     const LICENSE_STATUS_NOT_ENTERED    = 'false';
+
+    /**
+     * WildApricot authorization credentials have changed-- current license
+     * is no longer valid.
+     * 
+     * @var string
+     */
+    const LICENSE_STATUS_AUTH_CHANGED   = 'auth_changed';
 
 
     private static $instance = null;
@@ -146,7 +160,7 @@ class Addon {
      */
     public static function new_addon($addon) {
         $option = get_option('wawp_addons');
-        if ($option == false) {
+        if (!$option) {
             $option = array();
         }
 
@@ -164,17 +178,7 @@ class Addon {
 
         self::$license_check_options[$slug] = $addon['license_check_option'];
         self::$addon_list[$slug] = $option[$slug];
-        self::update_addons($option);
-    }
-
-    /**
-     * Updates the addon list in the options table.
-     *
-     * @param string[] $new_list updated list of addons
-     * @return void
-     */
-    public static function update_addons($new_list) {
-        update_option(self::WAWP_ADDON_LIST_OPTION, $new_list);
+        update_option(self::WAWP_ADDON_LIST_OPTION, $option);
     }
 
     /**
@@ -222,6 +226,8 @@ class Addon {
             } else if ($license_status == self::LICENSE_STATUS_INVALID) {
                 // show invalid license message on any wawp settings page
                 self::invalid_license_key_notice($slug);
+            } else if ($license_status == self::LICENSE_STATUS_AUTH_CHANGED) {
+                self::license_wa_auth_changed_notice($slug, $is_licensing_page);
             }
         }
             
@@ -270,6 +276,24 @@ class Addon {
      */
     public static function update_show_activation_notice_option($slug, $val) {
         update_option(self::$addon_list[$slug][self::WAWP_ACTIVATION_NOTICE_OPTION], $val);
+    }
+
+    /**
+     * Called when the WildApricot credentials have changed. Updates the core
+     * plugin's status to `License::LICENSE_STATUS_AUTH_CHANGED` and all the
+     * blocks' statuses to `License::LICENSE_STATUS_NOT_ENTERED`.
+     *
+     * @return void
+     */
+    public static function wa_auth_changed_update_status() {
+        // update core status to auth changed
+        self::update_license_check_option(CORE_SLUG, self::LICENSE_STATUS_AUTH_CHANGED);
+
+        // update block status to not entered
+        foreach (self::get_addons() as $slug => $addon) {
+            if (is_core($slug)) continue;
+            self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        }
     }
 
 
@@ -423,9 +447,10 @@ class Addon {
 
     /**
      * Disables plugins. 
-     * If the slug is the core plugin, all NewPath addons will be disabled along with the core plugin.
-     * If the slug is an addon, disable_addon will be called.
-     * Make login page private and prevent uses from accessing the login form
+     * If the slug is the core plugin, all NewPath addons will be disabled along
+     * with the core plugin. If the slug is an addon, `disable_addon` will be
+     * called. Make login page private and prevent uses from accessing the 
+     * login form
      * 
      * @param string $slug slug string of the plugin to disable.
      * @param string $new_license_status new, accurate status for the license.
@@ -463,9 +488,37 @@ class Addon {
         }
 
         WA_Integration::delete_transients();
+
+        Addon::unschedule_all_cron_jobs();
         
         do_action('remove_wa_integration');
 
+    }
+
+    /**
+     * Unschedules all CRON jobs scheduled by the plugin.
+     *
+     * @return void
+     */
+    public static function unschedule_all_cron_jobs() {
+		Addon::unschedule_cron_job(Settings::CRON_HOOK);
+		Addon::unschedule_cron_job(WA_Integration::USER_REFRESH_HOOK);
+		Addon::unschedule_cron_job(WA_Integration::LICENSE_CHECK_HOOK);
+    }
+
+    /**
+	 * Unschedules CRON job.
+	 * 
+	 * @param string $cron_hook_name cron job to remove
+	 * @return void
+	 */
+	private static function unschedule_cron_job($cron_hook_name) {
+		// Get the timestamp for the next event.
+		$timestamp = wp_next_scheduled($cron_hook_name);
+		// Check that event is already scheduled
+		if ($timestamp) {
+			wp_unschedule_event($timestamp, $cron_hook_name);
+		}
     }
 
     /**
@@ -538,7 +591,11 @@ class Addon {
         if ($license_key != $license_key_input) return null;
 
         // if license hasn't changed, return it to avoid making expensive request
-        if (self::get_license($addon_slug) == $license_key) return $license_key;
+        if (self::get_license($addon_slug) == $license_key && 
+            self::has_valid_license($addon_slug)) 
+        {
+            return $license_key;
+        } 
 
         // check key against integromat scenario
         $response = self::post_request($license_key);
@@ -586,10 +643,11 @@ class Addon {
     }
 
     /**
-     * Checks the Integromat hook response for the necessary conditions for a valid license.
+     * Checks the Integromat hook response for the necessary conditions for a 
+     * valid license.
      * Must have WAP in products.
      * Must have correct URL and user ID for their WA account associated with
-     * the API credentials
+     * the API credentials.
      * Must not be expired.
      * 
      * @return bool true if above conditions are valid, false if not.
@@ -690,9 +748,12 @@ class Addon {
 
     /**
      * Prints out a message prompting the user to enter their license key.
-     * Called when user has activated the plugin but has NOT YET entered their license key.
+     * Called when user has activated the plugin but has NOT YET entered their 
+     * license key.
      * 
      * @param string $slug slug of the plugin for which to display this prompt
+     * @param bool $is_licensing_page whether the user is currently on the
+     * license settings page or not
      * @param void
      */
     public static function license_key_prompt($slug, $is_licensing_page) {
@@ -700,6 +761,7 @@ class Addon {
 
         echo "<div class='notice notice-warning is-dismissable license'><p>";
         echo "Please enter your license key";
+        // if the user is not on the license settings, print the url
         if (!$is_licensing_page) {
             echo " in <a href=" . esc_url(get_licensing_menu_url()) . ">WildApricot Press > Licensing</a>"; 
         }
@@ -707,6 +769,31 @@ class Addon {
         echo " in order to use the <strong>" . esc_html($plugin_name) . "</strong> functionality.</p></div>";
 
         unset($_GET['activate']);
+    }
+
+    /**
+     * Prints out a message informing the user that their license key(s) are now
+     * invalid because there are new WA authorization credentials.
+     *
+     * @param string $slug plugin slug for which to output this message
+     * @param bool $is_licensing_page whether the user is currently on the 
+     * license settings page or not
+     * @return void
+     */
+    public static function license_wa_auth_changed_notice($slug, $is_licensing_page) {
+        $plugin_name = self::get_title($slug);
+
+        echo '<div class="notice notice-warning license"><p>';
+        echo 'Your WildApricot authorization credentials have changed. ';
+        echo 'Please re-enter your license key(s)';
+        // if the user is not on the license settings, print the url
+        if (!$is_licensing_page) {
+            echo ' in <a href=' . esc_url(get_licensing_menu_url()) . 
+            '>WildApricot Press > Licensing</a>';
+        }
+        echo ' in order to continue using the <strong>' . esc_html($plugin_name)
+        . '</strong> functionality.</p></div>';
+
     }
 
 } // end of Addon class

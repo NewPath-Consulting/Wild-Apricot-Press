@@ -1222,9 +1222,9 @@ class WA_Auth_Settings {
             if (!$valid) {
                 return empty_string_array($input);
             }
+
             $api_key = $valid[WA_Integration::WA_API_KEY_OPT];
             $valid_api = WA_API::is_application_valid($api_key); 
-
             // credentials invalid
             if (!$valid_api) {
                 return empty_string_array($input);
@@ -1233,17 +1233,23 @@ class WA_Auth_Settings {
 
             // encrypt valid credentials
             $data_encryption = new Data_Encryption();
+            $saved_auth_creds = WA_API::load_user_credentials();
+            $auth_creds_changed = false;
             foreach ($valid as $key => $value) {
+                if ($valid[$key] != $saved_auth_creds[$key]) {
+                    $auth_creds_changed = true;
+                }
                 $valid[$key] = $data_encryption->encrypt($value);
+
             }
         } catch (Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
             return empty_string_array($input);
         } 
 
-        // Schedule CRON update for updating the available membership levels and groups
-        Settings::setup_cron_job();
-        update_option(Addon::WAWP_DISABLED_OPTION, false);
+        if ($auth_creds_changed) {
+            Addon::wa_auth_changed_update_status();
+        }
 
         // Return array of valid inputs
         return $valid;
@@ -1356,7 +1362,6 @@ class WA_Auth_Settings {
      * @return void
      */
     private static function obtain_and_save_wa_data_from_api($valid_api) {
-        // $valid_api = WA_API::is_application_valid($api_key); 
         $data_encryption = new Data_Encryption();
         // Extract access token and ID, as well as expiring time
         $access_token = $valid_api['access_token'];
@@ -1379,6 +1384,7 @@ class WA_Auth_Settings {
         $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
         $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
 
+        $wawp_api_instance->retrieve_custom_fields();
 
         // Save transients and options all at once; by this point all values should be valid.
         // Store access token and account ID as transients
@@ -1605,7 +1611,7 @@ class License_Settings {
             $input_value = Addon::instance()::get_license($slug);
         }
         
-        echo '<input id="license_key "' . esc_attr($slug) . '" name="wawp_license_keys[' . esc_attr($slug) .']" type="text" value="' . esc_attr($input_value) . '"  />' ;
+        echo '<input class="license_key" id="' . esc_attr($slug) . '" name="wawp_license_keys[' . esc_attr($slug) .']" type="text" value="' . esc_attr($input_value) . '"  />' ;
         if ($license_valid) {
             echo '<br><p class="wap-success"><span class="dashicons dashicons-saved"></span> License key valid</p>';
         } 

@@ -24,9 +24,11 @@ class WA_API {
     private $wa_user_id;
 
 	/**
-	 * Creates instance of class based on the user's access token and WildApricot user ID
+	 * Creates instance of class based on the user's access token and 
+	 * WildApricot user ID
 	 *
-	 * @param string $access_token is the user's access token obtained from the WildApricot API
+	 * @param string $access_token is the user's access token obtained from the
+	 * WildApricot API
 	 * @param string $wa_user_id is the user's WildApricot ID
 	 */
     public function __construct($access_token, $wa_user_id) {
@@ -38,36 +40,30 @@ class WA_API {
     }
 
 	/**
-	 * Removes CRON job.
-	 * 
-	 * @param string $cron_hook_name cron job to remove
-	 * @return void
-	 */
-	public static function unsetCronJob($cron_hook_name) {
-		// Get the timestamp for the next event.
-		$timestamp = wp_next_scheduled($cron_hook_name);
-		// Check that event is already scheduled
-		if ($timestamp) {
-			wp_unschedule_event($timestamp, $cron_hook_name);
-		}
-    }
-
-	/**
 	 * Converts the API response to the body from which data can be extracted
 	 *
-	 * @param  array $response holds the output from the API request, organized in a key-value pattern
-	 * @return array|bool $data is the body of the response, false if unauthorized
+	 * @param array $response holds the output from the API request, organized
+	 *  in a key-value pattern
+	 * @return array|bool $data is the body of the response, empty array if
+	 * unauthorized
 	 * @throws API_Exception
 	 */
     private static function response_to_data($response) {
         if (is_wp_error($response)) {
 			throw new API_Exception(API_Exception::api_connection_error());
 		}
-		if ($response['response']['code'] == '401') return false;
+
+		// if user is unauthorized, return empty array
+		if ($response['response']['code'] == '401') 
+		{
+			return array();
+		} 
+
 		// Get body of response
 		$body = wp_remote_retrieve_body($response);
 		// Get data from json response
 		$data = json_decode($body, true);
+
 		// Check if there is an error in body
 		if (isset($data['error'])) { // error in body
 			throw new API_Exception(API_Exception::api_response_error());
@@ -119,7 +115,8 @@ class WA_API {
 
 	/**
 	 * Checks if a new admin access token is required and returns a valid access
-	 * token. If there are any encryption or decryption exceptions, an empty array will be returned.
+	 * token. If there are any encryption or decryption exceptions, an empty 
+	 * array will be returned.
 	 *
 	 * @return array $verified_data holds the verified access token and account ID
 	 */
@@ -147,8 +144,17 @@ class WA_API {
 			$new_access_token_enc = $dataEncryption->encrypt($new_access_token);
 			$new_account_id_enc = $dataEncryption->encrypt($new_account_id);
 			
-			set_transient(WA_Integration::ADMIN_ACCESS_TOKEN_TRANSIENT, $new_access_token_enc, $new_expiring_time);
-			set_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT, $new_account_id_enc, $new_expiring_time);
+			set_transient(
+				WA_Integration::ADMIN_ACCESS_TOKEN_TRANSIENT, 
+				$new_access_token_enc, 
+				$new_expiring_time
+			);
+
+			set_transient(
+				WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT, 
+				$new_account_id_enc, 
+				$new_expiring_time
+			);
 			// Update values
 			$access_token = $new_access_token;
 			$wa_account_id = $new_account_id;
@@ -215,13 +221,19 @@ class WA_API {
 	public function retrieve_custom_fields() {
 		// Make API request for custom fields
 		$args = $this->request_data_args();
-		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contactfields?showSectionDividers=true';
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
+			$this->wa_user_id . '/contactfields?showSectionDividers=true';
 		$response_api = wp_remote_get($url, $args);
 		$custom_field_response = self::response_to_data($response_api);
 
 		// Loop through custom fields and get field names with IDs
 		// Array that holds default fields
-		$default_fields = array('Group participation', 'User ID', 'Organization', 'Membership status');
+		$default_fields = array(
+			'Group participation', 
+			'User ID', 
+			'Organization', 
+			'Membership status'
+		);
 		// Do not add 'Group participation' or 'User ID' because those are already used by default
 		$custom_fields = array();
 		if (!empty($custom_field_response)) {
@@ -261,7 +273,10 @@ class WA_API {
 			// Get user email
 			$user_email = $wa_user->data->user_email;
 			// Get WildApricot ID
-			$wa_synced_id = get_user_meta($site_user_id, WA_Integration::WA_USER_ID_KEY);
+			$wa_synced_id = get_user_meta(
+				$site_user_id, 
+				WA_Integration::WA_USER_ID_KEY
+			);
 			$wa_synced_id = $wa_synced_id[0];
 			// Save to email to array indexed by WordPress ID
 			$user_emails_array[$site_user_id] = $user_email;
@@ -274,7 +289,8 @@ class WA_API {
 		}
 		// Make API request
 		$args = $this->request_data_args();
-		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
+			$this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
 		$all_contacts_request = wp_remote_get($url, $args);
 		// Ensure that responses are not empty
 		if (empty($all_contacts_request)) return;

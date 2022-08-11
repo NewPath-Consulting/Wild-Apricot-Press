@@ -31,10 +31,7 @@ class Deactivator {
 			wp_update_post($login_page);
 		}
 
-		// Unschedule the CRON events
-		WA_API::unsetCronJob(Settings::CRON_HOOK);
-		WA_API::unsetCronJob(WA_Integration::USER_REFRESH_HOOK);
-		WA_API::unsetCronJob(WA_Integration::LICENSE_CHECK_HOOK);
+		Addon::unschedule_all_cron_jobs();
 	}
 }
 ?>

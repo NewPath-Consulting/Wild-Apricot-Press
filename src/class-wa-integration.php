@@ -354,13 +354,21 @@ class WA_Integration {
 			}
 		}
 
-		// re-validate license only if the plugin has been disabled
-		if (Addon::is_plugin_disabled() && !Exception::fatal_error()) {
+		$license_status = Addon::get_license_check_option(CORE_SLUG);
+
+		// re-validate license only if the plugin has been disabled and if the authorization credentials have not changed
+		if (Addon::is_plugin_disabled() && 
+			!Exception::fatal_error() && 
+			$license_status != Addon::LICENSE_STATUS_AUTH_CHANGED && 
+			$has_valid_wa_credentials) 
+		{
 			Addon::update_licenses();
+			// obtain new status
+			$license_status = Addon::get_license_check_option(CORE_SLUG);
 		}
 
 		$has_valid_license = Addon::has_valid_license(CORE_SLUG);
-		$license_status = Addon::get_license_check_option(CORE_SLUG);
+		
 
 		// if there's been a fatal error or there are invalid creds then disable
 		if (Exception::fatal_error() || !$has_valid_license || !$has_valid_wa_credentials) {
@@ -477,6 +485,8 @@ class WA_Integration {
 		self::create_cron_for_user_refresh();
 		// Create event for checking license
 		self::setup_license_check_cron();
+		// schedule cron update for updating the membership levels and groups
+		Settings::setup_cron_job();
 
 		$login_title = 'Login with your WildApricot credentials';
 		$login_content = '[wawp_custom_login_form]';
