@@ -1385,6 +1385,7 @@ class WA_Auth_Settings {
         $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
         $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
 
+        $wawp_api_instance->retrieve_custom_fields();
 
         // Save transients and options all at once; by this point all values should be valid.
         // Store access token and account ID as transients
