@@ -447,9 +447,10 @@ class Addon {
 
     /**
      * Disables plugins. 
-     * If the slug is the core plugin, all NewPath addons will be disabled along with the core plugin.
-     * If the slug is an addon, disable_addon will be called.
-     * Make login page private and prevent uses from accessing the login form
+     * If the slug is the core plugin, all NewPath addons will be disabled along
+     * with the core plugin. If the slug is an addon, `disable_addon` will be
+     * called. Make login page private and prevent uses from accessing the 
+     * login form
      * 
      * @param string $slug slug string of the plugin to disable.
      * @param string $new_license_status new, accurate status for the license.
@@ -487,9 +488,37 @@ class Addon {
         }
 
         WA_Integration::delete_transients();
+
+        Addon::unschedule_all_cron_jobs();
         
         do_action('remove_wa_integration');
 
+    }
+
+    /**
+     * Unschedules all CRON jobs scheduled by the plugin.
+     *
+     * @return void
+     */
+    public static function unschedule_all_cron_jobs() {
+		Addon::unschedule_cron_job(Settings::CRON_HOOK);
+		Addon::unschedule_cron_job(WA_Integration::USER_REFRESH_HOOK);
+		Addon::unschedule_cron_job(WA_Integration::LICENSE_CHECK_HOOK);
+    }
+
+    /**
+	 * Unschedules CRON job.
+	 * 
+	 * @param string $cron_hook_name cron job to remove
+	 * @return void
+	 */
+	private static function unschedule_cron_job($cron_hook_name) {
+		// Get the timestamp for the next event.
+		$timestamp = wp_next_scheduled($cron_hook_name);
+		// Check that event is already scheduled
+		if ($timestamp) {
+			wp_unschedule_event($timestamp, $cron_hook_name);
+		}
     }
 
     /**
@@ -614,10 +643,11 @@ class Addon {
     }
 
     /**
-     * Checks the Integromat hook response for the necessary conditions for a valid license.
+     * Checks the Integromat hook response for the necessary conditions for a 
+     * valid license.
      * Must have WAP in products.
      * Must have correct URL and user ID for their WA account associated with
-     * the API credentials
+     * the API credentials.
      * Must not be expired.
      * 
      * @return bool true if above conditions are valid, false if not.
