@@ -18,9 +18,17 @@
 	width: 75%;
 }
 
+.license_key {
+	width: 20%;
+}
+
 @media only screen and (max-width: 1200px) {
 	.wap-wa-auth-creds {
 		width: 100%;
+	}
+	
+	.license_key {
+		width: 20%;
 	}
 }
 
