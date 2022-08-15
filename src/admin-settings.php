@@ -1234,25 +1234,14 @@ class WA_Auth_Settings {
 
             // encrypt valid credentials
             $data_encryption = new Data_Encryption();
-            $saved_auth_creds = WA_API::load_user_credentials();
-            $auth_creds_changed = false;
             foreach ($valid as $key => $value) {
-                if ($valid[$key] != $saved_auth_creds[$key]) {
-                    $auth_creds_changed = true;
-                }
                 $valid[$key] = $data_encryption->encrypt($value);
-
             }
         } catch (Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
             return empty_string_array($input);
         } 
 
-        if ($auth_creds_changed) {
-            Addon::wa_auth_changed_update_status();
-            // if creds change delete old saved custom fields
-            delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
-        }
 
         // Return array of valid inputs
         return $valid;
@@ -1385,9 +1374,17 @@ class WA_Auth_Settings {
         // Get WildApricot URL
         $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
         $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
-        $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
 
-        $wawp_api_instance->retrieve_custom_fields();
+        // if wild apricot site changes, remove saved custom fields
+        $old_wa_url = get_option(WA_Integration::WA_URL_KEY);
+        $old_wa_url = $data_encryption->decrypt($old_wa_url);
+
+        if ($old_wa_url != $wild_apricot_url) {
+            Addon::wa_auth_changed_update_status();
+            delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
+        }
+
+        $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
 
         // Save transients and options all at once; by this point all values should be valid.
         // Store access token and account ID as transients
