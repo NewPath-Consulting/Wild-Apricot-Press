@@ -587,6 +587,7 @@ class Admin_Settings {
      * @return void
      */
     public function custom_fields_input() {
+        WA_Integration::retrieve_custom_fields();
         // Load in custom fields
         $custom_fields = get_option(WA_Integration::LIST_OF_CUSTOM_FIELDS);
         $checked_fields = get_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
@@ -1249,6 +1250,8 @@ class WA_Auth_Settings {
 
         if ($auth_creds_changed) {
             Addon::wa_auth_changed_update_status();
+            // if creds change delete old saved custom fields
+            delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
         }
 
         // Return array of valid inputs
