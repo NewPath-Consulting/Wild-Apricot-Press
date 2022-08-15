@@ -20,7 +20,9 @@ To configure the WildApricot Press, the WildApricot API settings must be configu
 
 ### Create an Authorized Application in WildApricot
 
-WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a WordPress authorized application](https://gethelp.wildapricot.com/en/articles/199). With your API key, client ID and client secret, navigate to WAP Settings > Authorization, and follow the instructions there to apply the WildApricot keys.
+WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a "Server application" authorized application](https://gethelp.wildapricot.com/en/articles/199). You should provide "Full access" to the authorized application to enable WildApricot Press to reading and write data into WildApricot.
+
+ With your API key, client ID and client secret, navigate to WAP Settings > Authorization, and follow the instructions there to apply the WildApricot keys.
 
 ### Add API keys into WAP
 
