@@ -970,6 +970,8 @@ class WA_Integration {
 		// Get all post types, including built-in WordPress post types and custom post types
 		$post_types = get_post_types(array('public' => true));
 
+		if (Addon::is_plugin_disabled()) return;
+
 		// Add meta box for post access
 		add_meta_box(
 			'wawp_post_access_meta_box_id', // ID
