@@ -607,9 +607,8 @@ class Admin_Settings {
 				<?php
             }
         } else { // no custom fields
-            $authorization_link = esc_url(site_url() . '/wp-admin/admin.php?page=wawp-login');
             ?>
-            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php echo esc_url($authorization_link); ?>">WildApricot Press -> Authorization</a></p>
+            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot Press -> Authorization</a></p>
             <?php
         }
     }
@@ -635,6 +634,9 @@ class Admin_Settings {
                 $valid[$key] = sanitize_text_field($checkbox);
             }
         }
+
+        
+
         return $valid;
     }
 
