@@ -365,10 +365,11 @@ class WA_Integration {
 			Addon::update_licenses();
 			// obtain new status
 			$license_status = Addon::get_license_check_option(CORE_SLUG);
+		} else if (!$has_valid_wa_credentials) {
+			$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
 		}
 
 		$has_valid_license = Addon::has_valid_license(CORE_SLUG);
-		
 
 		// if there's been a fatal error or there are invalid creds then disable
 		if (Exception::fatal_error() || !$has_valid_license || !$has_valid_wa_credentials) {
@@ -474,7 +475,8 @@ class WA_Integration {
     }
 
 	/**
-	 * Creates user-facing WildApricot login page
+	 * Creates user-facing WildApricot login page. Runs when both API key
+	 * and license key are found to be valid.
 	 *
 	 * @see https://stackoverflow.com/questions/32314278/how-to-create-a-new-wordpress-page-programmatically
 	 * @see https://stackoverflow.com/questions/13848052/create-a-new-page-with-wp-insert-post
@@ -1813,6 +1815,16 @@ class WA_Integration {
 		);
 
 		return $wa_meta;
+	}
+
+	public static function retrieve_custom_fields() {
+		// Create WA_API with valid credentials
+		$verified_data = WA_API::verify_valid_access_token();
+		$admin_access_token = $verified_data['access_token'];
+		$admin_account_id = $verified_data['wa_account_id'];
+		$wawp_api = new WA_API($admin_access_token, $admin_account_id);
+		// Refresh custom fields first
+		$wawp_api->retrieve_custom_fields();
 	}
 
 }
