@@ -21,15 +21,14 @@ class Deactivator {
 	 * @return void
 	 */
 	public static function deactivate() {
-		// Set WAWP WildApricot Login page to a Private page so that users cannot access it
-		// https://wordpress.stackexchange.com/questions/273557/how-to-set-post-status-to-delete
-		// First, get the id of the Login page
-		$login_page_id = get_option(WA_Integration::LOGIN_PAGE_ID_OPT);
-		if (isset($login_page_id) && $login_page_id != '') { // valid
-			$login_page = get_post($login_page_id, 'ARRAY_A');
-			$login_page['post_status'] = 'private';
-			wp_update_post($login_page);
+		// Remove WAWP Login/Logout page
+		$wawp_wal_page_id = get_option(WA_Integration::LOGIN_PAGE_ID_OPT);
+		if (isset($wawp_wal_page_id) && $wawp_wal_page_id != '') {
+			wp_delete_post($wawp_wal_page_id, true); // delete page entirely
 		}
+
+		// delete login page ID
+		delete_option(WA_Integration::LOGIN_PAGE_ID_OPT);
 
 		Addon::unschedule_all_cron_jobs();
 	}

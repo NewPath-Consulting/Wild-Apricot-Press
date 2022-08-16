@@ -482,7 +482,7 @@ class Admin_Settings {
         // Should 'suspended' and 'archived' be included?
 
         // Load in the list of restricted statuses, if applicable
-        $saved_statuses = get_option(WA_Integration::RESTRICTION_STATUS);
+        $saved_statuses = get_option(WA_Integration::GLOBAL_RESTRICTED_STATUSES);
         // Check if saved statuses exists; if not, then create an empty array
         if (empty($saved_statuses)) { // create empty array
             $saved_statuses = array();
@@ -648,9 +648,9 @@ class Admin_Settings {
     public function deletion_option_print_info() {
         print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, none of the data created and stored by WildApricot Press is deleted.<br><br>';
         
-        print 'You can remove all <strong>database and post/page data</strong> created by WildApricot Press by checking the first box <strong>Delete WordPress database data and post/page data</strong>.<br>';
+        print 'You can remove all <strong>database and post/page data</strong> created by WildApricot Press by checking <strong>Delete WordPress database data and post/page data</strong>.<br>';
 
-        print 'You can remove all <strong>WildApricot users</strong> created by WildApricot Press by checking the second box <strong>Delete users added by WildApricot Press</strong>.';
+        print 'You can remove all <strong>WildApricot users</strong> created by WildApricot Press by checking <strong>Delete users added by WildApricot Press</strong>.';
         
         return;
     }
@@ -815,7 +815,7 @@ class Admin_Settings {
         );
         register_setting(
             'wawp_restriction_status_group', // group name for settings
-            WA_Integration::RESTRICTION_STATUS, // name of option to sanitize and save
+            WA_Integration::GLOBAL_RESTRICTED_STATUSES, // name of option to sanitize and save
             $register_args
         );
         // Add settings section and field for restriction status

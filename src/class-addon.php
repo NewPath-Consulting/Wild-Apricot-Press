@@ -401,11 +401,14 @@ class Addon {
         foreach ($addons as $slug => $addon) {
             $filename = $addon['filename'];
             delete_plugins(array(0 => $filename));
-            delete_option('license-check-' . $slug);
+            delete_option($addon['license_check_option']);
+            delete_option($addon['show_activation_notice']);
         }
 
         delete_option(self::WAWP_ADDON_LIST_OPTION);
         delete_option(self::WAWP_LICENSE_KEYS_OPTION);
+        delete_option(self::WAWP_ACTIVATION_NOTICE_OPTION);
+        delete_option(self::WAWP_DISABLED_OPTION);
     }
 
     /**

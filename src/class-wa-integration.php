@@ -129,19 +129,19 @@ class WA_Integration {
 	const IS_POST_RESTRICTED 					= 'wawp_is_post_restricted';
 
 	/**
+	 * Stores custom restriction message in post meta data.
+	 * 
+	 * @var string
+	 */
+	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY	= 'wawp_individual_restriction_message_key';
+
+	/**
 	 * Stores array of all restricted posts in the options table. Used for
 	 * deleting custom post metadata upon plugin deletion.
 	 * 
 	 * @var string
 	 */
 	const ARRAY_OF_RESTRICTED_POSTS 			= 'wawp_array_of_restricted_posts';
-
-	/**
-	 * Stores custom restriction message in post meta data.
-	 * 
-	 * @var string
-	 */
-	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY	= 'wawp_individual_restriction_message_key';
 
 	/**
 	 * Stores global restriction message in options table.
@@ -156,7 +156,7 @@ class WA_Integration {
 	 * 
 	 * @var string
 	 */
-	const RESTRICTION_STATUS					= 'wawp_restriction_status_name';
+	const GLOBAL_RESTRICTED_STATUSES					= 'wawp_restriction_status_name';
 
 	/**
 	 * Stores transient for the WA admin account ID. Deleted after 30 minutes.
@@ -226,7 +226,7 @@ class WA_Integration {
 	 * 
 	 * @var string
 	 */
-	const WA_DELETE_OPTION 						= 'wawp_delete_name';
+	const WA_DELETE_OPTION 						= 'wawp_delete_setting';
 
 	/**
 	 * Stores the page ID of the WAP login page created by the plugin in the
@@ -696,7 +696,7 @@ class WA_Integration {
 
 		// Check if user's status is allowed to view restricted posts
 		// Get restricted status(es) from options table
-		$restricted_statuses = get_option(self::RESTRICTION_STATUS);
+		$restricted_statuses = get_option(self::GLOBAL_RESTRICTED_STATUSES);
 		// If there are restricted statuses, then we must check them against the user's status
 		if (!empty($restricted_statuses)) {
 			// If user's status is not in the restricted statuses, then the user cannot see the post
@@ -1515,7 +1515,7 @@ class WA_Integration {
 									// Check if user's status is within the allowed status(es)
 									$users_status = get_user_meta($current_users_id, self::WA_USER_STATUS_KEY);
 									$users_status = $users_status[0];
-									$allowed_statuses = get_option(self::RESTRICTION_STATUS);
+									$allowed_statuses = get_option(self::GLOBAL_RESTRICTED_STATUSES);
 									// If some statuses have been checked off, then that means that some statuses are restricted
 									$valid_status = true;
 									if (!empty($allowed_statuses) && !empty($users_status)) {
