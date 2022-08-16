@@ -657,7 +657,11 @@ class Admin_Settings {
      */
     public function deletion_option_input() {
         // Store each checkbox description in array
-        $synced_info = array('wawp_delete_checkbox' => 'Delete all WildApricot information from my WordPress site');
+        $synced_info = array(
+            'wawp_delete_db_checkbox' => 'Delete all WildApricot Press settings from WordPress database',
+            'wawp_delete_checkbox' => 'Delete all WildApricot information from my WordPress site'
+        );
+        
         // Load in saved checkboxes
         $saved_synced_info = get_option(WA_Integration::WA_DELETE_OPTION);
         // Display checkboxes
@@ -670,9 +674,7 @@ class Admin_Settings {
                 }
             }
             ?>
-            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>" <?php echo esc_attr($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br>
-            <p><b><br>Please note that this information will never be deleted from your WildApricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your WildApricot site.
-            So, don't worry - you are not permanently deleting information that you cannot recover later.</b></p>
+            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>" <?php echo esc_attr($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br><br>
             <?php
         }
     }
@@ -926,6 +928,13 @@ class Admin_Settings {
             array($this, 'deletion_option_input'), // callback
             'wawp-wal-admin&tab=plugin', // page
             'wawp_delete_id' // section
+        );
+        add_settings_field(
+            'wawp_delete_db_options_id',
+            'Delete DB info',
+            array($this, 'deletion_option_input'),
+            'wawp-wal-admin&tab=plugin',
+            'wawp_delete_db_id'
         );
     }
 
