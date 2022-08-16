@@ -133,7 +133,7 @@ function delete_all_db_data() {
 	// Delete WA authorized application data
 	delete_transient(WAWP\WA_Integration::ADMIN_ACCESS_TOKEN_TRANSIENT);
 	delete_transient(WAWP\WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
-	delete_transient(WAWP\WA_Integration::ADMIN_REFRESH_TOKEN_OPTION);
+	delete_option(WAWP\WA_Integration::ADMIN_REFRESH_TOKEN_OPTION);
 	delete_option(WAWP\WA_Integration::WA_URL_KEY);
 
 	// delete options added in admin settings

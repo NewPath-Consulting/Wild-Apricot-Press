@@ -1252,7 +1252,7 @@ class WA_Auth_Settings {
             $saved_auth_creds = WA_API::load_user_credentials();
             $auth_creds_changed = false;
             foreach ($valid as $key => $value) {
-                if ($valid[$key] != $saved_auth_creds[$key]) {
+                if (!empty($saved_auth_creds) && $valid[$key] != $saved_auth_creds[$key]) {
                     $auth_creds_changed = true;
                 }
                 $valid[$key] = $data_encryption->encrypt($value);
