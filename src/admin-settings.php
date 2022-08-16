@@ -255,6 +255,9 @@ class Admin_Settings {
     const LOGIN_BUTTON_LOCATION_SECTION = 'wap_menu_location_group';
     const LOGIN_BUTTON_LOCATION_PAGE = Settings::SETTINGS_URL . '-login-location';
 
+    const DELETE_DB_DATA = 'delete_db_data';
+    const DELETE_USER_DATA = 'delete_user_data';
+
     public function __construct() {
     }
 
@@ -643,10 +646,13 @@ class Admin_Settings {
      * @return void
      */
     public function deletion_option_print_info() {
-        print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, the WordPress users and roles that you have synced from WildApricot are retained (not deleted).';
-        print 'If you like, you can remove all WildApricot information from your WordPress site after deleting the <b>WildApricot Press</b> plugin by checking the checkbox below.<br><br>';
-        print 'Then, all of the WildApricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>WildApricot Press</b> plugin.';
-        print 'If you would like to keep your WildApricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked.';
+        print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, none of the data created and stored by WildApricot Press is deleted.<br><br>';
+        
+        print 'You can remove all <strong>database and post/page data</strong> created by WildApricot Press by checking the first box <strong>Delete WordPress database data and post/page data</strong>.<br>';
+
+        print 'You can remove all <strong>WildApricot users</strong> created by WildApricot Press by checking the second box <strong>Delete users added by WildApricot Press</strong>.';
+        
+        return;
     }
 
     /**
@@ -658,8 +664,8 @@ class Admin_Settings {
     public function deletion_option_input() {
         // Store each checkbox description in array
         $synced_info = array(
-            'wawp_delete_db_checkbox' => 'Delete all WildApricot Press settings from WordPress database',
-            'wawp_delete_checkbox' => 'Delete all WildApricot information from my WordPress site'
+            self::DELETE_DB_DATA => 'Delete WordPress database data and post/page data',
+            self::DELETE_USER_DATA => 'Delete users added by WildApricot Press'
         );
         
         // Load in saved checkboxes
@@ -674,8 +680,9 @@ class Admin_Settings {
                 }
             }
             ?>
-            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>" <?php echo esc_attr($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br><br>
+            <input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>" <?php echo esc_attr($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br><br>
             <?php
+
         }
     }
 
@@ -924,7 +931,7 @@ class Admin_Settings {
         );
         add_settings_field(
             'wawp_delete_options_id', // ID
-            'Attributes to Remove Upon Plugin Deletion:', // title
+            'Data to Remove Upon Plugin Deletion:', // title
             array($this, 'deletion_option_input'), // callback
             'wawp-wal-admin&tab=plugin', // page
             'wawp_delete_id' // section
