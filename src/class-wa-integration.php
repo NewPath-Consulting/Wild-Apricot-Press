@@ -365,8 +365,11 @@ class WA_Integration {
 			Addon::update_licenses();
 			// obtain new status
 			$license_status = Addon::get_license_check_option(CORE_SLUG);
-		} else if (!$has_valid_wa_credentials) {
-			$license_status = Addon::LICENSE_STATUS_NOT_ENTERED;
+		} 
+		
+		// if api creds aren't valid, remove licenses
+		if (!$has_valid_wa_credentials) {
+			delete_option(Addon::WAWP_LICENSE_KEYS_OPTION);
 		}
 
 		$has_valid_license = Addon::has_valid_license(CORE_SLUG);

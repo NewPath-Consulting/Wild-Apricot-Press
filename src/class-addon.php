@@ -228,6 +228,7 @@ class Addon {
                 self::invalid_license_key_notice($slug);
             } else if ($license_status == self::LICENSE_STATUS_AUTH_CHANGED) {
                 self::license_wa_auth_changed_notice($slug, $is_licensing_page);
+                return;
             }
         }
             
