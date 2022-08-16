@@ -1616,12 +1616,12 @@ class WA_Integration {
 	private static function get_licensed_wa_urls($response) {
 		$licensed_wa_urls = array();
 
-		if (!array_key_exists('Licensed WildApricot URLs', $response)) {
-			Log::wap_log_warning('Licensed WildApricot URLs missing from hook response.');
+		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
+			Log::wap_log_warning('Licensed Wild Apricot URLs missing from hook response.');
 			return null;
 		}
 
-		$licensed_wa_urls = $response['Licensed WildApricot URLs'];
+		$licensed_wa_urls = $response['Licensed Wild Apricot URLs'];
 		if (empty($licensed_wa_urls) || empty($licensed_wa_urls[0])) return null;
 
 		// Sanitize urls, if necessary
@@ -1642,12 +1642,12 @@ class WA_Integration {
 	private static function get_licensed_wa_ids($response) {
 		$licensed_wa_ids = array();
 
-		if (!array_key_exists('Licensed WildApricot Account IDs', $response)) {
-			Log::wap_log_warning('License WildApricot IDs missing from hook response');
+		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
+			Log::wap_log_warning('License Wild Apricot IDs missing from hook response');
 			return null;
 		}
 
-		$licensed_wa_ids = $response['Licensed WildApricot Account IDs'];
+		$licensed_wa_ids = $response['Licensed Wild Apricot Account IDs'];
 		if (empty($licensed_wa_ids) || empty($licensed_wa_ids[0])) return null;
 
 		foreach ($licensed_wa_ids as $id_key => $id_value) {
