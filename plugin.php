@@ -63,6 +63,16 @@ function wawp_enqueue_jquery() {
 	wp_enqueue_script('wawp-script-select-all-checkboxes', plugin_dir_url(__FILE__) . 'js/script.js', array('jquery'), null, true);
 }
 
+// add settings link to plugin page
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'wap_action_links');
+function wap_action_links($links) {
+	$mylinks = array(
+		'<a href="' . WAWP\get_admin_settings_url() . '">Settings</a>',
+
+	);
+	return array_merge($links, $mylinks);
+}
+
 // Create settings page
 $settings = new WAWP\Settings();
 
