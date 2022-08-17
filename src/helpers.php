@@ -66,6 +66,10 @@ function get_current_url() {
     return basename(home_url($_SERVER['REQUEST_URI']));
 }
 
+function get_admin_settings_url() {
+    return admin_url('admin.php?page=' . Settings::SETTINGS_URL);
+}
+
 /**
  * @return string url to the licensing settings menu
  */
