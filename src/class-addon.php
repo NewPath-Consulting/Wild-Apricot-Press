@@ -400,7 +400,10 @@ class Addon {
 
         foreach ($addons as $slug => $addon) {
             $filename = $addon['filename'];
-            delete_plugins(array(0 => $filename));
+            if (!is_core($slug)) {
+                delete_plugins(array(0 => $filename));
+            }
+            
             delete_option($addon['license_check_option']);
             delete_option($addon['show_activation_notice']);
         }
