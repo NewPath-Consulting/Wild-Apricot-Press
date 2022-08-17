@@ -12,34 +12,24 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 	exit;
 }
 
-// Delete the added post meta data to the restricted pages
-// Get posts that contain the 'wawp_' post meta data
-$wawp_find_posts_args = array('meta_key' => WAWP\WA_Integration::IS_POST_RESTRICTED, 'post_type' => 'any');
-$wawp_posts_with_meta = get_posts($wawp_find_posts_args);
-// Loop through each post and delete the associated 'wawp_' meta data from it
-if (!empty($wawp_posts_with_meta)) {
-	foreach ($wawp_posts_with_meta as $wawp_post) {
-		// Get post ID
-		$wawp_post_id = $wawp_post->ID;
-		delete_post_meta($wawp_post_id, WAWP\WA_Integration::RESTRICTED_GROUPS);
-		delete_post_meta($wawp_post_id, WAWP\WA_Integration::RESTRICTED_LEVELS);
-		delete_post_meta($wawp_post_id, WAWP\WA_Integration::IS_POST_RESTRICTED);
-		delete_post_meta($wawp_post_id, WAWP\WA_Integration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
+delete_plugin_data();
+
+
+
+
+function delete_plugin_data() {
+	// Get plugin deletion options and check if users and/or roles should be deleted
+	$wawp_delete_options = get_option(WAWP\WA_Integration::WA_DELETE_OPTION);
+
+	if (!$wawp_delete_options) return;
+
+	if (in_array(WAWP\Admin_Settings::DELETE_DB_DATA, $wawp_delete_options)) {
+		delete_all_db_data();
+	}	
+
+	if (in_array(WAWP\Admin_Settings::DELETE_USER_DATA, $wawp_delete_options)) {
+		delete_all_user_data();	
 	}
-}
-
-
-
-
-// Get plugin deletion options and check if users and/or roles should be deleted
-$wawp_delete_options = get_option(WAWP\WA_Integration::WA_DELETE_OPTION);
-
-if (in_array(WAWP\Admin_Settings::DELETE_DB_DATA, $wawp_delete_options)) {
-	delete_all_db_data();
-}	
-
-if (in_array(WAWP\Admin_Settings::DELETE_USER_DATA, $wawp_delete_options)) {
-	delete_all_user_data();	
 }
 
 
@@ -166,6 +156,9 @@ function delete_all_db_data() {
 	delete_post_meta_by_key(WAWP\WA_Integration::RESTRICTED_LEVELS);
 	delete_post_meta_by_key(WAWP\WA_Integration::IS_POST_RESTRICTED);
 	delete_post_meta_by_key(WAWP\WA_Integration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
+
+	// delete log file
+	unlink(WAWP\Log::LOGFILE);
 
 }
 
