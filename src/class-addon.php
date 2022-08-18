@@ -454,6 +454,9 @@ class Addon {
 
     /**
      * Disables plugins. 
+     * Plugins will be disabled if the WildApricot authorization 
+     * credentials are invalid, the license key is invalid, or if there's been
+     * a fatal error.
      * If the slug is the core plugin, all NewPath addons will be disabled along
      * with the core plugin. If the slug is an addon, `disable_addon` will be
      * called. Make login page private and prevent uses from accessing the 
@@ -509,12 +512,6 @@ class Addon {
 
         // remove saved fields
         delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
-
-        WA_Integration::delete_transients();
-
-        Addon::unschedule_all_cron_jobs();
-        
-        do_action('remove_wa_integration');
 
     }
 

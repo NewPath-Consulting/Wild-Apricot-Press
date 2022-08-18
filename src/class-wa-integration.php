@@ -1008,6 +1008,9 @@ class WA_Integration {
 	 * @return void
 	 */
 	public function show_membership_level_on_profile($user) {
+		// don't display WA data if the plugin is disabled
+		if (Addon::is_plugin_disabled()) return;
+		
 		// Load in parameters from user's meta data
 		$membership_level = get_user_meta($user->ID, self::WA_MEMBERSHIP_LEVEL_KEY, true);
 		$user_status = get_user_meta($user->ID, self::WA_USER_STATUS_KEY, true);
