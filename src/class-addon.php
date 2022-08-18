@@ -494,6 +494,14 @@ class Addon {
             update_option(self::WAWP_DISABLED_OPTION, true);
         }
 
+        WA_Integration::delete_transients();
+
+        Addon::unschedule_all_cron_jobs();
+        
+        do_action('remove_wa_integration');
+
+        if (Exception::fatal_error()) return;
+
         // remove membership levels, groups, and custom fields
         delete_option(WA_Integration::WA_ALL_MEMBERSHIPS_KEY);
         delete_option(WA_Integration::WA_ALL_GROUPS_KEY);
