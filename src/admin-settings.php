@@ -255,6 +255,9 @@ class Admin_Settings {
     const LOGIN_BUTTON_LOCATION_SECTION = 'wap_menu_location_group';
     const LOGIN_BUTTON_LOCATION_PAGE = Settings::SETTINGS_URL . '-login-location';
 
+    const DELETE_DB_DATA = 'delete_db_data';
+    const DELETE_USER_DATA = 'delete_user_data';
+
     public function __construct() {
     }
 
@@ -479,7 +482,7 @@ class Admin_Settings {
         // Should 'suspended' and 'archived' be included?
 
         // Load in the list of restricted statuses, if applicable
-        $saved_statuses = get_option(WA_Integration::RESTRICTION_STATUS);
+        $saved_statuses = get_option(WA_Integration::GLOBAL_RESTRICTED_STATUSES);
         // Check if saved statuses exists; if not, then create an empty array
         if (empty($saved_statuses)) { // create empty array
             $saved_statuses = array();
@@ -643,10 +646,13 @@ class Admin_Settings {
      * @return void
      */
     public function deletion_option_print_info() {
-        print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, the WordPress users and roles that you have synced from WildApricot are retained (not deleted).';
-        print 'If you like, you can remove all WildApricot information from your WordPress site after deleting the <b>WildApricot Press</b> plugin by checking the checkbox below.<br><br>';
-        print 'Then, all of the WildApricot information that you synced with your WordPress site will be deleted AFTER you delete the <b>WildApricot Press</b> plugin.';
-        print 'If you would like to keep your WildApricot users and roles in your WordPress site upon deletion of the plugin, then you\'re all set - just leave the checkbox unchecked.';
+        print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, none of the data created and stored by WildApricot Press is deleted.<br><br>';
+        
+        print 'You can remove all <strong>database and post/page data</strong> created by WildApricot Press by checking <strong>Delete WordPress database data and post/page data</strong>.<br>';
+
+        print 'You can remove all <strong>WildApricot users</strong> created by WildApricot Press by checking <strong>Delete users added by WildApricot Press</strong>.';
+        
+        return;
     }
 
     /**
@@ -657,7 +663,11 @@ class Admin_Settings {
      */
     public function deletion_option_input() {
         // Store each checkbox description in array
-        $synced_info = array('wawp_delete_checkbox' => 'Delete all WildApricot information from my WordPress site');
+        $synced_info = array(
+            self::DELETE_DB_DATA => 'Delete WordPress database data and post/page data',
+            self::DELETE_USER_DATA => 'Delete users added by WildApricot Press'
+        );
+        
         // Load in saved checkboxes
         $saved_synced_info = get_option(WA_Integration::WA_DELETE_OPTION);
         // Display checkboxes
@@ -670,10 +680,9 @@ class Admin_Settings {
                 }
             }
             ?>
-            <input type="checkbox" name="wawp_delete_name[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>" <?php echo esc_attr($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br>
-            <p><b><br>Please note that this information will never be deleted from your WildApricot site, only your WordPress site, so you can always recover the deleted information from your WordPress site by re-syncing your WordPress site with your WildApricot site.
-            So, don't worry - you are not permanently deleting information that you cannot recover later.</b></p>
+            <input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>" <?php echo esc_attr($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br><br>
             <?php
+
         }
     }
 
@@ -806,7 +815,7 @@ class Admin_Settings {
         );
         register_setting(
             'wawp_restriction_status_group', // group name for settings
-            WA_Integration::RESTRICTION_STATUS, // name of option to sanitize and save
+            WA_Integration::GLOBAL_RESTRICTED_STATUSES, // name of option to sanitize and save
             $register_args
         );
         // Add settings section and field for restriction status
@@ -922,10 +931,17 @@ class Admin_Settings {
         );
         add_settings_field(
             'wawp_delete_options_id', // ID
-            'Attributes to Remove Upon Plugin Deletion:', // title
+            'Data to Remove Upon Plugin Deletion:', // title
             array($this, 'deletion_option_input'), // callback
             'wawp-wal-admin&tab=plugin', // page
             'wawp_delete_id' // section
+        );
+        add_settings_field(
+            'wawp_delete_db_options_id',
+            'Delete DB info',
+            array($this, 'deletion_option_input'),
+            'wawp-wal-admin&tab=plugin',
+            'wawp_delete_db_id'
         );
     }
 
@@ -1236,7 +1252,7 @@ class WA_Auth_Settings {
             $saved_auth_creds = WA_API::load_user_credentials();
             $auth_creds_changed = false;
             foreach ($valid as $key => $value) {
-                if ($valid[$key] != $saved_auth_creds[$key]) {
+                if (!empty($saved_auth_creds) && $valid[$key] != $saved_auth_creds[$key]) {
                     $auth_creds_changed = true;
                 }
                 $valid[$key] = $data_encryption->encrypt($value);
@@ -1262,7 +1278,8 @@ class WA_Auth_Settings {
      */
     public function wal_print_section_info() {
         print 'Please enter your WildApricot authorization credentials here. Your data is encrypted for your safety.<br>';
-        print 'To obtain your WildApricot authorization credentials, please refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a>.';
+        print 'To obtain your WildApricot authorization credentials, please create a full-access <strong>Server application</strong>.<br>'; 
+        print 'Refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a> for more details on creating an authorized application.';
     }
 
     /**

@@ -84,6 +84,9 @@ class WA_API {
 	public static function load_user_credentials() {
 		// Load encrypted credentials from database
 		$credentials = get_option(WA_Integration::WA_CREDENTIALS_KEY);
+
+		if (!$credentials) return array();
+
 		$decrypted_credentials = array();
 		// Ensure that credentials are not empty
 		// Decrypt credentials
@@ -474,7 +477,8 @@ class WA_API {
     }
 
     /**
-	 * Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
+	 * Static function that checks if application codes (API Key, Client ID,
+	 * and Client Secret) are valid
 	 *
 	 * @param string $entered_api_key The WildApricot API Key to check
 	 * @return array|bool $data An array of the response from the WA API
