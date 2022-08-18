@@ -1597,6 +1597,80 @@ class WA_Integration {
 		return $items;
 	}
 
+	/**
+	 * Removes all users with WildApricot data added by the plugin.
+	 *
+	 * @return void
+	 */
+	public static function remove_wa_users() {
+
+		// get users added by the plugin
+		$wap_users_added_by_plugin = get_users(
+			array(
+				'meta_key' => self::USER_ADDED_BY_PLUGIN,
+				'meta_value' => true
+			)
+		);
+
+		// delete all users added by the plugin
+		foreach ($wap_users_added_by_plugin as $user) {
+			$user_id = $user->ID;
+			wp_delete_user($user_id);
+		}
+
+		// get preexisting users with meta/roles added by the plugin
+		$users_with_wap_data = get_users(
+			array(
+				'meta_key' => self::USER_ADDED_BY_PLUGIN,
+				'meta_value' => false
+			)
+		);
+
+		// get wap roles
+		$all_roles = (array) wp_roles();
+		if (empty($all_roles) || !array_key_exists('role_names', $all_roles)) {
+			return;
+		}
+		$role_names = $all_roles['role_names'];
+		$wap_roles = array_filter(
+			$role_names, 
+			function($key) {
+				// anonymous function; returns true if WA or WAP role
+				return str_contains($key, 'wa_level') ||
+					   str_contains($key, CORE_SLUG);
+			}, 
+			ARRAY_FILTER_USE_KEY
+		);
+
+		// remove wap data from preexisting users
+		foreach ($users_with_wap_data as $user) {
+			$user_id = $user->ID;
+
+			// delete wap meta from this user
+			$user_meta = get_user_meta($user_id);
+			foreach ($user_meta as $key => $value) {
+				if (str_contains($key, CORE_SLUG)) {
+					delete_user_meta($user_id, $key);
+				}
+			}
+
+			// delete wap roles from this user
+			$user_roles = $user->roles;
+			Log::wap_log_debug($user_roles);
+			foreach ($user_roles as $role) {
+				if (array_key_exists($role, $wap_roles)) {
+					$user->remove_role($role);
+				}
+			}
+		}
+
+		// remove wap roles
+		foreach ($wap_roles as $role) {
+			remove_role($role);
+		}
+
+	}
+
 
 	// **** private functions ****
 	/**

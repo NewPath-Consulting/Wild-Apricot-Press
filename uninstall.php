@@ -39,6 +39,10 @@ function delete_plugin_data() {
  * @return void
  */
 function delete_all_user_data() {
+
+	WAWP\WA_Integration::remove_wa_users();
+	return;
+
 	// Get roles in WordPress user database
 	$wawp_all_roles = wp_roles();
 	$wawp_all_roles = (array) $wawp_all_roles;

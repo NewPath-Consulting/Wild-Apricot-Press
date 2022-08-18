@@ -1399,6 +1399,7 @@ class WA_Auth_Settings {
 
         if ($old_wa_url != $wild_apricot_url) {
             Addon::wa_auth_changed_update_status();
+            WA_Integration::remove_wa_users();
             delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
         }
 
