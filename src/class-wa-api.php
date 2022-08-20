@@ -474,7 +474,8 @@ class WA_API {
     }
 
     /**
-	 * Static function that checks if application codes (API Key, Client ID, and Client Secret are valid)
+	 * Static function that checks if application codes (API Key, Client ID,
+	 * and Client Secret) are valid
 	 *
 	 * @param string $entered_api_key The WildApricot API Key to check
 	 * @return array|bool $data An array of the response from the WA API
