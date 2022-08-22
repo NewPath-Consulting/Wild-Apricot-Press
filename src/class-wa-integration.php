@@ -1609,7 +1609,7 @@ class WA_Integration {
 		$licensed_wa_urls = array();
 
 		if (!array_key_exists('Licensed Wild Apricot URLs', $response)) {
-			Log::wap_log_warning('Licensed Wild Apricot URLs missing from hook response.');
+			Log::wap_log_warning('Licensed WildApricot URLs missing from hook response.');
 			return null;
 		}
 
@@ -1635,7 +1635,7 @@ class WA_Integration {
 		$licensed_wa_ids = array();
 
 		if (!array_key_exists('Licensed Wild Apricot Account IDs', $response)) {
-			Log::wap_log_warning('License Wild Apricot IDs missing from hook response');
+			Log::wap_log_warning('License WildApricot IDs missing from hook response');
 			return null;
 		}
 
