@@ -1401,6 +1401,12 @@ class WA_Auth_Settings {
             Addon::wa_auth_changed_update_status();
             WA_Integration::remove_wa_users();
             delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
+            delete_option(WA_Integration::ARRAY_OF_RESTRICTED_POSTS);
+            // delete post meta added by the plugin
+            delete_post_meta_by_key(WA_Integration::RESTRICTED_GROUPS);
+            delete_post_meta_by_key(WA_Integration::RESTRICTED_LEVELS);
+            delete_post_meta_by_key(WA_Integration::IS_POST_RESTRICTED);
+            delete_post_meta_by_key(WA_Integration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
         }
 
         $wild_apricot_url_enc = $data_encryption->encrypt($wild_apricot_url);
