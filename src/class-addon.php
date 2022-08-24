@@ -228,6 +228,7 @@ class Addon {
                 self::invalid_license_key_notice($slug);
             } else if ($license_status == self::LICENSE_STATUS_AUTH_CHANGED) {
                 self::license_wa_auth_changed_notice($slug, $is_licensing_page);
+                return;
             }
         }
             
@@ -486,6 +487,14 @@ class Addon {
         if (!Addon::is_plugin_disabled()) {
             update_option(self::WAWP_DISABLED_OPTION, true);
         }
+
+        // remove membership levels, groups, and custom fields
+        delete_option(WA_Integration::WA_ALL_MEMBERSHIPS_KEY);
+        delete_option(WA_Integration::WA_ALL_GROUPS_KEY);
+        delete_option(WA_Integration::LIST_OF_CUSTOM_FIELDS);
+
+        // remove saved fields
+        delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
 
         WA_Integration::delete_transients();
 
