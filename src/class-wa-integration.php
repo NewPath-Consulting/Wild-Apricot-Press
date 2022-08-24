@@ -1606,7 +1606,6 @@ class WA_Integration {
 	 * @return void
 	 */
 	public static function remove_wa_users() {
-
 		// get users added by the plugin
 		$wap_users_added_by_plugin = get_users(
 			array(
@@ -1641,6 +1640,7 @@ class WA_Integration {
 		$all_roles = (array) wp_roles();
 		if (!empty($all_roles) && array_key_exists('role_names', $all_roles)) {
 			$role_names = $all_roles['role_names'];
+			// filter out non-WAP roles from list of all roles
 			$wap_roles = array_filter(
 				$role_names, 
 				function($key) {
@@ -1674,7 +1674,7 @@ class WA_Integration {
 		}
 
 		// remove wap roles
-		foreach ($wap_roles as $role) {
+		foreach ($wap_roles as $role => $name) {
 			remove_role($role);
 		}
 
