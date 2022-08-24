@@ -1393,7 +1393,7 @@ class WA_Auth_Settings {
         $wild_apricot_url_array = $wawp_api_instance->get_account_url_and_id();
         $wild_apricot_url = esc_url_raw($wild_apricot_url_array['Url']);
 
-        // if wild apricot site changes, remove saved custom fields and license
+        // if wild apricot site changes, remove saved custom fields and license and WAP user data
         $old_wa_url = get_option(WA_Integration::WA_URL_KEY);
         $old_wa_url = $data_encryption->decrypt($old_wa_url);
 

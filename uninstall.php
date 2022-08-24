@@ -14,9 +14,12 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 delete_plugin_data();
 
-
-
-
+/**
+ * Conditionally deletes plugin data from the WordPress database and the
+ * user metadata.
+ *
+ * @return void
+ */
 function delete_plugin_data() {
 	// Get plugin deletion options and check if users and/or roles should be deleted
 	$wawp_delete_options = get_option(WAWP\WA_Integration::WA_DELETE_OPTION);
@@ -31,7 +34,6 @@ function delete_plugin_data() {
 		delete_all_user_data();	
 	}
 }
-
 
 /**
  * Deletes all data in the user meta created by the plugin.

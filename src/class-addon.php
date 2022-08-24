@@ -392,7 +392,8 @@ class Addon {
     }
 
     /**
-     * Called in uninstall.php. Deletes the add-on data stored in the options table.
+     * Called in `uninstall.php`. Deletes the add-on data stored in the options
+     * table.
      * 
      * @return void
      */
