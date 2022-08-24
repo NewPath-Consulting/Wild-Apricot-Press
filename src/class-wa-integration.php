@@ -1618,6 +1618,8 @@ class WA_Integration {
 		// delete all users added by the plugin
 		foreach ($wap_users_added_by_plugin as $user) {
 			$user_id = $user->ID;
+			// if user is admin, don't delete
+			if (in_array('administrator', $user->roles)) continue;
 			wp_delete_user($user_id);
 		}
 
@@ -1629,21 +1631,26 @@ class WA_Integration {
 			)
 		);
 
+		// merge admin users added by plugin with these users
+		$users_with_wap_data = array_merge(
+			$users_with_wap_data, 
+			$wap_users_added_by_plugin
+		);
+
 		// get wap roles
 		$all_roles = (array) wp_roles();
-		if (empty($all_roles) || !array_key_exists('role_names', $all_roles)) {
-			return;
+		if (!empty($all_roles) && array_key_exists('role_names', $all_roles)) {
+			$role_names = $all_roles['role_names'];
+			$wap_roles = array_filter(
+				$role_names, 
+				function($key) {
+					// anonymous function; returns true if WA or WAP role
+					return str_contains($key, 'wa_level') ||
+						   str_contains($key, CORE_SLUG);
+				}, 
+				ARRAY_FILTER_USE_KEY
+			);
 		}
-		$role_names = $all_roles['role_names'];
-		$wap_roles = array_filter(
-			$role_names, 
-			function($key) {
-				// anonymous function; returns true if WA or WAP role
-				return str_contains($key, 'wa_level') ||
-					   str_contains($key, CORE_SLUG);
-			}, 
-			ARRAY_FILTER_USE_KEY
-		);
 
 		// remove wap data from preexisting users
 		foreach ($users_with_wap_data as $user) {
@@ -1659,7 +1666,6 @@ class WA_Integration {
 
 			// delete wap roles from this user
 			$user_roles = $user->roles;
-			Log::wap_log_debug($user_roles);
 			foreach ($user_roles as $role) {
 				if (array_key_exists($role, $wap_roles)) {
 					$user->remove_role($role);
