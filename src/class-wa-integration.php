@@ -129,19 +129,19 @@ class WA_Integration {
 	const IS_POST_RESTRICTED 					= 'wawp_is_post_restricted';
 
 	/**
+	 * Stores custom restriction message in post meta data.
+	 * 
+	 * @var string
+	 */
+	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY	= 'wawp_individual_restriction_message_key';
+
+	/**
 	 * Stores array of all restricted posts in the options table. Used for
 	 * deleting custom post metadata upon plugin deletion.
 	 * 
 	 * @var string
 	 */
 	const ARRAY_OF_RESTRICTED_POSTS 			= 'wawp_array_of_restricted_posts';
-
-	/**
-	 * Stores custom restriction message in post meta data.
-	 * 
-	 * @var string
-	 */
-	const INDIVIDUAL_RESTRICTION_MESSAGE_KEY	= 'wawp_individual_restriction_message_key';
 
 	/**
 	 * Stores global restriction message in options table.
@@ -156,7 +156,7 @@ class WA_Integration {
 	 * 
 	 * @var string
 	 */
-	const RESTRICTION_STATUS					= 'wawp_restriction_status_name';
+	const GLOBAL_RESTRICTED_STATUSES					= 'wawp_restriction_status_name';
 
 	/**
 	 * Stores transient for the WA admin account ID. Deleted after 30 minutes.
@@ -226,7 +226,7 @@ class WA_Integration {
 	 * 
 	 * @var string
 	 */
-	const WA_DELETE_OPTION 						= 'wawp_delete_name';
+	const WA_DELETE_OPTION 						= 'wawp_delete_setting';
 
 	/**
 	 * Stores the page ID of the WAP login page created by the plugin in the
@@ -704,7 +704,7 @@ class WA_Integration {
 
 		// Check if user's status is allowed to view restricted posts
 		// Get restricted status(es) from options table
-		$restricted_statuses = get_option(self::RESTRICTION_STATUS);
+		$restricted_statuses = get_option(self::GLOBAL_RESTRICTED_STATUSES);
 		// If there are restricted statuses, then we must check them against the user's status
 		if (!empty($restricted_statuses)) {
 			// If user's status is not in the restricted statuses, then the user cannot see the post
@@ -1008,6 +1008,9 @@ class WA_Integration {
 	 * @return void
 	 */
 	public function show_membership_level_on_profile($user) {
+		// don't display WA data if the plugin is disabled
+		if (Addon::is_plugin_disabled()) return;
+		
 		// Load in parameters from user's meta data
 		$membership_level = get_user_meta($user->ID, self::WA_MEMBERSHIP_LEVEL_KEY, true);
 		$user_status = get_user_meta($user->ID, self::WA_USER_STATUS_KEY, true);
@@ -1595,6 +1598,86 @@ class WA_Integration {
 		}
 		
 		return $items;
+	}
+
+	/**
+	 * Removes all users with WildApricot data added by the plugin.
+	 *
+	 * @return void
+	 */
+	public static function remove_wa_users() {
+		// get users added by the plugin
+		$wap_users_added_by_plugin = get_users(
+			array(
+				'meta_key' => self::USER_ADDED_BY_PLUGIN,
+				'meta_value' => true
+			)
+		);
+
+		// delete all users added by the plugin
+		foreach ($wap_users_added_by_plugin as $user) {
+			$user_id = $user->ID;
+			// if user is admin, don't delete
+			if (in_array('administrator', $user->roles)) continue;
+			wp_delete_user($user_id);
+		}
+
+		// get preexisting users with meta/roles added by the plugin
+		$users_with_wap_data = get_users(
+			array(
+				'meta_key' => self::USER_ADDED_BY_PLUGIN,
+				'meta_value' => false
+			)
+		);
+
+		// merge admin users added by plugin with these users
+		$users_with_wap_data = array_merge(
+			$users_with_wap_data, 
+			$wap_users_added_by_plugin
+		);
+
+		// get wap roles
+		$all_roles = (array) wp_roles();
+		if (!empty($all_roles) && array_key_exists('role_names', $all_roles)) {
+			$role_names = $all_roles['role_names'];
+			// filter out non-WAP roles from list of all roles
+			$wap_roles = array_filter(
+				$role_names, 
+				function($key) {
+					// anonymous function; returns true if WA or WAP role
+					return str_contains($key, 'wa_level') ||
+						   str_contains($key, CORE_SLUG);
+				}, 
+				ARRAY_FILTER_USE_KEY
+			);
+		}
+
+		// remove wap data from preexisting users
+		foreach ($users_with_wap_data as $user) {
+			$user_id = $user->ID;
+
+			// delete wap meta from this user
+			$user_meta = get_user_meta($user_id);
+			foreach ($user_meta as $key => $value) {
+				if (str_contains($key, CORE_SLUG)) {
+					delete_user_meta($user_id, $key);
+				}
+			}
+
+			// delete wap roles from this user
+			$user_roles = $user->roles;
+			foreach ($user_roles as $role) {
+				if (array_key_exists($role, $wap_roles)) {
+					$user->remove_role($role);
+				}
+			}
+		}
+
+		// remove wap roles
+		foreach ($wap_roles as $role => $name) {
+			remove_role($role);
+		}
+
 	}
 
 

@@ -84,6 +84,9 @@ class WA_API {
 	public static function load_user_credentials() {
 		// Load encrypted credentials from database
 		$credentials = get_option(WA_Integration::WA_CREDENTIALS_KEY);
+
+		if (!$credentials) return array();
+
 		$decrypted_credentials = array();
 		// Ensure that credentials are not empty
 		// Decrypt credentials

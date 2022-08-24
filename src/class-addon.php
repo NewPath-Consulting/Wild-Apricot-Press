@@ -392,7 +392,8 @@ class Addon {
     }
 
     /**
-     * Called in uninstall.php. Deletes the add-on data stored in the options table.
+     * Called in `uninstall.php`. Deletes the add-on data stored in the options
+     * table.
      * 
      * @return void
      */
@@ -401,12 +402,18 @@ class Addon {
 
         foreach ($addons as $slug => $addon) {
             $filename = $addon['filename'];
-            delete_plugins(array(0 => $filename));
-            delete_option('license-check-' . $slug);
+            if (!is_core($slug)) {
+                delete_plugins(array(0 => $filename));
+            }
+            
+            delete_option($addon['license_check_option']);
+            delete_option($addon['show_activation_notice']);
         }
 
         delete_option(self::WAWP_ADDON_LIST_OPTION);
         delete_option(self::WAWP_LICENSE_KEYS_OPTION);
+        delete_option(self::WAWP_ACTIVATION_NOTICE_OPTION);
+        delete_option(self::WAWP_DISABLED_OPTION);
     }
 
     /**
@@ -448,6 +455,9 @@ class Addon {
 
     /**
      * Disables plugins. 
+     * Plugins will be disabled if the WildApricot authorization 
+     * credentials are invalid, the license key is invalid, or if there's been
+     * a fatal error.
      * If the slug is the core plugin, all NewPath addons will be disabled along
      * with the core plugin. If the slug is an addon, `disable_addon` will be
      * called. Make login page private and prevent uses from accessing the 
@@ -488,6 +498,14 @@ class Addon {
             update_option(self::WAWP_DISABLED_OPTION, true);
         }
 
+        WA_Integration::delete_transients();
+
+        Addon::unschedule_all_cron_jobs();
+        
+        do_action('remove_wa_integration');
+
+        if (Exception::fatal_error()) return;
+
         // remove membership levels, groups, and custom fields
         delete_option(WA_Integration::WA_ALL_MEMBERSHIPS_KEY);
         delete_option(WA_Integration::WA_ALL_GROUPS_KEY);
@@ -495,12 +513,6 @@ class Addon {
 
         // remove saved fields
         delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
-
-        WA_Integration::delete_transients();
-
-        Addon::unschedule_all_cron_jobs();
-        
-        do_action('remove_wa_integration');
 
     }
 

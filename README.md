@@ -4,7 +4,7 @@ Tags: wildapricot, wild apricot, sso, membership, event management, events, memb
 Requires at least: 5.0
 Tested up to: 6.0
 Requires PHP: 7.4
-Stable Tag: 1.0.0
+Stable Tag: 1.0.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
