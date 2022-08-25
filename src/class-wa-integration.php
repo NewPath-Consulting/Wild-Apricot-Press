@@ -1514,7 +1514,7 @@ class WA_Integration {
 								// Check if user's status is within the allowed status(es)
 								$users_status = get_user_meta($current_users_id, self::WA_USER_STATUS_KEY);
 								$users_status = $users_status[0];
-								$allowed_statuses = get_option(self::RESTRICTION_STATUS);
+								$allowed_statuses = get_option(self::GLOBAL_RESTRICTED_STATUSES);
 								// If some statuses have been checked off, then that means that some statuses are restricted
 								$valid_status = true;
 								if (!empty($allowed_statuses) && !empty($users_status)) {
