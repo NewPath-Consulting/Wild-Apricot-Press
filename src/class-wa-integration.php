@@ -1376,11 +1376,14 @@ class WA_Integration {
 		}
 
 		// Sanitize 'Remember Me?' checkbox
-		$remember_me_input = sanitize_text_field(wp_unslash($_POST['wawp_remember_me']));
-		$remember_user = false;
-		if ($remember_me_input == 'on') { // should remember user
-			$remember_user = true;
+		if (array_key_exists('wawp_remember_me', $_POST)) {
+			$remember_me_input = sanitize_text_field(wp_unslash($_POST['wawp_remember_me']));
+			$remember_user = false;
+			if ($remember_me_input == 'on') { // should remember user
+				$remember_user = true;
+			}
 		}
+
 
 		// Check if login is valid and add the user to wp database if it is
 		try {
