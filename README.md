@@ -191,6 +191,8 @@ After installing each add-on, you can enter the license key for the WAP plugin a
 
 ## Version 1.0.1 - August 24, 2022
 - added support to delete WildApricot meta data and users when switching WildApricot sites via re-authorization/license key swap
+- added options in Plugin Options to delete WildApricot meta data and sync'd users during plugin deletion
+- cosmetic changes to several user interface strings
 
 ## Version 1.0.0 - August 9, 2022
 - first public release
