@@ -160,11 +160,9 @@ These fields are now shared for WordPress and for other plugins, which extends t
 
 If you decide to deactivate and delete the WAP plugin, navigate to WAP Settings and click on the “Plugin Options” tab. (Even though you will never want to delete WAP, right?) :)
 
-<img width="957" alt="wap settings plugin options" src="https://user-images.githubusercontent.com/458134/131911994-1954ef24-4e44-4797-9b42-a8534b1fa16c.png">
+<img width="957" alt="wap settings plugin options" src="https://user-images.githubusercontent.com/458134/187314069-0d017710-630e-4f84-8f0b-11607065809f.png">
 
-By selecting the “Delete all WildApricot information from my WordPress site”, you will remove all synced WildApricot data from your WordPress site upon deletion of the WAP plugin. You can also leave this option unchecked if you would like to keep the synced users and roles on your WordPress site even after deleting WAP.
-
-<img width="544" alt="Screen Shot 2021-08-16 at 6 07 21 PM" src="https://user-images.githubusercontent.com/8737691/129635421-3f80bb44-3c03-4659-8b28-2ce2c02125e6.png">
+By default, upon deletion of the WildApricot Press plugin, none of the data created and stored by WildApricot Press is deleted. You can remove all database and post/page data created by WildApricot Press by checking "Delete WordPress database data and post/page data". You can remove all WildApricot users created by WildApricot Press by checking "Delete users added by WildApricot Press". With these settings checked, you can delete the NewPath WildApricot Press plugin and perform a "clean" install of the plugin when you install again.
 
 ## WAP Debug Log
 
