@@ -91,7 +91,15 @@ class Log {
      * @return void
      */
     static private function print_message($msg, $error_type) {
-        if (!self::can_debug() && $error_type != self::LOG_FATAL) { return; }
+        // if debug flag isn't on or the error is not fatal or the dev flag isn't on, don't print
+        if (
+            !self::can_debug() && 
+            $error_type != self::LOG_FATAL && 
+            !defined('WAP_LICENSE_CHECK_DEV')
+        ) { 
+            return; 
+        }
+
         $backtrace = debug_backtrace();
 
         // collect caller info to print to logfile
@@ -118,6 +126,8 @@ class Log {
         } catch (Decryption_Exception $e) {
             $account_id = '';
         }
+
+        $msg = print_r($backtrace, 1);
 
         // conditionally construct log message based on whether the WA account
         // ID is present or not
@@ -205,8 +215,15 @@ class Log {
      * @return string folder name of the plugin
      */
     static private function get_plugin_name($filename) {
-        $name = explode('plugins/', $filename)[1];
-        $name = explode('/', $name)[0];
+        // see if path uses forward slash or backslash
+        if (strpos($filename, '/')) {
+            $name = explode('plugins/', $filename)[1];
+            $name = explode('/', $name)[0];
+        } else {
+            $name = explode('plugins\\', $filename)[1];
+            $name = explode('\\', $name)[0];
+        }
+
 
         return $name;
     }
