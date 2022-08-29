@@ -316,7 +316,7 @@ class Admin_Settings {
         $tab = get_current_tab();
         ?>
         <div class="wrap">
-            <h2>WildApricot Admin Settings</h2>
+            <h2>Settings</h2>
             <?php
             if (Addon::is_plugin_disabled()) {
                 ?> </div> <?php 
@@ -1181,7 +1181,7 @@ class WA_Auth_Settings {
         
 		?>
         <div class="wrap">
-			<h1>WildApricot Authorization</h1>
+			<h1>Authorization</h1>
 			<div class="waSettings">
 				<div class="loginChild">
                     <!-- WildApricot credentials form -->
@@ -1518,7 +1518,7 @@ class License_Settings {
     public function create_license_form() {
         ?>
         <div class="wrap">
-            <h1>License Keys</h1>
+            <h1>Licensing</h1>
             <?php
             // Check if WildApricot credentials have been entered
             // If credentials have been entered (not empty) and plugin is not disabled, then we can present the license page
