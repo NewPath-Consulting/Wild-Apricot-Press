@@ -216,7 +216,7 @@ class Log {
      */
     static private function get_plugin_name($filename) {
         // see if path uses forward slash or backslash
-        if (strpos($filename, '/')) {
+        if (str_contains($filename, '/')) {
             $name = explode('plugins/', $filename)[1];
             $name = explode('/', $name)[0];
         } else {
