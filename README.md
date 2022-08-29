@@ -1,6 +1,6 @@
-=== WildApricot Press ===
+=== NewPath WildApricot Press ===
 Contributors: 1cookspe, nataliebrotherton, asirota
-Tags: wildapricot, wild apricot, sso, membership, event management, events, membership management, login, OAuth 2.0, Single Sign-on, WordPress SSO
+Tags: wildapricot, wild apricot, membership, event management, events, membership management, Single Sign-on, sso
 Requires at least: 5.0
 Tested up to: 6.0
 Requires PHP: 7.4
@@ -190,9 +190,9 @@ After installing each add-on, you can enter the license key for the WAP plugin a
 # Release History
 
 ## Version 1.0.1 - August 24, 2022
-- added support to delete WildApricot meta data and users when switching WildApricot sites via re-authorization/license key swap
+- plugin now removes any saved options and synchronized user meta data when switching WildApricot sites via new API keys and license key swap
 - added options in Plugin Options to delete WildApricot meta data and sync'd users during plugin deletion
-- cosmetic changes to several user interface strings
+- cosmetic changes to several user interface string to be more consistent and clear
 
 ## Version 1.0.0 - August 9, 2022
 - first public release
