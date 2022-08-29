@@ -198,40 +198,40 @@ A: It should. We make every effort to provide standard plugin code, but some the
 
 == Changelog ==
 
-## Version 1.0.1 - August 24, 2022
+Version 1.0.1 - August 24, 2022
 - plugin now removes any saved options and synchronized user meta data when switching WildApricot sites via new API keys and license key swap
 - added options in Plugin Options to delete WildApricot meta data and sync'd users during plugin deletion
 - cosmetic changes to several user interface string to be more consistent and clear
 - plugin now called NewPath WildApricot Press
 
-## Version 1.0.0 - August 9, 2022
+Version 1.0.0 - August 9, 2022
 - first public release
 
-## Version 1.0b5 - August 4, 2022
+Version 1.0b5 - August 4, 2022
 - added selection of default menu item for login/logout link
 - renamed plugin to WildApricot Press
 - cleaned up Authorization screen cosmetically
 - Added WAP Developer's Guide
 
-## Version 1.0b4 - July 29, 2022
+Version 1.0b4 - July 29, 2022
 - adding WAP switch to toggle error logging to wp-content/wapdebug.log file
 - added a ton of error checking routines to log errors in various conditions where plugin errors or has an API error
 - finished all sanitization/escape output text to support submission to WordPress plugin repo
 
-## Version 1.0b3 - June 30, 2022
+Version 1.0b3 - June 30, 2022
 - fixed images in settings page
 - started to escape output text for issue #58
 - refactored licensing code and introduced generic license checker URL
 
-## Version 1.0b2b - June 15, 2022
+Version 1.0b2b - June 15, 2022
 - modified to new production webhook for licensing
 
-## Version 1.0b2a - March 11, 2022
+Version 1.0b2a - March 11, 2022
 
-## Version 1.0b2 - February 17, 2022
+Version 1.0b2 - February 17, 2022
 - fixed support for custom themes like Avada
 
-## Version 1.0b1 - September 2, 2021
+Version 1.0b1 - September 2, 2021
 - first release
 - fixed images in settings page
 - started to escape output text for issue #58
