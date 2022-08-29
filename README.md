@@ -8,7 +8,7 @@ Stable Tag: 1.0.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-WildApricot Press enables WordPress websites to support the WildApricot membership management system.
+NewPath WildApricot Press enables WordPress websites to support the WildApricot membership management system.
 
 # Administrator's Guide
 
@@ -16,11 +16,11 @@ WildApricot Press enables WordPress websites to support the WildApricot membersh
 
 On the WordPress admin dashboard, using the left menu, navigate to to Plugins > Add New. Upload the plugin compressed archive (zip) and ensure the plugin is activated.
 
-To configure the WildApricot Press, the WildApricot API settings must be configured.
+To configure NewPath WildApricot Press, the WildApricot API settings must be configured.
 
 ### Create an Authorized Application in WildApricot
 
-WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a "Server application" authorized application](https://gethelp.wildapricot.com/en/articles/199). You should provide "Full access" to the authorized application to enable WildApricot Press to reading and write data into WildApricot.
+NewPath WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a "Server application" authorized application](https://gethelp.wildapricot.com/en/articles/199). You should provide "full access" to the authorized application to enable NewPath WildApricot Press to read and write data into WildApricot.
 
 Creating Server application in WildApricot:
 
@@ -47,7 +47,7 @@ If you do not see a green success message, then please make sure that you have t
 
 ### Licensing WAP
 
-The WildApricot Press plugin license is available for [purchase online](https://newpathconsulting.com/wap) for a small annual license. Your license includes 2 free add-ons, the member directory and iframe widget blocks. Future commercials WAP add-ons that generate revenue for your organization will have a separate license fee.
+The NewPAth WildApricot Press plugin license is available for [purchase online](https://newpathconsulting.com/wap) for a small annual license. Your license includes 2 free add-ons, the member directory and iframe widget blocks. Future commercials WAP add-ons that generate revenue for your organization will have a separate license fee.
 
 Enter your WAP license key to unlock WAP! This can be done on the "Licensing" section under WAP Settings > Licensing.
 
@@ -173,7 +173,7 @@ WildApricot content can be embedded into WordPress using a number of WAP add-ons
 # WAP - Add Ons
 NewPath Consulting has developed several add-ons for the core WAP plugin that further enrich your experience with your WildApricot account in WordPress! Read more about them below:
 
-## WildApricot IFrame Add-on
+##  Iframe Widget Add-on
 Embed a system page from WildApricot directly in your WordPress site! Fundamental WildApricot features including member profiles, events, and more can be displayed in an IFrame (Inline Frame) in a WordPress post with just the click of a button! [Learn more](https://newpathconsulting.com/wap).
 
 ## Member Directory Add-on
@@ -182,18 +182,27 @@ Want to display a directory of your WildApricot users in WordPress? Look no furt
 
 
 # License
-The License for WildApricot Press is completely free, and is used to verify that your WildApricot website is connected to your WordPress website. Please visit the [WildApricot Press website](https://newpathconsulting.com/wap/) to get your free license key or to inquire further about the WAP plugin!
+Please visit the [NewPath WildApricot Press website](https://newpathconsulting.com/wap/) to obtain your license key or to inquire further about the plugin!
 
-After installing each add-on, you can enter the license key for the WAP plugin and each add-on on the same Licensing page, under WAP Settings > Licensing.
+After installing each add-on, you can enter the license key for the NewPath WildApricot Press plugin and each add-on on the same Licensing page, under WAP Settings > Licensing.
 
 <img width="422" alt="wap licensing of add ons" src="https://user-images.githubusercontent.com/458134/131912822-42e0d808-c21f-4ea2-a612-94501254a728.png">
 
-# Release History
+== Frequently Asked Questions ==
+
+Q: What is the difference between NewPath WildApricot Press and Wild Apricot Login plugin?
+A: There are many differences including full support and maintenance, regular synchronization of data for logged in users, ability to sync all system, common and membership fields. Most importantly NewPath WildApricot Press has add-on architecture to enable more functionality to be made available over time via add-on plugins and blocks.
+
+Q: Does it work with my theme?
+A: It should. We make every effort to provide standard plugin code, but some themes may break with the plugin. Please let us know on our [support forum](https://talk.newpathconsulting.com) if you encounter any issues. We also recommend the [GeneratePress theme](https://generatepress.com) library for optimal design.
+
+== Changelog ==
 
 ## Version 1.0.1 - August 24, 2022
 - plugin now removes any saved options and synchronized user meta data when switching WildApricot sites via new API keys and license key swap
 - added options in Plugin Options to delete WildApricot meta data and sync'd users during plugin deletion
 - cosmetic changes to several user interface string to be more consistent and clear
+- plugin now called NewPath WildApricot Press
 
 ## Version 1.0.0 - August 9, 2022
 - first public release
