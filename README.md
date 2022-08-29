@@ -47,12 +47,13 @@ If you do not see a green success message, then please make sure that you have t
 
 ### Licensing WAP
 
-Finally, please enter your WAP license key to unlock WAP! This can be done on the "Licensing" section under WAP Settings > Licensing.
+The WildApricot Press plugin license is available for [purchase online](https://newpathconsulting.com/wap) for a small annual license. Your license includes 2 free add-ons, the member directory and iframe widget blocks. Future commercials WAP add-ons that generate revenue for your organization will have a separate license fee.
+
+Enter your WAP license key to unlock WAP! This can be done on the "Licensing" section under WAP Settings > Licensing.
 
 <img width="746" alt="wap licensing" src="https://user-images.githubusercontent.com/458134/131911156-e8aab427-9a31-46f4-9e20-3cb5a3e45ebe.png">
 
-
-The WAP core plugin license is available at no cost, with no credit card or payment ever required! In the future commercials add-ons that generate revenue for your organization will have a license fee. If you do not already have a WAP license key, please visit the [WAP website](https://newpathconsulting.com/wap/), and see [Licenses](#license) for more information. Once you enter your license key and click "Save", you're good to go!
+Once you enter your license key and click "Save", you're good to go!
 
 
 <img width="198" alt="wap license saved" src="https://user-images.githubusercontent.com/458134/131911442-01c4c614-2ffa-49f9-8ce9-049d322c5e51.png">
