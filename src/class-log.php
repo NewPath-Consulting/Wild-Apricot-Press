@@ -109,9 +109,12 @@ class Log {
 
         // try to obtain WA account ID
         try {
-            $account_id = get_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
-            $decryption = new Data_Encryption();
-            $account_id = $decryption->decrypt($account_id);
+            if (Exception::fatal_error() != Decryption_Exception::ERROR_DESCRIPTION) {
+                $account_id = get_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
+                $decryption = new Data_Encryption();
+                $account_id = $decryption->decrypt($account_id);
+            }
+
         } catch (Decryption_Exception $e) {
             $account_id = '';
         }
