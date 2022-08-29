@@ -127,8 +127,6 @@ class Log {
             $account_id = '';
         }
 
-        $msg = print_r($backtrace, 1);
-
         // conditionally construct log message based on whether the WA account
         // ID is present or not
         if (!empty($account_id)) {
@@ -223,7 +221,6 @@ class Log {
             $name = explode('plugins\\', $filename)[1];
             $name = explode('\\', $name)[0];
         }
-
 
         return $name;
     }
