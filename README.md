@@ -246,3 +246,12 @@ It should. We make every effort to provide standard plugin code, but some themes
 If you are having trouble, install this version and then use the new plugin options to remove all previous WAP daa, and then reinstall this version.
 
 == Screenshots ==
+
+1. Website with Login/Logout link added after WAP has been installed, activated and licensed.
+2. Content Restriction Options
+3. Setting which Membership Statuses can access content
+4. Setting a "global restriction" message which can be changed per page or post
+5. Setting access control to membership levels and groups per page or post
+6. Synchronization options to sync common, membership and system fields into WordPress
+7. Synchronized WordPress users get WildApricot data every 24 hours and during successful login.
+8. Plugin options to clean up WordPress after deletion and a special WAP Debug Log
