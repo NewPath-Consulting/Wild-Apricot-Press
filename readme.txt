@@ -1,0 +1,257 @@
+=== NewPath WildApricot Press ===
+Contributors: 1cookspe, nataliebrotherton, asirota
+Tags: wildapricot, wild apricot, membership, event management, events, membership management, Single Sign-on, sso
+Requires at least: 5.0
+Tested up to: 6.0
+Requires PHP: 7.4
+Stable Tag: 1.0.1
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+NewPath WildApricot Press enables WordPress websites to support the WildApricot membership management system.
+
+== Description ==
+
+WordPress is the world’s most popular website builder. WildApricot is the #1 rated membership management software. Now, your organization can seamlessly combine the best of both with NewPath WildApricot Press plugin.
+
+NewPath WildApricot Press and our custom theme library enables you to build and manage your own full-featured website using just your web browser—without having to learn how to code. In fact, if you’ve ever used a layout editor like Microsoft Word or PowerPoint, you’ll be right at home with the WildApricot Press blocks in the WordPress Block Editor. Enjoy the elegance, diversity of plugins and unparalleled versatility of WordPress with the user-friendliness power of WildApricot Membership Management software. Build faster, customize more and lower the learning curve to produce the high-quality membership websites your members deserve.
+
+# Administrator's Guide
+
+## Installing and Configuring the WAP Plugin
+
+On the WordPress admin dashboard, using the left menu, navigate to to Plugins > Add New. Upload the plugin compressed archive (zip) and ensure the plugin is activated.
+
+To configure NewPath WildApricot Press, the WildApricot API settings must be configured.
+
+### Create an Authorized Application in WildApricot
+
+NewPath WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a "Server application" authorized application](https://gethelp.wildapricot.com/en/articles/199). You should provide "full access" to the authorized application to enable NewPath WildApricot Press to read and write data into WildApricot.
+
+Creating Server application in WildApricot:
+
+<img width="292" alt="authorized application creation screen" src="https://user-images.githubusercontent.com/458134/184677576-aad24cdd-c37a-4827-b54a-fc139ee95a1d.png">
+
+Granting Full access to Server application:
+
+<img width="313" alt="granting full access to authorized application" src="https://user-images.githubusercontent.com/458134/184677619-e3f5b2f9-2b9f-4b73-908b-7caefe25968c.png">
+
+ With your API key, client ID and client secret, navigate to WAP Settings > Authorization, and follow the instructions there to apply the WildApricot keys.
+
+### Add API keys into WAP
+
+Once you have created an authorized application in WildApricot, enter the API key, client ID and client secret into WAP. You can copy and paste these "keys" into the configuration screen in the WAP configuration.
+
+After entering these credentials and pressing the "Save Changes" button, a green success message will display the WildApricot website that you have connected to! You can ensure that this matches your WildApricot URL. 
+
+![Adding WildApricot Authorized Application Keys into WAP](https://user-images.githubusercontent.com/458134/182927385-37c42be3-c74c-4bb1-aebd-a04570150b8b.png)
+
+
+If you do not see a green success message, then please make sure that you have the correct WildApricot authorized application credentials (without any extra spaces or gremlin characters) and re-enter them.
+
+
+
+### Licensing WAP
+
+The NewPAth WildApricot Press plugin license is available for [purchase online](https://newpathconsulting.com/wap) for a small annual license. Your license includes 2 free add-ons, the member directory and iframe widget blocks. Future commercials WAP add-ons that generate revenue for your organization will have a separate license fee.
+
+Enter your WAP license key to unlock WAP! This can be done on the "Licensing" section under WAP Settings > Licensing.
+
+<img width="746" alt="wap licensing" src="https://user-images.githubusercontent.com/458134/131911156-e8aab427-9a31-46f4-9e20-3cb5a3e45ebe.png">
+
+Once you enter your license key and click "Save", you're good to go!
+
+
+<img width="198" alt="wap license saved" src="https://user-images.githubusercontent.com/458134/131911442-01c4c614-2ffa-49f9-8ce9-049d322c5e51.png">
+
+Once activated, a login/logout button will appear on your configured menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner. 
+
+<img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
+
+When WildApricot contacts or members click the "Log In" button, they are directed to log in with their WildApricot username (email) and password. Once completed, a WordPress user account is created for them (if it does not exist already), and their WildApricot data is synchronized to the WordPress account. If the user already has a WordPress account on the WordPress site, then the contact or member's WildApricot information is synced with the existing WordPress account.
+
+All WordPress administrators can now manage access to restricted pages and posts based on a member's membership levels and membership groups.
+
+***
+
+## WildApricot  login/logout button
+By default, the primary menu will have the login/logout link added automatically by WAP. You can configure specify which WordPress menu(s) you would like to add the "single signon" login/logout button to by selecting other menus you have in your WordPress site. You can find this setting in **WildApricot Press > Settings** under the **Content Restriction Options** tab.
+
+
+![Login/Logout Button Menu Settings](https://user-images.githubusercontent.com/458134/182928772-31589f3b-a9f8-42ab-ab63-104a8f0fdbb5.png)
+
+
+## WAP Global Access Settings
+
+### Setting Membership Status Restrictions
+
+To set which membership status can access restricted pages and posts, navigate to WAP in the left-hand menu, then select the "Content Restriction Options" tab.
+
+<img width="385" alt="wap settings" src="https://user-images.githubusercontent.com/458134/131911687-00e74697-c1c7-4bf4-83f4-423e2eee2cce.png">
+
+Set the membership statuses that will be allowed to view restricted posts or pages.
+
+<img width="648" alt="Screen Shot 2021-08-16 at 12 48 01 PM" src="https://user-images.githubusercontent.com/8737691/129658641-7b02705b-fa62-4541-b76f-31462a127c4c.png">
+
+If no boxes are checked, then all members (regardless of status) will be able to view resticted posts.
+
+### Set Global Restriction Message
+
+By default restricted pages show the Global Restriction Message. A default message is shown to visitors who are trying to access pages which they do not have access to.
+
+<img width="1241" alt="Screen Shot 2021-08-16 at 1 05 20 PM" src="https://user-images.githubusercontent.com/8737691/129612116-5666ef23-8c5c-4ead-b60a-9e26b78a8e5c.png">
+
+## Per Page and Post Settings
+Access to pages and posts can be set with WAP, allowing members to have access to  various posts and pages. These restrictions are set on the "Edit" screen of each post or page. The content editor can specify the restrictions as you write content.
+
+### Setting a custom page/post restricted message
+
+Each page and post has a restricted message in a box called "Individual Restriction Message". This setting overrides the default Global Restriction Message. This box appears under the main content and can float down the page depending on what page builder is in use, if any. You can modify the individual restriction message as desired on a per post or page basis. If you leave the individal resriction message blank, the Global Restriction Message will be used.
+
+![Individual Restriction Message](https://user-images.githubusercontent.com/458134/182929565-7a3db6cf-3911-4ec7-b496-cbdb1c9df50b.png)
+
+IMPORTANT: To save the custom restricted message, make sure to save or publish the page or post.
+
+### Page or Post Access Control
+
+On every page or post, you can select which Wild Apricot membership levels and membership groups can view the content of the page. Access control is set by the box on the right side of the page or post's "Edit" screen.
+
+
+![Page or Post Access control](https://user-images.githubusercontent.com/8737691/129618750-3ed1f127-f084-452a-b9a4-296718424062.png)
+
+You can select one or more membership levels to restrict which levels have access to the post. WildApricot members who are in a checked membership level will be able to access the page or post once it is published. 
+
+Likewise, you can also set access to one or more membership groups. You can select zero or more membership groups, which will allow members in those WildApricot membership groups to access the page or post.
+
+Access to posts and pages based on membership levels and membership groups are set inclusively. If a member is in one of the checked membership levels OR they are in a checked membership group then they can see the page or post. If they donot belong to a checked membership level or membership group, they will instead receive the global restricted message or the individual restricted message, if one was configured.
+
+By default none of the membership levels or membership groups are checked, and as a result a page or post is not restricted. Unrestricted, published pages can be seen by all visitors, both logged-in and logged-out of the WordPress site.
+
+***
+
+## Memberships and User Data Refresh
+
+The membership levels that have been added, modified or deleted will be synced into WordPress from WildApricot automatically on user login and every 24 hours. During each  login, the common, system and membership fields  (e.g. status and membership level) will be updated from WildApricot. So, after syncing your WordPress site with the WAP plugin, any updates made in the WildApricot contact database will be automatically sync'd into WordPress during login  as well within 24 hours.
+
+On each user login and daily user refresh, several WildApricot member fields are synced to the user's WordPress profile. You can view these WildApricot fields by viewing the WordPress user under "WildApricot Membership Details". The default WildApricot fields can be viewed in the screenshot below. 
+
+PS: Can you guess who this member might be? :) 
+
+![Screen Shot 2021-08-16 at 2 16 45 PM](https://user-images.githubusercontent.com/8737691/129620414-f7f3042a-1063-4bbf-b0b6-a3c47084980a.png)
+
+
+## Data Synchronization
+
+You can specify which common, membership and system fields are synchronized into WordPress using the "Synchronization Options" tab under "Settings". See the screenshot below for an illustration.
+
+<img width="389" alt="wa settings sync options" src="https://user-images.githubusercontent.com/458134/131911860-869f9ca0-a11e-483a-8021-8388baf7660c.png">
+
+For each field that you check off, the field will be synced to each WildApricot user on the WordPress site. The screenshot below shows some of the extra fields being checked off and thus imported into each user in WordPress:
+
+![Screen Shot 2021-08-16 at 4 28 36 PM](https://user-images.githubusercontent.com/8737691/129625564-fabce129-a64d-497b-99bd-b5e1230778cb.png)
+
+Now, the extra fields can be seen in each user's WordPress profile after they login or after the daily sync is performed.
+
+![Screen Shot 2021-08-16 at 2 19 45 PM (1)](https://user-images.githubusercontent.com/8737691/129625837-ca418263-a0d2-4bf9-b397-5daa055935f8.png)
+
+These fields are now shared for WordPress and for other plugins, which extends the WildApricot database to every part of the WordPress plugin ecosystem. This is very powerful because now other plugins know which WildApricot user is in WordPress.
+
+## Plugin Options
+
+If you decide to deactivate and delete the WAP plugin, navigate to WAP Settings and click on the “Plugin Options” tab. (Even though you will never want to delete WAP, right?) :)
+
+<img width="957" alt="wap settings plugin options" src="https://user-images.githubusercontent.com/458134/187314069-0d017710-630e-4f84-8f0b-11607065809f.png">
+
+By default, upon deletion of the WildApricot Press plugin, none of the data created and stored by WildApricot Press is deleted. You can remove all database and post/page data created by WildApricot Press by checking "Delete WordPress database data and post/page data". You can remove all WildApricot users created by WildApricot Press by checking "Delete users added by WildApricot Press". With these settings checked, you can delete the NewPath WildApricot Press plugin and perform a "clean" install of the plugin when you install again.
+
+## WAP Debug Log
+
+In Plugin Options tab you can turn on the "Print log messages to log file" to start logging errors and warnings to the filer wp-content/wapdebug.log. This can be used to troubleshoot plugin issues and provided to support.
+
+## Embedding Content from WildApricot into WordPress
+
+WildApricot content can be embedded into WordPress using a number of WAP add-ons; see the [WAP - Add Ons](#wap---add-ons) section for more.
+
+***
+
+# WAP - Add Ons
+NewPath Consulting has developed several add-ons for the core WAP plugin that further enrich your experience with your WildApricot account in WordPress! Read more about them below:
+
+##  Iframe Widget Add-on
+Embed a system page from WildApricot directly in your WordPress site! Fundamental WildApricot features including member profiles, events, and more can be displayed in an IFrame (Inline Frame) in a WordPress post with just the click of a button! [Learn more](https://newpathconsulting.com/wap).
+
+## Member Directory Add-on
+Want to display a directory of your WildApricot users in WordPress? Look no further! The Member Directory Add-on for WAP allows you to show your WildApricot users directly in your WordPress site. [Learn more](https://newpathconsulting.com/wap).
+
+
+
+# License
+Please visit the [NewPath WildApricot Press website](https://newpathconsulting.com/wap/) to obtain your license key or to inquire further about the plugin!
+
+After installing each add-on, you can enter the license key for the NewPath WildApricot Press plugin and each add-on on the same Licensing page, under WAP Settings > Licensing.
+
+<img width="422" alt="wap licensing of add ons" src="https://user-images.githubusercontent.com/458134/131912822-42e0d808-c21f-4ea2-a612-94501254a728.png">
+
+== Frequently Asked Questions ==
+
+= What is the difference between NewPath WildApricot Press and Wild Apricot Login plugin? =
+There are many differences including full support and maintenance, regular synchronization of data for logged in users, ability to sync all system, common and membership fields. Most importantly NewPath WildApricot Press has add-on architecture to enable more functionality to be made available over time via add-on plugins and blocks.
+
+= Does it work with my theme? =
+It should. We make every effort to provide standard plugin code, but some themes may break with the plugin. Please let us know on our [support forum](https://talk.newpathconsulting.com) if you encounter any issues. We also recommend the [GeneratePress theme](https://generatepress.com) library for optimal design.
+
+== Changelog ==
+
+= Version 1.0.1 - August 24, 2022 =
+- plugin now removes any saved options and synchronized user meta data when switching WildApricot sites via new API keys and license key swap
+- added options in Plugin Options to delete WildApricot meta data and sync'd users during plugin deletion
+- cosmetic changes to several user interface string to be more consistent and clear
+- plugin now called NewPath WildApricot Press
+
+= Version 1.0.0 - August 9, 2022 =
+- first public release
+
+= Version 1.0b5 - August 4, 2022 =
+- added selection of default menu item for login/logout link
+- renamed plugin to WildApricot Press
+- cleaned up Authorization screen cosmetically
+- Added WAP Developer's Guide
+
+= Version 1.0b4 - July 29, 2022 =
+- adding WAP switch to toggle error logging to wp-content/wapdebug.log file
+- added a ton of error checking routines to log errors in various conditions where plugin errors or has an API error
+- finished all sanitization/escape output text to support submission to WordPress plugin repo
+
+= Version 1.0b3 - June 30, 2022 =
+- fixed images in settings page
+- started to escape output text for issue #58
+- refactored licensing code and introduced generic license checker URL
+
+= Version 1.0b2b - June 15, 2022 =
+- modified to new production webhook for licensing
+
+= Version 1.0b2a - March 11, 2022 =
+
+= Version 1.0b2 - February 17, 2022 =
+- fixed support for custom themes like Avada
+
+= Version 1.0b1 - September 2, 2021 =
+- first release
+- fixed images in settings page
+- started to escape output text for issue #58
+
+== Upgrade Notice ==
+
+= 1.0.1 =
+If you are having trouble, install this version and then use the new plugin options to remove all previous WAP daa, and then reinstall this version.
+
+== Screenshots ==
+
+1. Website with Login/Logout link added after WAP has been installed, activated and licensed.
+2. Content Restriction Options
+3. Setting which Membership Statuses can access content
+4. Setting a "global restriction" message which can be changed per page or post
+5. Setting access control to membership levels and groups per page or post
+6. Synchronization options to sync common, membership and system fields into WordPress
+7. Synchronized WordPress users get WildApricot data every 24 hours and during successful login.
+8. Plugin options to clean up WordPress after deletion and a special WAP Debug Log
