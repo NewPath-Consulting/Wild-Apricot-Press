@@ -43,6 +43,7 @@ Please visit the [NewPath WildApricot Press website](https://newpathconsulting.c
 NewPath WildApricot Press is developed and maintained by NewPath Consulting. Wild Apricot Login is developed by Personify several years ago and unfortunately has not been improved or expanded in several years. NewPath WildApricot Press includes full support and maintenance, regular synchronization of data for logged in users, ability to sync all system, common and membership fields. Most importantly NewPath WildApricot Press has add-on architecture to enable more functionality to be made available over time via add-on plugins and blocks.
 
 = Does it work with my theme? =
+
 It should. We make every effort to provide standard plugin code, but some themes may break with the plugin. Please let us know on our [support forum](https://talk.newpathconsulting.com) if you encounter any issues. We also recommend the [GeneratePress theme](https://generatepress.com) library for optimal design.
 
 = How do I authorize and license NewPath WildApricot Press? =
@@ -84,7 +85,7 @@ After installing any add-ons, you can enter the license key for each add-on on t
 
 ![Licensing of add ons](https://user-images.githubusercontent.com/458134/131912822-42e0d808-c21f-4ea2-a612-94501254a728.png)
 
-== How do I add a login/logout button to my theme? ==
+= How do I add a login/logout button to my theme? =
 
 ## WildApricot  login/logout button
 By default, the primary menu will have the login/logout link added automatically by WAP. You can configure specify which WordPress menu(s) you would like to add the "single signon" login/logout button to by selecting other menus you have in your WordPress site. You can find this setting in **WildApricot Press > Settings** under the **Content Restriction Options** tab.
@@ -95,13 +96,18 @@ By default, the primary menu will have the login/logout link added automatically
 
 ## Setting Membership Status Restrictions
 
-To set which membership status can access restricted pages and posts, navigate to WildApricot Press and select the !["Content Restriction Options" tab](https://user-images.githubusercontent.com/458134/131911687-00e74697-c1c7-4bf4-83f4-423e2eee2cce.png").
+To set which membership status can access restricted pages and posts, navigate to WildApricot Press and select the "Content Restriction Options" tab.
 
-Set the ![membership statuses](https://user-images.githubusercontent.com/8737691/129658641-7b02705b-fa62-4541-b76f-31462a127c4c.png) that will be allowed to view restricted posts or pages.
+!["Content Restriction Options" tab](https://user-images.githubusercontent.com/458134/131911687-00e74697-c1c7-4bf4-83f4-423e2eee2cce.png).
+
+Set the membership statuses that will be allowed to view restricted posts or pages.
+
+![membership statuses](https://user-images.githubusercontent.com/8737691/129658641-7b02705b-fa62-4541-b76f-31462a127c4c.png) 
 
 If no boxes are checked, then all members (regardless of status) will be able to view resticted posts.
 
-== How do I restrict which membership levels and membership groups can see a page or post? ==
+= How do I restrict which membership levels and membership groups can see a page or post? =
+
 ## Page or Post Access Control
 
 On every page or post, you can select which WildApricot membership levels and membership groups can view the content of the page. Access control is set by the box on the right side of the page or post's "Edit" screen.
@@ -116,11 +122,13 @@ Access to posts and pages based on membership levels and membership groups are s
 
 By default none of the membership levels or membership groups are checked, and as a result a page or post is not restricted. Unrestricted, published pages can be seen by all visitors, both logged-in and logged-out of the WordPress site.
 
-== How do I set which messages show when access is restricted to a page or post? ==
+= How do I set which messages show when access is restricted to a page or post? =
 
 ## Set Global Restriction Message
 
-By default restricted pages show the Global Restriction Message. A ![default message](https://user-images.githubusercontent.com/8737691/129612116-5666ef23-8c5c-4ead-b60a-9e26b78a8e5c.png) is shown to visitors who are trying to access pages which they do not have access to.
+By default restricted pages show the Global Restriction Message. This message is shown to visitors who are trying to access pages which they do not have access to.
+
+![default restriction message](https://user-images.githubusercontent.com/8737691/129612116-5666ef23-8c5c-4ead-b60a-9e26b78a8e5c.png)
 
 ### Per Page and Post Settings
 Access to pages and posts can be set with WAP, allowing members to have access to  various posts and pages. These restrictions are set on the "Edit" screen of each post or page. The content editor can specify the restrictions as you write content.
@@ -133,7 +141,7 @@ Each page and post has a restricted message in a box called "Individual Restrict
 
 IMPORTANT: To save the custom restricted message, make sure to save or publish the page or post.
 
-== How do I configure which WildApricot common and membership fields are copied into the WordPress database? ==
+= How do I configure which WildApricot common and membership fields are copied into the WordPress database? =
 
 ## Data Synchronization
 
@@ -151,7 +159,7 @@ Now, the extra fields can be seen in each user's WordPress profile after they lo
 
 These fields are now shared for WordPress and for other plugins, which extends the WildApricot database to every part of the WordPress plugin ecosystem. This is very powerful because now other plugins know which WildApricot user is in WordPress.
 
-== How often is contact and member user data synchronized? ==
+= How often is contact and member user data synchronized? =
 
 ## WildApricot contact and member data synchronization
 
@@ -161,7 +169,7 @@ On each user login and daily user refresh, several WildApricot member fields are
 
 ![PS: Can you guess who this member might be? :)](https://user-images.githubusercontent.com/8737691/129620414-f7f3042a-1063-4bbf-b0b6-a3c47084980a.png)
 
-== When I delete the plugin, will there be a way to "clean" the WordPress database? ==
+= When I delete the plugin, will there be a way to "clean" the WordPress database? =
 
 ## Plugin Options
 
