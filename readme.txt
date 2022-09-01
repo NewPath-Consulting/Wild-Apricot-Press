@@ -40,7 +40,7 @@ Please visit the [NewPath WildApricot Press website](https://newpathconsulting.c
 == Frequently Asked Questions ==
 
 = What is the difference between NewPath WildApricot Press and Wild Apricot Login plugin? =
-There are many differences including full support and maintenance, regular synchronization of data for logged in users, ability to sync all system, common and membership fields. Most importantly NewPath WildApricot Press has add-on architecture to enable more functionality to be made available over time via add-on plugins and blocks.
+NewPath WildApricot Press is developed and maintained by NewPath Consulting. Wild Apricot Login is developed by Personify several years ago and unfortunately has not been improved or expanded in several years. NewPath WildApricot Press includes full support and maintenance, regular synchronization of data for logged in users, ability to sync all system, common and membership fields. Most importantly NewPath WildApricot Press has add-on architecture to enable more functionality to be made available over time via add-on plugins and blocks.
 
 = Does it work with my theme? =
 It should. We make every effort to provide standard plugin code, but some themes may break with the plugin. Please let us know on our [support forum](https://talk.newpathconsulting.com) if you encounter any issues. We also recommend the [GeneratePress theme](https://generatepress.com) library for optimal design.
@@ -104,7 +104,7 @@ If no boxes are checked, then all members (regardless of status) will be able to
 == How do I restrict which membership levels and membership groups can see a page or post? ==
 ## Page or Post Access Control
 
-On every page or post, you can select which Wild Apricot membership levels and membership groups can view the content of the page. Access control is set by the box on the right side of the page or post's "Edit" screen.
+On every page or post, you can select which WildApricot membership levels and membership groups can view the content of the page. Access control is set by the box on the right side of the page or post's "Edit" screen.
 
 ![Page or Post Access control](https://user-images.githubusercontent.com/8737691/129618750-3ed1f127-f084-452a-b9a4-296718424062.png)
 
