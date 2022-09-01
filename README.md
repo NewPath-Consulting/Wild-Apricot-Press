@@ -18,29 +18,22 @@ NewPath WildApricot Press and our custom theme library enables you to build and 
 
 # Administrator's Guide
 
-## Installing and Configuring the WAP Plugin
+## Configuring NewPath WildApricot Press
 
-On the WordPress admin dashboard, using the left menu, navigate to to Plugins > Add New. Upload the plugin compressed archive (zip) and ensure the plugin is activated.
-
-To configure NewPath WildApricot Press, the WildApricot API settings must be configured.
+To configure NewPath WildApricot Press, the WildApricot API settings must be configured and the license key must be added for the licensed WildApricot site. Without both configuration settings the plugin and the related add-ons will not function. You can obtain a license key on the [NewPath WildApricot Press website](https://newpathconsulting.com/wap).
 
 ### Create an Authorized Application in WildApricot
 
-NewPath WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a "Server application" authorized application](https://gethelp.wildapricot.com/en/articles/199). You should provide "full access" to the authorized application to enable NewPath WildApricot Press to read and write data into WildApricot.
+NewPath WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a "Server application" authorized application](https://gethelp.wildapricot.com/en/articles/199). You must  provide "full access" to the authorized application to enable NewPath WildApricot Press to read and write data into WildApricot.
 
-Creating Server application in WildApricot:
+![Creating Server application in WildApricot](https://user-images.githubusercontent.com/458134/184677576-aad24cdd-c37a-4827-b54a-fc139ee95a1d.png)
 
-<img width="292" alt="authorized application creation screen" src="https://user-images.githubusercontent.com/458134/184677576-aad24cdd-c37a-4827-b54a-fc139ee95a1d.png">
+![Granting Full access to Server application](https://user-images.githubusercontent.com/458134/184677619-e3f5b2f9-2b9f-4b73-908b-7caefe25968c.png)
 
-Granting Full access to Server application:
-
-<img width="313" alt="granting full access to authorized application" src="https://user-images.githubusercontent.com/458134/184677619-e3f5b2f9-2b9f-4b73-908b-7caefe25968c.png">
-
- With your API key, client ID and client secret, navigate to WAP Settings > Authorization, and follow the instructions there to apply the WildApricot keys.
 
 ### Add API keys into WAP
 
-Once you have created an authorized application in WildApricot, enter the API key, client ID and client secret into WAP. You can copy and paste these "keys" into the configuration screen in the WAP configuration.
+Once you have created an authorized application in WildApricot, navigate to WildApricot Press > Authorization and enter the API key, client ID and client secret into WAP. You can copy and paste these "keys" into the configuration screen in the WAP configuration.
 
 After entering these credentials and pressing the "Save Changes" button, a green success message will display the WildApricot website that you have connected to! You can ensure that this matches your WildApricot URL. 
 
@@ -50,23 +43,21 @@ After entering these credentials and pressing the "Save Changes" button, a green
 If you do not see a green success message, then please make sure that you have the correct WildApricot authorized application credentials (without any extra spaces or gremlin characters) and re-enter them.
 
 
-
 ### Licensing WAP
 
-The NewPAth WildApricot Press plugin license is available for [purchase online](https://newpathconsulting.com/wap) for a small annual license. Your license includes 2 free add-ons, the member directory and iframe widget blocks. Future commercials WAP add-ons that generate revenue for your organization will have a separate license fee.
+The NewPath WildApricot Press plugin license is available on [the NewPath WildApricot Press website](https://newpathconsulting.com/wap). Your license includes 2 free add-ons, the member directory and iframe widget blocks. Future commercials WAP add-ons that generate revenue for your organization will have a separate license fee.
 
-Enter your WAP license key to unlock WAP! This can be done on the "Licensing" section under WAP Settings > Licensing.
+To activate the plugin, wnter your license key in WildApricot Press > Licensing.
 
-<img width="746" alt="wap licensing" src="https://user-images.githubusercontent.com/458134/131911156-e8aab427-9a31-46f4-9e20-3cb5a3e45ebe.png">
+![WildApricot Press > Licensing](https://user-images.githubusercontent.com/458134/131911156-e8aab427-9a31-46f4-9e20-3cb5a3e45ebe.png) screen.
 
 Once you enter your license key and click "Save", you're good to go!
 
-
-<img width="198" alt="wap license saved" src="https://user-images.githubusercontent.com/458134/131911442-01c4c614-2ffa-49f9-8ce9-049d322c5e51.png">
+![Successful License Key Added](https://user-images.githubusercontent.com/458134/131911442-01c4c614-2ffa-49f9-8ce9-049d322c5e51.png)
 
 Once activated, a login/logout button will appear on your configured menu(s) automatically on your WordPress site. The screenshot below illustrates an example of the "Log Out" button being added to the main menu of the website. In this case, the "Log Out" button can be seen in the red box in the top right corner. 
 
-<img width="1427" alt="Screen Shot 2021-08-16 at 2 37 56 PM" src="https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png">
+![Login/Logout Link in Menu Bar](https://user-images.githubusercontent.com/8737691/129614718-eb525e0e-026c-4223-9058-64f3ff651bde.png)
 
 When WildApricot contacts or members click the "Log In" button, they are directed to log in with their WildApricot username (email) and password. Once completed, a WordPress user account is created for them (if it does not exist already), and their WildApricot data is synchronized to the WordPress account. If the user already has a WordPress account on the WordPress site, then the contact or member's WildApricot information is synced with the existing WordPress account.
 
