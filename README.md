@@ -44,6 +44,7 @@ Please visit the [NewPath WildApricot Press website](https://newpathconsulting.c
 == Frequently Asked Questions ==
 
 = What is the difference between NewPath WildApricot Press and Wild Apricot Login plugin? =
+
 [NewPath WildApricot Press website](https://newpathconsulting.com/wap/) is developed and maintained by [NewPath Consulting](https://newpathconsulting.com). Wild Apricot Login was released and developed by Personify several years ago, but unfortunately the plugin has not been improved or expanded in several years. So NewPath rewrote the functionality, from scratch and eliminated many nasty bugs.
 
 NewPath WildApricot Press includes full support and maintenance, regular synchronization of data for logged in users, ability to sync all system, common and membership fields. Most importantly NewPath WildApricot Press has add-on architecture to enable more functionality to be made available over time via add-on plugins and blocks.
