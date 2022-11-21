@@ -9,7 +9,8 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/wap-exception.php';
 
 // for checking license key expiration dates
-use \DateTime; 
+use \DateTime;
+use WP_Block_Type_Registry;
 
 /**
  * Addon class
@@ -442,14 +443,19 @@ class Addon {
      * @return void
      */
     public static function disable_addon($slug) {
-        if (self::instance()::get_license_check_option($slug) != self::LICENSE_STATUS_NOT_ENTERED) {
-            self::instance()::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
+        if (self::get_license_check_option($slug) != self::LICENSE_STATUS_NOT_ENTERED) {
+            self::update_license_check_option($slug, self::LICENSE_STATUS_NOT_ENTERED);
         }
 
-        $blocks = self::instance()::get_addons()[$slug]['blocks'];
+        $blocks = self::get_addons()[$slug]['blocks'];
 
+        // retrieve block registry instance to check if blocks are registered
+        $registry = WP_Block_Type_Registry::get_instance();
         foreach ($blocks as $block) {
-            unregister_block_type($block);
+            // if block was registered, unregister it
+            if ($registry->get_registered($block)) {
+                unregister_block_type($block);
+            }
         }
     }
 
