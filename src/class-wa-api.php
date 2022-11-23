@@ -241,6 +241,9 @@ class WA_API {
 		$custom_fields = array();
 		if (!empty($custom_field_response)) {
 			foreach ($custom_field_response as $field_response) {
+				// ignore section dividers
+				if ($field_response['Type'] == 'SectionDivider') continue;
+				
 				$field_name = $field_response['FieldName'];
 				$field_id = $field_response['SystemCode'];
 				// Ensure that we are not displaying default options
