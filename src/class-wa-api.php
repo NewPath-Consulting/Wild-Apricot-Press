@@ -565,7 +565,33 @@ class WA_API {
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
-		$data = self::response_to_data($response);
+	/**
+	 * Retrieves number of contacts from Wild Apricot.
+	 *
+	 * @return int number of contacts
+	 */
+	public function get_contacts_count() {
+
+		$count = get_option(WA_Integration::WA_CONTACTS_COUNT_KEY);
+		if ($count) return $count;
+
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
+			$this->wa_user_id . '/contacts?%24async=false&%24count=true';
+
+		$args = $this->request_data_args();
+		$response = wp_remote_get($url, $args);
+
+		try {
+			$data = self::response_to_data($response);
+			$count = $data['Count'];
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the number of Wild Apricot contacts.');
+		}
+
+		update_option(WA_Integration::WA_CONTACTS_COUNT_KEY, $count);
+
+		return $count;
+	}
 		return $data;
 	}
 }
