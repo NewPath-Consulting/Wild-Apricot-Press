@@ -198,8 +198,13 @@ class WA_API {
 		$args = $this->request_data_args();
 		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id;
 		$response_api = wp_remote_get($url, $args);
-		$details_response = self::response_to_data($response_api);
 
+		try {
+			$details_response = self::response_to_data($response_api);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot account URL and ID.');
+		}
+		
 		// Extract values
 		$wild_apricot_values = array();
 		if (array_key_exists('Id', $details_response)) {
@@ -227,7 +232,13 @@ class WA_API {
 		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
 			$this->wa_user_id . '/contactfields?showSectionDividers=true';
 		$response_api = wp_remote_get($url, $args);
-		$custom_field_response = self::response_to_data($response_api);
+
+		try {
+			$custom_field_response = self::response_to_data($response_api);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot custom fields.');
+		}
+		
 
 		// Loop through custom fields and get field names with IDs
 		// Array that holds default fields
@@ -297,7 +308,12 @@ class WA_API {
 		$all_contacts_request = wp_remote_get($url, $args);
 		// Ensure that responses are not empty
 		if (empty($all_contacts_request)) return;
-		$all_contacts = self::response_to_data($all_contacts_request);
+		try {
+			$all_contacts = self::response_to_data($all_contacts_request);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the contacts from Wild Apricot.');
+		}
+		
 		if (empty($all_contacts)) return;
 		// Convert contacts object to an array
 		$all_contacts = (array) $all_contacts;
@@ -414,7 +430,13 @@ class WA_API {
 			'body' => 'grant_type=refresh_token&refresh_token=' . $refresh_token
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-		$data = self::response_to_data($response);
+
+		try {
+			$data = self::response_to_data($response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot API access token.');
+		}
+		
 		return $data;
 	}
 
@@ -428,7 +450,13 @@ class WA_API {
 		// Get user's contact ID
         $args = $this->request_data_args();
 		$contact_info = wp_remote_get(self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
-		$contact_info = self::response_to_data($contact_info);
+
+		try {
+			$contact_info = self::response_to_data($contact_info);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving Wild Apricot contact info.');
+		} 
+		
 		// Get if user is administrator or not
 		$is_administrator = $contact_info['IsAccountAdministrator'];
 		// Perform API call based on if user is administrator or not
@@ -440,7 +468,13 @@ class WA_API {
 			$user_data_api = wp_remote_get('https://api.wildapricot.org/publicview/' . self::MEMBER_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
 		}
 		// Extract body
-		$full_info = self::response_to_data($user_data_api);
+
+		try {
+			$full_info = self::response_to_data($user_data_api);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retriving Wild Apricot user info.');
+		}
+		
 		// Get all information for current user
         return $full_info;
     }
@@ -460,8 +494,12 @@ class WA_API {
         $membership_levels_response = wp_remote_get($url, $args);
 
         // Return membership levels
-        $membership_levels_response = self::response_to_data($membership_levels_response);
-
+		try {
+			$membership_levels_response = self::response_to_data($membership_levels_response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot membership levels.');
+		}
+        
 		// Extract membership levels into array
 		$membership_levels = array();
 		if (!empty($membership_levels_response)) {
