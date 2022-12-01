@@ -301,19 +301,9 @@ class WA_API {
 			}
 			$i++;
 		}
-		// Make API request
-		$args = $this->request_data_args();
-		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
-			$this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
-		$all_contacts_request = wp_remote_get($url, $args);
-		// Ensure that responses are not empty
-		if (empty($all_contacts_request)) return;
-		try {
-			$all_contacts = self::response_to_data($all_contacts_request);
-		} catch (API_Exception $e) {
-			throw new API_Exception('There was an error retrieving the contacts from Wild Apricot.');
-		}
 		
+		$all_contacts = $this->retrieve_contacts_list($filter_string);
+
 		if (empty($all_contacts)) return;
 		// Convert contacts object to an array
 		$all_contacts = (array) $all_contacts;
@@ -564,6 +554,57 @@ class WA_API {
 			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+
+	/**
+	 * Retrieves list of contacts from Wild Apricot.
+	 *
+	 * @param string $query additional query to append to the request url
+	 * @param boolean $block whether a single block is requested or not, used
+	 * for REST API requests. Default false. 
+	 * @param integer $skip skip query for request url. Default 0.
+	 * @param integer $top top query for request url. Default 500.
+	 * @return array list of contacts
+	 */
+	public function retrieve_contacts_list($query, $block = false, $skip = 0, $top = 500) {
+		$base_url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
+		$this->wa_user_id . '/contacts?%24async=false&%24' . $query;
+
+		// return single block
+		if ($block) {
+			return $this->request_contact_block($base_url, $skip, $top);
+		}
+
+		$all_contacts = array(
+			'Contacts' => array()
+		);
+		$count = $this->get_contacts_count();
+		$done = false;
+
+		// retrieve in blocks of 500
+		while (!$done) {
+			Log::wap_log_debug('skip: ' . $skip . ' top: ' . $top);
+
+			// if there are more than 500 entires left, include top query
+			if (($count - $skip) <= $top) {
+				$top = 0;
+				$done = true;
+			}
+
+			// make API request and add block to list of all contacts
+			$contacts_block = $this->request_contact_block($base_url, $skip, $top);
+			// Log::wap_log_debug($contacts_block);
+			$all_contacts['Contacts'] = array_merge(
+				$all_contacts['Contacts'],
+				$contacts_block['Contacts']
+			);
+
+			// increment by block size
+			$skip += $top;
+		}
+
+		return $all_contacts;
+
+	}
 
 	/**
 	 * Retrieves number of contacts from Wild Apricot.
