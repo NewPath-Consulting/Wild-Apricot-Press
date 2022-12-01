@@ -177,6 +177,10 @@ In Plugin Options tab you can turn on the "Print log messages to log file" to st
 
 == Changelog ==
 
+= Version 1.0.2 - December 1, 2022 =
+- updated licensing message
+- improved performance of retrieving and sync'ing thousands of contacts
+
 = Version 1.0.1 - August 24, 2022 =
 - plugin now removes any saved options and synchronized user meta data when switching WildApricot sites via new API keys and license key swap
 - added options in Plugin Options to delete WildApricot meta data and sync'd users during plugin deletion
