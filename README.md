@@ -4,7 +4,7 @@ Tags: wildapricot, wild apricot, membership, event management, events, membershi
 Requires at least: 5.0
 Tested up to: 6.0
 Requires PHP: 7.4
-Stable Tag: 1.0.1
+Stable Tag: 1.0.2
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
