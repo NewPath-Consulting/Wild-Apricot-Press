@@ -592,6 +592,35 @@ class WA_API {
 
 		return $count;
 	}
+
+	/**
+	 * Requests a single block of contacts from Wild Apricot.
+	 *
+	 * @param string $url base url to which to make the request
+	 * @param int $skip the number of contacts to skip from the beginning
+	 * @param int $top the number of contacts to return
+	 * @return array block of contacts
+	 */
+	private function request_contact_block($url, $skip, $top) {
+
+		if ($skip) {
+			$url .= '&$skip=' . $skip; 
+		 }
+
+		if ($top) {
+			$url .= '&$top=' . $top;
+		}
+
+		$args = $this->request_data_args();
+
+		$response = wp_remote_get($url, $args);
+
+		try {
+			$data = self::response_to_data($response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving Wild Apricot contacts.');
+		}
+
 		return $data;
 	}
 }
