@@ -565,7 +565,7 @@ class WA_API {
 	 * @param integer $top top query for request url. Default 500.
 	 * @return array list of contacts
 	 */
-	public function retrieve_contacts_list($query, $block = false, $skip = 0, $top = 500) {
+	public function retrieve_contacts_list($query, $block = false, $skip = 0, $top = 200) {
 		$base_url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
 		$this->wa_user_id . '/contacts?%24async=false&%24' . $query;
 
