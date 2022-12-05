@@ -1402,6 +1402,8 @@ class WA_Auth_Settings {
             WA_Integration::remove_wa_users();
             delete_option(WA_Integration::LIST_OF_CHECKED_FIELDS);
             delete_option(WA_Integration::ARRAY_OF_RESTRICTED_POSTS);
+
+            delete_option(WA_Integration::WA_CONTACTS_COUNT_KEY);
             // delete post meta added by the plugin
             delete_post_meta_by_key(WA_Integration::RESTRICTED_GROUPS);
             delete_post_meta_by_key(WA_Integration::RESTRICTED_LEVELS);
