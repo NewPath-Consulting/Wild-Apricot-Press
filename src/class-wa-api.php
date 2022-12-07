@@ -555,6 +555,15 @@ class WA_API {
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
+		try {
+			$data = self::response_to_data($response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error authorizing a Wild Apricot user\'s credentials.');
+		} 
+		
+		return $data;
+	}
+
 	/**
 	 * Retrieves list of contacts from Wild Apricot.
 	 *
@@ -582,8 +591,6 @@ class WA_API {
 
 		// retrieve in blocks of 500
 		while (!$done) {
-			Log::wap_log_debug('skip: ' . $skip . ' top: ' . $top);
-
 			// if there are more than 500 entires left, include top query
 			if (($count - $skip) <= $top) {
 				$top = 0;
