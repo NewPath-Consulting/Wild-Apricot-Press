@@ -277,7 +277,7 @@ class WA_API {
 		$wa_users = get_users($users_args);
 
 		// Loop through each WP_User and create filter
-		$filter_string = 'filter=';
+		$filter_string = 'filter=(';
 		$i = 0;
 		// Create array that stores the WildApricot ID associated with the WordPress ID
 		$user_emails_array = array();
@@ -296,11 +296,18 @@ class WA_API {
 			$user_emails_array[$site_user_id] = $user_email;
 			$filter_string .= 'ID%20eq%20' . $wa_synced_id;
 			// Combine IDs with OR
-			if (!($i == count($wa_users) - 1)) { // not last element
+			if ($i < count($wa_users) - 1) { 
+				// not last element
 				$filter_string .= '%20OR%20';
+			} else {
+				$filter_string .= ')%20AND%20';
 			}
 			$i++;
 		}
+
+		// only retrieve contacts updated yesterday
+		$yesterday = $this->get_yesterdays_date();
+		$filter_string .= '\'Profile last updated\'%20gt%20' . $yesterday;
 		
 		$all_contacts = $this->retrieve_contacts_list($filter_string);
 
