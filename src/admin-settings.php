@@ -1617,7 +1617,6 @@ class License_Settings {
     public function print_settings_info() {
         $link_address = "https://newpathconsulting.com/wap/";
         print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='" . esc_url($link_address) . "' target='_blank' rel='noopener noreferrer'>here</a> to get a license key. ";
-        print "The license key for <b>WildApricot Press</b> is 100% free, and we never share your information with any third party.";
     }
 
     /**
