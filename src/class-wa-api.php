@@ -671,4 +671,13 @@ class WA_API {
 
 		return $data;
 	}
+
+	/**
+	 * Returns yesterday's date in the format yyyy-mm-dd.
+	 *
+	 * @return string
+	 */
+	private function get_yesterdays_date() {
+		return date('Y-m-d',strtotime("-1 days"));
+	}
 }
