@@ -165,3 +165,12 @@ Hook name                     | Hook function
 
 To see all hooks used by WAP, refer to `WA_Integration` in `class-wa-integration.php`.
 
+## WAP's cron jobs
+WAP has 3 custom cron jobs, primarily for refreshing user data. The table below shows each cron job, the hook that activates it, the function that is run for each instance, and how often the cron job runs.
+
+
+Hook | Function | Cron job | Frequency
+------------|------------|------------|------------
+`wawp_cron_refresh_user_hook` | `WA_Integration->refresh_user_info()` | Refreshes WA user info (only profiles updated in the last 24h) | Daily
+`wawp_cron_refresh_license_check` | `WA_Integration->check_updated_credentials()` | Checks that WA API credentials and license keys are valid | Every user refresh
+`wawp_cron_refresh_memberships_hook` | `Admin_Settings->cron_update_wa_memberships()` | Refreshes WA membership groups and levels | Daily
