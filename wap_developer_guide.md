@@ -270,3 +270,34 @@ If the user has previously deactivated the plugin and then activates the plugin 
     * If valid, then the WAP functionality is activated again
       * `wawp_wal_credentials_obtained` hook is run
       * Sets up cron events again
+
+## Debugging
+
+### WAP debugging
+As previously mentioned in the `Log` class section, the custom WAP log functions are used for debugging and logging messages to the log file in `wp-content/wapdebug.log`. 
+
+Debug messages can be logged with `wap_log_debug()`.
+
+**WAP logging will work regardless of if WP_DEBUG is enabled or not.**
+
+<mark>***Make sure the logfile toggle in WildApricot Press > Settings > Plugin Options is turned ON.***</mark>
+
+The custom log file is useful for debugging website errors both during development and with users.
+
+The other options for debugging in WordPress are as follows.
+* Default logfile `debug.log`
+* Query Monitor plugin
+
+### Default logfile
+To log messages to the default logfile, `wp-content/debug.log`, `WP_DEBUG` and `WP_DEBUG_LOG` must be enabled in `wp-config.php`.
+
+Messages can be logged to this file using the `error_log()` function.
+
+Generally, use of the default logfile is **not recommended** since it gets spammed with PHP errors from core and other plugins, so it is difficult to find WAP errors. 
+
+However, it is useful if WAP or WordPress experiences a critical error.
+
+### Query Monitor
+[Query Monitor](https://wordpress.org/plugins/query-monitor/) is a developer tools panel plugin. It displays information such as hooks in use, AJAX calls, memory usage, database queries, and much more. It is very useful for accessing that kind of information that you can’t necessarily get with a log message.
+
+It is possible to [log messages](https://querymonitor.com/docs/logging-variables/) with QM, but it doesn’t always work depending on where the message is being logged. For example, if you try to log a message with QM inside certain actions, it won’t display on the panel since the action may run before the panel is rendered.
