@@ -132,3 +132,11 @@ Exception type         | Functions
 `API_Exception`        | `WA_API::response_to_data()`
 `Encryption_Exception` | <ul><li>`Data_Encryption->encrypt()`</li><li>`Data_Encryption->get_default_key()`</li><li>`Data_Encryption->get_default_salt()`</li></ul>
 `Decryption_Exception` | `Data_Encryption->decrypt()`
+
+To sum it up, exceptions could be thrown at many points in the plugin: connecting to the WA API or accessing or inserting any sensitive user data in the options table. 
+
+Generally, these exceptions are thrown for reasons out of our control. An `API_Exception` could be thrown if the WildApricot API was down. An `Encryption_Exception` could be thrown if OpenSSL wasn’t installed. However, since these errors interrupt plugin functionality, it cannot continue to function once the errors happen. 
+
+The general procedure followed when handling exceptions is to catch them as high up on the call stack as possible, with a few exceptions to this rule. Many of these exceptions are caught in top-level functions, like any function hooked to a cron job or other action. 
+
+When exceptions are caught, they are logged with `wap_log_error` as a **fatal error** and plugin functionality is disabled. Read more about disabling the plugin in the **Plugin states** section. 
