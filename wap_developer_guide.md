@@ -140,3 +140,28 @@ Generally, these exceptions are thrown for reasons out of our control. An `API_E
 The general procedure followed when handling exceptions is to catch them as high up on the call stack as possible, with a few exceptions to this rule. Many of these exceptions are caught in top-level functions, like any function hooked to a cron job or other action. 
 
 When exceptions are caught, they are logged with `wap_log_error` as a **fatal error** and plugin functionality is disabled. Read more about disabling the plugin in the **Plugin states** section. 
+
+## Custom stylesheets and scripts
+### `css/wawp-styles-admin.css`
+Contains the CSS styling for the menus on the admin page (i.e. the WAP Settings).
+
+### `css/wawp-styles-shortcode.css` 
+Contains the CSS styling for front-end WAP interfaces; most notably, this file contains the CSS for the shortcode that renders the WAP login page.
+
+### `js/script.js`
+Controls the functionality for the check-all boxes for the WA restriction membership levels and groups in the post/page editor.
+
+## Custom WordPress hooks
+The WAP plugin uses several custom WordPress hooks for controlling its operation; the custom hooks are defined below. The highlighted hooks are hooks for custom cron jobs, which are described on the next page.
+
+Hook name                     | Hook function
+----------------------------- | -----------------------------
+`wawp_cron_refresh_user_hook` | <ul><li>Runs the Cron Job that refreshes and resyncs the users’ WildApricot data with their WordPress profiles.</li><li>Runs every 24 hours</li></ul>
+`wawp_cron_refresh_license_check` | <ul><li>Runs the Cron Job that checks if the license key(s) are still valid </li><li>Runs every 24 hours</li></ul>
+`wawp_cron_refresh_memberships_hook` | <ul><li>Runs the Cron Job that refreshes and resyncs the membership levels and groups from WildApricot to WordPress</li><li>Runs every 24 hours</li></ul>
+`wawp_wal_credentials_obtained` | <ul><li>Runs when the WildApricot credentials and license key(s) have been entered and verified that they are valid</li><li>Inserts the WAP login page and the “Log In”/”Log Out” button to the menu</li><li>Essentially kickstarts the WAP functionality to the actual front-end of the website so that the user’s website may use the WAP functionality</li></ul>
+`remove_wa_integration` | <ul><li>Replaces WA user login page content with the appropriate message: "access denied" or "fatal error encountered"</li><li>Runs when WAP functionality is disabled.</li></ul>
+`disable_plugin` | <ul><li>Runs when WAP functionality must be disabled for invalid credentials or a fatal erorr</li><li>See **Plugin states** for more about disabling the plugin</li></ul>
+
+To see all hooks used by WAP, refer to `WA_Integration` in `class-wa-integration.php`.
+
