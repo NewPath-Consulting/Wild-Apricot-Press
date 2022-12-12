@@ -174,3 +174,60 @@ Hook | Function | Cron job | Frequency
 `wawp_cron_refresh_user_hook` | `WA_Integration->refresh_user_info()` | Refreshes WA user info (only profiles updated in the last 24h) | Daily
 `wawp_cron_refresh_license_check` | `WA_Integration->check_updated_credentials()` | Checks that WA API credentials and license keys are valid | Every user refresh
 `wawp_cron_refresh_memberships_hook` | `Admin_Settings->cron_update_wa_memberships()` | Refreshes WA membership groups and levels | Daily
+
+## How WAP works (from a developer's POV)
+### Installation
+1. User downloads the WAP plugin (from the NewPath website or the WordPress plugin store, etc.) as Wild-Apricot-Press.zip
+2. User uploads plugin to their WordPress site
+3. Plugin is activated
+4. Activation code is run → located in `class-activator.php`
+5. `Activator` checks if there’s already valid entered WA auth creds and license key
+    * If so, `wawp_wal_credentials_obtained` will run and the WA user login page will be created
+    * If not, nothing happens and the user is unable to use the plugin functionality (i.e. login page and post restriction)
+6. WildApricot Press menu and settings pages are created and added to the WordPress dashboard
+    * The code for the settings pages is located in `class-admin-settings.php`
+7. If WA credentials/license keys are not found, admin notices are shown to remind the user to enter their WildApricot credentials and license key(s).
+8. User enters their WildApricot credentials (API Key, Client ID, Client Secret) under WildApricot Press > Authorization
+    * Inputs are sanitized
+    * Credentials are checked with the WildApricot API
+        * If valid, then a green message saying “Valid credentials” is displayed, and the admin notice to input WildApricot credentials is removed. Encrypted WildApricot credentials are saved in the options table.
+        * Else, a red message indicating invalid credentials is shown
+9. User enters their license key(s) under WildApricot Press > Licensing
+    * Inputs are sanitized
+    * License keys are checked with the Make scenario to see if they are correctly registered with the current WordPress site and WildApricot site and WildApricot user
+        * If valid, then the WAP plugin is fully activated to the WordPress site, and the custom WordPress hook “wawp_wal_credentials_obtained” is run. User is presented with a success message. Encrypted license keys are saved in the options table.
+        * If invalid, a message is shown to inform the user of their invalid license(s)
+10. User selects which menu(s) they would like the “Log In”/”Log Out” button to appear on; this is also under WildApricot Press > Settings
+    * If there is no menu selected, the login button is added to the primary menu by default. 
+    * If user selected a menu location and changes to a theme which doesn’t have the same menu location, the new theme’s primary menu is used by default.
+11. Following a successful step #8 and #9 (that is, both valid WildApricot credentials and valid license(s) have been entered), then the “Log In” button is added to the specified menu.
+12. If it does not already exist, then the WAP login page is programmatically created. If this page already exists, then the login form content is restored. The “Log In” button is linked to this page.
+
+### Post restriction
+All the functionality related to post restriction is contained in `WA_Integration`. 
+1. Post restriction starts with the post editor. There will be two custom meta boxes WAP will display on the editor: WildApricot Access Control and Individual Restriction Message. Meta boxes are created in `WA_Integration->post_access_add_post_meta_boxes()`.
+    * WildApricot Access Control contains checkboxes with every user group and level associated with the admin’s WA account. 
+    * The Individual Restriction Message box can be used to enter a custom restriction message for the current post only.
+2. The user can check off levels and groups to restrict and optionally enter a custom message.
+3. Once the user saves the post, the new post metadata is saved in `WA_Integration->post_access_load_restriction()`.
+4. The user should see the correct post output based on their group/level and the restricted group(s)/level(s).
+    * If the user’s group or level is checked in the meta, they should see the post content.
+    * If it isn’t, they should see a restriction message.
+        * Global message if there was no individual message entered.
+
+### WildApricot user login
+WA user login is where users can connect their WildApricot accounts to WordPress.
+The user login form is controlled by the shortcode `wawp_custom_login_form`. All functionality related to WA login is contained in `WA_Integration`. 
+#### Admin side
+1. The user login page is created when the plugin is activated with valid credentials and a valid license key.
+2. The link menu location can be configured under WildApricot Press > Settings > Content Restriction Options > Login/Logout Button Menu Location. The link will be in the primary menu by default.   
+3. The user login page can be found with the custom URL `wawp-wild-apricot-login`. 
+4. WildApricot users that log in through this form can be found in the Users panel.
+5. WildApricot user data can be found under "WildApricot Membership Details". 
+    *  This includes the user's account ID, membership level, membership groups, status, and organization.
+    * Syncing additional custom fields can be configured under WildApricot Press > Settings > Synchronizaton Options
+#### User side
+1. If the plugin is enabled, the login page link will appear on the menu designated by the site admin.
+2. Users can login with their WA email and password for the organization connected to the plugin.
+3. After logging in, users are redirected to the previous page they were on before the login page.
+4. Users can now access restricted posts that include their membership group(s)/level(s).
