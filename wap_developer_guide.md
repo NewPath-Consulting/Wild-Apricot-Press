@@ -231,3 +231,42 @@ The user login form is controlled by the shortcode `wawp_custom_login_form`. All
 2. Users can login with their WA email and password for the organization connected to the plugin.
 3. After logging in, users are redirected to the previous page they were on before the login page.
 4. Users can now access restricted posts that include their membership group(s)/level(s).
+
+## Plugin states
+### Deactivation
+In the case that the WAP plugin is deactivated, the WAP functionality on the front-end of the website is disabled. 
+
+The WA login page content will be replaced with an "Access Denied" message and users will no longer be able to use post restriction functionality.
+
+WAP settings pages will also be removed.
+
+### Invalid credentials
+When the user enters invalid WA credentials/license key or valid credentials have not been entered yet, the plugin is **disabled**. 
+
+### Fatal error
+When a fatal error occurs, plugin functionality is **disabled**. An admin notice will display, notifying the user of the fatal error and what kind of error it is. 
+
+The error will also be logged in the logfile `wp-content/wapdebug.log`. 
+
+The post editor will also display this error. 
+
+Any post or page using WAP user restriction will also display a fatal error message. 
+
+Until the error is resolved, the above behavior will persist.
+
+### Disabled
+When the plugin is disabled, the user will experience the below behavior:
+* “Plugin disabled” message on posts/pages previously using WA restriction
+* Main admin settings page is blocked
+* License settings page will be blocked if WA authorization credentials are missing
+* User will see an admin notice prompting for the WA authorization credentials, license key, or both (whichever is missing/invalid) on all WAP settings pages
+* WAP meta boxes will not be present in the post editor
+* WA user login page will also display a “plugin disabled” message
+* WA user login page link in menu is removed from website menu
+
+### Upon re-activation
+If the user has previously deactivated the plugin and then activates the plugin again, the following steps run:
+1. Checks if WildApricot credentials and license key(s) are valid
+    * If valid, then the WAP functionality is activated again
+      * `wawp_wal_credentials_obtained` hook is run
+      * Sets up cron events again
