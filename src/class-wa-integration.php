@@ -50,6 +50,11 @@ class WA_Integration {
 	const WA_CLIENT_SECRET_OPT 					= 'wawp_wal_client_secret';
 
 	/**
+	 * Stores the total number of Wild Apricot contacts.
+	 */
+	const WA_CONTACTS_COUNT_KEY					= 'wawp_contacts_count';
+
+	/**
 	 * Stores user's WA user ID in the user meta data.
 	 * 
 	 * @var string

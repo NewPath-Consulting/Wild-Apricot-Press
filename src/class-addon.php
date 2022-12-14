@@ -673,13 +673,17 @@ class Addon {
         // else return the valid license key
         if (array_key_exists('license-error', $response)) return false;
 
-        if (!(array_key_exists('Products', $response) && array_key_exists('Support Level', $response) && array_key_exists('expiration date', $response))) return false;
+        if (!(
+            array_key_exists('Products', $response) &&
+            array_key_exists('Support Level', $response) && 
+            array_key_exists('expiration date', $response)
+        )) {
+            return false;
+        }
 
         // Get list of product(s) that this license is valid for
         $valid_products = $response['Products'];
-        // $support_level = $response['Support Level'];
         $exp_date = $response['expiration date'];
-
         
         // Check if the addon_slug in in the products list, has support access and is expired
         if (!in_array(CORE_SLUG, $valid_products) || self::is_expired($exp_date)) {
@@ -687,9 +691,9 @@ class Addon {
         }
 
         $name = self::get_title($slug);
-
         if (self::is_expired($exp_date)) {
             Log::wap_log_warning('License key for ' . $name . ' has expired.');
+            return false;
         }
 
         // Ensure that this license key is valid for the associated WildApricot ID and website

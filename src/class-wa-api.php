@@ -198,8 +198,13 @@ class WA_API {
 		$args = $this->request_data_args();
 		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id;
 		$response_api = wp_remote_get($url, $args);
-		$details_response = self::response_to_data($response_api);
 
+		try {
+			$details_response = self::response_to_data($response_api);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot account URL and ID.');
+		}
+		
 		// Extract values
 		$wild_apricot_values = array();
 		if (array_key_exists('Id', $details_response)) {
@@ -227,7 +232,13 @@ class WA_API {
 		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
 			$this->wa_user_id . '/contactfields?showSectionDividers=true';
 		$response_api = wp_remote_get($url, $args);
-		$custom_field_response = self::response_to_data($response_api);
+
+		try {
+			$custom_field_response = self::response_to_data($response_api);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot custom fields.');
+		}
+		
 
 		// Loop through custom fields and get field names with IDs
 		// Array that holds default fields
@@ -266,7 +277,7 @@ class WA_API {
 		$wa_users = get_users($users_args);
 
 		// Loop through each WP_User and create filter
-		$filter_string = 'filter=';
+		$filter_string = 'filter=(';
 		$i = 0;
 		// Create array that stores the WildApricot ID associated with the WordPress ID
 		$user_emails_array = array();
@@ -285,19 +296,21 @@ class WA_API {
 			$user_emails_array[$site_user_id] = $user_email;
 			$filter_string .= 'ID%20eq%20' . $wa_synced_id;
 			// Combine IDs with OR
-			if (!($i == count($wa_users) - 1)) { // not last element
+			if ($i < count($wa_users) - 1) { 
+				// not last element
 				$filter_string .= '%20OR%20';
+			} else {
+				$filter_string .= ')%20AND%20';
 			}
 			$i++;
 		}
-		// Make API request
-		$args = $this->request_data_args();
-		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
-			$this->wa_user_id . '/contacts?%24async=false&%24' . $filter_string;
-		$all_contacts_request = wp_remote_get($url, $args);
-		// Ensure that responses are not empty
-		if (empty($all_contacts_request)) return;
-		$all_contacts = self::response_to_data($all_contacts_request);
+
+		// only retrieve contacts updated yesterday
+		$yesterday = $this->get_yesterdays_date();
+		$filter_string .= '\'Profile last updated\'%20gt%20' . $yesterday;
+		
+		$all_contacts = $this->retrieve_contacts_list($filter_string);
+
 		if (empty($all_contacts)) return;
 		// Convert contacts object to an array
 		$all_contacts = (array) $all_contacts;
@@ -414,7 +427,13 @@ class WA_API {
 			'body' => 'grant_type=refresh_token&refresh_token=' . $refresh_token
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
-		$data = self::response_to_data($response);
+
+		try {
+			$data = self::response_to_data($response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot API access token.');
+		}
+		
 		return $data;
 	}
 
@@ -428,7 +447,13 @@ class WA_API {
 		// Get user's contact ID
         $args = $this->request_data_args();
 		$contact_info = wp_remote_get(self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
-		$contact_info = self::response_to_data($contact_info);
+
+		try {
+			$contact_info = self::response_to_data($contact_info);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving Wild Apricot contact info.');
+		} 
+		
 		// Get if user is administrator or not
 		$is_administrator = $contact_info['IsAccountAdministrator'];
 		// Perform API call based on if user is administrator or not
@@ -440,7 +465,13 @@ class WA_API {
 			$user_data_api = wp_remote_get('https://api.wildapricot.org/publicview/' . self::MEMBER_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
 		}
 		// Extract body
-		$full_info = self::response_to_data($user_data_api);
+
+		try {
+			$full_info = self::response_to_data($user_data_api);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retriving Wild Apricot user info.');
+		}
+		
 		// Get all information for current user
         return $full_info;
     }
@@ -460,8 +491,12 @@ class WA_API {
         $membership_levels_response = wp_remote_get($url, $args);
 
         // Return membership levels
-        $membership_levels_response = self::response_to_data($membership_levels_response);
-
+		try {
+			$membership_levels_response = self::response_to_data($membership_levels_response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the Wild Apricot membership levels.');
+		}
+        
 		// Extract membership levels into array
 		$membership_levels = array();
 		if (!empty($membership_levels_response)) {
@@ -527,7 +562,129 @@ class WA_API {
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
-		$data = self::response_to_data($response);
+		try {
+			$data = self::response_to_data($response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error authorizing a Wild Apricot user\'s credentials.');
+		} 
+		
 		return $data;
+	}
+
+	/**
+	 * Retrieves list of contacts from Wild Apricot.
+	 *
+	 * @param string $query additional query to append to the request url
+	 * @param boolean $block whether a single block is requested or not, used
+	 * for REST API requests. Default false. 
+	 * @param integer $skip skip query for request url. Default 0.
+	 * @param integer $top top query for request url. Default 500.
+	 * @return array list of contacts
+	 */
+	public function retrieve_contacts_list($query, $block = false, $skip = 0, $top = 200) {
+		$base_url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
+		$this->wa_user_id . '/contacts?%24async=false&%24' . $query;
+
+		// return single block
+		if ($block) {
+			return $this->request_contact_block($base_url, $skip, $top);
+		}
+
+		$all_contacts = array(
+			'Contacts' => array()
+		);
+		$count = $this->get_contacts_count();
+		$done = false;
+
+		// retrieve in blocks of 500
+		while (!$done) {
+			// if there are more than 500 entires left, include top query
+			if (($count - $skip) <= $top) {
+				$top = 0;
+				$done = true;
+			}
+
+			// make API request and add block to list of all contacts
+			$contacts_block = $this->request_contact_block($base_url, $skip, $top);
+			// Log::wap_log_debug($contacts_block);
+			$all_contacts['Contacts'] = array_merge(
+				$all_contacts['Contacts'],
+				$contacts_block['Contacts']
+			);
+
+			// increment by block size
+			$skip += $top;
+		}
+
+		return $all_contacts;
+
+	}
+
+	/**
+	 * Retrieves number of contacts from Wild Apricot.
+	 *
+	 * @return int number of contacts
+	 */
+	public function get_contacts_count() {
+
+		$count = get_option(WA_Integration::WA_CONTACTS_COUNT_KEY);
+		if ($count) return $count;
+
+		$url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . 
+			$this->wa_user_id . '/contacts?%24async=false&%24count=true';
+
+		$args = $this->request_data_args();
+		$response = wp_remote_get($url, $args);
+
+		try {
+			$data = self::response_to_data($response);
+			$count = $data['Count'];
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving the number of Wild Apricot contacts.');
+		}
+
+		update_option(WA_Integration::WA_CONTACTS_COUNT_KEY, $count);
+
+		return $count;
+	}
+
+	/**
+	 * Requests a single block of contacts from Wild Apricot.
+	 *
+	 * @param string $url base url to which to make the request
+	 * @param int $skip the number of contacts to skip from the beginning
+	 * @param int $top the number of contacts to return
+	 * @return array block of contacts
+	 */
+	private function request_contact_block($url, $skip, $top) {
+
+		if ($skip) {
+			$url .= '&$skip=' . $skip; 
+		 }
+
+		if ($top) {
+			$url .= '&$top=' . $top;
+		}
+
+		$args = $this->request_data_args();
+
+		$response = wp_remote_get($url, $args);
+
+		try {
+			$data = self::response_to_data($response);
+		} catch (API_Exception $e) {
+			throw new API_Exception('There was an error retrieving Wild Apricot contacts.');
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Returns yesterday's date in the format yyyy-mm-dd.
+	 *
+	 * @return string
+	 */
+	private function get_yesterdays_date() {
+		return date('Y-m-d',strtotime("-1 days"));
 	}
 }
