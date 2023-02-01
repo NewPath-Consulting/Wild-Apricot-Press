@@ -105,6 +105,22 @@ class Activator {
 		$valid_wa_creds = WA_Integration::valid_wa_credentials();
 		$valid_license = Addon::instance()::has_valid_license(CORE_SLUG);
 
+		// Check for minimun PHP version (7.4)
+		if (!defined('PHP_VERSION_ID') || PHP_VERSION_ID < 70400) {
+			// remove plugin activated notice
+			unset($_GET['activate']);
+			// unsupported PHP version message
+			self::unsupported_php_message();
+		}
+
+		// Check if required extension is installed
+		if (!extension_loaded("mbstring")||!extension_loaded("json")||!extension_loaded("filter")){
+			// remove plugin activated notice
+			unset($_GET['activate']);
+			// missing requirements message
+			self::missing_requirements_message();
+		}
+
 		// TODO: add is_post_editor to this conditional
 		// only display these messages on wawp settings page or plugin page right after plugin is activated
 		if (!$valid_wa_creds) {
@@ -125,6 +141,28 @@ class Activator {
 
 		// print out licensing messages
 		Addon::instance()::license_admin_notices();
+	}
+
+	/**
+	 * Prints admin notice informing of minimun requirements
+	 *
+	 * @return void
+	 */
+	private static function unsupported_php_message() {
+		echo '<div class="notice notice-warning"><p>';
+		echo '<strong>' . esc_html(CORE_NAME) . '</strong> requires the PHP verion 7.4 or higher.';
+		echo '</p></div>';
+	}
+
+	/**
+	 * Prints admin notice informing of minimun requirements
+	 *
+	 * @return void
+	 */
+	private static function missing_requirements_message() {
+		echo '<div class="notice notice-warning"><p>';
+		echo '<strong>' . esc_html(CORE_NAME) . '</strong> requires the <em>mbstring</em>, <em>json</em>, and <em>filter</em> extenstions to be enabled in PHP.';
+		echo '</p></div>';
 	}
 
 	/**
