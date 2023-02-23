@@ -42,9 +42,9 @@ A valid license key must
 
 NOTE: to use the developer License Key database for testing dev license keys the following line in `class-addon.php` should be edited to use the https://newpathconsulting.com/check-dev webhook:
 
-    ```php
+```php
     const HOOK_URL = 'https://newpathconsulting.com/check-dev';
-    ```
+```
 
 
 ### `Data_Encryption`
