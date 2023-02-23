@@ -157,9 +157,13 @@ These fields are now shared for WordPress and for other plugins, which extends t
 
 = How often is contact and member user data synchronized? =
 
-The contact and member data fields that have been added, modified or deleted will be synced into WordPress from WildApricot automatically on user login and every 24 hours. During each  login, the common, system and membership fields  (e.g. status and membership level) will be updated from WildApricot. So, after syncing your WordPress site with the WAP plugin, any updates made in the WildApricot contact database will be automatically sync'd into WordPress during login  as well within 24 hours.
+By default no WildApricot user data is added to the WordPress user data database *until* a contact or member logs in for the first time into the WAP-enabled WordPress site. Once a successful login occurs the WordPress user is created with a core set of information like email address, userID, first name, last name and organization as well as membership level and membership status (if the contact is a member).
 
-On each user login and daily user refresh, several WildApricot member fields are synced to the user's WordPress profile. You can view these WildApricot fields by viewing the WordPress user under "WildApricot Membership Details". The default WildApricot fields can be viewed in the screenshot below. 
+During every subseqeunt login, the WildApricot contact/member data is synchronized into the WordPress user database. Any contact and member data fields that have been updated will be synced into WordPress from WildApricot automatically as well every 24 hours for any contacts or members that have logged in.
+
+So, after connecting your WordPress site with the WAP plugin, any updates *for contacts who have already logged in successfully to your WordPress site* will be automatically sync'd into WordPress during a successful login as well within 24 hours
+
+You can view the WildApricot fields that are synchronized by viewing the WordPress user under "WildApricot Membership Details". The default WildApricot fields can be viewed in the screenshot below. 
 
 [Screenshot - WordPress User Data with WildApricot](https://user-images.githubusercontent.com/8737691/129620414-f7f3042a-1063-4bbf-b0b6-a3c47084980a.png)
 
