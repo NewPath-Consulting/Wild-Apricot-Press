@@ -36,9 +36,16 @@ One prominent function includes checking the license keys against the Make scena
 
 A valid license key must
 
-* Contain WAP in its products list
+* Contain WAWP in its products list
 * Not be expired
 * Be registered to the WildApricot URL and account that correspond with the WildApricot authorization credentials
+
+NOTE: to use the developer License Key database for testing dev license keys the following line in `class-addon.php` should be edited to use the https://newpathconsulting.com/check-dev webhook:
+
+    ```php
+    const HOOK_URL = 'https://newpathconsulting.com/check-dev';
+    ```
+
 
 ### `Data_Encryption`
 
