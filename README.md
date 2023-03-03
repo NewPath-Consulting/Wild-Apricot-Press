@@ -19,6 +19,7 @@ NewPath WildApricot Press and our custom theme library enable you to build and m
 ## Features
 
 - Enable logging in to your WordPress site with WildApricot credentials, right from a page on your WordPress site (no unsightly popups!)
+- When a WildApricot contact or member successfully logs in through a native WordPress login page created by the WildApricot Press plugin, their contact and member information is copied into the WordPress user database. Their role is assigned to the membership level of their WildApricot account.
 - Add login/logout to any menu bar with 1 click (no coding!)
 - You can select and automatically sync WildApricot contact/member data including ALL common, system and membership fields into the WordPress Users database
 - WordPress administrators can manage access to restriced pages and posts by membership levels AND membership groups. Custom restriction messages can be added to specific pages or posts.
