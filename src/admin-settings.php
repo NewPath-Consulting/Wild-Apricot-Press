@@ -519,7 +519,7 @@ class Admin_Settings {
         // Loop through each checkbox and sanitize
         if (!empty($input)) {
             foreach ($input as $key => $box) {
-                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+                $valid[$key] = htmlspecialchars($box);
             }
         }
         // Return sanitized value
