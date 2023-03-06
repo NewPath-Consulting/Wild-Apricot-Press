@@ -40,10 +40,10 @@ A valid license key must
 * Not be expired
 * Be registered to the WildApricot URL and account that correspond with the WildApricot authorization credentials
 
-NOTE: to use the developer License Key database for testing dev license keys the following line in `class-addon.php` should be edited to use the https://newpathconsulting.com/check-dev webhook:
+NOTE: to use the developer License Key database for testing license keys for developer purposes the following line in `wp-config.php` should be edited to use the https://newpathconsulting.com/checkdev webhook:
 
 ```php
-    const HOOK_URL = 'https://newpathconsulting.com/check-dev';
+    define( 'WAP_LICENSE_CHECK_DEV', true );
 ```
 
 
