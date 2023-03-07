@@ -558,7 +558,12 @@ class WA_API {
 				'Authorization' => 'Basic ' . $encoded_authorization_string,
 				'Content-type' => 'application/x-www-form-urlencoded'
 			),
-			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
+			'body' => array(
+				'grant_type' => 'password',
+                'username' => $valid_login['email'],
+                'password' => $valid_login['password'],
+				'scope' => 'auto'
+			)
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 
