@@ -1274,7 +1274,6 @@ class WA_Auth_Settings {
         print 'To obtain your WildApricot authorization credentials, please create a full-access <strong>Server application</strong>.<br><br>'; 
 
         print 'Refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a> for more details on creating an authorized application.<br>'; 
-;
         print '<strong>IMPORTANT:</strong> Do NOT create a WordPress authorized application for authorizing WildApricot Press.'; 
     }
 
