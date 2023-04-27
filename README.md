@@ -160,7 +160,11 @@ These fields are now shared for WordPress and for other plugins, which extends t
 
 = Why are some custom contact and membership fields or Membership Groups not synchronized?
 
-Due to security features in WildApricot, any contact field that has Member access configured as "For administator access only" or membership field with Member access as "No access - Internal use" cannot be sync'd via the WildApricot API and as a result data will not come across for these fields. In a future version of the plugin, these fields will be shown in the WAP user interface as "unavailable for synchronization". Ensure the following options are unchecked when configuring fields you wish to sync into WordPress:
+Due to security features in WildApricot, any contact field that has Member access configured as "For administator access only" or membership field with Member access as "No access - Internal use" cannot be sync'd via the WildApricot API and as a result data will not come across for these fields. In a future version of the plugin, these fields will be shown in the WAP user interface as "unavailable for synchronization".
+
+The Groups Participation membeship field _MUST_ be set to "Edit" or "View only" for this member's Groups to sync into WordPress and be available for checking access control when using Membership Groups.
+
+Ensure the following options are unchecked when configuring fields you wish to sync into WordPress:
 
 [Screeshot - contact field configuration](https://raw.githubusercontent.com/NewPath-Consulting/Wild-Apricot-Press/1.0.2/images/contact-field-configuration.png)
 
