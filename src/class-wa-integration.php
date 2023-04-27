@@ -859,11 +859,8 @@ class WA_Integration {
 		// Get link to the global restriction page
 		$global_restriction_link = site_url('/wp-admin/admin.php?page=wawp-wal-admin');
 		?>
-<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this
-    field blank - the global restriction message set under <a
-        href="<?php echo esc_url($global_restriction_link) ?>">WildApricot Press > Settings</a> will be displayed to
-    restricted users.</p>
-<?php
+		<p>If you like, you can enter a restriction message that is custom to this individual post. If not, just leave this field blank - the global restriction message set under <a href="<?php echo esc_url($global_restriction_link) ?>">WildApricot Press > Settings</a> will be displayed to restricted users.</p>
+		<?php
 		$current_post_id = $post->ID;
 		// Get individual restriction message from post meta data
 		$initial_message = get_post_meta($current_post_id, self::INDIVIDUAL_RESTRICTION_MESSAGE_KEY, true); // return single value
@@ -896,16 +893,13 @@ class WA_Integration {
 		// Add a nonce field to check on save
 		wp_nonce_field(basename(__FILE__), 'wawp_post_access_control', 10, 2);
 		?>
-<!-- Membership Levels -->
-<ul>
-    <p>If you would like everyone (including non WildApricot users) to see the current post, then leave all the
-        checkboxes blank! You can restrict this post to specific WildApricot groups and levels by selecting the
-        checkboxes below.</p>
-    <li style="margin:0;font-weight: 600;">
-        <label for="wawp_check_all_levels"><input type="checkbox" value="wawp_check_all_levels"
-                id='wawp_check_all_levels' name="wawp_check_all_levels" /> Select All Membership Levels</label>
-    </li>
-    <?php
+			<!-- Membership Levels -->
+			<ul>
+			<p>If you would like everyone (including non WildApricot users) to see the current post, then leave all the checkboxes blank! You can restrict this post to specific WildApricot groups and levels by selecting the checkboxes below.</p>
+			<li style="margin:0;font-weight: 600;">
+                <label for="wawp_check_all_levels"><input type="checkbox" value="wawp_check_all_levels" id='wawp_check_all_levels' name="wawp_check_all_levels" /> Select All Membership Levels</label>
+            </li>
+			<?php
 			// Get checked levels from post meta data
 			$already_checked_levels = get_post_meta($current_post_id, self::RESTRICTED_LEVELS);
 			if (isset($already_checked_levels) && !empty($already_checked_levels)) {
@@ -930,22 +924,19 @@ class WA_Integration {
 					}
 				}
 				?>
-    <li>
-        <input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level'
-            value="<?php echo esc_attr($membership_key); ?>" <?php echo esc_attr($level_checked); ?> />
-        <?php echo esc_html($membership_level); ?> </input>
-    </li>
-    <?php
+					<li>
+						<input type="checkbox" name="wawp_membership_levels[]" class='wawp_case_level' value="<?php echo esc_attr($membership_key); ?>" <?php echo esc_attr($level_checked); ?>/> <?php echo esc_html($membership_level); ?> </input>
+					</li>
+				<?php
 			}
 			?>
-</ul>
-<!-- Membership Groups -->
-<ul>
-    <li style="margin:0;font-weight: 600;">
-        <label for="wawp_check_all_groups"><input type="checkbox" value="wawp_check_all_groups"
-                id='wawp_check_all_groups' name="wawp_check_all_groups" /> Select All Membership Groups</label>
-    </li>
-    <?php
+			</ul>
+			<!-- Membership Groups -->
+			<ul>
+			<li style="margin:0;font-weight: 600;">
+                <label for="wawp_check_all_groups"><input type="checkbox" value="wawp_check_all_groups" id='wawp_check_all_groups' name="wawp_check_all_groups" /> Select All Membership Groups</label>
+            </li>
+			<?php
 			// Get checked groups from post meta data
 			$already_checked_groups = get_post_meta($current_post_id, self::RESTRICTED_GROUPS);
 			if (isset($already_checked_groups) && !empty($already_checked_groups)) {
@@ -970,16 +961,14 @@ class WA_Integration {
 					}
 				}
 				?>
-    <li>
-        <input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group"
-            value="<?php echo esc_attr($membership_key); ?>" <?php echo esc_attr($group_checked); ?> />
-        <?php echo esc_html($membership_group); ?> </input>
-    </li>
-    <?php
+					<li>
+						<input type="checkbox" name="wawp_membership_groups[]" class="wawp_case_group" value="<?php echo esc_attr($membership_key); ?>" <?php echo esc_attr($group_checked); ?>/> <?php echo esc_html($membership_group); ?> </input>
+					</li>
+				<?php
 			}
 			?>
-</ul>
-<?php
+			</ul>
+		<?php
 		// Fire action to allow "select all" checkboxes to select all options
 		do_action('wawp_create_select_all_checkboxes');
 	}
@@ -1061,54 +1050,54 @@ class WA_Integration {
 			$all_custom_fields = get_option(self::LIST_OF_CUSTOM_FIELDS);
 			// Display WildApricot parameters
 			?>
-<h2>WildApricot Membership Details</h2>
-<table class="form-table">
-    <!-- WildApricot Account ID -->
-    <tr>
-        <th><label>Account ID</label></th>
-        <td>
-            <?php
+			<h2>WildApricot Membership Details</h2>
+			<table class="form-table">
+				<!-- WildApricot Account ID -->
+				<tr>
+					<th><label>Account ID</label></th>
+					<td>
+					<?php
 						echo '<label>' . esc_html($wa_account_id) . '</label>';
 					?>
-        </td>
-    </tr>
-    <!-- Membership Level -->
-    <tr>
-        <th><label>Membership Level</label></th>
-        <td>
-            <?php
+					</td>
+				</tr>
+				<!-- Membership Level -->
+				<tr>
+					<th><label>Membership Level</label></th>
+					<td>
+					<?php
 						echo '<label>' . esc_html($membership_level) . '</label>';
 					?>
-        </td>
-    </tr>
-    <!-- User Status -->
-    <tr>
-        <th><label>User Status</label></th>
-        <td>
-            <?php
+					</td>
+				</tr>
+				<!-- User Status -->
+				<tr>
+					<th><label>User Status</label></th>
+					<td>
+					<?php
 						echo '<label>' . esc_html($user_status) . '</label>';
 					?>
-        </td>
-    </tr>
-    <!-- Organization -->
-    <tr>
-        <th><label>Organization</label></th>
-        <td>
-            <?php
+					</td>
+				</tr>
+				<!-- Organization -->
+				<tr>
+					<th><label>Organization</label></th>
+					<td>
+					<?php
 						echo '<label>' . esc_html($organization) . '</label>';
 					?>
-        </td>
-    </tr>
-    <!-- Groups -->
-    <tr>
-        <th><label>Groups</label></th>
-        <td>
-            <?php
+					</td>
+				</tr>
+				<!-- Groups -->
+				<tr>
+					<th><label>Groups</label></th>
+					<td>
+					<?php
 						echo '<label>' . esc_html($group_list) . '</label>';
 					?>
-        </td>
-    </tr>
-    <?php
+					</td>
+				</tr>
+				<?php
 				// Display extra custom fields here
 				if (!empty($checked_custom_fields)) {
 					foreach ($checked_custom_fields as $custom_key => $custom_field) {
@@ -1125,20 +1114,20 @@ class WA_Integration {
 							$field_saved_value = rtrim($field_saved_value, ', ');
 						}
 						?>
-    <tr>
-        <th><label><?php echo esc_html($all_custom_fields[$custom_field]); ?></label></th>
-        <td>
-            <?php
+						<tr>
+							<th><label><?php echo esc_html($all_custom_fields[$custom_field]); ?></label></th>
+							<td>
+							<?php
 								echo '<label>' . esc_html($field_saved_value) . '</label>';
 							?>
-        </td>
-    </tr>
-    <?php
+							</td>
+						</tr>
+						<?php
 					}
 				}
 				?>
-</table>
-<?php
+			</table>
+			<?php
 		}
 	}
 
@@ -1229,8 +1218,6 @@ class WA_Integration {
 		$organization = $contact_info['Organization'];
 		// Get field values
 		$field_values = $contact_info['FieldValues'];
-		// Get user ID
-		$wild_apricot_user_id = $contact_info['Id'];
 
 		// Check if WA email exists in the WP user database
 		$current_wp_user_id = 0;
@@ -1299,14 +1286,13 @@ class WA_Integration {
 		update_user_meta($current_wp_user_id, self::WA_USER_STATUS_KEY, $user_status);
 		// Add WildApricot organization to user's metadata
 		update_user_meta($current_wp_user_id, self::WA_ORGANIZATION_KEY, $organization);
-		// Add WildApricot User ID to user's metadata
-		update_user_meta($current_wp_user_id, self::WA_USER_ID_KEY, $wild_apricot_user_id);
 
 		// Get list of custom fields that user should import
 		$extra_custom_fields = get_option(self::LIST_OF_CHECKED_FIELDS);
 
 		// Get groups
 		// Loop through each field value until 'Group participation' is found
+		$wild_apricot_user_id = '';
 		$user_groups_array = array();
 		foreach ($field_values as $field_value) {
 			$field_name = $field_value['FieldName'];
@@ -1317,6 +1303,10 @@ class WA_Integration {
 				foreach ($group_array as $group) {
 					$user_groups_array[$group['Id']] = $group['Label'];
 				}
+			}
+			// Find User ID
+			if ($field_name == 'User ID') {
+				$wild_apricot_user_id = $field_value['Value'];
 			}
 			// Get extra custom fields, if any
 			if (!empty($extra_custom_fields)) {
@@ -1333,6 +1323,8 @@ class WA_Integration {
 		$user_groups_array = maybe_serialize($user_groups_array);
 		// Save to user's meta data
 		update_user_meta($current_wp_user_id, self::WA_MEMBER_GROUPS_KEY, $user_groups_array);
+		// Save user id
+		update_user_meta($current_wp_user_id, self::WA_USER_ID_KEY, $wild_apricot_user_id);
 
 		// Log user into WP account
 		wp_set_auth_cookie($current_wp_user_id, $remember_user, is_ssl());
@@ -1454,34 +1446,30 @@ class WA_Integration {
 		if (!self::is_wa_user_logged_in()) {
 			// Create page content -> login form
 			?><div id="wawp_login-wrap">
-    <p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot
-        members!</p>
-    <form method="post" action="">
-        <?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
-        <label for="wawp_login_email">Email:</label>
-        <br><input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
-        <br><label for="wawp_login_password">Password:</label>
-        <br><input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********"
-            autocomplete="new-password">
-        <!-- Remember Me -->
-        <div id="wawp_remember_me_div">
-            <br><label id="wawp_remember_me_label" for="wawp_remember_me">Remember me?</label>
-            <input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
-        </div>
-        <!-- Forgot password -->
-        <br><label id="wawp_forgot_password"><a
-                href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank"
-                rel="noopener noreferrer">Forgot Password?</a></label>
-        <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
-    </form>
-</div><?php
+				<p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot members!</p>
+				<form method="post" action="">
+					<?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
+					<label for="wawp_login_email">Email:</label>
+					<br><input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
+					<br><label for="wawp_login_password">Password:</label>
+					<br><input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********" autocomplete="new-password">
+					<!-- Remember Me -->
+					<div id="wawp_remember_me_div">
+						<br><label id="wawp_remember_me_label" for="wawp_remember_me">Remember me?</label>
+						<input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
+					</div>
+					<!-- Forgot password -->
+					<br><label id="wawp_forgot_password"><a href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank" rel="noopener noreferrer">Forgot Password?</a></label>
+					<br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
+				</form>
+			</div><?php
 		} else {
 			// display you are already logged in message and give option to logout
 			$logout_link = wp_logout_url(esc_url(site_url()));
 			?><div id="wawp_login-wrap">
-    <p>You are already logged in to your WildApricot account.</p>
-    <p><a href="<?php echo esc_url($logout_link);?>">Log Out</a></p>
-</div><?php
+				<p>You are already logged in to your WildApricot account.</p>
+				<p><a href="<?php echo esc_url($logout_link);?>">Log Out</a></p>
+			</div><?php
 		}
 
 
