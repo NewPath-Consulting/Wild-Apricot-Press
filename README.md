@@ -166,7 +166,7 @@ The Groups Participation membeship field _MUST_ be set to "Edit" or "View only" 
 
 Ensure the following options are unchecked when configuring fields you wish to sync into WordPress:
 
-[Screeshot - contact field configuration](https://raw.githubusercontent.com/NewPath-Consulting/Wild-Apricot-Press/1.0.2/images/contact-field-configuration.png)
+[Screenshot - contact field configuration](https://raw.githubusercontent.com/NewPath-Consulting/Wild-Apricot-Press/1.0.2/images/contact-field-configuration.png)
 
 [Screenshot - membership field configuration](https://raw.githubusercontent.com/NewPath-Consulting/Wild-Apricot-Press/1.0.2/images/membership-field-configuration.png)
 
