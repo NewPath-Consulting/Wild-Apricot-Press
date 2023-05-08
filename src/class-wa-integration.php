@@ -940,6 +940,8 @@ class WA_Integration {
 			?>
 </ul>
 <!-- Membership Groups -->
+<p>Group Restriction will only work if the Group Participation membership field is <em>not set to</em> "No access -
+    Internal use".</p>
 <ul>
     <li style="margin:0;font-weight: 600;">
         <label for="wawp_check_all_groups"><input type="checkbox" value="wawp_check_all_groups"
@@ -1556,8 +1558,8 @@ class WA_Integration {
 								$page_member_groups = $wa_post_meta[self::RESTRICTED_GROUPS];
 								$page_member_levels = $wa_post_meta[self::RESTRICTED_LEVELS];
 								// Check if user's groups/level overlap with the page's groups/level
-								$intersect_groups = array_intersect(array_keys($users_member_groups), $page_member_groups);
-								$intersect_level = in_array($user_member_level, $page_member_levels);
+								$intersect_groups = (is_array($users_member_groups) && is_array($page_member_groups)) ? array_intersect(array_keys($users_member_groups), $page_member_groups) : array();
+								$intersect_level = (is_array($page_member_levels) && is_array($user_member_level) && in_array($user_member_level, $page_member_levels)) ? true : false;
 								if ((empty($intersect_groups) && !$intersect_level) || !$valid_status) { // the user can't see this page!
 									// Remove this element from the menu
 									$user_can_see = false;
@@ -1842,6 +1844,11 @@ class WA_Integration {
 	 * @return string[] formatted array of the post meta data.
 	 */
 	private static function get_wa_post_meta_from_post_data($post_data) {
+
+		$memgroups = "";
+		$memlevels = "";
+		$restmsg = "";
+
 		$post_data = self::sanitize_post_meta($post_data);
 		if (array_key_exists('wawp_membership_groups', $post_data)) {
 			$memgroups = $post_data['wawp_membership_groups'];
@@ -1869,11 +1876,13 @@ class WA_Integration {
 	 * @return array array of the restricted groups and levels, each in their own
 	 * respective element.
 	 */
-	private function get_wa_post_meta($meta) {
+	private function get_wa_post_meta($nav_id) {
 		$restricted_groups = array();
 		$restricted_levels = array();
 		$is_restricted = 0;
 		$individual_restriction_msg = '';
+
+		$meta = get_post_meta($nav_id);
 
 		/**
 		 * these will only be present in the post meta if there are restricted
