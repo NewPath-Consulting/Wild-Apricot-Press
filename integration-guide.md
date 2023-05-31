@@ -17,12 +17,13 @@ WildApricot Press writes these fields into the WordPress user database. The best
 
 ```php
 // debugging code to display the logged in users user_meta
+if (!is_admin())
+	
+	{
 
 highlight_string("<?php\n\$data =\n" . var_export(get_user_meta( get_current_user_id()), true) . ";\n?>");
+	}
 
-function highlight_array($array, $name = 'var') {
-highlight_string("<?php\n\$$name =\n" . var_export($array, true) . ";\n?>");
-}
 ```
 
 Here's an example of the type of data stored in the WordPress user meta that is sync'd from WildApricot:
