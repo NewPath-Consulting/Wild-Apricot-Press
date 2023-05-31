@@ -1558,9 +1558,19 @@ class WA_Integration {
 								$page_member_groups = $wa_post_meta[self::RESTRICTED_GROUPS];
 								$page_member_levels = $wa_post_meta[self::RESTRICTED_LEVELS];
 								// Check if user's groups/level overlap with the page's groups/level
-								$intersect_groups = (is_array($users_member_groups) && is_array($page_member_groups)) ? array_intersect(array_keys($users_member_groups), $page_member_groups) : array();
-								$intersect_level = (is_array($page_member_levels) && is_array($user_member_level) && in_array($user_member_level, $page_member_levels)) ? true : false;
-								if ((empty($intersect_groups) && !$intersect_level) || !$valid_status) { // the user can't see this page!
+								if (!is_array($users_member_groups)) {
+									$users_member_groups = array($users_member_groups);
+								}
+								if (!is_array($user_member_level)) {
+									$user_member_level = array($user_member_level);
+								}
+
+								// $page_member_groups contains an array of group ids
+								// $page_member_groups contains an array of group names, with the group ids as the keys
+								$intersect_groups = (!empty($page_member_groups) && array_intersect_key(array_flip($page_member_groups), $users_member_groups));
+								$intersect_level = (!empty($page_member_levels) && in_array($user_member_level[0], $page_member_levels));
+
+								if (!$intersect_groups && !$intersect_level || !$valid_status) { // the user can't see this page!
 									// Remove this element from the menu
 									$user_can_see = false;
 								}
