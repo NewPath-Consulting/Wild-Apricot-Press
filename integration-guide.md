@@ -38,7 +38,7 @@ Here's an example of the type of data stored in the WordPress user meta that is 
   )
 ```
 
-The key wawp_membership_level_id_key and wawp_membership_level_key store the WildApricot Membership Level ID and Membership Level name for a member.
+The key `wawp_membership_level_id_key` and `wawp_membership_level_key` store the WildApricot Membership Level ID and Membership Level name for a member.
 
 
 ```
@@ -76,7 +76,7 @@ These 3 keys store the Membership Status, Organization and WildApricot unique Us
     0 => 'alexs+mpg@newpathconsulting.com',
   )
   ```
-These keys store your profile information.
+These keys store some of your profile information.
 
 ```
   'wawp_custom-8819428' => 
@@ -101,9 +101,9 @@ These keys store your profile information.
   )
 ```
 
-The keys above are custom fields and can store information from a custom field. In order to match which fields these are you should populate your profile with an account and see what data is retrieved with the debugging code above. Note that some of the fields contain serialized data (wawp_list_of_groups_key and wawp_custom-12970811). You will need to unserialize this data with maybe_unserialize() call to retrieve the values out of the data.
+The keys above are custom fields and can store information from a custom field. In order to match which fields these are you should populate your profile with an account and see what data is retrieved with the debugging code above. Note that some of the fields contain serialized data (`wawp_list_of_groups_key` and `wawp_custom-12970811`). You will need to unserialize this data with `maybe_unserialize()` call to retrieve the values out of the data.
 
-IMPORTANT: The custom key numbers are unique to your particular WildApricot site, so yours will definitely be different and you'll need to retrieve them using the debugging code above.
+IMPORTANT: The custom key names are unique to your particular WildApricot site, so yours will definitely be different and you'll need to retrieve them using the debugging code above.
 
 ## Integrating using Filters
 
