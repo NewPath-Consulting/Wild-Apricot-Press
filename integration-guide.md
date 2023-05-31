@@ -9,7 +9,7 @@
 
 WildApricot Press can synchronize all contact, membership custom fields, and system fields into the WordPress user database. To set which fields are copied into WordPress during successful login, use the Synchronization Options tab in WildApricot Setings.
 
-[Screenshot - Sync Options Screen](https://user-images.githubusercontent.com/458134/131911860-869f9ca0-a11e-483a-8021-8388baf7660c.png)
+![Screenshot - Sync Options Screen](https://user-images.githubusercontent.com/458134/131911860-869f9ca0-a11e-483a-8021-8388baf7660c.png "Screenshot - Sync Options Screen")
 
 ## Viewing the user meta data structure
 
