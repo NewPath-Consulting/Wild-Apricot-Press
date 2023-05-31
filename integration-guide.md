@@ -23,7 +23,6 @@ if (!is_admin())
 
 highlight_string("<?php\n\$data =\n" . var_export(get_user_meta( get_current_user_id()), true) . ";\n?>");
 	}
-
 ```
 
 Here's an example of the type of data stored in the WordPress user meta that is sync'd from WildApricot:
