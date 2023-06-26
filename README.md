@@ -196,13 +196,14 @@ In Plugin Options tab you can turn on the "Print log messages to log file" to st
 
 == Changelog ==
 
-= Version 1.0.2 - April 27, 2022 =
+= Version 1.0.2 - June 26, 2023 =
 - updated licensing message
 - improved performance of retrieving and sync'ing thousands of contacts
 - checking the minimum PHP and required PHP Modules during install
 - fixed bug where users with the '&' character in the password could not login
 - added README FAQ on fields cannot be sync'd due to access control settings in WildApricot
 - fixed syncing of Account ID (UserID) and access control issues
+- fixed showing/hiding items in menus based on access control
 
 = Version 1.0.1 - August 24, 2022 =
 - plugin now removes any saved options and synchronized user meta data when switching WildApricot sites via new API keys and license key swap
