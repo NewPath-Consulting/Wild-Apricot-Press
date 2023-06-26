@@ -4,7 +4,7 @@ Tags: wildapricot, wild apricot, membership, event management, events, membershi
 Requires at least: 5.0
 Tested up to: 6.1.1
 Requires PHP: 7.4
-Stable Tag: 1.0.2
+Stable Tag: 1.0.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,6 +19,7 @@ NewPath WildApricot Press and our custom theme library enable you to build and m
 ## Features
 
 - Enable logging in to your WordPress site with WildApricot credentials, right from a page on your WordPress site (no unsightly popups!)
+- When a WildApricot contact or member successfully logs in through a native WordPress login page created by the WildApricot Press plugin, their contact and member information is copied into the WordPress user database. Their role is assigned to the membership level of their WildApricot account.
 - Add login/logout to any menu bar with 1 click (no coding!)
 - You can select and automatically sync WildApricot contact/member data including ALL common, system and membership fields into the WordPress Users database
 - WordPress administrators can manage access to restriced pages and posts by membership levels AND membership groups. Custom restriction messages can be added to specific pages or posts.
@@ -48,6 +49,8 @@ Once installed and activated on your WordPress site, you must authorize and lice
 > Create an Authorized Application in WildApricot
 
 NewPath WildApricot Press communicates with your WildApricot website via the WildApricot API using an "Authorized Application." To create a WildApricot authorized application, use the [WildApricot administrative settings to create a "Server application" authorized application](https://gethelp.wildapricot.com/en/articles/199). You must  provide "full access" to the authorized application to enable NewPath WildApricot Press to read and write data into WildApricot.
+
+_IMPORTANT NOTE: DO NOT CREATE A WORDPRESS AUTHORIZED APPLICATION. IT WILL NOT WORK!_
 
 [Screenshot - Creating Server application in WildApricot](https://user-images.githubusercontent.com/458134/184677576-aad24cdd-c37a-4827-b54a-fc139ee95a1d.png)
 
@@ -155,11 +158,27 @@ Now, the extra fields can be seen in each user's WordPress profile after they lo
 
 These fields are now shared for WordPress and for other plugins, which extends the WildApricot database to every part of the WordPress plugin ecosystem. This is very powerful because now other plugins know which WildApricot user is in WordPress.
 
+= Why are some custom contact and membership fields or Membership Groups not synchronized?
+
+Due to security features in WildApricot, any contact field that has Member access configured as "For administator access only" or membership field with Member access as "No access - Internal use" cannot be sync'd via the WildApricot API and as a result data will not come across for these fields. In a future version of the plugin, these fields will be shown in the WAP user interface as "unavailable for synchronization".
+
+The Groups Participation membeship field _MUST_ be set to "Edit" or "View only" for this member's Groups to sync into WordPress and be available for checking access control when using Membership Groups.
+
+Ensure the following options are unchecked when configuring fields you wish to sync into WordPress:
+
+[Screenshot - contact field configuration](https://raw.githubusercontent.com/NewPath-Consulting/Wild-Apricot-Press/1.0.2/images/contact-field-configuration.png)
+
+[Screenshot - membership field configuration](https://raw.githubusercontent.com/NewPath-Consulting/Wild-Apricot-Press/1.0.2/images/membership-field-configuration.png)
+
 = How often is contact and member user data synchronized? =
 
-The contact and member data fields that have been added, modified or deleted will be synced into WordPress from WildApricot automatically on user login and every 24 hours. During each  login, the common, system and membership fields  (e.g. status and membership level) will be updated from WildApricot. So, after syncing your WordPress site with the WAP plugin, any updates made in the WildApricot contact database will be automatically sync'd into WordPress during login  as well within 24 hours.
+By default no WildApricot user data is added to the WordPress user data database *until* a contact or member logs in for the first time into the WAP-enabled WordPress site. Once a successful login occurs the WordPress user is created with a core set of information like email address, userID, first name, last name and organization as well as membership level and membership status (if the contact is a member).
 
-On each user login and daily user refresh, several WildApricot member fields are synced to the user's WordPress profile. You can view these WildApricot fields by viewing the WordPress user under "WildApricot Membership Details". The default WildApricot fields can be viewed in the screenshot below. 
+During every subseqeunt login, the WildApricot contact/member data is synchronized into the WordPress user database. Any contact and member data fields that have been updated will be synced into WordPress from WildApricot automatically as well every 24 hours for any contacts or members that have logged in.
+
+So, after connecting your WordPress site with the WAP plugin, any updates *for contacts who have already logged in successfully to your WordPress site* will be automatically sync'd into WordPress during a successful login as well within 24 hours
+
+You can view the WildApricot fields that are synchronized by viewing the WordPress user under "WildApricot Membership Details". The default WildApricot fields can be viewed in the screenshot below. 
 
 [Screenshot - WordPress User Data with WildApricot](https://user-images.githubusercontent.com/8737691/129620414-f7f3042a-1063-4bbf-b0b6-a3c47084980a.png)
 
@@ -177,9 +196,14 @@ In Plugin Options tab you can turn on the "Print log messages to log file" to st
 
 == Changelog ==
 
-= Version 1.0.2 - December 1, 2022 =
+= Version 1.0.2 - June 26, 2023 =
 - updated licensing message
 - improved performance of retrieving and sync'ing thousands of contacts
+- checking the minimum PHP and required PHP Modules during install
+- fixed bug where users with the '&' character in the password could not login
+- added README FAQ on fields cannot be sync'd due to access control settings in WildApricot
+- fixed syncing of Account ID (UserID) and access control issues
+- fixed showing/hiding items in menus based on access control
 
 = Version 1.0.1 - August 24, 2022 =
 - plugin now removes any saved options and synchronized user meta data when switching WildApricot sites via new API keys and license key swap

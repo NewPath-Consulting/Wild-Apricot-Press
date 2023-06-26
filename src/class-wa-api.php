@@ -15,7 +15,7 @@ class WA_API {
 	// Constants
 	const ADMIN_API_VERSION = 'v2.2';
 	const MEMBER_API_VERSION = 'v1';
-	const WAP_USER_AGENT = 'WildApricotPress/1.0';
+	const WAP_USER_AGENT = 'WildApricotPress/1.0.2';
 	const API_URL = 'https://api.wildapricot.org/';
 	// const API_URL = 'https://google.com';
 
@@ -558,7 +558,12 @@ class WA_API {
 				'Authorization' => 'Basic ' . $encoded_authorization_string,
 				'Content-type' => 'application/x-www-form-urlencoded'
 			),
-			'body' => 'grant_type=password&username=' . $valid_login['email'] . '&password=' . $valid_login['password'] . '&scope=auto'
+			'body' => array(
+				'grant_type' => 'password',
+                'username' => $valid_login['email'],
+                'password' => $valid_login['password'],
+				'scope' => 'auto'
+			)
 		);
 		$response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
 

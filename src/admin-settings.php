@@ -519,7 +519,7 @@ class Admin_Settings {
         // Loop through each checkbox and sanitize
         if (!empty($input)) {
             foreach ($input as $key => $box) {
-                $valid[$key] = filter_var($box, FILTER_SANITIZE_STRING);
+                $valid[$key] = htmlspecialchars($box);
             }
         }
         // Return sanitized value
@@ -1271,8 +1271,10 @@ class WA_Auth_Settings {
      */
     public function wal_print_section_info() {
         print 'Please enter your WildApricot authorization credentials here. Your data is encrypted for your safety.<br>';
-        print 'To obtain your WildApricot authorization credentials, please create a full-access <strong>Server application</strong>.<br>'; 
-        print 'Refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a> for more details on creating an authorized application.';
+        print 'To obtain your WildApricot authorization credentials, please create a full-access <strong>Server application</strong>.<br><br>'; 
+
+        print 'Refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a> for more details on creating an authorized application.<br>'; 
+        print '<strong>IMPORTANT:</strong> Do NOT create a WordPress authorized application for authorizing WildApricot Press.'; 
     }
 
     /**

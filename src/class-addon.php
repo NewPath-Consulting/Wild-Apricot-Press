@@ -701,9 +701,19 @@ class Addon {
 
         if (!$valid_urls_and_ids) {
             Log::wap_log_warning('License key for ' . $name . ' invalid for your WildApricot account and/or website');
+            Log::wap_log_warning('Products Licensed: ' . implode(',', $valid_products));
+            Log::wap_log_warning('License Expiration Date: ' . $exp_date);
+            Log::wap_log_warning('Support Level: ' . $response['Support Level']);
+            Log::wap_log_warning('Licensed URLs: ' . implode(',',$response['Licensed URLs']) .'|');
+            Log::wap_log_warning('Licensed WA URLs: ' . implode(',',$response['Licensed Wild Apricot URLs']) .'|');
+            Log::wap_log_warning('Licensed WA IDs: ' . implode(',',$response['Licensed Wild Apricot Account IDs']).'|');
+           
             return false;
         }
-
+	
+        Log::wap_log_debug('Valid Licensed URLs: ' . implode(',',$response['Licensed URLs']));
+		Log::wap_log_debug('Valid Licensed WA URLs: ' . implode(',',$response['Licensed Wild Apricot URLs']));
+		Log::wap_log_debug('Valid Licensed WA IDs: ' . implode(',',$response['Licensed Wild Apricot Account IDs']));
         return true;
     }
 

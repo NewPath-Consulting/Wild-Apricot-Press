@@ -40,9 +40,16 @@ One prominent function includes checking the license keys against the Make scena
 
 A valid license key must
 
-* Contain WAP in its products list
+* Contain WAWP in its products list
 * Not be expired
 * Be registered to the WildApricot URL and account that correspond with the WildApricot authorization credentials
+
+NOTE: to use the developer License Key database for testing license keys for developer purposes the following line in `wp-config.php` should be edited to use the https://newpathconsulting.com/checkdev webhook:
+
+```php
+    define( 'WAP_LICENSE_CHECK_DEV', true );
+```
+
 
 ### `Data_Encryption`
 
@@ -130,8 +137,9 @@ These exceptions are thrown in the following functions:
 Exception type         | Functions
 ---------------------- | -----------------------------
 `API_Exception`        | `WA_API::response_to_data()`
-`Encryption_Exception` | <ul><li>`Data_Encryption->encrypt()`</li><li>`Data_Encryption->get_default_key()`</li><li>`Data_Encryption->get_default_salt()`</li></ul>
+`Encryption_Exception` | `Data_Encryption->encrypt()`, `Data_Encryption->get_default_key()`, `Data_Encryption->get_default_salt()`
 `Decryption_Exception` | `Data_Encryption->decrypt()`
+
 
 To sum it up, exceptions could be thrown at many points in the plugin: connecting to the WA API or accessing or inserting any sensitive user data in the options table. 
 
