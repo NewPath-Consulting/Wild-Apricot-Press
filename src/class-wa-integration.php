@@ -1458,23 +1458,25 @@ class WA_Integration {
 			?><div id="wawp_login-wrap">
     <p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot
         members!</p>
-    <form method="post" action="">
+	<form method="post" action="">
         <?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
-        <label for="wawp_login_email">Email:</label>
-        <br><input type="text" id="wawp_login_email" name="wawp_login_email" placeholder="example@website.com">
-        <br><label for="wawp_login_password">Password:</label>
-        <br><input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********"
-            autocomplete="new-password">
+        <label for="wawp_login_email" style="margin-left: 20px;">Email:</label>
+        <br><input type="text" id="wawp_login_email" style="width: 20em; margin-left: 20px;" name="wawp_login_email" placeholder="example@website.com">
+        <br><label for="wawp_login_password"  style=" margin-left: 20px;">Password:</label>
+        <br><input type="password" id="wawp_login_password"  name="wawp_login_password" placeholder="***********"
+            autocomplete="new-password" style="width: 20em; margin-left: 20px;">
         <!-- Remember Me -->
-        <div id="wawp_remember_me_div">
+        <div id="wawp_remember_me_div" style="margin-left: 20px;">
             <br><label id="wawp_remember_me_label" for="wawp_remember_me">Remember me?</label>
             <input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
-        </div>
+       
         <!-- Forgot password -->
         <br><label id="wawp_forgot_password"><a
                 href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank"
                 rel="noopener noreferrer">Forgot Password?</a></label>
+		 
         <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
+			</div>
     </form>
 </div><?php
 		} else {
