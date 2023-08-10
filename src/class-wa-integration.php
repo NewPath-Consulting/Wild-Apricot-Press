@@ -1458,15 +1458,15 @@ class WA_Integration {
 			?><div id="wawp_login-wrap">
     <p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot
         members!</p>
-	<form method="post" action="">
+  <form method="post" action="">
         <?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
-        <label for="wawp_login_email" style="margin-left: 20px;">Email:</label>
-        <br><input type="text" id="wawp_login_email" style="width: 20em; margin-left: 20px;" name="wawp_login_email" placeholder="example@website.com">
-        <br><label for="wawp_login_password"  style=" margin-left: 20px;">Password:</label>
+        <label for="wawp_login_email" style="margin-left: 0px;">Email:</label>
+        <br><input type="text" id="wawp_login_email" style="width: 15em; margin-left: 0px;" name="wawp_login_email" placeholder="example@website.com">
+        <br><label for="wawp_login_password"  style=" margin-left: 0px;">Password:</label>
         <br><input type="password" id="wawp_login_password"  name="wawp_login_password" placeholder="***********"
-            autocomplete="new-password" style="width: 20em; margin-left: 20px;">
+            autocomplete="new-password" style="width: 15em; margin-left: 0px;">
         <!-- Remember Me -->
-        <div id="wawp_remember_me_div" style="margin-left: 20px;">
+        <div id="wawp_remember_me_div" style="margin-left: 0px;">
             <br><label id="wawp_remember_me_label" for="wawp_remember_me">Remember me?</label>
             <input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
        
