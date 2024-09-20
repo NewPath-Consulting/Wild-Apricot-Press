@@ -172,21 +172,15 @@ class WA_API {
 		return $verified_data;
 	}
 
-	/**
-	 * Lowercases and removes prefix to url for easy comparison between the license url and WildApricot url
-	 *
-	 * @param string  $original_url is the url to modify
-	 * @return string $modified_url is the url that is all lowercase and has the prefix removed
-	 */
-	public static function create_consistent_url($original_url) {
-		$modified_url = esc_url($original_url);
-		// Lowercase
-		$modified_url = strtolower($modified_url);
-		// Get main part of url
-		$parsed_url = parse_url($modified_url);
-		$main_wa_url = $parsed_url['host'];
-		return $main_wa_url;
-	}
+        $parsed_url = wp_parse_url($modified_url);
+        $main_wa_url = $parsed_url['host'];
+
+        if (str_starts_with($main_wa_url, 'www.'));
+        {
+            $main_wa_url = str_replace('www.', '', $main_wa_url);
+        }
+
+        return $main_wa_url;
 
 	/**
 	 * Retrieves url and id for the account
