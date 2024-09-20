@@ -2,7 +2,7 @@
 Contributors: 1cookspe, nataliebrotherton, asirota
 Tags: wildapricot, wild apricot, membership, event management, events, membership management, Single Sign-on, sso
 Requires at least: 5.0
-Tested up to: 8.3.11
+Tested up to: 6.6.2
 Requires PHP: 7.4
 Stable Tag: 1.0.3
 License: GPL v2 or later
