@@ -293,7 +293,7 @@ class WA_Integration {
 		add_action('save_post', array($this, 'post_access_load_restrictions'), 10, 2);
 
 		// Fires when post is loaded, restricts post content based on custom meta
-		add_filter('the_content', array($this, 'restrict_post_wa'));
+        add_filter('the_content', array($this, 'restrict_post_wa'), 1000);
 
 		// Action for user refresh cron hook
 		add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
