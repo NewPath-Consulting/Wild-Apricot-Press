@@ -4,7 +4,7 @@
  * Plugin Name:       NewPath WildApricot Press
  * Plugin URI:        https://newpathconsulting.com/wap
  * Description:       Integrates your WildApricot-powered organization with a WordPress website! Powered by WildApricot's API.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Requires at least: 5.0
  * Requires PHP:      7.4
  * Author:            NewPath Consulting
@@ -45,32 +45,36 @@ $activator = new WAWP\Activator(plugin_basename(__FILE__));
 
 // Enqueue stylesheet for styling admin settings page
 add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
-function wawp_enqueue_admin_script($hook) {
+function wawp_enqueue_admin_script($hook)
+{
     wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
 }
 // Enqueue stylesheet for styling login shortcode
 add_action('wp_enqueue_scripts', 'wawp_enqueue_shortcode_css');
-function wawp_enqueue_shortcode_css() {
-	wp_enqueue_style('wawp-styles-shortcode', plugin_dir_url(__FILE__) . 'css/wawp-styles-shortcode.css', array(), '1.0');
+function wawp_enqueue_shortcode_css()
+{
+    wp_enqueue_style('wawp-styles-shortcode', plugin_dir_url(__FILE__) . 'css/wawp-styles-shortcode.css', array(), '1.0');
 }
 
 /**
- * Enqueue jQuery script for selecting all membership level and group checkboxes in 
+ * Enqueue jQuery script for selecting all membership level and group checkboxes in
  * custom post meta box.
  */
 add_action('admin_enqueue_scripts', 'wawp_enqueue_jquery');
-function wawp_enqueue_jquery() {
-	wp_enqueue_script('wawp-script-select-all-checkboxes', plugin_dir_url(__FILE__) . 'js/script.js', array('jquery'), null, true);
+function wawp_enqueue_jquery()
+{
+    wp_enqueue_script('wawp-script-select-all-checkboxes', plugin_dir_url(__FILE__) . 'js/script.js', array('jquery'), null, true);
 }
 
 // add settings link to plugin page
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'wap_action_links');
-function wap_action_links($links) {
-	$mylinks = array(
-		'<a href="' . WAWP\get_admin_settings_url() . '">Settings</a>',
+function wap_action_links($links)
+{
+    $mylinks = array(
+        '<a href="' . WAWP\get_admin_settings_url() . '">Settings</a>',
 
-	);
-	return array_merge($links, $mylinks);
+    );
+    return array_merge($links, $mylinks);
 }
 
 // Create settings page
@@ -80,8 +84,6 @@ $settings = new WAWP\Settings();
 $wa_integration_instance = new WAWP\WA_Integration();
 
 // Deactivation hook
-register_deactivation_hook(__FILE__, function() {
-	WAWP\Deactivator::deactivate();
-} );
-
-?>
+register_deactivation_hook(__FILE__, function () {
+    WAWP\Deactivator::deactivate();
+});
