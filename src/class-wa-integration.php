@@ -394,39 +394,42 @@ class WA_Integration {
 		}
 	}
 
-	/**
-	 * Checks if the license key is registered for the WA url and account ID
-	 * corresponding to the entered API credentials
-	 *
-	 * @param array $response
-	 * @return bool
-	 */
-	public static function check_licensed_wa_urls_ids($response) {
-		$licensed_wa_urls = self::get_licensed_wa_urls($response);
-		$licensed_wa_ids = self::get_licensed_wa_ids($response);
-		if (is_null($licensed_wa_urls) || is_null($licensed_wa_ids)) return false;
+    /**
+     * Checks if the license key is registered for the WA url and account ID
+     * corresponding to the entered API credentials
+     *
+     * @param array $response
+     * @return bool
+     */
+    public static function check_licensed_wa_urls_ids($response)
+    {
+        $licensed_wa_urls = self::get_licensed_wa_urls($response);
+        $licensed_wa_ids = self::get_licensed_wa_ids($response);
+        if (is_null($licensed_wa_urls) || is_null($licensed_wa_ids)) {
+            return false;
+        }
 
-		try {
-			// Get access token and account id
-			$access_and_account = WA_API::verify_valid_access_token();
-			$access_token = $access_and_account['access_token'];
-			$wa_account_id = $access_and_account['wa_account_id'];
-			// Get account url from API
-			$wawp_api = new WA_API($access_token, $wa_account_id);
-			$wild_apricot_info = $wawp_api->get_account_url_and_id();
-		} catch (Exception $e) {
-			Log::wap_log_error($e->getMessage(), true);
-			return false;
-		}
+        try {
+            // Get access token and account id
+            $access_and_account = WA_API::verify_valid_access_token();
+            $access_token = $access_and_account['access_token'];
+            $wa_account_id = $access_and_account['wa_account_id'];
+            // Get account url from API
+            $wawp_api = new WA_API($access_token, $wa_account_id);
+            $wild_apricot_info = $wawp_api->get_account_url_and_id();
+        } catch (Exception $e) {
+            Log::wap_log_error($e->getMessage(), true);
+            return false;
+        }
 
-		// Compare license key information with current site
-		if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && in_array($wild_apricot_info['Url'], $licensed_wa_urls)) { 
-			return true;
-		}
-		
-		return false;
+        // Compare license key information with current site
+        if (in_array($wild_apricot_info['Id'], $licensed_wa_ids) && check_licensed_wa_urls($licensed_wa_urls, $wild_apricot_info['Url'])) {
+            return true;
+        }
 
-	}
+        return false;
+
+    }
 
 	/**
 	 * Hides the WordPress admin bar for non-admin users

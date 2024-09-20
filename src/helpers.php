@@ -269,6 +269,29 @@ function flipped_menu_location_array() {
 }
 
 /**
+ * Validates the user's WildApricot URL against the list of licensed URLs. Case
+ * insensitive. Ignores subdomains -- only checks if top level domain (TLD) is
+ * licensed. Requires all URL strings contain only the top level domain and
+ * potentially a subdomain but no http/https protocol.
+ *
+ * @param array $licensed_urls list of licensed URLs
+ * @param string $wa_url URL corresponding to admin's WildApricot account
+ * @return bool true if TLD in WA URL is found in licensed URLs.
+ * false if the WA URL is not licensed.
+ */
+function check_licensed_wa_urls($licensed_urls, $wa_url)
+{
+    Log::wap_log_debug($wa_url);
+    foreach ($licensed_urls as $url) {
+        // substring compare
+        if (substr_compare($url, $wa_url, 0) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Checks to see if the current entered credentials are still valid.
  * 
  * @return string|null|bool false if there's an exception or status of current license (current license, "empty" or null)
