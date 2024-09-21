@@ -3,42 +3,21 @@
     "siteOptions": {
         "blogname": "WildApricot Press Demo Site"
     },
+    "features": {
+        "networking": true
+    },
     "login": true,
+    {
+        "step": "defineWpConfigConsts",
+        "consts": {
+            "WP_DISABLE_FATAL_ERROR_HANDLER": true,
+            "WP_DEBUG": true,
+            "WP_DEBUG_DISPLAY": true
+        }
+    },
     "plugins": [
         {
-            "name": "wildapricot-press",
-            "source": "newpath-consulting",
-            "activate": true
-        }
-    ],
-    "pages": [
-        {
-            "title": "Home",
-            "content": "<h1>Welcome to Our Organization</h1><p>We are a passionate community dedicated to [your mission statement].</p>",
-            "status": "publish"
-        },
-        {
-            "title": "Donate",
-            "content": "<h2>Support Our Cause</h2><p>Your generous donation helps us make a difference. [Add donation form or link here]</p>",
-            "status": "publish"
-        },
-        {
-            "title": "Member Directory",
-            "content": "<p>Connect with fellow members. [WildApricot Press shortcode to display member directory]</p>",
-            "status": "publish"
-        },
-        {
-            "title": "Membership",
-            "content": "<h2>Join Us</h2><p>Discover the benefits of membership and become part of our community. [WildApricot Press shortcode to display membership levels and signup]</p>",
-            "status": "publish"
-        },
-        {
-            "title": "Members Only",
-            "content": "<h1>Exclusive Content for Members</h1><p>Thank you for being a valued member! Enjoy this special content.</p>",
-            "status": "publish",
-            "meta": {
-                "visibility": "private"
-            }
+            "newpath-wildapricot-press"
         }
     ]
 }
