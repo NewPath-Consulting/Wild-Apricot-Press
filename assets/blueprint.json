@@ -5,7 +5,7 @@
             "step": "setSiteOptions",
             "options": {
                 "blogname": "WildApricot Press Demo Site"
-                      }
+            }
         }
     ],
     "plugins": [
@@ -47,9 +47,9 @@
             "content": "<h1>Exclusive Content for Members</h1><p>Thank you for being a valued member! Enjoy this special content.</p>",
             "status": "publish",
             "meta": {
-                "visibility": "private" // Or use a membership plugin specific meta field if applicable
+                "visibility": "private"
             }
         }
     ],
-  "login": true
+    "login": true
 }
