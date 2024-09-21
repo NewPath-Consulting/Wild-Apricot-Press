@@ -1,13 +1,8 @@
 {
     "$schema": "https://playground.wordpress.net/blueprint-schema.json",
-    "steps": [
-        {
-            "step": "setSiteOptions",
-            "options": {
-                "blogname": "WildApricot Press Demo Site"
-            }
-        }
-    ],
+     "siteOptions": {
+        "blogname": "WildApricot Press Demo Site"
+    },
     "plugins": [
         {
             "name": "wildapricot-press",
