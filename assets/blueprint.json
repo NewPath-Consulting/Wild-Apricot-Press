@@ -7,14 +7,6 @@
     "siteOptions": {
         "blogname": "WildApricot Press Demo Site"
     },
-    {
-        "step": "defineWpConfigConsts",
-        "consts": {
-            "WP_DISABLE_FATAL_ERROR_HANDLER": true,
-            "WP_DEBUG": true,
-            "WP_DEBUG_DISPLAY": true
-        }
-    },
     "plugins": [
         "newpath-wildapricot-press",
         "https://raw.githubusercontent.com/wptrainingteam/playground-demo-handover/main/playground/zips/meta-block-sidebar.zip"
