@@ -17,7 +17,8 @@
             "consts": {
                 "WP_DISABLE_FATAL_ERROR_HANDLER": true,
                 "WP_DEBUG": true,
-                "WP_DEBUG_DISPLAY": true
+                "WP_DEBUG_DISPLAY": true,
+                "WAP_LICENSE_CHECK_DEV": true
             }
         },
         {
@@ -36,5 +37,5 @@
         "networking": true
     },
     "login": true,
-    "landingPage": "/?p=4"
+    "landingPage": "/wp-admin/admin.php?page=wawp-wal-admin"
 }
