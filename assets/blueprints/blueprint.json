@@ -21,6 +21,11 @@
         "error-log-viewer",
         "generateblocks"
     ],
+    "features": {
+        "networking": true
+    },
+    "login": true,
+    "landingPage": "/wp-admin/admin.php?page=wawp-wal-admin",
     "steps": [
         {
             "step": "defineWpConfigConsts",
@@ -53,10 +58,5 @@
             "step": "runPHP",
             "code": "<?php require_once('/wordpress/wp-load.php'); wp_insert_post(array( 'post_title' => 'WildApricot Press', 'post_content' => '<!-- wp:generateblocks/headline {\"uniqueId\":\"a449061d\",\"blockVersion\":3} --><h2 class=\"gb-headline gb-headline-a449061d gb-headline-text\">All the user-friendliness of WordPress with all the power of WildApricot</h2><!-- /wp:generateblocks/headline --><!-- wp:paragraph --><p>WordPress is the world's most popular website builder. WildApricot is the #1 rated  membership management software. Now, your organization can seamlessly combine the best of both with NewPath Consulting's WildApricot Press plugin.</p><!-- /wp:paragraph --><!-- wp:generateblocks/headline {\"uniqueId\":\"62b72239\",\"blockVersion\":3,\"typography\":{\"textAlign\":\"left\"}} --><h2 class=\"gb-headline gb-headline-62b72239 gb-headline-text\">Build beautiful, mobile-friendly websites for WildApricot</h2><!-- /wp:generateblocks/headline -->','post_status' => 'publish' ));"
         }
-    ],
-    "features": {
-        "networking": true
-    },
-    "login": true,
-    "landingPage": "/wp-admin/admin.php?page=wawp-wal-admin"
+    ]
 }
