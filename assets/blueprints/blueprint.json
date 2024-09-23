@@ -52,7 +52,7 @@
         {
             "step": "writeFile",
             "path": "/wordpress/wp-content/mu-plugins/bgnightly-notice.php",
-            "data": "<?php add_action('admin_notices', function() {  echo '<div class=\"notice notice-info is-dismissible\"><p>Welcome to the WildApricot Press Demo! Please make sure you configure the <a href=\"/wp-admin/admin.php?page=wap-wa-auth-login\">WildApricot Authorized Application Credentials before using the site. A sample license has already been set.</a></p></div>'; });"
+            "data": "<?php add_action('admin_notices', function() {  echo '<div class=\"notice notice-info is-dismissible\"><p>Welcome to the WildApricot Press Demo! Please make sure you configure the <a href=\"/wp-admin/admin.php?page=wap-wa-auth-login\">WildApricot Authorized Application Credentials</a> before using the site. A sample license has already been set.</a></p></div>'; });"
         },
         {
             "step": "runPHP",
