@@ -8,7 +8,7 @@
         "blogname": "WildApricot Press Demo Site"
     },
     "plugins": [
-        "https://github.com/NewPath-Consulting/Wild-Apricot-Press/archive/refs/heads/1.0.3.zip",
+        "https://github.com/NewPath-Consulting/Wild-Apricot-Press/releases/tag/v1.0.2?raw=true",
         "error-log-viewer",
         "https://raw.githubusercontent.com/wptrainingteam/playground-demo-handover/main/playground/zips/meta-block-sidebar.zip"
     ],
