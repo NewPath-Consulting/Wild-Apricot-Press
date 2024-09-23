@@ -4,6 +4,15 @@
         "php": "latest",
         "wp": "latest"
     },
+    "meta": {
+        "title": "WildApricot Press Demo",
+        "description": "loads the latest plugin into a playground site",
+        "author": "asirota",
+        "categories": [
+            "demo",
+            "plugin"
+        ]
+    },
     "siteOptions": {
         "blogname": "WildApricot Press Demo Site"
     },
@@ -33,6 +42,11 @@
         {
             "step": "runPHP",
             "code": "<?php require_once('/wordpress/wp-load.php'); wp_insert_post(array( 'post_title' => 'Created by a Blueprint', 'post_content' => '<!-- wp:paragraph --><p>How do you update the meta fields?</p><!-- /wp:paragraph --><!-- wp:list --><ol><!-- wp:list-item --><li>Open the <strong>Settings</strong> sidebar by clicking the window icon next to the blue <strong>Update</strong> button.</li><!-- /wp:list-item --><!-- wp:list-item --><li>Click the <strong>Meta Block Sidebar</strong> menu (below the <strong>Summary</strong> menu).</li><!-- /wp:list-item --><!-- wp:list-item --><li>Type the <strong>Team name</strong> and the <strong>date</strong> the person joined the company in the respective fields.</li><!-- /wp:list-item --><!-- wp:list-item --><li>Click the blue <strong>Update</strong> button.</li><!-- /wp:list-item --></ol><!-- /wp:list -->','post_status' => 'publish' ));"
+        },
+        {
+            "step": "writeFile",
+            "path": "/wordpress/wp-content/mu-plugins/bgnightly-notice.php",
+            "data": "<?php add_action('admin_notices', function() {  echo '<div class=\"notice notice-info is-dismissible\"><p>Welcome to the WildApricot Press Demo! Please make sure you fill out the <a href='/wp-admin/admin.php?page=wap-wa-auth-login'>Authorization tab before starting.</a></p></div>'; });"
         }
     ],
     "features": {
