@@ -309,10 +309,9 @@ function flipped_menu_location_array()
  */
 function check_licensed_wa_urls($licensed_urls, $wa_url)
 {
-    Log::wap_log_debug($wa_url);
     foreach ($licensed_urls as $url) {
         // substring compare
-        if (substr_compare($url, $wa_url, 0) > 0) {
+        if (substr_compare($url, $wa_url, 0) >= 0) {
             return true;
         }
     }
