@@ -9,6 +9,7 @@
     },
     "plugins": [
         "newpath-wildapricot-press",
+        "error-log-viewer",
         "https://raw.githubusercontent.com/wptrainingteam/playground-demo-handover/main/playground/zips/meta-block-sidebar.zip"
     ],
     "steps": [
