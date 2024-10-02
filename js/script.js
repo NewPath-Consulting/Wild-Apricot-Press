@@ -32,6 +32,29 @@
         $(GROUPS_CHECKBOXES).click(function() {
             toggle_select_all_check(GROUPS_SELECT_ALL, GROUPS_CHECKBOXES);
         });
+
+        // enable tab on custom css textarea
+        $('.wawp_user_style_input').keydown(function(e) {
+            if(e.keyCode === 9) { // tab was pressed
+                // get caret position/selection
+                var start = this.selectionStart;
+                var end = this.selectionEnd;
+        
+                var $this = $(this);
+                var value = $this.val();
+        
+                // set textarea value to: text before caret + tab + text after caret
+                $this.val(value.substring(0, start)
+                            + "\t"
+                            + value.substring(end));
+        
+                // put caret at right position again (add one for the tab)
+                this.selectionStart = this.selectionEnd = start + 1;
+        
+                // prevent the focus lose
+                e.preventDefault();
+            }
+        });
     })
 
     function toggle_check(select_all, selector) {

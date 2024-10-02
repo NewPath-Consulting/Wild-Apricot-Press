@@ -41,6 +41,8 @@ require_once plugin_dir_path(__FILE__) . 'src/class-deactivator.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-wa-integration.php';
 require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
 
+define('PLUGIN_PATH', plugin_dir_path(__FILE__));
+
 $activator = new WAWP\Activator(plugin_basename(__FILE__));
 
 // Enqueue stylesheet for styling admin settings page
@@ -48,7 +50,15 @@ add_action('admin_enqueue_scripts', 'wawp_enqueue_admin_script');
 function wawp_enqueue_admin_script($hook)
 {
     wp_enqueue_style('wawp-styles-admin', plugin_dir_url(__FILE__) . 'css/wawp-styles-admin.css', array(), '1.0');
+
 }
+
+add_action('wp_enqueue_scripts', 'wawp_enqueue_user_style');
+function wawp_enqueue_user_style()
+{
+    wp_enqueue_style('wawp-styles-user', plugin_dir_url(__FILE__) . 'css/wawp-styles-user.css', array(), '1.0');
+}
+
 // Enqueue stylesheet for styling login shortcode
 add_action('wp_enqueue_scripts', 'wawp_enqueue_shortcode_css');
 function wawp_enqueue_shortcode_css()

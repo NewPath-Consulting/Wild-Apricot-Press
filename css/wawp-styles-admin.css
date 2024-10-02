@@ -56,6 +56,17 @@
 	margin-left: 8% !important;
 }
 
+/* Styling for CSS textarea */
+.wawp_user_style_input {
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	width: 50vw;
+	height: 60vh;
+	white-space: nowrap;
+	overflow-y: scroll;
+	padding: 15px;
+}
+
+/* Styling for contact list block */
 ul.wawp_list {
 	list-style-type: disc;
 	margin-left: 5%;
