@@ -724,7 +724,13 @@ class Addon
         // if the license is invalid OR an invalid WildApricot URL is being used, return null
         // else return the valid license key
         if (array_key_exists('license-error', $response)) {
+            Log::wap_log_error('Error retrieving license data.');
             return false;
+        }
+
+        // license is valid if license hook doesn't return an error and dev flag is on, don't need to evaluate contents
+        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
+            return true;
         }
 
         if (!(
@@ -739,13 +745,13 @@ class Addon
         $valid_products = $response['Products'];
         $exp_date = $response['expiration date'];
 
-        // Check if the addon_slug in in the products list, has support access and is expired
-        if (!in_array(CORE_SLUG, $valid_products) || self::is_expired($exp_date)) {
-            return false;
-        }
-
         $name = self::get_title($slug);
-        if (self::is_expired($exp_date)) {
+
+        // Check if the addon_slug in in the products list, has support access and is expired
+        if (!in_array(CORE_SLUG, $valid_products)) {
+            Log::wap_log_warning('User license is valid, but not for product ' . $name . '.');
+            return false;
+        } elseif (self::is_expired($exp_date)) {
             Log::wap_log_warning('License key for ' . $name . ' has expired.');
             return false;
         }
