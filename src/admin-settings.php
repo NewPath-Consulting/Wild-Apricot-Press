@@ -1,4 +1,5 @@
 <?php
+
 namespace WAWP;
 
 require_once __DIR__ . '/class-addon.php';
@@ -16,24 +17,28 @@ require_once __DIR__ . '/wap-exception.php';
  * @author Spencer Gable-Cook and Natalie Brotherton
  * @copyright 2022 NewPath Consulting
  */
-class Settings {
-    const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
-    const SETTINGS_URL = 'wawp-wal-admin';
+class Settings
+{
+    public const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
+    public const SETTINGS_URL = 'wawp-wal-admin';
 
     private $admin_settings;
     private $wa_auth_settings;
     private $license_settings;
+    private $style_settings;
 
     /**
      * Adds actions and includes files
      */
-    public function __construct() {
-        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
-        add_action( 'admin_init', array( $this, 'page_init' ) );
+    public function __construct()
+    {
+        add_action('admin_menu', array( $this, 'add_settings_page' ));
+        add_action('admin_init', array( $this, 'page_init' ));
 
         $this->admin_settings   = new Admin_Settings();
         $this->wa_auth_settings = new WA_Auth_Settings();
         $this->license_settings = new License_Settings();
+        $this->style_settings = new Style_Settings();
 
         // Activate option in table if it does not exist yet
         // Currently, there is a WordPress bug that calls the 'sanitize' function twice if the option is not already in the database
@@ -53,11 +58,12 @@ class Settings {
     }
 
     /**
-	 * Set-up CRON job for updating membership levels and groups.
-     * 
+     * Set-up CRON job for updating membership levels and groups.
+     *
      * @return void
-	 */
-	public static function setup_cron_job() {
+     */
+    public static function setup_cron_job()
+    {
         //If $timestamp === false schedule the event since it hasn't been done previously
         if (!wp_next_scheduled(self::CRON_HOOK)) {
             //Schedule the event for right now, then to repeat daily using the hook
@@ -74,7 +80,8 @@ class Settings {
      * @param string $restricted_levels_key key of the restricted levels to be saved
      * @return void
      */
-    private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key) {
+    private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key)
+    {
         $restricted_posts = get_option(WA_Integration::ARRAY_OF_RESTRICTED_POSTS);
 
         // Convert levels arrays to its keys
@@ -128,7 +135,8 @@ class Settings {
      * @param array $old_levels            the previous levels before refresh
      * @return void
      */
-    private function remove_invalid_roles($updated_levels, $old_levels) {
+    private function remove_invalid_roles($updated_levels, $old_levels)
+    {
         // Convert levels arrays to its keys
         $updated_levels_keys = array_keys($updated_levels);
         $old_levels_keys = array_keys($old_levels);
@@ -156,19 +164,20 @@ class Settings {
 
     /**
      * Updates the membership levels and groups from WildApricot into WordPress upon each CRON job.
-     * 
+     *
      * @return void
      */
-    public function cron_update_wa_memberships() {
+    public function cron_update_wa_memberships()
+    {
         // Ensure that access token is valid
         try {
             $valid_access_credentials = WA_API::verify_valid_access_token();
         } catch (Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
-            return; 
+            return;
         }
-        
-        
+
+
         $access_token = $valid_access_credentials['access_token'];
         $wa_account_id = $valid_access_credentials['wa_account_id'];
 
@@ -218,47 +227,52 @@ class Settings {
 
     /**
      * Add WAP settings page.
-     * 
+     *
      * @return void.
      */
-    public function add_settings_page() {
+    public function add_settings_page()
+    {
         // Create WAWP admin page
         $this->admin_settings->add_menu_pages();
 
         $this->wa_auth_settings->add_submenu_page();
         $this->license_settings->add_submenu_page();
+        $this->style_settings->add_submenu_page();
 
     }
 
     /**
      * Register and add settings fields.
-     * 
+     *
      * @return void
      */
-    public function page_init() {
+    public function page_init()
+    {
         $this->wa_auth_settings->register_setting_add_fields();
         $this->license_settings->register_setting_add_fields();
         $this->admin_settings->register_setting_add_fields();
+        $this->style_settings->register_setting_add_fields();
     }
 
 }
 
 /**
  * Handles creating, rendering, and sanitizing WildApricot admin settings.
- * 
+ *
  * @since 1.1
  * @author Natalie Brotherton
  * @copyright 2022 NewPath Consulting
  */
-class Admin_Settings {
+class Admin_Settings
+{
+    public const LOGIN_BUTTON_LOCATION_SECTION = 'wap_menu_location_group';
+    public const LOGIN_BUTTON_LOCATION_PAGE = Settings::SETTINGS_URL . '-login-location';
 
-    const LOGIN_BUTTON_LOCATION_SECTION = 'wap_menu_location_group';
-    const LOGIN_BUTTON_LOCATION_PAGE = Settings::SETTINGS_URL . '-login-location';
+    public const DELETE_DB_DATA = 'delete_db_data';
+    public const DELETE_USER_DATA = 'delete_user_data';
 
-    const DELETE_DB_DATA = 'delete_db_data';
-    const DELETE_USER_DATA = 'delete_user_data';
-
-    public function __construct() {
+    public function __construct()
+    {
     }
 
     /**
@@ -266,7 +280,8 @@ class Admin_Settings {
      *
      * @return void
      */
-    public function add_menu_pages() {
+    public function add_menu_pages()
+    {
         // Sub-menu for settings
         add_menu_page(
             'WildApricot Press',
@@ -274,8 +289,8 @@ class Admin_Settings {
             'manage_options',
             Settings::SETTINGS_URL,
             array( $this, 'create_admin_page' ),
-			'dashicons-businesswoman',
-			6
+            'dashicons-businesswoman',
+            6
         );
 
         add_submenu_page(
@@ -292,7 +307,8 @@ class Admin_Settings {
      *
      * @return void
      */
-    public function register_setting_add_fields() {
+    public function register_setting_add_fields()
+    {
         // content restriction tab
         $this->register_login_button_location();
         $this->register_status_restriction();
@@ -304,7 +320,7 @@ class Admin_Settings {
         // plugin options
         $this->register_deletion_option();
         $this->register_logfile_option();
-    
+
     }
 
     /**
@@ -312,44 +328,52 @@ class Admin_Settings {
      *
      * @return void
      */
-    public function create_admin_page() {
+    public function create_admin_page()
+    {
         $tab = get_current_tab();
         ?>
-        <div class="wrap">
-            <h2>Settings</h2>
-            <?php
+<div class="wrap">
+    <h2>Settings</h2>
+    <?php
             if (Addon::is_plugin_disabled()) {
-                ?> </div> <?php 
+                ?>
+</div> <?php
                 return;
             }
-            ?>
-            <!-- navigation tabs -->
-            <nav class="nav-tab-wrapper">
-                <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab===null): ?>nav-tab-active<?php endif; ?>">Content Restriction Options</a>
-                <a href="?page=wawp-wal-admin&tab=fields" class="nav-tab <?php if($tab==='fields'):?>nav-tab-active<?php endif; ?>">Synchronization Options</a>
-                <a href="?page=wawp-wal-admin&tab=plugin" class="nav-tab <?php if($tab==='plugin'):?>nav-tab-active<?php endif; ?>">Plugin Options</a>
-            </nav>
-            <div class="tab-content">
-                <?php
-                switch($tab):
-                    case 'fields': $this->create_sync_options_tab();
-                        break;
-                    case 'plugin': $this->create_plugin_options_tab();
-                        break;
-                    default:       $this->create_content_restriction_options_tab();
-                    endswitch;
-                ?>
-            </div>
-        </div>
-        <?php
+        ?>
+<!-- navigation tabs -->
+<nav class="nav-tab-wrapper">
+    <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab === null): ?>nav-tab-active<?php endif; ?>">Content
+        Restriction Options</a>
+    <a href="?page=wawp-wal-admin&tab=fields"
+        class="nav-tab <?php if($tab === 'fields'):?>nav-tab-active<?php endif; ?>">Synchronization
+        Options</a>
+    <a href="?page=wawp-wal-admin&tab=plugin"
+        class="nav-tab <?php if($tab === 'plugin'):?>nav-tab-active<?php endif; ?>">Plugin
+        Options</a>
+</nav>
+<div class="tab-content">
+    <?php
+            switch($tab):
+                case 'fields': $this->create_sync_options_tab();
+                    break;
+                case 'plugin': $this->create_plugin_options_tab();
+                    break;
+                default:       $this->create_content_restriction_options_tab();
+            endswitch;
+        ?>
+</div>
+</div>
+<?php
     }
 
     /**
      * Print the menu location description text
-     * 
+     *
      * @return void
      */
-    public function login_menu_location_print_section_info() {
+    public function login_menu_location_print_section_info()
+    {
         print 'Please specify the menu(s) that you would like the Login/Logout button to appear on. Users can then use this Login/Logout button to sign in and out of their WildApricot account on your WordPress site.';
     }
 
@@ -359,8 +383,9 @@ class Admin_Settings {
      *
      * @return void
      */
-    public function login_menu_location_no_menus_info() {
-        print '<p class="wap-error"><strong>Please add at least one menu in <a href=' . 
+    public function login_menu_location_no_menus_info()
+    {
+        print '<p class="wap-error"><strong>Please add at least one menu in <a href=' .
                 esc_url(admin_url('nav-menus.php')) . '>Appearance > Menus</a> in 
                 order to display the Login/Logout button on your website.</strong></p>';
     }
@@ -368,10 +393,11 @@ class Admin_Settings {
     /**
      * Display the checkboxes corresponding to each visible menu on the site
      * for the user to choose from to place the WA user login button
-     * 
+     *
      * @return void
      */
-    public function login_menu_location_input_box() {
+    public function login_menu_location_input_box()
+    {
         // get saved menu for the login button
         $saved_login_menu = get_login_menu_location();
 
@@ -397,10 +423,10 @@ class Admin_Settings {
             // if menu has a location, display it
             if ($menu_has_location) {
                 $display_name = $display_name . ' (' . $menu_id_to_location[$menu_id] . ')';
-            } else if (!empty($menu_id_to_location) && !$is_checked) {
+            } elseif (!empty($menu_id_to_location) && !$is_checked) {
                 /**
-                 * if menu does not have locations but there are other menus 
-                 * registered to locations AND the menu is not currently 
+                 * if menu does not have locations but there are other menus
+                 * registered to locations AND the menu is not currently
                  * selected, don't display it
                  */
                 continue;
@@ -410,9 +436,9 @@ class Admin_Settings {
 
             // output checkbox and label with the format menu name (location(s))
             echo '<div><input type="checkbox" id="wap_menu_option" 
-                name="wawp_menu_location_name[]" value="' . 
+                name="wawp_menu_location_name[]" value="' .
                 esc_attr($menu_id) . '" ' . esc_attr($checked) . '>';
-            echo '<label for="' . esc_attr($menu_id) . '">' . 
+            echo '<label for="' . esc_attr($menu_id) . '">' .
                 esc_html($display_name);
             if (!$menu_has_location && $is_checked) {
                 echo '<span class="wap-error"> (Menu not assigned to a location)</span>';
@@ -428,11 +454,13 @@ class Admin_Settings {
      * @param array $input Contains all checkboxes in an array
      * @return array array of sanitized input
      */
-    public function login_menu_location_sanitize($input) {
+    public function login_menu_location_sanitize($input)
+    {
         // Verify nonce
         if (!wp_verify_nonce(
-            $_POST['wawp_menu_location_nonce_name'], 
-            'wawp_menu_location_nonce_action')
+            $_POST['wawp_menu_location_nonce_name'],
+            'wawp_menu_location_nonce_action'
+        )
         ) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
             Log::wap_log_error('Your nonce for the menu location(s) could not be verified.');
@@ -455,10 +483,11 @@ class Admin_Settings {
 
     /**
      * Print instructions on how to use the restriction status checkboxes
-     * 
+     *
      * @return void
      */
-    public function restriction_status_print_info() {
+    public function restriction_status_print_info()
+    {
         print 'Please select the WildApricot member/contact status(es) that will be able to see the restricted posts.<br>';
         print 'If no statuses are selected, then all membership statuses can view the restricted posts.';
     }
@@ -466,10 +495,11 @@ class Admin_Settings {
     /**
      * Displays the checkboxes for selecting the membership statuses to restrict
      * from posts.
-     * 
+     *
      * @return void
      */
-    public function restriction_status_input_box() {
+    public function restriction_status_input_box()
+    {
         // Display checkboxes for each WildApricot status
         // List of statuses here: https://gethelp.wildapricot.com/en/articles/137-member-and-contact-statuses
         $list_of_statuses = array(
@@ -496,18 +526,21 @@ class Admin_Settings {
                 $status_checked = 'checked';
             }
             ?>
-            <input type="checkbox" name="wawp_restriction_status_name[]" class='wawp_class_status' value="<?php echo esc_attr($status_key); ?>" <?php echo esc_attr($status_checked); ?>/> <?php echo esc_html($status); ?> </input><br>
-            <?php
+<input type="checkbox" name="wawp_restriction_status_name[]" class="wawp_class_status"
+    value="<?php echo esc_attr($status_key); ?>" <?php echo esc_attr($status_checked); ?> />
+<?php echo esc_html($status); ?> </input><br>
+<?php
         }
     }
-    
+
     /**
      * Sanitize restriction status checkboxes.
      *
      * @param array $input Contains all settings fields as array keys
      * @return array array of sanitized inputs
      */
-    public function restriction_status_sanitize($input) {
+    public function restriction_status_sanitize($input)
+    {
         // Verify nonce
         if (!wp_verify_nonce($_POST['wawp_restriction_status_nonce_name'], 'wawp_restriction_status_nonce_action')) {
             // wp_die('Your nonce for the restriction status(es) could not be verified.');
@@ -528,21 +561,23 @@ class Admin_Settings {
 
     /**
      * Print the Global Restriction description
-     * 
+     *
      * @return void
      */
-    public function restriction_message_print_info() {
+    public function restriction_message_print_info()
+    {
         print 'The "Global Restriction Message" is the message that is shown to users who are not members of the WildApricot membership level(s) or group(s) required to access a restricted post. ';
-        print 'Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. '; 
+        print 'Try to make the message informative; for example, you can suggest what the user can do in order to be granted access to the post. ';
         print 'You can also set a custom restriction message for each individual post by editing the "Individual Restriction Message" field under the post editor.';
     }
-    
+
     /**
      * Displays the global restriction message text area.
-     * 
+     *
      * @return void
      */
-    public function restriction_message_input_box() {
+    public function restriction_message_input_box()
+    {
         // Add wp editor
         // See: https://stackoverflow.com/questions/20331501/replacing-a-textarea-with-wordpress-tinymce-wp-editor
         // https://developer.wordpress.org/reference/functions/wp_editor/
@@ -561,7 +596,8 @@ class Admin_Settings {
      * @param array $input Contains all settings fields as array keys
      * @return array array of sanitized inputs
      */
-    public function restriction_message_sanitize($input) {
+    public function restriction_message_sanitize($input)
+    {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_restriction_nonce_name'], 'wawp_restriction_nonce_action')) {
             // wp_die('Your nonce for the restriction message could not be verified.');
@@ -569,27 +605,29 @@ class Admin_Settings {
             Log::wap_log_error('Your nonce for the restriction message could not be verified. Please try again.');
             return empty_string_array($input);
         }
-		// Create valid variable that will hold the valid input
-		$valid = wp_kses_post($input);
+        // Create valid variable that will hold the valid input
+        $valid = wp_kses_post($input);
         // Return valid input
         return $valid;
     }
 
     /**
      * Print the Custom Fields introductory text
-     * 
+     *
      * @return void
      */
-    public function custom_fields_print_info() {
+    public function custom_fields_print_info()
+    {
         print 'Please select the WildApricot Contact Fields that you would like to sync with your WordPress site.';
     }
 
     /**
      * Displays the checkboxes for the WildApricot custom fields.
-     * 
+     *
      * @return void
      */
-    public function custom_fields_input() {
+    public function custom_fields_input()
+    {
         WA_Integration::retrieve_custom_fields();
         // Load in custom fields
         $custom_fields = get_option(WA_Integration::LIST_OF_CUSTOM_FIELDS);
@@ -606,13 +644,17 @@ class Admin_Settings {
                     }
                 }
                 ?>
-					<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php echo esc_attr($field_id); ?>" <?php echo esc_attr($is_checked); ?>/> <?php echo esc_html($field_name); ?> </input><br>
-				<?php
+<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php echo esc_attr($field_id); ?>"
+    <?php echo esc_attr($is_checked); ?> />
+<?php echo esc_html($field_name); ?> </input><br>
+<?php
             }
         } else { // no custom fields
             ?>
-            <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your WildApricot site's credentials under <a href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot Press -> Authorization</a></p>
-            <?php
+<p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your
+    WildApricot site's credentials under <a href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot
+        Press -> Authorization</a></p>
+<?php
         }
     }
 
@@ -622,7 +664,8 @@ class Admin_Settings {
      * @param array $input Contains all settings fields as array keys
      * @return array array of sanitized inputs
      */
-    public function custom_fields_sanitize($input) {
+    public function custom_fields_sanitize($input)
+    {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_field_nonce_name'], 'wawp_field_nonce_action')) {
             // wp_die('Your nonce could not be verified.');
@@ -638,39 +681,41 @@ class Admin_Settings {
             }
         }
 
-        
+
 
         return $valid;
     }
 
     /**
      * Print description of the plugin options
-     * 
+     *
      * @return void
      */
-    public function deletion_option_print_info() {
+    public function deletion_option_print_info()
+    {
         print 'By default, upon deletion of the <b>WildApricot Press</b> plugin, none of the data created and stored by WildApricot Press is deleted.<br><br>';
-        
+
         print 'You can remove all <strong>database and post/page data</strong> created by WildApricot Press by checking <strong>Delete WordPress database data and post/page data</strong>.<br>';
 
         print 'You can remove all <strong>WildApricot users</strong> created by WildApricot Press by checking <strong>Delete users added by WildApricot Press</strong>.';
-        
+
         return;
     }
 
     /**
-     * Displays the options for deleting the plugin, including if the 
+     * Displays the options for deleting the plugin, including if the
      * WildApricot synced users should be retained, etc.
-     * 
+     *
      * @return void
      */
-    public function deletion_option_input() {
+    public function deletion_option_input()
+    {
         // Store each checkbox description in array
         $synced_info = array(
             self::DELETE_DB_DATA => 'Delete WordPress database data and post/page data',
             self::DELETE_USER_DATA => 'Delete users added by WildApricot Press'
         );
-        
+
         // Load in saved checkboxes
         $saved_synced_info = get_option(WA_Integration::WA_DELETE_OPTION);
         // Display checkboxes
@@ -683,25 +728,28 @@ class Admin_Settings {
                 }
             }
             ?>
-            <input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>" <?php echo esc_attr($checked); ?>/> <?php echo esc_html($attribute); ?> </input><br><br>
-            <?php
+<input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>"
+    <?php echo esc_attr($checked); ?> />
+<?php echo esc_html($attribute); ?> </input><br><br>
+<?php
 
         }
     }
 
     /**
      * Sanitize the plugin deletion option.
-     * 
+     *
      * @param array $input contains settings input as array keys
      * @return array array of sanitized inputs
      */
-    public function deletion_option_sanitize($input) {
+    public function deletion_option_sanitize($input)
+    {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_delete_nonce_name'], 'wawp_delete_nonce_action')) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
             Log::wap_log_error('Your nonce for the deletion option could not be verified.');
             return empty_string_array($input);
-        } 
+        }
         $valid = array();
         // Loop through input array and sanitize each value
         if (!empty($input)) {
@@ -718,7 +766,8 @@ class Admin_Settings {
      *
      * @return void
      */
-    public function logfile_option_print_info() {
+    public function logfile_option_print_info()
+    {
         print 'By checking this box, error and warning messages will be printed to a file accessible in <code>wp-content/wapdebug.log</code>.';
         print '<br>Note: log message timezone will be in UTC if timezone is not set in WordPress settings.';
     }
@@ -728,11 +777,13 @@ class Admin_Settings {
      *
      * @return void
      */
-    public function logfile_option_input() {
+    public function logfile_option_input()
+    {
         $checked = Log::can_debug();
         ?>
-        <input type="checkbox" name="<?php echo esc_attr(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked" <?php echo esc_html($checked); ?>></input>
-        <?php
+<input type="checkbox" name="<?php echo esc_attr(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked"
+    <?php echo esc_html($checked); ?>></input>
+<?php
     }
 
     /**
@@ -741,16 +792,19 @@ class Admin_Settings {
      * @param string $input
      * @return string sanitized input
      */
-    public function logfile_option_sanitize($input) {
+    public function logfile_option_sanitize($input)
+    {
         if (!wp_verify_nonce($_POST['wawp_logfile_flag_nonce_name'], 'wawp_logfile_flag_nonce_action')) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
             Log::wap_log_error('Your nonce for the logfile option could not be verified.');
             return '';
         }
-        
+
         $valid = sanitize_text_field($input);
         // if input is empty, box is not checked, return empty string
-        if (!$valid) return '';
+        if (!$valid) {
+            return '';
+        }
         return $valid;
     }
 
@@ -760,7 +814,8 @@ class Admin_Settings {
      *
      * @return void
      */
-    private function register_login_button_location() {
+    private function register_login_button_location()
+    {
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'login_menu_location_sanitize'),
@@ -800,17 +855,18 @@ class Admin_Settings {
             'wawp_wal_login_logout_button', // ID
             'Menu:', // Title
             array( $this, 'login_menu_location_input_box' ), // Callback
-            self::LOGIN_BUTTON_LOCATION_PAGE, // Page 
+            self::LOGIN_BUTTON_LOCATION_PAGE, // Page
             'wawp_menu_location_id' // Section
         );
     }
-    
+
     /**
      * Register settings and add fields for the restricted statuses.
      *
      * @return void
      */
-    private function register_status_restriction() {
+    private function register_status_restriction()
+    {
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'restriction_status_sanitize'),
@@ -843,7 +899,8 @@ class Admin_Settings {
      *
      * @return void
      */
-    private function register_global_restriction_msg() {
+    private function register_global_restriction_msg()
+    {
         // Register setting
         $register_args = array(
             'type' => 'string',
@@ -879,7 +936,8 @@ class Admin_Settings {
      *
      * @return void
      */
-    private function register_custom_fields() {
+    private function register_custom_fields()
+    {
         // Register setting
         $register_args = array(
             'type' => 'string',
@@ -906,14 +964,15 @@ class Admin_Settings {
             'wawp_fields_id' // section
         );
     }
-    
+
     // settings on the plugin options tab
     /**
      * Register settings add fields for the delete all content option.
      *
      * @return void
      */
-    private function register_deletion_option() {
+    private function register_deletion_option()
+    {
         // Register setting
         $register_args = array(
             'type' => 'string',
@@ -953,7 +1012,8 @@ class Admin_Settings {
      *
      * @return void
      */
-    private function register_logfile_option() {
+    private function register_logfile_option()
+    {
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'logfile_option_sanitize'),
@@ -984,47 +1044,48 @@ class Admin_Settings {
      *
      * @return void
      */
-    private function create_content_restriction_options_tab() {
+    private function create_content_restriction_options_tab()
+    {
 
         ?>
-        <!-- Menu Locations for Login/Logout button -->
-        <form method="post" action="options.php">
-        <?php
+<!-- Menu Locations for Login/Logout button -->
+<form method="post" action="options.php">
+    <?php
             // Nonce for verification
             wp_nonce_field('wawp_menu_location_nonce_action', 'wawp_menu_location_nonce_name');
-            // This prints out all hidden setting fields
-            settings_fields( self::LOGIN_BUTTON_LOCATION_SECTION );
-            do_settings_sections( self::LOGIN_BUTTON_LOCATION_PAGE );
-            $menus = wp_get_nav_menus();
-            if (!empty($menus)) {
-                // don't display submit button if there are no menus
-                submit_button();
-            }
+        // This prints out all hidden setting fields
+        settings_fields(self::LOGIN_BUTTON_LOCATION_SECTION);
+        do_settings_sections(self::LOGIN_BUTTON_LOCATION_PAGE);
+        $menus = wp_get_nav_menus();
+        if (!empty($menus)) {
+            // don't display submit button if there are no menus
+            submit_button();
+        }
         ?>
-        </form>
-        <!-- Form for Restriction Status(es) -->
-        <form method="post" action="options.php">
-        <?php
+</form>
+<!-- Form for Restriction Status(es) -->
+<form method="post" action="options.php">
+    <?php
             // Nonce for verification
             wp_nonce_field('wawp_restriction_status_nonce_action', 'wawp_restriction_status_nonce_name');
-            // This prints out all hidden setting fields
-            settings_fields('wawp_restriction_status_group');
-            do_settings_sections( Settings::SETTINGS_URL );
-            submit_button();
+        // This prints out all hidden setting fields
+        settings_fields('wawp_restriction_status_group');
+        do_settings_sections(Settings::SETTINGS_URL);
+        submit_button();
         ?>
-        </form>
-        <!-- Form for global restriction message -->
-        <form method="post" action="options.php">
-        <?php
+</form>
+<!-- Form for global restriction message -->
+<form method="post" action="options.php">
+    <?php
             // Nonce for verification
             wp_nonce_field('wawp_restriction_nonce_action', 'wawp_restriction_nonce_name');
-            // This prints out all hidden setting fields
-            settings_fields('wawp_restriction_group');
-            do_settings_sections( 'wawp-wal-admin-message' );
-            submit_button();
+        // This prints out all hidden setting fields
+        settings_fields('wawp_restriction_group');
+        do_settings_sections('wawp-wal-admin-message');
+        submit_button();
         ?>
-        </form>
-        <?php
+</form>
+<?php
     }
 
     /**
@@ -1032,19 +1093,20 @@ class Admin_Settings {
      *
      * @return void
      */
-    private function create_sync_options_tab() {
+    private function create_sync_options_tab()
+    {
         ?>
-        <form method="post" action="options.php">
-        <?php
+<form method="post" action="options.php">
+    <?php
             // Nonce for verification
             wp_nonce_field('wawp_field_nonce_action', 'wawp_field_nonce_name');
-            // This prints out all hidden setting fields
-            settings_fields( 'wawp_fields_group' );
-            do_settings_sections( 'wawp-wal-admin&tab=fields' );
-            submit_button();
+        // This prints out all hidden setting fields
+        settings_fields('wawp_fields_group');
+        do_settings_sections('wawp-wal-admin&tab=fields');
+        submit_button();
         ?>
-        </form>
-        <?php
+</form>
+<?php
     }
 
     /**
@@ -1052,49 +1114,52 @@ class Admin_Settings {
      *
      * @return void
      */
-    private function create_plugin_options_tab() {
+    private function create_plugin_options_tab()
+    {
         ?>
-        <form method="post" action="options.php">
-            <?php
+<form method="post" action="options.php">
+    <?php
             // Nonce for verification
             wp_nonce_field('wawp_delete_nonce_action', 'wawp_delete_nonce_name');
-            // This prints out all hidden setting fields
-            settings_fields( 'wawp_delete_group' );
-            do_settings_sections( 'wawp-wal-admin&tab=plugin' );
-            submit_button();
-            ?>
-        </form>
-        <form method="post" action="options.php">
-            <?php
-            wp_nonce_field('wawp_logfile_flag_nonce_action', 'wawp_logfile_flag_nonce_name');
-            settings_fields('wawp_logfile_group');
-            do_settings_sections('wawp-wal-admin&tab=plugin#log');
-            submit_button();
-            ?>
-        </form>
-        <?php
+        // This prints out all hidden setting fields
+        settings_fields('wawp_delete_group');
+        do_settings_sections('wawp-wal-admin&tab=plugin');
+        submit_button();
+        ?>
+</form>
+<form method="post" action="options.php">
+    <?php
+        wp_nonce_field('wawp_logfile_flag_nonce_action', 'wawp_logfile_flag_nonce_name');
+        settings_fields('wawp_logfile_group');
+        do_settings_sections('wawp-wal-admin&tab=plugin#log');
+        submit_button();
+        ?>
+</form>
+<?php
     }
 
 }
 
 /**
  * Handles creating, rendering, and sanitizing WildApricot Authorization settings.
- * 
+ *
  * @since 1.1
  * @author Natalie Brotherton
  * @copyright 2022 NewPath Consulting
  */
-class WA_Auth_Settings {
+class WA_Auth_Settings
+{
     /**
      * Holds the values to be used in the fields callbacks
      */
     private $options;
 
-    const OPTION_GROUP = 'wap_wa_auth_group';
-    const SUBMENU_PAGE = 'wap-wa-auth-login';
-    const SECTION = 'wap_wa_auth_section';
+    public const OPTION_GROUP = 'wap_wa_auth_group';
+    public const SUBMENU_PAGE = 'wap-wa-auth-login';
+    public const SECTION = 'wap_wa_auth_section';
 
-    public function __construct() {
+    public function __construct()
+    {
     }
 
     /**
@@ -1102,15 +1167,16 @@ class WA_Auth_Settings {
      *
      * @return void
      */
-    public function add_submenu_page() {
+    public function add_submenu_page()
+    {
         add_submenu_page(
-			Settings::SETTINGS_URL,
-			'WildApricot Authorization',
-			'Authorization',
-			'manage_options',
-			self::SUBMENU_PAGE,
-			array($this, 'create_wa_auth_login_page')
-		);
+            Settings::SETTINGS_URL,
+            'WildApricot Authorization',
+            'Authorization',
+            'manage_options',
+            self::SUBMENU_PAGE,
+            array($this, 'create_wa_auth_login_page')
+        );
     }
 
     /**
@@ -1119,21 +1185,22 @@ class WA_Auth_Settings {
      *
      * @return void
      */
-    public function register_setting_add_fields() {
+    public function register_setting_add_fields()
+    {
         $register_args = array(
             'type' => 'string',
             'sanitize_callback' => array( $this, 'sanitize'),
             'default' => null
         );
 
-		// Register setting
+        // Register setting
         register_setting(
             self::OPTION_GROUP, // Option group
             WA_Integration::WA_CREDENTIALS_KEY, // Option name
             $register_args // Sanitize
         );
 
-		// Create settings section
+        // Create settings section
         add_settings_section(
             self::SECTION, // ID
             'WildApricot Authorized Application Credentials', // Title
@@ -1141,7 +1208,7 @@ class WA_Auth_Settings {
             self::SUBMENU_PAGE // Page
         );
 
-		// Settings for API Key
+        // Settings for API Key
         add_settings_field(
             WA_Integration::WA_API_KEY_OPT, // ID
             'API Key:', // Title
@@ -1150,7 +1217,7 @@ class WA_Auth_Settings {
             self::SECTION // Section
         );
 
-		// Settings for Client ID
+        // Settings for Client ID
         add_settings_field(
             WA_Integration::WA_CLIENT_ID_OPT, // ID
             'Client ID:', // Title
@@ -1159,8 +1226,8 @@ class WA_Auth_Settings {
             self::SECTION // Section
         );
 
-		// Settings for Client Secret
-		add_settings_field(
+        // Settings for Client Secret
+        add_settings_field(
             WA_Integration::WA_CLIENT_SECRET_OPT, // ID
             'Client Secret:', // Title
             array( $this, 'client_secret_callback' ), // Callback
@@ -1171,52 +1238,56 @@ class WA_Auth_Settings {
 
     /**
      * API credentials settings page callback. Renders form for API credentials,
-     * checkbox for login button location on the website menu, and tutorial 
+     * checkbox for login button location on the website menu, and tutorial
      * for obtaining WildApricot API credentials.
-     * 
+     *
      * @return void
-	 */
-    public function create_wa_auth_login_page() {
-        $this->options = get_option( WA_Integration::WA_CREDENTIALS_KEY );
-        
-		?>
-        <div class="wrap">
-			<h1>Authorization</h1>
-			<div class="waSettings">
-				<div class="loginChild">
-                    <!-- WildApricot credentials form -->
-					<form method="post" action="options.php">
-					<?php
-                        // Nonce for verification
-                        wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
-						// This prints out all hidden setting fields
-						settings_fields( self::OPTION_GROUP );
-						do_settings_sections( self::SUBMENU_PAGE );
-						submit_button();
-					?>
-					</form>
-					<!-- Check if form is valid -->
-					<?php
-                        $wild_apricot_url = $this->check_wild_apricot_url();
-                        // if there's a fatal error don't display anything after credentials form
-                        if (Exception::fatal_error()) {
-                            ?> </div> </div> </div> <?php
-                            return;
-                        }
-						if (!WA_Integration::valid_wa_credentials()) { 
-                            // not valid
-							echo '<p class="wap-error">Missing valid WildApricot credentials. Please enter them above.</p>';
-						} else if ($wild_apricot_url) { 
-                            // successful login
-							echo '<p class="wap-success">Valid WildApricot credentials have been saved.</p>';
-                            echo '<p class="wap-success">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>.</p>';
-						}
-                        return;
-					?>
-				</div>
-			</div>
+     */
+    public function create_wa_auth_login_page()
+    {
+        $this->options = get_option(WA_Integration::WA_CREDENTIALS_KEY);
+
+        ?>
+<div class="wrap">
+    <h1>Authorization</h1>
+    <div class="waSettings">
+        <div class="loginChild">
+            <!-- WildApricot credentials form -->
+            <form method="post" action="options.php">
+                <?php
+        // Nonce for verification
+        wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
+        // This prints out all hidden setting fields
+        settings_fields(self::OPTION_GROUP);
+        do_settings_sections(self::SUBMENU_PAGE);
+        submit_button();
+        ?>
+            </form>
+            <!-- Check if form is valid -->
+            <?php
+            $wild_apricot_url = $this->check_wild_apricot_url();
+        // if there's a fatal error don't display anything after credentials form
+        if (Exception::fatal_error()) {
+            ?>
         </div>
-        <?php
+    </div>
+</div> <?php
+            return;
+        }
+        if (!WA_Integration::valid_wa_credentials()) {
+            // not valid
+            echo '<p class="wap-error">Missing valid WildApricot credentials. Please enter them above.</p>';
+        } elseif ($wild_apricot_url) {
+            // successful login
+            echo '<p class="wap-success">Valid WildApricot credentials have been saved.</p>';
+            echo '<p class="wap-success">Your WordPress site has been connected to <b>' . esc_url($wild_apricot_url) . '</b>.</p>';
+        }
+        return;
+        ?>
+</div>
+</div>
+</div>
+<?php
     }
 
     /**
@@ -1225,7 +1296,8 @@ class WA_Auth_Settings {
      * @param array $input Contains all settings fields as array keys
      * @return array array of sanitized input, empty array if invalid or fatal error
      */
-    public function sanitize($input) {
+    public function sanitize($input)
+    {
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_credentials_nonce_name'], 'wawp_credentials_nonce_action')) {
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
@@ -1243,7 +1315,7 @@ class WA_Auth_Settings {
             }
 
             $api_key = $valid[WA_Integration::WA_API_KEY_OPT];
-            $valid_api = WA_API::is_application_valid($api_key); 
+            $valid_api = WA_API::is_application_valid($api_key);
             // credentials invalid
             if (!$valid_api) {
                 return empty_string_array($input);
@@ -1258,7 +1330,7 @@ class WA_Auth_Settings {
         } catch (Exception $e) {
             Log::wap_log_error($e->getMessage(), true);
             return empty_string_array($input);
-        } 
+        }
 
         // Return array of valid inputs
         return $valid;
@@ -1266,57 +1338,61 @@ class WA_Auth_Settings {
 
     /**
      * Print the instructions text for entering your WildApricot credentials
-     * 
+     *
      * @return void
      */
-    public function wal_print_section_info() {
+    public function wal_print_section_info()
+    {
         print 'Please enter your WildApricot authorization credentials here. Your data is encrypted for your safety.<br>';
-        print 'To obtain your WildApricot authorization credentials, please create a full-access <strong>Server application</strong>.<br><br>'; 
+        print 'To obtain your WildApricot authorization credentials, please create a full-access <strong>Server application</strong>.<br><br>';
 
-        print 'Refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a> for more details on creating an authorized application.<br>'; 
-        print '<strong>IMPORTANT:</strong> Do NOT create a WordPress authorized application for authorizing WildApricot Press.'; 
+        print 'Refer to <a href="https://gethelp.wildapricot.com/en/articles/180-authorizing-external-applications" target="_blank">WildApricot support</a> for more details on creating an authorized application.<br>';
+        print '<strong>IMPORTANT:</strong> Do NOT create a WordPress authorized application for authorizing WildApricot Press.';
     }
 
     /**
      * Display text field for API key
-     * 
+     *
      * @return void
      */
-    public function api_key_callback() {
-		echo '<input class="wap-wa-auth-creds" id="wawp_wal_api_key" name="wawp_wal_name[wawp_wal_api_key]"
+    public function api_key_callback()
+    {
+        echo '<input class="wap-wa-auth-creds" id="wawp_wal_api_key" name="wawp_wal_name[wawp_wal_api_key]"
 			type="text" placeholder="*************" />';
-		// Check if api key has been set; if so, echo that the client secret has been set!
-		if (!empty($this->options[WA_Integration::WA_API_KEY_OPT]) && !Exception::fatal_error()) {
-			echo '<p>API Key is set</p>';
-		}
+        // Check if api key has been set; if so, echo that the client secret has been set!
+        if (!empty($this->options[WA_Integration::WA_API_KEY_OPT]) && !Exception::fatal_error()) {
+            echo '<p>API Key is set</p>';
+        }
     }
 
     /**
      * Display text field for Client ID
-     * 
+     *
      * @return void
      */
-    public function client_id_callback() {
-		echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_id" name="wawp_wal_name[wawp_wal_client_id]"
+    public function client_id_callback()
+    {
+        echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_id" name="wawp_wal_name[wawp_wal_client_id]"
 			type="text" placeholder="*************" />';
-		// Check if client id has been set; if so, echo that the client secret has been set!
-		if (!empty($this->options[WA_Integration::WA_CLIENT_ID_OPT]) && !Exception::fatal_error()) {
-			echo '<p>Client ID is set</p>';
-		}
+        // Check if client id has been set; if so, echo that the client secret has been set!
+        if (!empty($this->options[WA_Integration::WA_CLIENT_ID_OPT]) && !Exception::fatal_error()) {
+            echo '<p>Client ID is set</p>';
+        }
     }
 
-	/**
+    /**
      * Display text field for Client Secret
-     * 
+     *
      * @return void
      */
-    public function client_secret_callback() {
-		echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_secret" name="wawp_wal_name[wawp_wal_client_secret]"
+    public function client_secret_callback()
+    {
+        echo '<input class="wap-wa-auth-creds" id="wawp_wal_client_secret" name="wawp_wal_name[wawp_wal_client_secret]"
 			type="text" placeholder="*************" />';
-		// Check if client secret has been set; if so, echo that the client secret has been set!
-		if (!empty($this->options[WA_Integration::WA_CLIENT_SECRET_OPT]) && !Exception::fatal_error()) {
-			echo '<p>Client Secret is set</p>';
-		}
+        // Check if client secret has been set; if so, echo that the client secret has been set!
+        if (!empty($this->options[WA_Integration::WA_CLIENT_SECRET_OPT]) && !Exception::fatal_error()) {
+            echo '<p>Client Secret is set</p>';
+        }
     }
 
     /**
@@ -1324,7 +1400,8 @@ class WA_Auth_Settings {
      *
      * @return string|bool WildApricot URL, false if it could not be obtained
      */
-    private function check_wild_apricot_url() {
+    private function check_wild_apricot_url()
+    {
         $wild_apricot_url = get_option(WA_Integration::WA_URL_KEY);
         try {
             if ($wild_apricot_url) {
@@ -1339,13 +1416,14 @@ class WA_Auth_Settings {
     }
 
     /**
-     * Sanitize and validate each input value for the WildApricot API 
+     * Sanitize and validate each input value for the WildApricot API
      * Credentials.
      *
      * @param string[] $input
      * @return string[]|false returns array of valid inputs and false if inputs are not valid
      */
-    private static function validate_and_sanitize_wa_input($input) {
+    private static function validate_and_sanitize_wa_input($input)
+    {
         $valid = array();
         foreach ($input as $key => $value) {
             // remove non-alphanumeric chars
@@ -1373,7 +1451,8 @@ class WA_Auth_Settings {
      * @param string[] $valid_api response from initial connection to WildApricot API
      * @return void
      */
-    private static function obtain_and_save_wa_data_from_api($valid_api) {
+    private static function obtain_and_save_wa_data_from_api($valid_api)
+    {
         $data_encryption = new Data_Encryption();
         // Extract access token and ID, as well as expiring time
         $access_token = $valid_api['access_token'];
@@ -1383,7 +1462,7 @@ class WA_Auth_Settings {
 
         $access_token_enc = $data_encryption->encrypt($access_token);
         $account_id_enc = $data_encryption->encrypt($account_id);
-        $refresh_token_enc = $data_encryption->encrypt($refresh_token); 
+        $refresh_token_enc = $data_encryption->encrypt($refresh_token);
 
         // Get all membership levels and groups
         $wawp_api_instance = new WA_API($access_token, $account_id);
@@ -1425,7 +1504,7 @@ class WA_Auth_Settings {
         update_option(WA_Integration::WA_ALL_MEMBERSHIPS_KEY, $all_membership_levels);
         update_option(WA_Integration::WA_ALL_GROUPS_KEY, $all_membership_groups);
         update_option(WA_Integration::WA_URL_KEY, $wild_apricot_url_enc);
-            // Create a new role for each membership level
+        // Create a new role for each membership level
         // Delete old roles if applicable
         $old_wa_roles = get_option(WA_Integration::WA_ALL_MEMBERSHIPS_KEY);
         if (isset($old_wa_roles) && !empty($old_wa_roles)) {
@@ -1444,24 +1523,28 @@ class WA_Auth_Settings {
 
 /**
  * Handles creating, rendering, and sanitizing license keys
- * 
+ *
  * @since 1.1
  * @author Natalie Brotherton
  * @copyright 2022 NewPath Consulting
  */
-class License_Settings {
-    const OPTION_GROUP = 'wap_licensing_group';
-    const SUBMENU_PAGE = 'wap-licensing';
-    const SECTION = 'wap_licensing_section';
+class License_Settings
+{
+    public const OPTION_GROUP = 'wap_licensing_group';
+    public const SUBMENU_PAGE = 'wap-licensing';
+    public const SECTION = 'wap_licensing_section';
 
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     /**
      * Add submenu settings page for license settings.
      *
      * @return void
      */
-    public function add_submenu_page() {
+    public function add_submenu_page()
+    {
         // Create submenu for license key forms
         add_submenu_page(
             Settings::SETTINGS_URL,
@@ -1478,7 +1561,8 @@ class License_Settings {
      *
      * @return void
      */
-    public function register_setting_add_fields() {
+    public function register_setting_add_fields()
+    {
         // Registering and adding settings for the license key forms
         $register_args = array(
             'type' => 'string',
@@ -1519,29 +1603,30 @@ class License_Settings {
      *
      * @return void
      */
-    public function create_license_form() {
+    public function create_license_form()
+    {
         ?>
-        <div class="wrap">
-            <h1>Licensing</h1>
-            <?php
+<div class="wrap">
+    <h1>Licensing</h1>
+    <?php
             // Check if WildApricot credentials have been entered
             // If credentials have been entered (not empty) and plugin is not disabled, then we can present the license page
             if (!Exception::fatal_error() && WA_Integration::valid_wa_credentials()) {
                 ?>
-                <form method="post" action="options.php">
-                    <?php
+    <form method="post" action="options.php">
+        <?php
                     // Nonce for verification
                     wp_nonce_field('wawp_license_nonce_action', 'wawp_license_nonce_name');
-                    settings_fields(self::OPTION_GROUP);
-                    do_settings_sections(self::SUBMENU_PAGE);
-                    submit_button('Save', 'primary');
-                    ?>
-                </form>
-                <?php
-            } 
-            ?>
-        </div>
-        <?php
+                settings_fields(self::OPTION_GROUP);
+                do_settings_sections(self::SUBMENU_PAGE);
+                submit_button('Save', 'primary');
+                ?>
+    </form>
+    <?php
+            }
+        ?>
+</div>
+<?php
     }
 
     /**
@@ -1549,12 +1634,13 @@ class License_Settings {
      * For each license submitted, check if the license is valid.
      * If it is valid, it gets added to the array of valid license keys.
      * Otherwise, the user receives an error.
-     * 
+     *
      * @param array $input settings form input array mapping addon slugs to license keys
      * @return array array of valid license keys, empty array if invalid or
      * fatal error
      */
-    public function sanitize_and_validate($input) {
+    public function sanitize_and_validate($input)
+    {
         $empty_input_array = empty_string_array($input);
         // Check that nonce is valid
         if (!wp_verify_nonce($_POST['wawp_license_nonce_name'], 'wawp_license_nonce_action')) {
@@ -1575,23 +1661,23 @@ class License_Settings {
 
         foreach($input as $slug => $license) {
             try {
-                $key = Addon::instance()::validate_license_key($license, $slug); 
+                $key = Addon::instance()::validate_license_key($license, $slug);
             } catch (Exception $e) {
                 Log::wap_log_error($e->getMessage(), true);
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_NOT_ENTERED);
                 return $empty_input_array;
             }
-            if (is_null($key)) { 
+            if (is_null($key)) {
                 // invalid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_INVALID);
                 $valid[$slug] = '';
 
-            } else if ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
+            } elseif ($key == Addon::LICENSE_STATUS_ENTERED_EMPTY) {
                 // key was not entered -- different message will be shown
                 $valid[$slug] = '';
 
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_ENTERED_EMPTY);
-            } else { 
+            } else {
                 try {
                     $license_encrypted = $data_encryption->encrypt($key);
                 } catch (Encryption_Exception $e) {
@@ -1615,10 +1701,11 @@ class License_Settings {
 
     /**
      * Print the licensing settings section text
-     * 
+     *
      * @return void
      */
-    public function print_settings_info() {
+    public function print_settings_info()
+    {
         $link_address = "https://newpathconsulting.com/wap/";
         print "Enter your license key(s) here. If you do not already have a license key, please visit our website <a href='" . esc_url($link_address) . "' target='_blank' rel='noopener noreferrer'>here</a> to get a license key. ";
     }
@@ -1627,10 +1714,11 @@ class License_Settings {
      * Render license input box HTML.
      *
      * @param array $args the plugin for which to render the license field.
-     * Contains slug and title. Passed in in `add_settings_field`. 
+     * Contains slug and title. Passed in in `add_settings_field`.
      * @return void
      */
-    public function create_input_box(array $args) {
+    public function create_input_box(array $args)
+    {
         $slug = $args['slug'];
         // Check that slug is valid
         $input_value = '';
@@ -1638,10 +1726,133 @@ class License_Settings {
         if ($license_valid) {
             $input_value = Addon::instance()::get_license($slug);
         }
-        
+
         echo '<input class="license_key" id="' . esc_attr($slug) . '" name="wawp_license_keys[' . esc_attr($slug) .']" type="text" value="' . esc_attr($input_value) . '"  />' ;
         if ($license_valid) {
             echo '<br><p class="wap-success"><span class="dashicons dashicons-saved"></span> License key valid</p>';
-        } 
+        }
     }
+}
+
+class Style_Settings
+{
+    public const OPTION_GROUP = 'wap_styles_group';
+    public const SUBMENU_PAGE = 'wap-styles-submenu';
+    public const SECTION = 'wap_styles_section';
+    public const OPTION_NAME = 'wawp_user_style';
+    public const CSS_FILE_PATH = 'css/wawp-styles-user.css';
+    // public const CSS_FILE_URL = WP_PLUGIN_DIR .
+
+    public function __construct()
+    {
+
+    }
+
+    /**
+     * Adds the user stylesheet page to the admin menu.
+     *
+     * @return void
+     */
+    public function add_submenu_page()
+    {
+        add_submenu_page(
+            Settings::SETTINGS_URL,
+            'Custom User Style',
+            'Custom User Style',
+            'manage_options',
+            self::SUBMENU_PAGE,
+            array($this, 'create_user_styles_page')
+        );
+    }
+
+    public function register_setting_add_fields()
+    {
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'sanitize'),
+            'default' => null
+        );
+
+        register_setting(
+            self::OPTION_GROUP,
+            self::OPTION_NAME,
+            $register_args
+        );
+
+        add_settings_section(
+            self::SECTION,
+            '',
+            array($this, 'user_styles_print_section_info'),
+            self::SUBMENU_PAGE
+        );
+
+        add_settings_field(
+            self::OPTION_NAME,
+            'Custom CSS',
+            array($this, 'user_style_callback'),
+            self::SUBMENU_PAGE,
+            self::SECTION
+        );
+    }
+
+    public function create_user_styles_page()
+    {
+
+
+        // create form w/ content
+
+        ?>
+<div class="wrap">
+    <h1>Custom User Style</h1>
+    <div class="wap-custom-css">
+        <form method="post" action="options.php">
+            <?php
+        // Nonce for verification
+        wp_nonce_field('wawp_styles_nonce_action', 'wawp_styles_nonce_name');
+        // This prints out all hidden setting fields
+        settings_fields(self::OPTION_GROUP);
+        do_settings_sections(self::SUBMENU_PAGE);
+        submit_button();
+        ?>
+        </form>
+    </div>
+</div><?php
+
+    }
+
+    public function user_style_callback()
+    {
+        // get css file content
+        $file_contents = file_get_contents(self::get_stylesheet_url());
+        ?>
+<textarea name="wawp_user_style[]" class="wawp_user_style_input"
+    value="<?php echo $file_contents?>" /><?php echo $file_contents ?></textarea><br>
+<?php
+    }
+
+    public function sanitize($input)
+    {
+        if(!wp_verify_nonce($_POST['wawp_styles_nonce_name'], 'wawp_styles_nonce_action')) {
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the restriction status could not be verified. Please try again.');
+            return file_get_contents(self::get_stylesheet_url());
+        }
+
+        // write to file
+        $sanitized_input = sanitize_textarea_field($input[0]);
+        file_put_contents(self::get_stylesheet_url(), $sanitized_input);
+        return $sanitized_input;
+    }
+
+    public function user_styles_print_section_info()
+    {
+        print 'Enter custom CSS for ' . Addon::get_title(CORE_SLUG) . ' elements here.';
+    }
+
+    private static function get_stylesheet_url()
+    {
+        return PLUGIN_PATH . self::CSS_FILE_PATH;
+    }
+
+
 }
