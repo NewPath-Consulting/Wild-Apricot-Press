@@ -1504,25 +1504,26 @@ class WA_Integration
 <div id="wawp_login-wrap">
     <p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot
         members!</p>
-  <form method="post" action="">
+    <form method="post" action="">
         <?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
         <label for="wawp_login_email" style="margin-left: 0px;">Email:</label>
-        <br><input type="text" id="wawp_login_email" style="width: 15em; margin-left: 0px;" name="wawp_login_email" placeholder="example@website.com">
-        <br><label for="wawp_login_password"  style=" margin-left: 0px;">Password:</label>
-        <br><input type="password" id="wawp_login_password"  name="wawp_login_password" placeholder="***********"
+        <br><input type="text" id="wawp_login_email" style="width: 15em; margin-left: 0px;" name="wawp_login_email"
+            placeholder="example@website.com">
+        <br><label for="wawp_login_password" style=" margin-left: 0px;">Password:</label>
+        <br><input type="password" id="wawp_login_password" name="wawp_login_password" placeholder="***********"
             autocomplete="new-password" style="width: 15em; margin-left: 0px;">
         <!-- Remember Me -->
         <div id="wawp_remember_me_div" style="margin-left: 0px;">
             <br><label id="wawp_remember_me_label" for="wawp_remember_me">Remember me?</label>
             <input type="checkbox" id="wawp_remember_me" name="wawp_remember_me" checked>
-       
-        <!-- Forgot password -->
-        <br><label id="wawp_forgot_password"><a
-                href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank"
-                rel="noopener noreferrer">Forgot Password?</a></label>
-		 
-        <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
-			</div>
+
+            <!-- Forgot password -->
+            <br><label id="wawp_forgot_password"><a
+                    href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank"
+                    rel="noopener noreferrer">Forgot Password?</a></label>
+
+            <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
+        </div>
     </form>
 </div><?php
         } else {
@@ -1554,9 +1555,10 @@ class WA_Integration
         if (Addon::is_plugin_disabled()) {
             return $items;
         }
+        $menu_item_class = '';
         // Check the restrictions of each item in header IF the header is not blank
         if (!empty($items)) {
-            // Get navigation items
+            // Get navigation items as WP_Post objects
             $args_menu = $args->menu;
             $nav_items = wp_get_nav_menu_items($args_menu);
 
@@ -1639,6 +1641,20 @@ class WA_Integration
 
                     // Get associated HTML tag for this menu
                     $associated_html = $li_tags->item($nav_item_number);
+
+                    // get menu item class
+                    $item_class_name = $associated_html->className;
+                    // set class variable ONLY if it hasn't been set yet AND the menu item isn't the currently viewed page (adds extra classes)
+                    if (empty($menu_item_class) && !str_contains($item_class_name, 'current-menu-item')) {
+                        $item_id = $associated_html->id;
+
+                        // if menu item class contains item-specific id, remove it
+                        if (!empty($item_id) && str_contains($item_class_name, $item_id)) {
+                            $menu_item_class = str_replace($item_id, '', $item_class_name);
+                        } else {
+                            $menu_item_class = $item_class_name;
+                        }
+                    }
                     // Add or remove hidden style
                     if ($user_can_see) {
                         $associated_html->removeAttribute('style');
@@ -1684,7 +1700,7 @@ class WA_Integration
                 $url = $login_url;
                 $button_text = 'Log In';
             }
-            $items .= '<li id="wawp_login_logout_button" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="'. esc_url($url) .'">' . esc_html($button_text) . '</a></li>';
+            $items .= '<li id="wawp_login_logout_button" class="' . esc_html($menu_item_class) . '"><a href="'. esc_url($url) .'">' . esc_html($button_text) . '</a></li>';
         }
 
         return $items;
