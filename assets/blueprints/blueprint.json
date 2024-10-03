@@ -17,7 +17,7 @@
         "blogname": "WildApricot Press Demo Site"
     },
     "plugins": [
-        "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=1.0.3",
+        "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=master",
         "error-log-viewer",
         "generateblocks"
     ],
