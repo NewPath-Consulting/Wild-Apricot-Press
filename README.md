@@ -199,11 +199,12 @@ In Plugin Options tab you can turn on the "Print log messages to log file" to st
 
 == Changelog ==
 
-= Version 1.0.3 - September 20, 2024 =
+= Version 1.0.3 - October 2, 2024 =
 
 - improved post restriction compatibility with other plugins
-- fixed overly strict URL comparison between licensed URLs and WildApricot URL
-
+- fixed license key checking for overly strict URL comparison between licensed URLs and WildApricot URL
+- edit plugin css options
+- 
 = Version 1.0.2 - June 26, 2023 =
 
 - updated licensing message
