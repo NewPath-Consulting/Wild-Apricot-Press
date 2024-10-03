@@ -201,9 +201,9 @@ In Plugin Options tab you can turn on the "Print log messages to log file" to st
 
 = Version 1.0.3 - October 2, 2024 =
 
-- improved post restriction compatibility with other plugins
+- improved post restriction compatibility with other plugins that manage page or post contents
 - fixed license key checking for overly strict URL comparison between licensed URLs and WildApricot URL
-- edit plugin css options
+- added edit plugin css options tab 
 - 
 = Version 1.0.2 - June 26, 2023 =
 
