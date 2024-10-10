@@ -226,6 +226,13 @@ class WA_Integration
     public const LIST_OF_CUSTOM_FIELDS 				= 'wawp_list_of_custom_fields';
 
     /**
+     * Stores WA fields that are WA admin only for display in admin settings.
+     *
+     * @var string
+     */
+    public const LIST_OF_ADMIN_FIELDS               = 'wawp_list_of_admin_fields';
+
+    /**
      * Stores WA fields selected by user to sync with WordPress. Controlled in
      * admin settings.
      *

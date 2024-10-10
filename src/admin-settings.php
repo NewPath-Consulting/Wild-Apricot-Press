@@ -618,7 +618,8 @@ class Admin_Settings
      */
     public function custom_fields_print_info()
     {
-        print 'Please select the WildApricot Contact Fields that you would like to sync with your WordPress site.';
+        print 'Please select the WildApricot Contact Fields that you would like to sync with your WordPress site.<br>';
+        print 'Admin-only contact fields are displayed below the list of contact fields but are not available to sync. If you wish to sync these fields with your site please change the field settings in Wild Apricot.';
     }
 
     /**
@@ -655,6 +656,22 @@ class Admin_Settings
     WildApricot site's credentials under <a href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot
         Press -> Authorization</a></p>
 <?php
+        }
+    }
+
+    /**
+     * Displays list of Wild Apricot member fields that have admin only access.
+     *
+     * @return void
+     */
+    public function admin_fields_list()
+    {
+        $admin_fields = get_option(WA_Integration::LIST_OF_ADMIN_FIELDS);
+        if (!empty($admin_fields)) {
+            foreach ($admin_fields as $field_id => $field_name) {
+                ?> <input type="checkbox" disabled style="color:gray">
+<?php echo esc_html($field_name) ?> </input><br> <?php
+            }
         }
     }
 
@@ -962,6 +979,13 @@ class Admin_Settings
             array($this, 'custom_fields_input'), // callback
             'wawp-wal-admin&tab=fields', // page
             'wawp_fields_id' // section
+        );
+        add_settings_field(
+            'wawp_admin_field_id',
+            'Admin fields:',
+            array($this, 'admin_fields_list'),
+            'wawp-wal-admin&tab=fields',
+            'wawp_fields_id'
         );
     }
 

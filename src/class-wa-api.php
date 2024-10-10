@@ -265,20 +265,36 @@ class WA_API
             'Organization',
             'Membership status'
         );
+
         // Do not add 'Group participation' or 'User ID' because those are already used by default
         $custom_fields = array();
-        if (!empty($custom_field_response)) {
-            foreach ($custom_field_response as $field_response) {
-                $field_name = $field_response['FieldName'];
+        $admin_fields = array();
+        foreach ($custom_field_response as $field_response) {
+            $field_name = $field_response['FieldName'];
+            $field_id = '';
+            if (array_key_exists('SystemCode', $field_response)) {
                 $field_id = $field_response['SystemCode'];
-                // Ensure that we are not displaying default options
-                if (!in_array($field_name, $default_fields)) {
-                    $custom_fields[$field_id] = $field_name;
-                }
+            } else {
+                $field_id = str_replace(' ', '', $field_id);
+            }
+
+            // check access
+            // Ensure that we are not displaying default options
+
+            if (in_array($field_name, $default_fields)) {
+                continue;
+            }
+
+            if ($field_response['AdminOnly']) {
+                $admin_fields[$field_id] = $field_name;
+            } else {
+                $custom_fields[$field_id] = $field_name;
             }
         }
+        // TODO: update fields in user roles and checked fields
         // Save custom fields in the options table
         update_option(WA_Integration::LIST_OF_CUSTOM_FIELDS, $custom_fields);
+        update_option(WA_Integration::LIST_OF_ADMIN_FIELDS, $admin_fields);
     }
 
     /**
