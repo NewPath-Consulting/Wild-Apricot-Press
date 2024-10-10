@@ -34,7 +34,12 @@ class Log {
      * The name of the option stored in the options table
      * which contains the user's debug setting.   
      */
-    const LOG_OPTION = 'wawp_logfile';
+
+    /**
+     * The name of the option in the options table that records whether the
+     * user has manually checked/unchecked the debug log setting
+     */
+    public const LOG_OPTION_UPDATED = 'wawp_logfile_updated';
 
     /**
      * Returns the log file flag. 
@@ -43,6 +48,11 @@ class Log {
      */
     static public function can_debug() {
         return get_option(Log::LOG_OPTION);
+    }
+
+    public static function did_check_debug()
+    {
+        return get_option(Log::LOG_OPTION_UPDATED);
     }
 
     /**

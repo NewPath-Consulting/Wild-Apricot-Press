@@ -49,16 +49,8 @@ function delete_all_db_data() {
 	delete_option(WAWP\WA_Integration::ADMIN_REFRESH_TOKEN_OPTION);
 	delete_option(WAWP\WA_Integration::WA_URL_KEY);
 
-	// delete options added in admin settings
-	delete_option(WAWP\WA_Integration::MENU_LOCATIONS_KEY);
-	delete_option(WAWP\WA_Integration::GLOBAL_RESTRICTED_STATUSES);
-	delete_option(WAWP\WA_Integration::GLOBAL_RESTRICTION_MESSAGE);
-	delete_option(WAWP\WA_Integration::LIST_OF_CHECKED_FIELDS);
-	delete_option(WAWP\WA_Integration::WA_DELETE_OPTION);
-	delete_option(WAWP\Log::LOG_OPTION);
-	
-	// delete authorized application credentials	
-	delete_option(WAWP\WA_Integration::WA_CREDENTIALS_KEY);
+    delete_option(WAWP\Log::LOG_OPTION_UPDATED);
+
 
 	// delete license data
 	WAWP\Addon::instance()::delete();
