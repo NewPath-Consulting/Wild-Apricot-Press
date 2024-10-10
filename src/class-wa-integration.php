@@ -52,6 +52,36 @@ class WA_Integration
     public const WA_CLIENT_SECRET_OPT 					= 'wawp_wal_client_secret';
 
     /**
+     * Stores the validity status of the Wild Apricot API credentials.
+     *
+     * @var string
+     */
+    public const API_STATUS_OPTION = 'wawp_api_status';
+
+    /**
+     * Valid WA API credentials.
+     *
+     * @var string
+     */
+    public const API_STATUS_VALID = 'valid';
+
+    /**
+     * Invalid WA API credentials.
+     *
+     * @var string
+     */
+    public const API_STATUS_INVALID = 'invalid';
+
+    /**
+     * WA API credentials have the incorrect scope - read only or
+     * WordPress credentials.
+     *
+     * @var string
+     */
+    public const API_STATUS_INCORRECT_SCOPE = 'incorrect_scope';
+
+
+    /**
      * Stores the total number of Wild Apricot contacts.
      */
     public const WA_CONTACTS_COUNT_KEY					= 'wawp_contacts_count';
@@ -346,6 +376,26 @@ class WA_Integration
 
         // check first that creds exist
         return !empty($api_key) && !empty($client_id) && !empty($client_secret);
+    }
+
+    public static function get_api_input_status()
+    {
+        return get_option(self::API_STATUS_OPTION);
+    }
+
+    public static function set_api_status_invalid()
+    {
+        update_option(self::API_STATUS_OPTION, self::API_STATUS_INVALID);
+    }
+
+    public static function set_api_status_incorrect_scope()
+    {
+        update_option(self::API_STATUS_OPTION, self::API_STATUS_INCORRECT_SCOPE);
+    }
+
+    public static function set_api_status_valid()
+    {
+        update_option(self::API_STATUS_OPTION, self::API_STATUS_VALID);
     }
 
     /**

@@ -55,13 +55,8 @@ function delete_all_db_data() {
 	// delete license data
 	WAWP\Addon::instance()::delete();
 
-	// data from wild apricot
-	delete_option(WAWP\WA_Integration::WA_ALL_MEMBERSHIPS_KEY);
-	delete_option(WAWP\WA_Integration::WA_ALL_GROUPS_KEY);
-	delete_option(WAWP\WA_Integration::LIST_OF_CUSTOM_FIELDS);
-	
-	// delete stored list of restricted post
-	delete_option(WAWP\WA_Integration::ARRAY_OF_RESTRICTED_POSTS);
+    delete_option(WAWP\WA_Integration::LIST_OF_ADMIN_FIELDS);
+
 
 	// delete exception flag
 	delete_option(WAWP\Exception::EXCEPTION_OPTION);
