@@ -38,7 +38,6 @@ class Settings
         $this->admin_settings   = new Admin_Settings();
         $this->wa_auth_settings = new WA_Auth_Settings();
         $this->license_settings = new License_Settings();
-        $this->style_settings = new Style_Settings();
 
         // Activate option in table if it does not exist yet
         // Currently, there is a WordPress bug that calls the 'sanitize' function twice if the option is not already in the database
@@ -271,6 +270,12 @@ class Admin_Settings
     public const DELETE_DB_DATA = 'delete_db_data';
     public const DELETE_USER_DATA = 'delete_user_data';
 
+    public const STYLE_OPTION_GROUP = 'wap_styles_group';
+    public const STYLE_SUBMENU_PAGE = 'wap-styles-submenu';
+    public const STYLE_SECTION = 'wap_styles_section';
+    public const STYLE_OPTION_NAME = 'wawp_user_style';
+    public const CSS_FILE_PATH = 'css/wawp-styles-user.css';
+
     public function __construct()
     {
     }
@@ -321,6 +326,10 @@ class Admin_Settings
         $this->register_deletion_option();
         $this->register_logfile_option();
 
+        // style options
+        $this->register_user_style();
+        $this->register_login_page_settings();
+
     }
 
     /**
@@ -351,6 +360,9 @@ class Admin_Settings
     <a href="?page=wawp-wal-admin&tab=plugin"
         class="nav-tab <?php if($tab === 'plugin'):?>nav-tab-active<?php endif; ?>">Plugin
         Options</a>
+    <a href="?page=wawp-wal-admin&tab=style"
+        class="nav-tab <?php if($tab === 'style'):?>nav-tab-active<?php  endif;?>">User
+        Login Page Options</a>
 </nav>
 <div class="tab-content">
     <?php
@@ -358,6 +370,8 @@ class Admin_Settings
                 case 'fields': $this->create_sync_options_tab();
                     break;
                 case 'plugin': $this->create_plugin_options_tab();
+                    break;
+                case 'style': $this->create_login_settings_tab();
                     break;
                 default:       $this->create_content_restriction_options_tab();
             endswitch;
@@ -820,9 +834,42 @@ class Admin_Settings
         $valid = sanitize_text_field($input);
         // if input is empty, box is not checked, return empty string
         if (!$valid) {
-            return '';
+            return 0;
         }
-        return $valid;
+        return 1;
+    }
+
+
+    public function user_style_callback()
+    {
+        // get css file content
+        $file_contents = file_get_contents(self::get_stylesheet_url());
+        ?>
+<textarea name="wawp_user_style[]" class="wawp_user_style_input"
+    value="<?php echo $file_contents?>" /><?php echo $file_contents ?></textarea><br>
+<?php
+    }
+
+    public function user_style_sanitize($input)
+    {
+        if(!wp_verify_nonce($_POST['wawp_styles_nonce_name'], 'wawp_styles_nonce_action')) {
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the restriction status could not be verified. Please try again.');
+            return file_get_contents(self::get_stylesheet_url());
+        }
+
+        // write to file
+        $sanitized_input = sanitize_textarea_field($input[0]);
+        file_put_contents(self::get_stylesheet_url(), $sanitized_input);
+        return $sanitized_input;
+    }
+
+    public function user_styles_print_section_info()
+    {
+        print 'Enter custom CSS for ' . Addon::get_title(CORE_SLUG) . ' elements here.';
+    }
+
+
     }
 
     // settings on the content restriction options tab
@@ -1063,6 +1110,37 @@ class Admin_Settings
         );
     }
 
+    private function register_user_style()
+    {
+        $register_args = array(
+        'type' => 'string',
+        'sanitize_callback' => array( $this, 'user_style_sanitize'),
+        'default' => null
+        );
+
+        register_setting(
+            self::STYLE_OPTION_GROUP,
+            self::STYLE_OPTION_NAME,
+            $register_args
+        );
+
+        add_settings_section(
+            self::STYLE_SECTION,
+            'Customize Look and Feel',
+            array($this, 'user_styles_print_section_info'),
+            self::STYLE_SUBMENU_PAGE
+        );
+
+        add_settings_field(
+            self::STYLE_OPTION_NAME,
+            'Custom CSS',
+            array($this, 'user_style_callback'),
+            self::STYLE_SUBMENU_PAGE,
+            self::STYLE_SECTION
+        );
+    }
+
+
     /**
      * Render content for the content restriction tab.
      *
@@ -1160,6 +1238,46 @@ class Admin_Settings
         ?>
 </form>
 <?php
+    }
+
+    private function create_login_settings_tab()
+    {
+
+
+        // create form w/ content
+
+        ?>
+<div class="wrap">
+    <div class="wap-custom-css">
+        <form method="post" action="options.php">
+            <?php
+        // Nonce for verification
+        wp_nonce_field('wawp_styles_nonce_action', 'wawp_styles_nonce_name');
+        // This prints out all hidden setting fields
+        settings_fields(self::STYLE_OPTION_GROUP);
+        do_settings_sections(self::STYLE_SUBMENU_PAGE);
+        submit_button();
+        ?>
+        </form>
+        <form method="post" action="options.php">
+            <?php
+        // Nonce for verification
+        wp_nonce_field('wawp_login_nonce_action', 'wawp_login_nonce_name');
+        // This prints out all hidden setting fields
+        settings_fields('wap_login_settings_group');
+        do_settings_sections('login_settings_submenu');
+        submit_button();
+        ?>
+        </form>
+    </div>
+</div><?php
+
+    }
+
+
+    private static function get_stylesheet_url()
+    {
+        return PLUGIN_PATH . self::CSS_FILE_PATH;
     }
 
 }
@@ -1771,127 +1889,4 @@ class License_Settings
             echo '<br><p class="wap-success"><span class="dashicons dashicons-saved"></span> License key valid</p>';
         }
     }
-}
-
-class Style_Settings
-{
-    public const OPTION_GROUP = 'wap_styles_group';
-    public const SUBMENU_PAGE = 'wap-styles-submenu';
-    public const SECTION = 'wap_styles_section';
-    public const OPTION_NAME = 'wawp_user_style';
-    public const CSS_FILE_PATH = 'css/wawp-styles-user.css';
-    // public const CSS_FILE_URL = WP_PLUGIN_DIR .
-
-    public function __construct()
-    {
-
-    }
-
-    /**
-     * Adds the user stylesheet page to the admin menu.
-     *
-     * @return void
-     */
-    public function add_submenu_page()
-    {
-        add_submenu_page(
-            Settings::SETTINGS_URL,
-            'Custom User Style',
-            'Custom User Style',
-            'manage_options',
-            self::SUBMENU_PAGE,
-            array($this, 'create_user_styles_page')
-        );
-    }
-
-    public function register_setting_add_fields()
-    {
-        $register_args = array(
-            'type' => 'string',
-            'sanitize_callback' => array( $this, 'sanitize'),
-            'default' => null
-        );
-
-        register_setting(
-            self::OPTION_GROUP,
-            self::OPTION_NAME,
-            $register_args
-        );
-
-        add_settings_section(
-            self::SECTION,
-            '',
-            array($this, 'user_styles_print_section_info'),
-            self::SUBMENU_PAGE
-        );
-
-        add_settings_field(
-            self::OPTION_NAME,
-            'Custom CSS',
-            array($this, 'user_style_callback'),
-            self::SUBMENU_PAGE,
-            self::SECTION
-        );
-    }
-
-    public function create_user_styles_page()
-    {
-
-
-        // create form w/ content
-
-        ?>
-<div class="wrap">
-    <h1>Custom User Style</h1>
-    <div class="wap-custom-css">
-        <form method="post" action="options.php">
-            <?php
-        // Nonce for verification
-        wp_nonce_field('wawp_styles_nonce_action', 'wawp_styles_nonce_name');
-        // This prints out all hidden setting fields
-        settings_fields(self::OPTION_GROUP);
-        do_settings_sections(self::SUBMENU_PAGE);
-        submit_button();
-        ?>
-        </form>
-    </div>
-</div><?php
-
-    }
-
-    public function user_style_callback()
-    {
-        // get css file content
-        $file_contents = file_get_contents(self::get_stylesheet_url());
-        ?>
-<textarea name="wawp_user_style[]" class="wawp_user_style_input"
-    value="<?php echo $file_contents?>" /><?php echo $file_contents ?></textarea><br>
-<?php
-    }
-
-    public function sanitize($input)
-    {
-        if(!wp_verify_nonce($_POST['wawp_styles_nonce_name'], 'wawp_styles_nonce_action')) {
-            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
-            Log::wap_log_error('Your nonce for the restriction status could not be verified. Please try again.');
-            return file_get_contents(self::get_stylesheet_url());
-        }
-
-        // write to file
-        $sanitized_input = sanitize_textarea_field($input[0]);
-        file_put_contents(self::get_stylesheet_url(), $sanitized_input);
-        return $sanitized_input;
-    }
-
-    public function user_styles_print_section_info()
-    {
-        print 'Enter custom CSS for ' . Addon::get_title(CORE_SLUG) . ' elements here.';
-    }
-
-    private static function get_stylesheet_url()
-    {
-        return PLUGIN_PATH . self::CSS_FILE_PATH;
-    }
-
-
 }
