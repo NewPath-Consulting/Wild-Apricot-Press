@@ -280,6 +280,17 @@ class WA_Integration
      */
     public const LOGIN_PAGE_ID_OPT						= 'wawp_wal_page_id';
 
+    // TODO: add comments
+    public const LOGIN_SETTINGS                         = 'wap_login_settings';
+
+    public const LOGIN_SETTINGS_TITLE                   = 'title';
+    public const LOGIN_SETTINGS_INTRO                   = 'intro';
+    public const LOGIN_SETTINGS_SUBMIT                  = 'submit';
+
+    public const LOGIN_DEFAULT_TITLE                    = 'Login with your WildApricot credentials';
+    public const LOGIN_DEFAULT_INTRO                    = 'Log into your WildApricot account here to access content exclusive to WildApricot members!';
+    public const LOGIN_DEFAULT_SUBMIT                   = 'Submit';
+
     // Custom hook names
     /**
      * User data refresh hook. Scheduled to run daily.
@@ -553,6 +564,31 @@ class WA_Integration
         if (!wp_next_scheduled($license_hook_name)) {
             wp_schedule_event(time(), 'daily', $license_hook_name);
         }
+    }
+
+    public static function get_login_settings(?string $idx = '')
+    {
+        $login = get_option(self::LOGIN_SETTINGS);
+
+        $default = array(
+            'title' => self::LOGIN_DEFAULT_TITLE,
+            'intro' => self::LOGIN_DEFAULT_INTRO,
+            'submit' => self::LOGIN_DEFAULT_SUBMIT
+        );
+
+        if (!$idx && !$login) {
+            // return whole array and login option is not set yet --> default array
+            return $default;
+        } elseif ($idx && !$login) {
+            return $default[$idx];
+        } elseif ($idx && $login && (!array_key_exists($idx, $login) || empty($login[$idx]))) {
+            // return option for idx but index option is not set --> default idx
+            return $default[$idx];
+        }
+
+        // return login option for idx
+        return $login[$idx];
+
     }
 
     /**
