@@ -52,7 +52,7 @@ class WA_Integration
     public const WA_CLIENT_SECRET_OPT 					= 'wawp_wal_client_secret';
 
     /**
-     * Stores the validity status of the Wild Apricot API credentials.
+     * Stores the validity status of the WildApricot API credentials.
      *
      * @var string
      */
@@ -82,7 +82,7 @@ class WA_Integration
 
 
     /**
-     * Stores the total number of Wild Apricot contacts.
+     * Stores the total number of WildApricot contacts.
      */
     public const WA_CONTACTS_COUNT_KEY					= 'wawp_contacts_count';
 
