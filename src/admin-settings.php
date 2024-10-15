@@ -619,7 +619,7 @@ class Admin_Settings
     public function custom_fields_print_info()
     {
         print 'Please select the WildApricot Contact Fields that you would like to sync with your WordPress site.<br>';
-        print 'Admin-only contact fields are displayed below the list of contact fields but are not available to sync. If you wish to sync these fields with your site please change the field settings in Wild Apricot.';
+        print 'Admin-only contact fields are displayed below the list of contact fields but are not available to sync. If you wish to sync these fields with your site please change the field settings in WildApricot.';
     }
 
     /**
@@ -660,7 +660,7 @@ class Admin_Settings
     }
 
     /**
-     * Displays list of Wild Apricot member fields that have admin only access.
+     * Displays list of WildApricot member fields that have admin only access.
      *
      * @return void
      */
@@ -1304,7 +1304,7 @@ class WA_Auth_Settings
             echo '<p class="wap-error">Missing valid WildApricot credentials. Please enter them above.</p>';
         } elseif ($api_status == WA_Integration::API_STATUS_INCORRECT_SCOPE) {
             // incorrect scope selected
-            echo '<p class="wap-error">Incorrect application scope. Please create a <strong>full-access Server Application</strong> on Wild Apricot.</p>';
+            echo '<p class="wap-error">Incorrect application scope. Please create a <strong>full-access Server Application</strong> on WildApricot.</p>';
         } elseif ($api_status == WA_Integration::API_STATUS_VALID && $wild_apricot_url) {
             // successful login
             echo '<p class="wap-success">Valid WildApricot credentials have been saved.</p>';
