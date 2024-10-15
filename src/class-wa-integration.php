@@ -608,7 +608,7 @@ class WA_Integration
         // schedule cron update for updating the membership levels and groups
         Settings::setup_cron_job();
 
-        $login_title = 'Login with your WildApricot credentials';
+        $login_title = self::get_login_settings('title');
         $login_content = '[wawp_custom_login_form]';
 
         $post_details = array(
@@ -1593,10 +1593,10 @@ class WA_Integration
         // if WA user is not logged in, display login form
         if (!self::is_wa_user_logged_in()) {
             // Create page content -> login form
+            $login_settings = self::get_login_settings();
             ?>
 <div id="wawp_login-wrap">
-    <p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot
-        members!</p>
+    <p id="wawp_wa_login_direction"><?php echo esc_html($login_settings['intro']) ?></p>
     <form method="post" action="">
         <?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
         <label for="wawp_login_email" style="margin-left: 0px;">Email:</label>
@@ -1615,7 +1615,8 @@ class WA_Integration
                     href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank"
                     rel="noopener noreferrer">Forgot Password?</a></label>
 
-            <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
+            <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit"
+                <?php echo esc_html($login_settings['submit']) ?> />
         </div>
     </form>
 </div><?php
