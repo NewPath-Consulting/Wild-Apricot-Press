@@ -870,7 +870,58 @@ class Admin_Settings
     }
 
 
+
+    public function login_title_callback()
+    {
+        $current = WA_Integration::get_login_settings('title');
+        ?>
+<input class="wap-login-settings" id="login-title" name="wap_login_settings[title]" type="text"
+    value="<?php echo esc_attr($current) ?>"
+    <?php echo esc_html($current) ?> />
+<?php
     }
+
+    public function login_intro_callback()
+    {
+        $initial_content = WA_Integration::LOGIN_DEFAULT_INTRO;
+        $editor_id = 'login-intro';
+        $editor_name = 'wap_login_settings[intro]';
+        $editor_settings = array('textarea_name' => $editor_name, 'tinymce' => true);
+
+        wp_editor($initial_content, $editor_id, $editor_settings);
+    }
+
+    public function login_submit_callback()
+    {
+        $current = WA_Integration::get_login_settings('submit');
+        ?>
+<input class="wap-login-settings" id="login-submit" name="wap_login_settings[submit]" type="text"
+    value="<?php echo esc_attr($current) ?>"
+    <?php echo esc_html($current) ?> /> <?php
+    }
+
+    public function login_settings_sanitize($input)
+    {
+        if (!wp_verify_nonce($_POST['wawp_login_nonce_name'], 'wawp_login_nonce_action')) {
+            add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
+            Log::wap_log_error('Your nonce for the WildApricot credentials could not be verified.');
+            return empty_string_array($input);
+        }
+
+        $input['title'] = sanitize_text_field($input['title']);
+        $input['intro'] = sanitize_textarea_field($input['intro']);
+        $input['submit'] = sanitize_text_field($input['submit']);
+
+        return $input;
+
+    }
+
+    public function login_settings_print_info()
+    {
+        print 'Enter custom text for elements of the user login page here.';
+    }
+
+
 
     // settings on the content restriction options tab
     /**
@@ -1140,6 +1191,51 @@ class Admin_Settings
         );
     }
 
+    private function register_login_page_settings()
+    {
+        $register_args = array(
+            'type' => 'string',
+            'sanitize_callback' => array( $this, 'login_settings_sanitize'),
+            'default' => null
+            );
+
+        register_setting(
+            'wap_login_settings_group',
+            WA_Integration::LOGIN_SETTINGS,
+            $register_args
+        );
+
+        add_settings_section(
+            'wap_login_settings_section',
+            'Customize Page Text',
+            array($this, 'login_settings_print_info'),
+            'login_settings_submenu'
+        );
+
+        add_settings_field(
+            WA_Integration::LOGIN_SETTINGS_TITLE,
+            'Page Title',
+            array($this, 'login_title_callback'),
+            'login_settings_submenu',
+            'wap_login_settings_section'
+        );
+
+        add_settings_field(
+            WA_Integration::LOGIN_SETTINGS_INTRO,
+            'Introduction',
+            array($this, 'login_intro_callback'),
+            'login_settings_submenu',
+            'wap_login_settings_section'
+        );
+
+        add_settings_field(
+            WA_Integration::LOGIN_SETTINGS_SUBMIT,
+            'Submit button',
+            array($this, 'login_submit_callback'),
+            'login_settings_submenu',
+            'wap_login_settings_section'
+        );
+    }
 
     /**
      * Render content for the content restriction tab.
