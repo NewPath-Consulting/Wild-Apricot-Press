@@ -812,8 +812,10 @@ class Admin_Settings
     {
         $checked = Log::can_debug();
         ?>
-<input type="checkbox" name="<?php echo esc_attr(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked"
-    <?php echo esc_html($checked); ?>></input>
+<input type="checkbox"
+    name="<?php echo esc_attr(Log::LOG_OPTION); ?>"
+    class="wawp_class_logfile" value="checked"
+    <?php echo $checked ? 'checked' : ''  ?>></input>
 <?php
     }
 
@@ -831,6 +833,7 @@ class Admin_Settings
             return '';
         }
 
+        update_option(Log::LOG_OPTION_UPDATED, 1);
         $valid = sanitize_text_field($input);
         // if input is empty, box is not checked, return empty string
         if (!$valid) {
