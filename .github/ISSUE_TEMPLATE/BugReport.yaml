@@ -11,9 +11,15 @@ body:
       label: 'I have checked the following:'
       options:
         - label: I use the newest version of WildApricot Press.
-          required: true
+          required: false
         - label: I've searched existing issues and found nothing related to my issue.
           required: true
+  - type: textarea
+    attributes:
+      label: 'WildApricot Press version:'
+      description: What version of WildApricot Press are you using?
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Describe the bug
