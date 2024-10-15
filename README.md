@@ -4,7 +4,7 @@ Tags: wildapricot, wild apricot, membership, event management, events, membershi
 Requires at least: 5.0
 Tested up to: 6.6.2
 Requires PHP: 7.4
-Stable Tag: 1.0.3
+Stable Tag: 1.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -198,6 +198,12 @@ By default, upon deletion of the WildApricot Press plugin, none of the data crea
 In Plugin Options tab you can turn on the "Print log messages to log file" to start logging errors and warnings to the filer wp-content/wapdebug.log. This can be used to troubleshoot plugin issues and provided to support.
 
 == Changelog ==
+
+= Version 1.1 - October xx, 2024 =
+
+- enable plugin debugging log by default
+- improved WA credentials validation flow
+- remove ability to sync admin-only fields 
 
 = Version 1.0.3 - October 2, 2024 =
 

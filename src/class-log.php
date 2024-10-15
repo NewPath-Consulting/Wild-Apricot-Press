@@ -52,6 +52,11 @@ class Log
         return get_option(Log::LOG_OPTION);
     }
 
+    public static function did_check_debug()
+    {
+        return get_option(Log::LOG_OPTION_UPDATED);
+    }
+
     /**
      * Print an error message to the log file.
      *
