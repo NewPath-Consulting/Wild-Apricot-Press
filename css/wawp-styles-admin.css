@@ -59,8 +59,8 @@
 /* Styling for CSS textarea */
 .wawp_user_style_input {
 	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	width: 50vw;
-	height: 60vh;
+	width: 40vw;
+	height: 40vh;
 	white-space: nowrap;
 	overflow-y: scroll;
 	padding: 15px;
@@ -74,4 +74,8 @@ ul.wawp_list {
 
 .form-table th {
 	width: 100px;
+}
+
+input.wap-login-settings#login-title {
+	width: 20vw;
 }
