@@ -280,6 +280,17 @@ class WA_Integration
      */
     public const LOGIN_PAGE_ID_OPT						= 'wawp_wal_page_id';
 
+    // TODO: add comments
+    public const LOGIN_SETTINGS                         = 'wap_login_settings';
+
+    public const LOGIN_SETTINGS_TITLE                   = 'title';
+    public const LOGIN_SETTINGS_INTRO                   = 'intro';
+    public const LOGIN_SETTINGS_SUBMIT                  = 'submit';
+
+    public const LOGIN_DEFAULT_TITLE                    = 'Login with your WildApricot credentials';
+    public const LOGIN_DEFAULT_INTRO                    = 'Log into your WildApricot account here to access content exclusive to WildApricot members!';
+    public const LOGIN_DEFAULT_SUBMIT                   = 'Submit';
+
     // Custom hook names
     /**
      * User data refresh hook. Scheduled to run daily.
@@ -555,6 +566,31 @@ class WA_Integration
         }
     }
 
+    public static function get_login_settings(?string $idx = '')
+    {
+        $login = get_option(self::LOGIN_SETTINGS);
+
+        $default = array(
+            'title' => self::LOGIN_DEFAULT_TITLE,
+            'intro' => self::LOGIN_DEFAULT_INTRO,
+            'submit' => self::LOGIN_DEFAULT_SUBMIT
+        );
+
+        if (!$idx && !$login) {
+            // return whole array and login option is not set yet --> default array
+            return $default;
+        } elseif ($idx && !$login) {
+            return $default[$idx];
+        } elseif ($idx && $login && (!array_key_exists($idx, $login) || empty($login[$idx]))) {
+            // return option for idx but index option is not set --> default idx
+            return $default[$idx];
+        }
+
+        // return login option for idx
+        return $login[$idx];
+
+    }
+
     /**
      * Creates user-facing WildApricot login page. Runs when both API key
      * and license key are found to be valid.
@@ -572,7 +608,7 @@ class WA_Integration
         // schedule cron update for updating the membership levels and groups
         Settings::setup_cron_job();
 
-        $login_title = 'Login with your WildApricot credentials';
+        $login_title = self::get_login_settings('title');
         $login_content = '[wawp_custom_login_form]';
 
         $post_details = array(
@@ -1557,10 +1593,10 @@ class WA_Integration
         // if WA user is not logged in, display login form
         if (!self::is_wa_user_logged_in()) {
             // Create page content -> login form
+            $login_settings = self::get_login_settings();
             ?>
 <div id="wawp_login-wrap">
-    <p id="wawp_wa_login_direction">Log into your WildApricot account here to access content exclusive to WildApricot
-        members!</p>
+    <p id="wawp_wa_login_direction"><?php echo esc_html($login_settings['intro']) ?></p>
     <form method="post" action="">
         <?php wp_nonce_field("wawp_login_nonce_action", "wawp_login_nonce_name");?>
         <label for="wawp_login_email" style="margin-left: 0px;">Email:</label>
@@ -1579,7 +1615,8 @@ class WA_Integration
                     href="<?php echo esc_url($wild_apricot_url . '/Sys/ResetPasswordRequest'); ?>" target="_blank"
                     rel="noopener noreferrer">Forgot Password?</a></label>
 
-            <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit">
+            <br><input type="submit" id="wawp_login_submit" name="wawp_login_submit" value="Submit"
+                <?php echo esc_html($login_settings['submit']) ?> />
         </div>
     </form>
 </div><?php
