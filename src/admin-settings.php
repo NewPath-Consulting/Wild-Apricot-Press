@@ -25,7 +25,7 @@ class Settings
     private $admin_settings;
     private $wa_auth_settings;
     private $license_settings;
-    private $style_settings;
+    private $support_page;
 
     /**
      * Adds actions and includes files
@@ -38,6 +38,7 @@ class Settings
         $this->admin_settings   = new Admin_Settings();
         $this->wa_auth_settings = new WA_Auth_Settings();
         $this->license_settings = new License_Settings();
+        $this->support_page     = new Support_Page();
 
         // Activate option in table if it does not exist yet
         // Currently, there is a WordPress bug that calls the 'sanitize' function twice if the option is not already in the database
@@ -236,6 +237,7 @@ class Settings
 
         $this->wa_auth_settings->add_submenu_page();
         $this->license_settings->add_submenu_page();
+        $this->support_page->add_submenu_page();
 
     }
 
@@ -1990,5 +1992,29 @@ class License_Settings
         if ($license_valid) {
             echo '<br><p class="wap-success"><span class="dashicons dashicons-saved"></span> License key valid</p>';
         }
+    }
+}
+
+class Support_Page
+{
+    public function __construct()
+    {
+    }
+
+    public function add_submenu_page()
+    {
+        add_submenu_page(
+            Settings::SETTINGS_URL,
+            'WAP Support',
+            'Support',
+            'manage_options',
+            'wap-support',
+            array($this, 'create_support_page')
+        );
+    }
+
+    public function create_support_page()
+    {
+        echo '<div class="wrap"><h1>Support</h1>Support for this plugin is available in two ways:<br><br>Community support: <a href="https://talk.newpathconsulting.com" target="_blank">https://talk.newpathconsulting.com</a><br>In-person real-time support: <a href="https://newpathconsulting.com/hero" target="_blank">https://newpathconsulting.com/hero</a></div>';
     }
 }
