@@ -17,7 +17,7 @@
         "blogname": "WildApricot Press Demo Site"
     },
     "plugins": [
-        "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=master",
+        "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=164-playgrounds-proxy",
         "error-log-viewer",
         "generateblocks"
     ],
@@ -33,8 +33,9 @@
                 "WP_DISABLE_FATAL_ERROR_HANDLER": true,
                 "WP_DEBUG": true,
                 "WP_DEBUG_LOG": true,
-                "WP_DEBUG_DISPLAY": false,
-                "WAP_LICENSE_CHECK_DEV": true
+                "WP_DEBUG_DISPLAY": true,
+                "WAP_LICENSE_CHECK_DEV": true,
+                "WP_PLAYGROUNDS_SUPPORT": true
             }
         },
         {
