@@ -1540,7 +1540,11 @@ class WA_Integration
 
         // Check if login is valid and add the user to wp database if it is
         try {
-            $login_attempt = WA_API::login_email_password($valid_login);
+            $verified_data = WA_API::verify_valid_access_token();
+            $admin_access_token = $verified_data['access_token'];
+            $admin_account_id = $verified_data['wa_account_id'];
+            $wawp_api = new WA_API($admin_access_token, $admin_account_id);
+            $login_attempt = $wawp_api->login_email_password($valid_login);
             if (!$login_attempt) {
                 add_filter('the_content', array($this, 'add_login_error'));
                 return;
