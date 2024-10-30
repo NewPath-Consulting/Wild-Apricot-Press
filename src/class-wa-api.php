@@ -683,7 +683,7 @@ class WA_API
         return $count;
     }
 
-    private function get_auth_url()
+    private static function get_auth_url()
     {
         if (defined('WP_PLAYGROUNDS_SUPPORT') && WP_PLAYGROUNDS_SUPPORT) {
             return self::PROXY_URL . '/auth';
@@ -692,7 +692,7 @@ class WA_API
         return self::AUTH_URL;
     }
 
-    private function get_api_url()
+    private static function get_api_url()
     {
         if (defined('WP_PLAYGROUNDS_SUPPORT') && WP_PLAYGROUNDS_SUPPORT) {
             return self::PROXY_URL;
@@ -701,7 +701,7 @@ class WA_API
         return self::API_URL;
     }
 
-    private function get_public_api_url()
+    private static function get_public_api_url()
     {
         if (defined('WP_PLAYGROUNDS_SUPPORT') && WP_PLAYGROUNDS_SUPPORT) {
             return self::PROXY_URL . '/publicview';
