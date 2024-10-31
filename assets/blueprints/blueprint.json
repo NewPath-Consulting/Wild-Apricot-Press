@@ -19,7 +19,8 @@
     "plugins": [
         "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=164-playgrounds-proxy",
         "error-log-viewer",
-        "generateblocks"
+        "generateblocks",
+         "plugin-check"
     ],
     "features": {
         "networking": true

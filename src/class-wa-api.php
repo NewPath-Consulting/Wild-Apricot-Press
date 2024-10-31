@@ -220,7 +220,7 @@ class WA_API
         try {
             $details_response = self::response_to_data($response_api);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retrieving the Wild Apricot account URL and ID.');
+            throw new API_Exception('There was an error retrieving the WildApricot account URL and ID.');
         }
 
         // Extract values
@@ -255,7 +255,7 @@ class WA_API
         try {
             $custom_field_response = self::response_to_data($response_api);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retrieving the Wild Apricot custom fields.');
+            throw new API_Exception('There was an error retrieving the WildApricot custom fields.');
         }
 
 
@@ -267,20 +267,36 @@ class WA_API
             'Organization',
             'Membership status'
         );
+
         // Do not add 'Group participation' or 'User ID' because those are already used by default
         $custom_fields = array();
-        if (!empty($custom_field_response)) {
-            foreach ($custom_field_response as $field_response) {
-                $field_name = $field_response['FieldName'];
+        $admin_fields = array();
+        foreach ($custom_field_response as $field_response) {
+            $field_name = $field_response['FieldName'];
+            $field_id = '';
+            if (array_key_exists('SystemCode', $field_response)) {
                 $field_id = $field_response['SystemCode'];
-                // Ensure that we are not displaying default options
-                if (!in_array($field_name, $default_fields)) {
-                    $custom_fields[$field_id] = $field_name;
-                }
+            } else {
+                $field_id = str_replace(' ', '', $field_id);
+            }
+
+            // check access
+            // Ensure that we are not displaying default options
+
+            if (in_array($field_name, $default_fields)) {
+                continue;
+            }
+
+            if ($field_response['AdminOnly']) {
+                $admin_fields[$field_id] = $field_name;
+            } else {
+                $custom_fields[$field_id] = $field_name;
             }
         }
+        // TODO: update fields in user roles and checked fields
         // Save custom fields in the options table
         update_option(WA_Integration::LIST_OF_CUSTOM_FIELDS, $custom_fields);
+        update_option(WA_Integration::LIST_OF_ADMIN_FIELDS, $admin_fields);
     }
 
     /**
@@ -454,7 +470,7 @@ class WA_API
         try {
             $data = self::response_to_data($response);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retrieving the Wild Apricot API access token.');
+            throw new API_Exception('There was an error retrieving the WildApricot API access token.');
         }
 
         return $data;
@@ -475,7 +491,7 @@ class WA_API
         try {
             $contact_info = self::response_to_data($contact_info);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retrieving Wild Apricot contact info.');
+            throw new API_Exception('There was an error retrieving WildApricot contact info.');
         }
 
         // Get if user is administrator or not
@@ -493,7 +509,7 @@ class WA_API
         try {
             $full_info = self::response_to_data($user_data_api);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retriving Wild Apricot user info.');
+            throw new API_Exception('There was an error retriving WildApricot user info.');
         }
 
         // Get all information for current user
@@ -519,7 +535,7 @@ class WA_API
         try {
             $membership_levels_response = self::response_to_data($membership_levels_response);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retrieving the Wild Apricot membership levels.');
+            throw new API_Exception('There was an error retrieving the WildApricot membership levels.');
         }
 
         // Extract membership levels into array
@@ -597,14 +613,14 @@ class WA_API
         try {
             $data = self::response_to_data($response);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error authorizing a Wild Apricot user\'s credentials.');
+            throw new API_Exception('There was an error authorizing a WildApricot user\'s credentials.');
         }
 
         return $data;
     }
 
     /**
-     * Retrieves list of contacts from Wild Apricot.
+     * Retrieves list of contacts from WildApricot.
      *
      * @param string $query additional query to append to the request url
      * @param boolean $block whether a single block is requested or not, used
@@ -653,7 +669,7 @@ class WA_API
     }
 
     /**
-     * Retrieves number of contacts from Wild Apricot.
+     * Retrieves number of contacts from WildApricot.
      *
      * @return int number of contacts
      */
@@ -675,7 +691,7 @@ class WA_API
             $data = self::response_to_data($response);
             $count = $data['Count'];
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retrieving the number of Wild Apricot contacts.');
+            throw new API_Exception('There was an error retrieving the number of WildApricot contacts.');
         }
 
         update_option(WA_Integration::WA_CONTACTS_COUNT_KEY, $count);
@@ -711,7 +727,7 @@ class WA_API
     }
 
     /**
-     * Requests a single block of contacts from Wild Apricot.
+     * Requests a single block of contacts from WildApricot.
      *
      * @param string $url base url to which to make the request
      * @param int $skip the number of contacts to skip from the beginning
@@ -736,7 +752,7 @@ class WA_API
         try {
             $data = self::response_to_data($response);
         } catch (API_Exception $e) {
-            throw new API_Exception('There was an error retrieving Wild Apricot contacts.');
+            throw new API_Exception('There was an error retrieving WildApricot contacts.');
         }
 
         return $data;
