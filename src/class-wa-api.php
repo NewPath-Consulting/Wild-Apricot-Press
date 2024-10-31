@@ -19,7 +19,7 @@ class WA_API
     public const AUTH_URL = 'https://oauth.wildapricot.org/auth/token';
     public const API_URL = 'https://api.wildapricot.org/v2.2';
     public const PUBLIC_API_URL = 'https://api.wildapricot.org/publicview/v1';
-    public const PROXY_URL = 'https://wap-proxy.newpathconsulting.com';
+    public const PROXY_URL = 'https://wap-proxy.newpathconsulting.com/index.php';
 
     // Class variables
     private $access_token;
