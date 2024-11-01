@@ -40,7 +40,12 @@ class Activator {
 			'is_addon' => 0
 		));
 
-	}
+        // enable debug log file by default
+        if (!Log::did_check_debug()) {
+            update_option(Log::LOG_OPTION, 1);
+        }
+
+    }
 
 
 	/**

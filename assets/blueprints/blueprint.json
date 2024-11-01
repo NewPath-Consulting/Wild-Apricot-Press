@@ -17,9 +17,10 @@
         "blogname": "WildApricot Press Demo Site"
     },
     "plugins": [
-        "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=master",
+        "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=1.1",
         "error-log-viewer",
-        "generateblocks"
+        "generateblocks",
+         "plugin-check"
     ],
     "features": {
         "networking": true
@@ -44,7 +45,7 @@
         },
         {
             "step": "installTheme",
-            "themeZipFile": {
+            "themeData": {
                 "resource": "wordpress.org/themes",
                 "slug": "generatepress"
             }
