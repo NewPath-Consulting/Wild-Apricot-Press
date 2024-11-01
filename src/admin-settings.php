@@ -352,8 +352,7 @@ class Admin_Settings
         ?>
 <!-- navigation tabs -->
 <nav class="nav-tab-wrapper">
-    <a href="?page=wawp-wal-admin"
-        class="nav-tab <?php if($tab === null): ?>nav-tab-active<?php endif; ?>">Content
+    <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab === null): ?>nav-tab-active<?php endif; ?>">Content
         Restriction Options</a>
     <a href="?page=wawp-wal-admin&tab=fields"
         class="nav-tab <?php if($tab === 'fields'):?>nav-tab-active<?php endif; ?>">Synchronization
@@ -542,8 +541,7 @@ class Admin_Settings
             }
             ?>
 <input type="checkbox" name="wawp_restriction_status_name[]" class="wawp_class_status"
-    value="<?php echo esc_attr($status_key); ?>"
-    <?php echo esc_attr($status_checked); ?> />
+    value="<?php echo esc_attr($status_key); ?>" <?php echo esc_attr($status_checked); ?> />
 <?php echo esc_html($status); ?> </input><br>
 <?php
         }
@@ -661,8 +659,7 @@ class Admin_Settings
                     }
                 }
                 ?>
-<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field'
-    value="<?php echo esc_attr($field_id); ?>"
+<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php echo esc_attr($field_id); ?>"
     <?php echo esc_attr($is_checked); ?> />
 <?php echo esc_html($field_name); ?> </input><br>
 <?php
@@ -670,8 +667,7 @@ class Admin_Settings
         } else { // no custom fields
             ?>
 <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your
-    WildApricot site's credentials under <a
-        href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot
+    WildApricot site's credentials under <a href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot
         Press -> Authorization</a></p>
 <?php
         }
@@ -763,8 +759,7 @@ class Admin_Settings
                 }
             }
             ?>
-<input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete'
-    value="<?php echo esc_attr($key); ?>"
+<input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>"
     <?php echo esc_attr($checked); ?> />
 <?php echo esc_html($attribute); ?> </input><br><br>
 <?php
@@ -817,9 +812,7 @@ class Admin_Settings
     {
         $checked = Log::can_debug();
         ?>
-<input type="checkbox"
-    name="<?php echo esc_attr(Log::LOG_OPTION); ?>"
-    class="wawp_class_logfile" value="checked"
+<input type="checkbox" name="<?php echo esc_attr(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked"
     <?php echo $checked ? 'checked' : ''  ?>></input>
 <?php
     }
@@ -884,8 +877,7 @@ class Admin_Settings
         $current = WA_Integration::get_login_settings('title');
         ?>
 <input class="wap-login-settings" id="login-title" name="wap_login_settings[title]" type="text"
-    value="<?php echo esc_attr($current) ?>"
-    <?php echo esc_html($current) ?> />
+    value="<?php echo esc_attr($current) ?>" <?php echo esc_html($current) ?> />
 <?php
     }
 
@@ -904,8 +896,7 @@ class Admin_Settings
         $current = WA_Integration::get_login_settings('submit');
         ?>
 <input class="wap-login-settings" id="login-submit" name="wap_login_settings[submit]" type="text"
-    value="<?php echo esc_attr($current) ?>"
-    <?php echo esc_html($current) ?> /> <?php
+    value="<?php echo esc_attr($current) ?>" <?php echo esc_html($current) ?> /> <?php
     }
 
     public function login_settings_sanitize($input)
