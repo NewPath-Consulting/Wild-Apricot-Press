@@ -102,7 +102,7 @@ function get_auth_menu_url()
 function get_current_tab()
 {
     $current_url = get_current_url();
-    $url_components = parse_url($current_url);
+    $url_components = wp_parse_url($current_url);
     parse_str($url_components['query'], $params);
     if (array_key_exists('tab', $params)) {
         return $params['tab'];
