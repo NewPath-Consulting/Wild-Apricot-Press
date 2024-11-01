@@ -916,6 +916,14 @@ class Admin_Settings
             return empty_string_array($input);
         }
 
+        if (array_key_exists('reset', $_POST)) {
+            return array(
+                'title' => WA_Integration::LOGIN_DEFAULT_TITLE,
+                'intro' => WA_Integration::LOGIN_DEFAULT_INTRO,
+                'submit' => WA_Integration::LOGIN_DEFAULT_SUBMIT
+            );
+        }
+
         $input['title'] = sanitize_text_field($input['title']);
         $input['intro'] = sanitize_textarea_field($input['intro']);
         $input['submit'] = sanitize_text_field($input['submit']);
@@ -1370,7 +1378,8 @@ class Admin_Settings
         // This prints out all hidden setting fields
         settings_fields('wap_login_settings_group');
         do_settings_sections('login_settings_submenu');
-        submit_button();
+        submit_button(__('Save Changes', 'textdomain'), 'primary', 'submit', false);
+        submit_button(__('Reset to Defaults', 'textdomain'), 'secondary', 'reset', false);
         ?>
         </form>
     </div>

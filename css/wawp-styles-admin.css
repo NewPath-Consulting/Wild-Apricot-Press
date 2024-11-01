@@ -79,3 +79,7 @@ ul.wawp_list {
 input.wap-login-settings#login-title {
 	width: 20vw;
 }
+
+#reset {
+	margin-left: 5px;
+}
