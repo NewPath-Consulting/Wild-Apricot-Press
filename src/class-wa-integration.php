@@ -1366,6 +1366,8 @@ class WA_Integration
         // Get user ID
         $wild_apricot_user_id = $contact_info['Id'];
 
+        // TODO: roles not synced
+
         // Check if WA email exists in the WP user database
         $current_wp_user_id = 0;
         if (email_exists($login_email)) { // email exists; we will update user

@@ -854,7 +854,7 @@ class Admin_Settings
         $file_contents = file_get_contents(self::get_stylesheet_url());
         ?>
 <textarea name="wawp_user_style[]" class="wawp_user_style_input"
-    value="<?php echo $file_contents?>" /><?php echo $file_contents ?></textarea><br>
+    value="<?php echo esc_attr($file_contents)?>" /><?php echo esc_textarea($file_contents) ?></textarea><br>
 <?php
     }
 
@@ -874,7 +874,7 @@ class Admin_Settings
 
     public function user_styles_print_section_info()
     {
-        print 'Enter custom CSS for ' . Addon::get_title(CORE_SLUG) . ' elements here.';
+        print 'Enter custom CSS for ' . esc_html(Addon::get_title(CORE_SLUG)) . ' elements here.';
     }
 
 
@@ -1378,8 +1378,8 @@ class Admin_Settings
         // This prints out all hidden setting fields
         settings_fields('wap_login_settings_group');
         do_settings_sections('login_settings_submenu');
-        submit_button(__('Save Changes', 'textdomain'), 'primary', 'submit', false);
-        submit_button(__('Reset to Defaults', 'textdomain'), 'secondary', 'reset', false);
+        submit_button(__('Save Changes', 'newpath-wildapricot-press'), 'primary', 'submit', false);
+        submit_button(__('Reset to Defaults', 'newpath-wildapricot-press'), 'secondary', 'reset', false);
         ?>
         </form>
     </div>
