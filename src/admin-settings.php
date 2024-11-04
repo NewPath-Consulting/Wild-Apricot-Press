@@ -1865,7 +1865,7 @@ class Style_Settings
         $file_contents = file_get_contents(self::get_stylesheet_url());
         ?>
 <textarea name="wawp_user_style[]" class="wawp_user_style_input"
-    value="<?php echo $file_contents?>" /><?php echo $file_contents ?></textarea><br>
+    value="<?php echo esc_html($file_contents)?>" /><?php echo esc_html($file_contents) ?></textarea><br>
 <?php
     }
 
@@ -1885,7 +1885,7 @@ class Style_Settings
 
     public function user_styles_print_section_info()
     {
-        print 'Enter custom CSS for ' . Addon::get_title(CORE_SLUG) . ' elements here.';
+        print 'Enter custom CSS for ' . esc_html(Addon::get_title(CORE_SLUG)) . ' elements here.';
     }
 
     private static function get_stylesheet_url()
