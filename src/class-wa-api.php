@@ -585,8 +585,10 @@ class WA_API
      * login screen
      * @return array $data Returns the response from the WA API
      */
-    public static function login_email_password($valid_login)
+    public function login_email_password($valid_login)
     {
+        $this->accept_terms_of_use($valid_login['email']);
+        // first need to accept terms of use
         // Get decrypted credentials
         $decrypted_credentials = self::load_user_credentials();
 
@@ -737,5 +739,26 @@ class WA_API
     private function get_yesterdays_date()
     {
         return date('Y-m-d', strtotime("-1 days"));
+    }
+
+    private function accept_terms_of_use($user_email)
+    {
+        // find contact with this email
+        $url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' .
+        $this->wa_user_id . '/contacts?%24async=false&filter=Email%20eq%20' . $user_email;
+
+        $args = $this->request_data_args();
+        $response = wp_remote_get($url, $args);
+        $data = self::response_to_data($response);
+
+        $user_id = '';
+        if (array_key_exists('Contacts', $data)) {
+            $user_id = $data['Contacts']['MembershipLevel']['Id'];
+        } else {
+            return;
+        }
+
+        $rpc_url = self::API_URL . self::ADMIN_API_VERSION . '/rpc/' . $user_id . 'AcceptTermsOfUse';
+        wp_remote_post($rpc_url, $args);
     }
 }
