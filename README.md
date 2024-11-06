@@ -199,11 +199,15 @@ In Plugin Options tab you can turn on the "Print log messages to log file" to st
 
 == Changelog ==
 
-= Version 1.1 - October xx, 2024 =
+= Version 1.1 - November xx, 2024 =
 
 - enable plugin debugging log by default
-- improved WA credentials validation flow
-- remove ability to sync admin-only fields 
+- improved WildApricot credentials validation flow
+- remove ability to sync admin-only fields
+- automatically accept terms of use for new WildApricot users
+- customize username/password title, intro, and submit button text in Login Settings tab
+- add custom CSS to Login Settings tab
+- support for WP Playground using proxy server
 
 = Version 1.0.3 - October 2, 2024 =
 
