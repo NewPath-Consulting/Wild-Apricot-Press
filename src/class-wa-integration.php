@@ -6,10 +6,10 @@ namespace WAWP;
 use DOMDocument;
 
 require_once __DIR__ . '/class-addon.php';
-require_once __DIR__ . '/class-data-encryption.php';
-require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/util/class-data-encryption.php';
+require_once __DIR__ . '/util/class-log.php';
 require_once __DIR__ . '/class-wa-api.php';
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/util/helpers.php';
 
 /**
  * Class for managing WildApricot user accounts and post restriction.

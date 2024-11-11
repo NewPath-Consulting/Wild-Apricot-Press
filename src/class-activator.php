@@ -4,9 +4,9 @@ namespace WAWP;
 
 require_once __DIR__ . '/class-addon.php';
 require_once __DIR__ . '/admin-settings.php';
-require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/util/class-log.php';
 require_once __DIR__ . '/class-wa-integration.php';
-require_once __DIR__ . '/wap-exception.php';
+require_once __DIR__ . '/util/wap-exception.php';
 
 /**
  * Activation controller class

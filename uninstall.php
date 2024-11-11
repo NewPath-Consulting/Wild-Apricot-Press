@@ -3,10 +3,10 @@
 require_once plugin_dir_path(__FILE__) . 'src/admin-settings.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-addon.php';
-require_once plugin_dir_path(__FILE__) . 'src/class-log.php';
+require_once plugin_dir_path(__FILE__) . 'src/util/class-log.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-wa-integration.php';
-require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
-require_once plugin_dir_path(__FILE__) . 'src/wap-exception.php';
+require_once plugin_dir_path(__FILE__) . 'src/util/helpers.php';
+require_once plugin_dir_path(__FILE__) . 'src/util/wap-exception.php';
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
     wp_die(sprintf('%s should only be called when uninstalling the plugin.', __FILE__));

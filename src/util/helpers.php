@@ -11,9 +11,9 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/admin-settings.php';
-require_once __DIR__ . '/class-addon.php';
-require_once __DIR__ . '/class-wa-api.php';
+require_once __DIR__ . '/../settings/class-settings-controller.php';
+require_once __DIR__ . '/../class-addon.php';
+require_once __DIR__ . '/../class-wa-api.php';
 
 const CORE_SLUG = 'wawp';
 const CORE_NAME = 'WildApricot Press (WAP)';

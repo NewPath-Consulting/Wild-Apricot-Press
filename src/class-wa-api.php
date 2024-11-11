@@ -2,8 +2,8 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/class-log.php';
-require_once __DIR__ . '/wap-exception.php';
+require_once __DIR__ . '/util/class-log.php';
+require_once __DIR__ . '/util/wap-exception.php';
 
 /**
  * Manages connections to and retrieves data from the WildApricot API.

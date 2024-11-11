@@ -39,7 +39,7 @@ require_once plugin_dir_path(__FILE__) . 'src/class-activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/admin-settings.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-deactivator.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-wa-integration.php';
-require_once plugin_dir_path(__FILE__) . 'src/helpers.php';
+require_once plugin_dir_path(__FILE__) . 'src/util/helpers.php';
 
 define('PLUGIN_PATH', plugin_dir_path(__FILE__));
 

@@ -2,12 +2,12 @@
 
 namespace WAWP;
 
-require_once __DIR__ . '/class-data-encryption.php';
-require_once __DIR__ . '/class-log.php';
+require_once __DIR__ . '/util/class-data-encryption.php';
+require_once __DIR__ . '/util/class-log.php';
 require_once __DIR__ . '/class-wa-api.php';
 require_once __DIR__ . '/class-wa-integration.php';
-require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/wap-exception.php';
+require_once __DIR__ . '/util/helpers.php';
+require_once __DIR__ . '/util/wap-exception.php';
 
 // for checking license key expiration dates
 use DateTime;
