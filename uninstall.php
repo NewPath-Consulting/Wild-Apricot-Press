@@ -56,8 +56,8 @@ function delete_all_db_data()
 
     // delete options added in admin settings
     delete_option(WAWP\WA_Integration::MENU_LOCATIONS_KEY);
-    delete_option(WAWP\WA_Integration::GLOBAL_RESTRICTED_STATUSES);
-    delete_option(WAWP\WA_Integration::GLOBAL_RESTRICTION_MESSAGE);
+    delete_option(WAWP\WA_Restricted_Posts::GLOBAL_RESTRICTED_STATUSES);
+    delete_option(WAWP\WA_Restricted_Posts::GLOBAL_RESTRICTION_MESSAGE);
     delete_option(WAWP\WA_Integration::LIST_OF_CHECKED_FIELDS);
     delete_option(WAWP\WA_Integration::WA_DELETE_OPTION);
     delete_option(WAWP\Log::LOG_OPTION);
@@ -74,16 +74,16 @@ function delete_all_db_data()
     delete_option(WAWP\WA_Integration::LIST_OF_CUSTOM_FIELDS);
 
     // delete stored list of restricted post
-    delete_option(WAWP\WA_Integration::ARRAY_OF_RESTRICTED_POSTS);
+    delete_option(WAWP\WA_Restricted_Posts::ARRAY_OF_RESTRICTED_POSTS);
 
     // delete exception flag
     delete_option(WAWP\Exception::EXCEPTION_OPTION);
 
     // delete post meta added by the plugin
-    delete_post_meta_by_key(WAWP\WA_Integration::RESTRICTED_GROUPS);
-    delete_post_meta_by_key(WAWP\WA_Integration::RESTRICTED_LEVELS);
-    delete_post_meta_by_key(WAWP\WA_Integration::IS_POST_RESTRICTED);
-    delete_post_meta_by_key(WAWP\WA_Integration::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
+    delete_post_meta_by_key(WAWP\WA_Restricted_Posts::RESTRICTED_GROUPS);
+    delete_post_meta_by_key(WAWP\WA_Restricted_Posts::RESTRICTED_LEVELS);
+    delete_post_meta_by_key(WAWP\WA_Restricted_Posts::IS_POST_RESTRICTED);
+    delete_post_meta_by_key(WAWP\WA_Restricted_Posts::INDIVIDUAL_RESTRICTION_MESSAGE_KEY);
 
     // delete log file
     wp_delete_file(WAWP\Log::LOGFILE);
