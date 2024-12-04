@@ -21,7 +21,7 @@
         "error-log-viewer",
         "generateblocks",
         "plugin-check",
-        "wp-data-access"
+        "query-monitor"
     ],
     "features": {
         "networking": true
