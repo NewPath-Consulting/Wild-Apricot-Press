@@ -20,7 +20,8 @@
         "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=164-playgrounds-proxy",
         "error-log-viewer",
         "generateblocks",
-         "plugin-check"
+        "plugin-check",
+        "wp-data-access"
     ],
     "features": {
         "networking": true
