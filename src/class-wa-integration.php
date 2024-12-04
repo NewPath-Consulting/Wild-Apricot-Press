@@ -1250,6 +1250,8 @@ class WA_Integration
             $verified_data = WA_API::verify_valid_access_token();
             $admin_access_token = $verified_data['access_token'];
             $admin_account_id = $verified_data['wa_account_id'];
+            Log::wap_log_debug($admin_access_token);
+            Log::wap_log_debug($admin_account_id);
             $wawp_api = new WA_API($admin_access_token, $admin_account_id);
             // Refresh custom fields first
             $wawp_api->retrieve_custom_fields();
