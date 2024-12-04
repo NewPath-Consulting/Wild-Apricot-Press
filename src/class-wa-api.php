@@ -53,7 +53,6 @@ class WA_API
      */
     private static function response_to_data($response)
     {
-        Log::wap_log_debug($response);
         if (is_wp_error($response)) {
             throw new API_Exception(esc_html(API_Exception::api_connection_error()));
         }
@@ -253,6 +252,8 @@ class WA_API
             $this->wa_user_id . '/contactfields?showSectionDividers=true';
         $response_api = wp_remote_get($url, $args);
 
+        Log::wap_log_debug($url);
+        Log::wap_log_debug($args);
         try {
             $custom_field_response = self::response_to_data($response_api);
         } catch (API_Exception $e) {
