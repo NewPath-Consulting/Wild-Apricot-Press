@@ -54,6 +54,7 @@ class WA_API
     private static function response_to_data($response)
     {
         if (is_wp_error($response)) {
+            Log::wap_log_debug($response);
             throw new API_Exception(esc_html(API_Exception::api_connection_error()));
         }
 
