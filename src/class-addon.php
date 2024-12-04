@@ -27,7 +27,7 @@ class Addon
      *
      * @var string
      */
-    public const HOOK_URL = 'https://newpathconsulting.com/check';
+    public const HOOK_URL = 'https://npc-proxy.newpathconsulting.com/check';
 
     /**
      * Array of free addons.
@@ -689,10 +689,10 @@ class Addon
             $url = $url . 'dev';
         }
 
-        // construct array of data to send
         $data = array('key' => $license_key, 'json' => 1);
+        $url = $url . '?' . http_build_query($data);
+
         $args = array(
-            'body'        => $data,
             'timeout'     => '5',
             'redirection' => '5',
             'httpversion' => '1.0',
