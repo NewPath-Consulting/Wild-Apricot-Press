@@ -27,6 +27,13 @@
     "landingPage": "/wp-admin/admin.php?page=wawp-wal-admin",
     "steps": [
         {
+            "step": "installTheme",
+            "themeData": {
+                "resource": "wordpress.org/themes",
+                "slug": "generatepress"
+            }
+        },
+        {
             "step": "defineWpConfigConsts",
             "consts": {
                 "WP_DISABLE_FATAL_ERROR_HANDLER": true,
