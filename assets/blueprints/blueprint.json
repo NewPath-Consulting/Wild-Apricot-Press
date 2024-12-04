@@ -13,9 +13,6 @@
             "plugin"
         ]
     },
-    "siteOptions": {
-        "blogname": "WildApricot Press Demo Site"
-    },
     "plugins": [
         "https://github-proxy.com/proxy/?repo=NewPath-Consulting/Wild-Apricot-Press&branch=164-playgrounds-proxy",
         "error-log-viewer",
@@ -29,6 +26,12 @@
     "login": true,
     "landingPage": "/wp-admin/admin.php?page=wawp-wal-admin",
     "steps": [
+        {
+            "step": "setSiteOptions",
+            "options": {
+                "blogname": "WildApricot Press Demo Site"
+            }
+        },
         {
             "step": "defineWpConfigConsts",
             "consts": {
