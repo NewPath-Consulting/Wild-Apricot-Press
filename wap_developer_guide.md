@@ -193,7 +193,7 @@ Hook | Function | Cron job | Frequency
     * If so, `wawp_wal_credentials_obtained` will run and the WA user login page will be created
     * If not, nothing happens and the user is unable to use the plugin functionality (i.e. login page and post restriction)
 6. WildApricot Press menu and settings pages are created and added to the WordPress dashboard
-    * The code for the settings pages is located in `class-admin-settings.php`
+    * The code for the settings pages is located in `settings/class-settings-controller.php`
 7. If WA credentials/license keys are not found, admin notices are shown to remind the user to enter their WildApricot credentials and license key(s).
 8. User enters their WildApricot credentials (API Key, Client ID, Client Secret) under WildApricot Press > Authorization
     * Inputs are sanitized
