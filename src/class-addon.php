@@ -556,7 +556,7 @@ class Addon
      */
     public static function unschedule_all_cron_jobs()
     {
-        Addon::unschedule_cron_job(Settings::CRON_HOOK);
+        Addon::unschedule_cron_job(WA_Integration::CRON_HOOK);
         Addon::unschedule_cron_job(WA_Integration::USER_REFRESH_HOOK);
         Addon::unschedule_cron_job(WA_Integration::LICENSE_CHECK_HOOK);
     }
@@ -703,6 +703,7 @@ class Addon
 
         // make post request to hook and decode response data
         $response = wp_remote_post($url, $args);
+        Log::wap_log_debug($response);
         $response_data = $response['body'];
 
         return json_decode($response_data, true);
@@ -723,7 +724,8 @@ class Addon
     {
         // if the license is invalid OR an invalid WildApricot URL is being used, return null
         // else return the valid license key
-        if (array_key_exists('license-error', $response)) {
+        if (!$response || array_key_exists('license-error', $response)) {
+            // TODO: better user-facing error messages for license response errors
             Log::wap_log_error('Error retrieving license data.');
             return false;
         }

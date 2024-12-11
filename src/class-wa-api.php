@@ -39,7 +39,7 @@ class WA_API
         $this->wa_user_id = $wa_user_id;
         // Include WA_Integration and Data_Encryption
         require_once('class-wa-integration.php');
-        require_once('class-data-encryption.php');
+        require_once('util/class-data-encryption.php');
     }
 
     /**
@@ -89,7 +89,7 @@ class WA_API
     public static function load_user_credentials()
     {
         // Load encrypted credentials from database
-        $credentials = get_option(WA_Integration::WA_CREDENTIALS_KEY);
+        $credentials = get_option(WA_Auth_Settings::WA_CREDENTIALS_KEY);
 
         if (!$credentials) {
             return array();
@@ -100,9 +100,9 @@ class WA_API
         // Decrypt credentials
         // Encryption exceptions will propogate up
         $dataEncryption = new Data_Encryption();
-        $decrypted_credentials[WA_Integration::WA_API_KEY_OPT] = $dataEncryption->decrypt($credentials[WA_Integration::WA_API_KEY_OPT]);
-        $decrypted_credentials[WA_Integration::WA_CLIENT_ID_OPT] = $dataEncryption->decrypt($credentials[WA_Integration::WA_CLIENT_ID_OPT]);
-        $decrypted_credentials[WA_Integration::WA_CLIENT_SECRET_OPT] = $dataEncryption->decrypt($credentials[WA_Integration::WA_CLIENT_SECRET_OPT]);
+        $decrypted_credentials[WA_Auth_Settings::WA_API_KEY_OPT] = $dataEncryption->decrypt($credentials[WA_Auth_Settings::WA_API_KEY_OPT]);
+        $decrypted_credentials[WA_Auth_Settings::WA_CLIENT_ID_OPT] = $dataEncryption->decrypt($credentials[WA_Auth_Settings::WA_CLIENT_ID_OPT]);
+        $decrypted_credentials[WA_Auth_Settings::WA_CLIENT_SECRET_OPT] = $dataEncryption->decrypt($credentials[WA_Auth_Settings::WA_CLIENT_SECRET_OPT]);
 
 
         return $decrypted_credentials;
@@ -454,7 +454,7 @@ class WA_API
         $decrypted_credentials = self::load_user_credentials();
 
         // Encode API key
-        $authorization_string = $decrypted_credentials[WA_Integration::WA_CLIENT_ID_OPT] . ':' . $decrypted_credentials[WA_Integration::WA_CLIENT_SECRET_OPT];
+        $authorization_string = $decrypted_credentials[WA_Auth_Settings::WA_CLIENT_ID_OPT] . ':' . $decrypted_credentials[WA_Auth_Settings::WA_CLIENT_SECRET_OPT];
         $encoded_authorization_string = base64_encode($authorization_string);
 
         // Perform API request
@@ -773,7 +773,7 @@ class WA_API
     private function accept_terms_of_use($user_email)
     {
         // find contact with this email
-        $url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' .
+        $url = self::API_URL . '/accounts/' .
         $this->wa_user_id . '/contacts?%24async=false&filter=Email%20eq%20' . $user_email;
 
         $args = $this->request_data_args();
@@ -787,7 +787,7 @@ class WA_API
             return;
         }
 
-        $rpc_url = self::API_URL . self::ADMIN_API_VERSION . '/rpc/' . $user_id . 'AcceptTermsOfUse';
+        $rpc_url = self::API_URL . '/rpc/' . $user_id . 'AcceptTermsOfUse';
         wp_remote_post($rpc_url, $args);
     }
 }

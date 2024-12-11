@@ -36,7 +36,7 @@ or at 5000 Yonge Street, Suite 1901, Toronto, Ontario, M2N 7E9, Canada.
 */
 
 require_once plugin_dir_path(__FILE__) . 'src/class-activator.php';
-require_once plugin_dir_path(__FILE__) . 'src/admin-settings.php';
+require_once plugin_dir_path(__FILE__) . 'src/settings/class-settings-controller.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-deactivator.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-wa-integration.php';
 require_once plugin_dir_path(__FILE__) . 'src/util/helpers.php';
@@ -88,7 +88,7 @@ function wap_action_links($links)
 }
 
 // Create settings page
-$settings = new WAWP\Settings();
+$settings = new WAWP\Settings_Controller();
 
 // Create WA Integration instance
 $wa_integration_instance = new WAWP\WA_Integration();

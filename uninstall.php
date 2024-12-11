@@ -1,6 +1,6 @@
 <?php
 
-require_once plugin_dir_path(__FILE__) . 'src/admin-settings.php';
+require_once plugin_dir_path(__FILE__) . 'src/settings/class-settings-controller.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-activator.php';
 require_once plugin_dir_path(__FILE__) . 'src/class-addon.php';
 require_once plugin_dir_path(__FILE__) . 'src/util/class-log.php';
@@ -63,7 +63,7 @@ function delete_all_db_data()
     delete_option(WAWP\Log::LOG_OPTION);
 
     // delete authorized application credentials
-    delete_option(WAWP\WA_Integration::WA_CREDENTIALS_KEY);
+    delete_option(WAWP\WA_Auth_Settings::WA_CREDENTIALS_KEY);
 
     // delete license data
     WAWP\Addon::instance()::delete();

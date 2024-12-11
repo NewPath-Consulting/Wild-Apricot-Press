@@ -74,7 +74,7 @@ function get_current_url()
 
 function get_admin_settings_url()
 {
-    return admin_url('admin.php?page=' . Settings::SETTINGS_URL);
+    return admin_url('admin.php?page=' . Settings_Controller::SETTINGS_URL);
 }
 
 /**
