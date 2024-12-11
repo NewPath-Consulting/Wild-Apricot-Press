@@ -702,7 +702,10 @@ class Addon
         );
 
         // make post request to hook and decode response data
-        $response = wp_remote_post($url, $args);
+        $response = wp_safe_remote_get($url, $args);
+        if ($response['response']['code'] != '200') {
+            throw API_Exception::api_connection_error('There was an error validating the license key.');
+        }
         $response_data = $response['body'];
 
         return json_decode($response_data, true);

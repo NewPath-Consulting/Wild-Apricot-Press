@@ -60,7 +60,7 @@ class WA_API
 
         // if user is unauthorized, throw error
         if ($response['response']['code'] == '401') {
-            throw new API_Exception(API_Exception::api_connection_error());
+            throw new API_Exception(esc_html(API_Exception::api_connection_error()));
         } elseif ($response['response']['code'] == '200') {
             API_Exception::remove_error();
         }
@@ -216,7 +216,7 @@ class WA_API
     {
         $args = $this->request_data_args();
         $url = self::get_api_url() . '/accounts/' . $this->wa_user_id;
-        $response_api = wp_remote_get($url, $args);
+        $response_api = wp_safe_remote_get($url, $args);
 
         try {
             $details_response = self::response_to_data($response_api);
@@ -251,7 +251,7 @@ class WA_API
         $args = $this->request_data_args();
         $url = self::get_api_url() . '/accounts/' .
             $this->wa_user_id . '/contactfields?showSectionDividers=true';
-        $response_api = wp_remote_get($url, $args);
+        $response_api = wp_safe_remote_get($url, $args);
 
         Log::wap_log_debug($url);
         Log::wap_log_debug($args);
@@ -489,7 +489,7 @@ class WA_API
         // Get details of current WA user with API request
         // Get user's contact ID
         $args = $this->request_data_args();
-        $contact_info = wp_remote_get(self::get_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
+        $contact_info = wp_safe_remote_get(self::get_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
 
         try {
             $contact_info = self::response_to_data($contact_info);
@@ -503,9 +503,9 @@ class WA_API
         $user_data_api = null;
         if (isset($is_administrator) && $is_administrator == '1') { // user is administrator
             $contact_id = $contact_info['Id'];
-            $user_data_api = wp_remote_get(self::get_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
+            $user_data_api = wp_safe_remote_get(self::get_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
         } else { // not administrator
-            $user_data_api = wp_remote_get(self::get_public_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
+            $user_data_api = wp_safe_remote_get(self::get_public_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
         }
         // Extract body
 
@@ -532,7 +532,7 @@ class WA_API
         if ($request_groups) {
             $url = self::get_api_url() . '/accounts/' . $this->wa_user_id . '/membergroups';
         }
-        $membership_levels_response = wp_remote_get($url, $args);
+        $membership_levels_response = wp_safe_remote_get($url, $args);
 
         // Return membership levels
         try {
@@ -688,7 +688,7 @@ class WA_API
             $this->wa_user_id . '/contacts?%24async=false&%24count=true';
 
         $args = $this->request_data_args();
-        $response = wp_remote_get($url, $args);
+        $response = wp_safe_remote_get($url, $args);
 
         try {
             $data = self::response_to_data($response);
@@ -750,7 +750,7 @@ class WA_API
 
         $args = $this->request_data_args();
 
-        $response = wp_remote_get($url, $args);
+        $response = wp_safe_remote_get($url, $args);
 
         try {
             $data = self::response_to_data($response);
