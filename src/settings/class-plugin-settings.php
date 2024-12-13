@@ -431,8 +431,13 @@ class Admin_Settings
             return $cron_freq;
         }
 
-        if (array_key_exists('cron_recurrence', $_POST)) {
-            return sanitize_key($_POST['cron_recurrence']);
+        if (array_key_exists('sync', $_POST)) {
+            WA_Integration::refresh_all_data();
+            return $cron_freq;
+        } elseif (array_key_exists('cron_recurrence', $_POST)) {
+            $new_freq = sanitize_key($_POST['cron_recurrence']);
+            WA_Integration::reschedule_cron_jobs($new_freq);
+            return $new_freq;
         }
 
         return $cron_freq;
@@ -1146,7 +1151,7 @@ class Admin_Settings
 <form method="post" action="options.php">
     <?php
         wp_nonce_field('wawp_sync_nonce_action', 'wawp_sync_nonce_name');
-        // submit_button(__('Manually Sync WildApricot Data', 'newpath-wildapricot-press'), 'primary', 'sync', true);
+        submit_button(__('Manually Sync WildApricot Data', 'newpath-wildapricot-press'), 'primary', 'sync', true);
         settings_fields('wawp_sync_group');
         do_settings_sections('wawp-wal-admin-sync-freq');
         submit_button();

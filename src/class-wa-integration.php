@@ -180,20 +180,11 @@ class WA_Integration
     public const CRON_HOOK = 'wawp_cron_refresh_memberships_hook';
 
     /**
-     * User data refresh hook. Scheduled to run daily.
-     *
-     * @var string
-     */
-    public const USER_REFRESH_HOOK 					= 'wawp_cron_refresh_user_hook';
-
-    /**
      * License data refresh hook. Scheduled to run daily.
      *
      * @var string
      */
-    public const LICENSE_CHECK_HOOK 					= 'wawp_cron_refresh_license_check';
-
-
+    public const CREDENTIALS_CHECK_HOOK 			    = 'wawp_cron_check_credentials';
 
     public $wa_login;
     public $wa_user;
@@ -222,17 +213,14 @@ class WA_Integration
         // Add actions for cron update
         add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'));
 
-        // Action for user refresh cron hook
-        add_action(self::USER_REFRESH_HOOK, array($this, 'refresh_user_wa_info'));
-
         // Action for hiding admin bar for non-admin users, fires after the theme is loaded
         add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 
         // Fires on every page, checks credentials and disables plugin if necessary
-        add_action('init', array($this, 'check_updated_credentials'));
+        // add_action('init', array($this, 'check_updated_credentials'));
 
         // Action for Cron job that refreshes the license check
-        add_action(self::LICENSE_CHECK_HOOK, 'WAWP\Addon::update_licenses');
+        add_action(self::CREDENTIALS_CHECK_HOOK, 'WAWP\WA_Integration::check_updated_credentials');
 
         // Fires when access to the admin page is denied, displays message prompting user to log out of their WA account
         add_action('admin_page_access_denied', array($this, 'tell_user_to_logout'));
@@ -266,110 +254,55 @@ class WA_Integration
         return $option ? $option : 'daily';
     }
 
-    /**
-     * Set-up CRON job for updating membership levels and groups.
-     *
-     * @return void
-     */
-    public static function setup_cron_job()
+    public static function schedule_cron_jobs()
     {
-        //If $timestamp === false schedule the event since it hasn't been done previously
+        $cron_freq = self::get_cron_frequency();
+        if (!wp_next_scheduled(self::CREDENTIALS_CHECK_HOOK)) {
+            wp_schedule_event(current_time('timestamp'), $cron_freq, self::CREDENTIALS_CHECK_HOOK);
+        }
         if (!wp_next_scheduled(self::CRON_HOOK)) {
-            //Schedule the event for right now, then to repeat daily using the hook
-            wp_schedule_event(current_time('timestamp'), 'daily', self::CRON_HOOK);
+            wp_schedule_event(current_time('timestamp'), $cron_freq, self::CRON_HOOK);
         }
+
+        WA_User::create_cron_for_user_refresh($cron_freq);
     }
 
-    /**
-     * Removes the invalid, now deleted groups and levels after the membership levels and groups are updated
-     * Please note that, while this function refers to "levels", this function works for both levels and groups
-     *
-     * @param array $updated_levels         new levels obtained from refresh
-     * @param array $old_levels             previous levels before refresh
-     * @param string $restricted_levels_key key of the restricted levels to be saved
-     * @return void
-     */
-    private function remove_invalid_groups_levels($updated_levels, $old_levels, $restricted_levels_key)
+    public static function reschedule_cron_jobs(?string $new_freq = '')
     {
-        $restricted_posts = get_option(WA_Restricted_Posts::ARRAY_OF_RESTRICTED_POSTS);
-
-        // Convert levels arrays to its keys
-        $updated_levels = array_keys($updated_levels);
-        $old_levels = array_keys($old_levels);
-
-        // Loop through each old level and check if it is in the updated levels
-        foreach ($old_levels as $old_level) {
-            if (!in_array($old_level, $updated_levels)) { // old level is NOT in the updated levels
-                // This is a deleted level! ($old_level)
-                $level_to_delete = $old_level;
-                // Remove this level from restricted posts
-                // Loop through each restricted post and check if its post meta data contains this level
-                foreach ($restricted_posts as $restricted_post) {
-                    // Get post's list of restricted levels
-                    $post_restricted_levels = get_post_meta($restricted_post, $restricted_levels_key);
-                    $post_restricted_levels = maybe_unserialize($post_restricted_levels[0]);
-                    // See line 230 on class-wa-integration.php
-                    if (in_array($level_to_delete, $post_restricted_levels)) {
-                        // Remove this updated level from post restricted levels
-                        $post_restricted_levels = array_diff($post_restricted_levels, array($level_to_delete));
-                    }
-                    // Check if post's restricted groups and levels are now empty
-                    $other_membership_key = WA_Restricted_Posts::RESTRICTED_GROUPS;
-                    if ($restricted_levels_key == WA_Restricted_Posts::RESTRICTED_GROUPS) {
-                        $other_membership_key = WA_Restricted_Posts::RESTRICTED_LEVELS;
-                    }
-                    $other_memberships = get_post_meta($restricted_post, $other_membership_key);
-                    $other_memberships = maybe_unserialize($other_memberships[0]);
-                    if (empty($other_memberships) && empty($post_restricted_levels)) {
-                        // This post should NOT be restricted
-                        update_post_meta($restricted_post, WA_Restricted_Posts::IS_POST_RESTRICTED, false);
-                        // Remove this post from the array of restricted posts
-                        $updated_restricted_posts = array_diff($restricted_posts, array($restricted_post));
-                        update_option(WA_Restricted_Posts::ARRAY_OF_RESTRICTED_POSTS, $updated_restricted_posts);
-                    }
-                    // Save new restricted levels to post meta data
-                    $post_restricted_levels = maybe_serialize($post_restricted_levels);
-                    // Delete past value
-                    // $old_post_levels = get_post_meta($restricted_post);
-                    update_post_meta($restricted_post, $restricted_levels_key, $post_restricted_levels); // single value
-                }
-            }
-        }
+        self::unschedule_all_cron_jobs();
+        $cron_freq = $new_freq ? $new_freq : self::get_cron_frequency();
+        wp_schedule_event(current_time('timestamp'), $cron_freq, self::CREDENTIALS_CHECK_HOOK);
+        wp_schedule_event(current_time('timestamp'), $cron_freq, self::CRON_HOOK);
+        WA_User::create_cron_for_user_refresh($cron_freq);
     }
 
-    /**
-    * Removes deleted roles after refreshing new membership levels
-    *
-    * @param array $updated_levels        the new levels obtained from refresh
-    * @param array $old_levels            the previous levels before refresh
-    * @return void
-    */
-    private function remove_invalid_roles($updated_levels, $old_levels)
+    public static function unschedule_all_cron_jobs()
     {
-        // Convert levels arrays to its keys
-        $updated_levels_keys = array_keys($updated_levels);
-        $old_levels_keys = array_keys($old_levels);
-
-        // Loop through each old level and check if it is in the updated levels
-        foreach ($old_levels_keys as $old_level_key) {
-            if (!in_array($old_level_key, $updated_levels_keys)) { // old level is NOT in the updated levels
-                // This is a deleted level! ($old_level)
-                $level_to_delete = $old_level_key;
-                // Remove role
-                $level_name = $old_levels[$level_to_delete];
-                $role_to_remove = 'wawp_' . str_replace(' ', '', $level_name);
-                remove_role($role_to_remove);
-                // Remove users from this role now that it is deleted
-                // CHECK THAT EDITOR/ADMIN IS NOT DOWNGRADED TO SUBSCRIBER
-                $delete_args = array('role' => $role_to_remove);
-                $users_with_deleted_roles = get_users($delete_args);
-                // Loop through these users and set their roles to subscriber
-                foreach ($users_with_deleted_roles as $user_to_modify) {
-                    $user_to_modify->set_role('subscriber');
-                }
-            }
-        }
+        self::unschedule_cron_job(self::CREDENTIALS_CHECK_HOOK);
+        self::unschedule_cron_job(self::CRON_HOOK);
+        self::unschedule_cron_job(WA_User::USER_REFRESH_HOOK);
     }
+
+    public static function refresh_all_data()
+    {
+        // TODO: see where disable_plugin is called, add if needed
+        try {
+            $credentials = WA_API::load_user_credentials();
+            $is_valid = WA_API::is_application_valid($credentials[WA_Auth_Settings::WA_API_KEY_OPT]);
+            $access = WA_API::verify_valid_access_token();
+            $access_token = $access['access_token'];
+            $admin_account_id = $access['wa_account_id'];
+            $wa_api = new WA_API($access_token, $admin_account_id);
+        } catch (Exception $e) {
+            Log::wap_log_error($e->getMessage());
+        }
+
+        Addon::update_licenses();
+
+        self::cron_update_wa_memberships($wa_api);
+        WA_User::refresh_user_wa_info($wa_api);
+    }
+
 
     /**
     * Updates the membership levels and groups from WildApricot into WordPress upon each CRON job.
@@ -1061,6 +994,16 @@ class WA_Integration
 
 
     // **** private functions ****
+    private static function unschedule_cron_job($cron_hook)
+    {
+        // Get the timestamp for the next event.
+        $timestamp = wp_next_scheduled($cron_hook);
+        // Check that event is already scheduled
+        if ($timestamp) {
+            wp_unschedule_event($timestamp, $cron_hook);
+        }
+    }
+
     /**
      * Returns the licensed WA urls from the hook response.
      *

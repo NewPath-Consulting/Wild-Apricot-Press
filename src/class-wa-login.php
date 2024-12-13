@@ -104,12 +104,7 @@ class WA_Login
      */
     public function create_login_page()
     {
-        // Run action to create user refresh CRON event
-        WA_User::create_cron_for_user_refresh();
-        // Create event for checking license
-        WA_Integration::setup_license_check_cron();
-        // schedule cron update for updating the membership levels and groups
-        WA_Integration::setup_cron_job();
+        WA_Integration::schedule_cron_jobs();
 
         $login_title = self::get_login_settings('title');
         $login_content = '[wawp_custom_login_form]';

@@ -71,6 +71,9 @@ class WA_User
         // Fires when displaying or editing user profile, adds WA user data
         add_action('show_user_profile', array($this, 'show_membership_level_on_profile'));
         add_action('edit_user_profile', array($this, 'show_membership_level_on_profile'));
+
+        // Action for user refresh cron hook
+        add_action(self::USER_REFRESH_HOOK, 'WAWP\WA_User::refresh_user_wa_info');
     }
 
     /**
@@ -80,11 +83,11 @@ class WA_User
      * @param int $user_id  User's WordPress ID
      * @return void
      */
-    public static function create_cron_for_user_refresh()
+    public static function create_cron_for_user_refresh($cron_freq)
     {
         // Schedule event if it is not already scheduled
         if (!wp_next_scheduled(self::USER_REFRESH_HOOK)) {
-            wp_schedule_event(time(), 'daily', self::USER_REFRESH_HOOK);
+            wp_schedule_event(time(), $cron_freq, self::USER_REFRESH_HOOK);
         }
     }
 

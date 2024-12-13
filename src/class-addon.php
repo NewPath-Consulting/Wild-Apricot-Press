@@ -550,34 +550,6 @@ class Addon
     }
 
     /**
-     * Unschedules all CRON jobs scheduled by the plugin.
-     *
-     * @return void
-     */
-    public static function unschedule_all_cron_jobs()
-    {
-        Addon::unschedule_cron_job(WA_Integration::CRON_HOOK);
-        Addon::unschedule_cron_job(WA_Integration::USER_REFRESH_HOOK);
-        Addon::unschedule_cron_job(WA_Integration::LICENSE_CHECK_HOOK);
-    }
-
-    /**
-     * Unschedules CRON job.
-     *
-     * @param string $cron_hook_name cron job to remove
-     * @return void
-     */
-    private static function unschedule_cron_job($cron_hook_name)
-    {
-        // Get the timestamp for the next event.
-        $timestamp = wp_next_scheduled($cron_hook_name);
-        // Check that event is already scheduled
-        if ($timestamp) {
-            wp_unschedule_event($timestamp, $cron_hook_name);
-        }
-    }
-
-    /**
      * Returns whether the plugin is currently disabled.
      * Plugin will be disabled if any of the credentials are invalid/nonexistent
      * or if there's been an unresolved fatal error.

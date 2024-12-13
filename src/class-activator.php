@@ -81,8 +81,6 @@ class Activator
         // **** this code will only run if license AND wa credentials are valid ****
         // Run credentials obtained hook, which will read in the credentials in class-wa-integration.php
         do_action('wawp_wal_credentials_obtained');
-        // Also create CRON event to refresh the membership levels/groups
-        WA_Integration::setup_cron_job();
     }
 
 
