@@ -23,10 +23,12 @@ use DateTime;
 class Addon
 {
     /**
-     * Base hook url.
+     * Base hook url for the proxy.
      *
      * @var string
      */
+    public const PROXY_HOOK_URL = 'https://npc-proxy.newpathconsulting.com/check';
+
     public const HOOK_URL = 'https://newpathconsulting.com/check';
 
     /**
@@ -684,15 +686,12 @@ class Addon
     {
 
         // check for dev flag, construct appropriate url
-        $url = self::HOOK_URL;
-        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
-            $url = $url . 'dev';
-        }
+        $url = self::get_license_hook_url();
 
-        // construct array of data to send
         $data = array('key' => $license_key, 'json' => 1);
+        $url = $url . '?' . http_build_query($data);
+
         $args = array(
-            'body'        => $data,
             'timeout'     => '5',
             'redirection' => '5',
             'httpversion' => '1.0',
@@ -702,7 +701,10 @@ class Addon
         );
 
         // make post request to hook and decode response data
-        $response = wp_remote_post($url, $args);
+        $response = wp_safe_remote_get($url, $args);
+        if ($response['response']['code'] != '200') {
+            throw API_Exception::api_connection_error('There was an error validating the license key.');
+        }
         $response_data = $response['body'];
 
         return json_decode($response_data, true);
@@ -729,7 +731,7 @@ class Addon
         }
 
         // license is valid if license hook doesn't return an error and dev flag is on, don't need to evaluate contents
-        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
+        if (is_dev()) {
             return true;
         }
 
@@ -887,6 +889,25 @@ class Addon
         echo ' in order to continue using the <strong>' . esc_html($plugin_name)
         . '</strong> functionality.</p></div>';
 
+    }
+
+    private static function get_license_hook_url()
+    {
+        $url = '';
+        if (is_playgrounds()) {
+            $url = self::PROXY_HOOK_URL;
+        } else {
+            $url = self::HOOK_URL;
+        }
+
+        if (is_dev()) {
+            if (!is_playgrounds()) {
+                $url = $url . '-';
+            }
+            $url = $url . 'dev';
+        }
+
+        return $url;
     }
 
 } // end of Addon class
