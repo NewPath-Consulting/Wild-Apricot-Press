@@ -39,8 +39,7 @@
                 "WP_DEBUG": true,
                 "WP_DEBUG_LOG": true,
                 "WP_DEBUG_DISPLAY": true,
-                "WAP_LICENSE_CHECK_DEV": true,
-                "WP_PLAYGROUNDS_SUPPORT": true
+                "WAP_LICENSE_CHECK_DEV": true
             }
         },
         {
