@@ -23,11 +23,13 @@ use DateTime;
 class Addon
 {
     /**
-     * Base hook url.
+     * Base hook url for the proxy.
      *
      * @var string
      */
-    public const HOOK_URL = 'https://npc-proxy.newpathconsulting.com/check';
+    public const PROXY_HOOK_URL = 'https://npc-proxy.newpathconsulting.com/check';
+
+    public const HOOK_URL = 'https://newpathconsulting.com/check';
 
     /**
      * Array of free addons.
@@ -684,10 +686,7 @@ class Addon
     {
 
         // check for dev flag, construct appropriate url
-        $url = self::HOOK_URL;
-        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
-            $url = $url . 'dev';
-        }
+        $url = self::get_license_hook_url();
 
         $data = array('key' => $license_key, 'json' => 1);
         $url = $url . '?' . http_build_query($data);
@@ -732,7 +731,7 @@ class Addon
         }
 
         // license is valid if license hook doesn't return an error and dev flag is on, don't need to evaluate contents
-        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
+        if (is_dev()) {
             return true;
         }
 
@@ -890,6 +889,25 @@ class Addon
         echo ' in order to continue using the <strong>' . esc_html($plugin_name)
         . '</strong> functionality.</p></div>';
 
+    }
+
+    private static function get_license_hook_url()
+    {
+        $url = '';
+        if (is_playgrounds()) {
+            $url = self::PROXY_HOOK_URL;
+        } else {
+            $url = self::HOOK_URL;
+        }
+
+        if (is_dev()) {
+            if (!is_playgrounds()) {
+                $url = $url . '-';
+            }
+            $url = $url . 'dev';
+        }
+
+        return $url;
     }
 
 } // end of Addon class

@@ -704,7 +704,7 @@ class WA_API
 
     private static function get_auth_url()
     {
-        if (defined('WP_PLAYGROUNDS_SUPPORT') && WP_PLAYGROUNDS_SUPPORT) {
+        if (is_playgrounds()) {
             return self::PROXY_URL . '/auth';
         }
 
@@ -713,7 +713,7 @@ class WA_API
 
     private static function get_api_url()
     {
-        if (defined('WP_PLAYGROUNDS_SUPPORT') && WP_PLAYGROUNDS_SUPPORT) {
+        if (is_playgrounds()) {
             return self::PROXY_URL;
         }
 
@@ -722,7 +722,7 @@ class WA_API
 
     private static function get_public_api_url()
     {
-        if (defined('WP_PLAYGROUNDS_SUPPORT') && WP_PLAYGROUNDS_SUPPORT) {
+        if (is_playgrounds()) {
             return self::PROXY_URL . '/publicview';
         }
 
