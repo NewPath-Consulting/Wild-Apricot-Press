@@ -22,14 +22,8 @@ use DateTime;
  */
 class Addon
 {
-    /**
-     * Base hook url for the proxy.
-     *
-     * @var string
-     */
-    public const PROXY_HOOK_URL = 'https://npc-proxy.newpathconsulting.com/check';
-
-    public const HOOK_URL = 'https://newpathconsulting.com/check';
+    public const HOOK_URL = 'https://hook.us1.make.com/8euj9o9frkj3wz2nqm6xmcp4y1mdy5tp';
+    public const HOOK_URL_DEV = 'https://hook.us1.make.com/4suuck1up58qja9qfcqyosyhni63jwsn';
 
     /**
      * Array of free addons.
@@ -893,21 +887,11 @@ class Addon
 
     private static function get_license_hook_url()
     {
-        $url = '';
-        if (is_playgrounds()) {
-            $url = self::PROXY_HOOK_URL;
-        } else {
-            $url = self::HOOK_URL;
-        }
-
         if (is_dev()) {
-            if (!is_playgrounds()) {
-                $url = $url . '-';
-            }
-            $url = $url . 'dev';
+            return self::HOOK_URL_DEV;
         }
 
-        return $url;
+        return self::HOOK_URL;
     }
 
 } // end of Addon class
