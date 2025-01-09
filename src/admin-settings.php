@@ -1344,6 +1344,7 @@ class WA_Auth_Settings
         // make simple call
         $count = $wawp_api->get_contacts_count();
         remove_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
+        update_option('wap_api_debug', false);
         echo '</div>';
     }
 
