@@ -679,16 +679,27 @@ class WA_API
     public function get_contacts_count()
     {
 
-        $count = get_option(WA_Integration::WA_CONTACTS_COUNT_KEY);
-        if ($count) {
-            return $count;
-        }
+        // $count = get_option(WA_Integration::WA_CONTACTS_COUNT_KEY);
+        // if ($count) {
+        //     return $count;
+        // }
 
         $url = self::get_api_url() . '/accounts/' .
             $this->wa_user_id . '/contacts?%24async=false&%24count=true';
 
         $args = $this->request_data_args();
+
+        Log::wap_log_debug($url);
+        Log::wap_log_debug($args);
+
         $response = wp_safe_remote_get($url, $args);
+
+        echo '<p>url: '. esc_html($url) . '</p>';
+        echo '<p>args:</p>';
+        esc_html(print_r($args));
+        echo '<br>';
+        echo '<p>response:</p>';
+        esc_html(print_r($response));
 
         try {
             $data = self::response_to_data($response);

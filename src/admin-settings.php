@@ -54,6 +54,7 @@ class Settings
 
         // Add actions for cron update
         add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'));
+        add_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
 
     }
 
@@ -343,7 +344,8 @@ class Admin_Settings
         ?>
 <!-- navigation tabs -->
 <nav class="nav-tab-wrapper">
-    <a href="?page=wawp-wal-admin" class="nav-tab <?php if($tab === null): ?>nav-tab-active<?php endif; ?>">Content
+    <a href="?page=wawp-wal-admin"
+        class="nav-tab <?php if($tab === null): ?>nav-tab-active<?php endif; ?>">Content
         Restriction Options</a>
     <a href="?page=wawp-wal-admin&tab=fields"
         class="nav-tab <?php if($tab === 'fields'):?>nav-tab-active<?php endif; ?>">Synchronization
@@ -527,7 +529,8 @@ class Admin_Settings
             }
             ?>
 <input type="checkbox" name="wawp_restriction_status_name[]" class="wawp_class_status"
-    value="<?php echo esc_attr($status_key); ?>" <?php echo esc_attr($status_checked); ?> />
+    value="<?php echo esc_attr($status_key); ?>"
+    <?php echo esc_attr($status_checked); ?> />
 <?php echo esc_html($status); ?> </input><br>
 <?php
         }
@@ -645,7 +648,8 @@ class Admin_Settings
                     }
                 }
                 ?>
-<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field' value="<?php echo esc_attr($field_id); ?>"
+<input type="checkbox" name="wawp_fields_name[]" class='wawp_case_field'
+    value="<?php echo esc_attr($field_id); ?>"
     <?php echo esc_attr($is_checked); ?> />
 <?php echo esc_html($field_name); ?> </input><br>
 <?php
@@ -653,7 +657,8 @@ class Admin_Settings
         } else { // no custom fields
             ?>
 <p>Your WildApricot site does not have any contact fields! Please ensure that you have correctly entered your
-    WildApricot site's credentials under <a href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot
+    WildApricot site's credentials under <a
+        href="<?php echo esc_url(get_auth_menu_url()); ?>">WildApricot
         Press -> Authorization</a></p>
 <?php
         }
@@ -745,7 +750,8 @@ class Admin_Settings
                 }
             }
             ?>
-<input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete' value="<?php echo esc_attr($key); ?>"
+<input type="checkbox" name="wawp_delete_setting[]" class='wawp_class_delete'
+    value="<?php echo esc_attr($key); ?>"
     <?php echo esc_attr($checked); ?> />
 <?php echo esc_html($attribute); ?> </input><br><br>
 <?php
@@ -798,7 +804,9 @@ class Admin_Settings
     {
         $checked = Log::can_debug();
         ?>
-<input type="checkbox" name="<?php echo esc_attr(Log::LOG_OPTION); ?>" class="wawp_class_logfile" value="checked"
+<input type="checkbox"
+    name="<?php echo esc_attr(Log::LOG_OPTION); ?>"
+    class="wawp_class_logfile" value="checked"
     <?php echo esc_html($checked); ?>></input>
 <?php
     }
@@ -1316,6 +1324,23 @@ class WA_Auth_Settings
 </div>
 </div>
 <?php
+    }
+
+    public static function api_debug()
+    {
+        if (!WA_Integration::valid_wa_credentials()) {
+            return;
+        }
+        echo '<div class="notice">';
+        // init api
+        $access_and_account = WA_API::verify_valid_access_token();
+        $access_token = $access_and_account['access_token'];
+        $wa_account_id = $access_and_account['wa_account_id'];
+        $wawp_api = new WA_API($access_token, $wa_account_id);
+        // make simple call
+        $count = $wawp_api->get_contacts_count();
+        // remove_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
+        echo '</div>';
     }
 
     /**
