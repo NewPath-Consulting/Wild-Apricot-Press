@@ -54,7 +54,10 @@ class Settings
 
         // Add actions for cron update
         add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'));
-        add_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
+
+        if (get_option('wap_api_debug')) {
+            add_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
+        }
 
     }
 
@@ -1287,6 +1290,7 @@ class WA_Auth_Settings
             <!-- WildApricot credentials form -->
             <form method="post" action="options.php">
                 <?php
+                submit_button(__('Test API', 'newpath-wildapricot-press'), 'primary', 'api-test');
         // Nonce for verification
         wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
         // This prints out all hidden setting fields
@@ -1339,7 +1343,7 @@ class WA_Auth_Settings
         $wawp_api = new WA_API($access_token, $wa_account_id);
         // make simple call
         $count = $wawp_api->get_contacts_count();
-        // remove_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
+        remove_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
         echo '</div>';
     }
 
@@ -1356,6 +1360,12 @@ class WA_Auth_Settings
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
             Log::wap_log_error('Your nonce for the WildApricot credentials could not be verified.');
             return empty_string_array($input);
+        }
+
+        if (array_key_exists('api-test', $_POST)) {
+            update_option('wap_api_debug', true);
+
+            return get_option(WA_Integration::WA_CREDENTIALS_KEY);
         }
 
         $valid = array();

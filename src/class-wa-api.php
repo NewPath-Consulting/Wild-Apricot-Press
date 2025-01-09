@@ -694,8 +694,8 @@ class WA_API
 
         $response = wp_safe_remote_get($url, $args);
 
-        echo '<p>url: '. esc_html($url) . '</p>';
-        echo '<p>args:</p>';
+        echo '<p>url:<br>'. esc_html($url) . '</p>';
+        echo '<p>args to wp_safe_remote_get:</p>';
         esc_html(print_r($args));
         echo '<br>';
         echo '<p>response:</p>';
