@@ -81,8 +81,6 @@ class Activator
             return;
         }
 
-
-
         if (Exception::fatal_error()) {
             do_action('disable_plugin', CORE_SLUG, $license_status);
             return;

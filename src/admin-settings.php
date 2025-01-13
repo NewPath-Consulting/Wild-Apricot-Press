@@ -1760,6 +1760,7 @@ class License_Settings
                 // valid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
                 $valid[$slug] = $license_encrypted;
+                do_action('wawp_wal_credentials_obtained');
 
             }
 
