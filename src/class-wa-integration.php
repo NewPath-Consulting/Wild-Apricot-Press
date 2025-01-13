@@ -565,12 +565,13 @@ class WA_Integration
      */
     public function create_login_page()
     {
-        // Run action to create user refresh CRON event
-        self::create_cron_for_user_refresh();
+        Log::wap_log_debug('create_login_page');
         // Create event for checking license
         self::setup_license_check_cron();
         // schedule cron update for updating the membership levels and groups
         Settings::setup_cron_job();
+        // Run action to create user refresh CRON event
+        self::create_cron_for_user_refresh();
 
         $login_title = 'Login with your WildApricot credentials';
         $login_content = '[wawp_custom_login_form]';

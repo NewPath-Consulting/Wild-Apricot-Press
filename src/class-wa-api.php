@@ -143,6 +143,8 @@ class WA_API
         // Check if access token is still valid
         $access_token = get_transient(WA_Integration::ADMIN_ACCESS_TOKEN_TRANSIENT);
         $wa_account_id = get_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
+        Log::wap_log_debug($access_token);
+        Log::wap_log_debug($wa_account_id);
         if (!$access_token || !$wa_account_id) { // access token is expired
 
             $dataEncryption = new Data_Encryption();
