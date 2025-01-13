@@ -342,7 +342,7 @@ class WA_Integration
         add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 
         // Fires on every page, checks credentials and disables plugin if necessary
-        add_action('init', array($this, 'check_updated_credentials'));
+        // add_action('init', array($this, 'check_updated_credentials'));
 
         // Action for Cron job that refreshes the license check
         add_action(self::LICENSE_CHECK_HOOK, 'WAWP\Addon::update_licenses');
