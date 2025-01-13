@@ -1761,7 +1761,6 @@ class License_Settings
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
                 $valid[$slug] = $license_encrypted;
                 do_action('wawp_wal_credentials_obtained');
-
             }
 
 
@@ -1795,6 +1794,8 @@ class License_Settings
         $license_valid = Addon::instance()::has_valid_license($slug);
         if ($license_valid) {
             $input_value = Addon::instance()::get_license($slug);
+        } elseif (defined('WAP_PLAYGROUNDS_LICENSE') && WAP_PLAYGROUNDS_LICENSE) {
+            $input_value = WAP_PLAYGROUNDS_LICENSE;
         }
 
         echo '<input class="license_key" id="' . esc_attr($slug) . '" name="wawp_license_keys[' . esc_attr($slug) .']" type="text" value="' . esc_attr($input_value) . '"  />' ;
