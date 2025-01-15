@@ -342,7 +342,7 @@ class WA_Integration
         add_action('after_setup_theme', array($this, 'hide_admin_bar'));
 
         // Fires on every page, checks credentials and disables plugin if necessary
-        // add_action('init', array($this, 'check_updated_credentials'));
+        add_action('init', array($this, 'check_updated_credentials'));
 
         // Action for Cron job that refreshes the license check
         add_action(self::LICENSE_CHECK_HOOK, 'WAWP\Addon::update_licenses');
@@ -415,15 +415,6 @@ class WA_Integration
         // Ensure that credentials have been already entered
         $has_valid_wa_credentials = self::valid_wa_credentials();
 
-        // see if credentials have gone invalid since last check
-        if ($has_valid_wa_credentials) {
-            try {
-                WA_API::verify_valid_access_token();
-            } catch (Exception $e) {
-                $has_valid_wa_credentials = false;
-            }
-        }
-
         $license_status = Addon::get_license_check_option(CORE_SLUG);
 
         // re-validate license only if the plugin has been disabled and if the authorization credentials have not changed
@@ -453,7 +444,7 @@ class WA_Integration
             // also update plugin disabled option to be false and delete exception option
             update_option(Addon::WAWP_DISABLED_OPTION, false);
             delete_option(Exception::EXCEPTION_OPTION);
-            do_action('wawp_wal_credentials_obtained');
+            // do_action('wawp_wal_credentials_obtained');
         }
     }
 
