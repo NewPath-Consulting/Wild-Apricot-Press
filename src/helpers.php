@@ -346,3 +346,13 @@ function refresh_credentials()
     Addon::update_license_check_option(CORE_SLUG, Addon::LICENSE_STATUS_VALID);
     return $new_license;
 }
+
+function is_dev()
+{
+    return defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV;
+}
+
+function is_playgrounds()
+{
+    return defined('WP_PLAYGROUNDS_SUPPORT') && WP_PLAYGROUNDS_SUPPORT;
+}

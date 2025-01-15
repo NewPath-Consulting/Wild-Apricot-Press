@@ -426,15 +426,6 @@ class WA_Integration
         // Ensure that credentials have been already entered
         $has_valid_wa_credentials = self::valid_wa_credentials();
 
-        // see if credentials have gone invalid since last check
-        if ($has_valid_wa_credentials) {
-            try {
-                WA_API::verify_valid_access_token();
-            } catch (Exception $e) {
-                $has_valid_wa_credentials = false;
-            }
-        }
-
         $license_status = Addon::get_license_check_option(CORE_SLUG);
 
         // re-validate license only if the plugin has been disabled and if the authorization credentials have not changed
@@ -464,7 +455,7 @@ class WA_Integration
             // also update plugin disabled option to be false and delete exception option
             update_option(Addon::WAWP_DISABLED_OPTION, false);
             delete_option(Exception::EXCEPTION_OPTION);
-            do_action('wawp_wal_credentials_obtained');
+            // do_action('wawp_wal_credentials_obtained');
         }
     }
 
@@ -601,12 +592,17 @@ class WA_Integration
      */
     public function create_login_page()
     {
-        // Run action to create user refresh CRON event
-        self::create_cron_for_user_refresh();
+        Log::wap_log_debug('create_login_page');
+        if (Addon::is_plugin_disabled()) {
+            update_option(Addon::WAWP_DISABLED_OPTION, false);
+            delete_option(Exception::EXCEPTION_OPTION);
+        }
         // Create event for checking license
         self::setup_license_check_cron();
         // schedule cron update for updating the membership levels and groups
         Settings::setup_cron_job();
+        // Run action to create user refresh CRON event
+        self::create_cron_for_user_refresh();
 
         $login_title = self::get_login_settings('title');
         $login_content = '[wawp_custom_login_form]';
@@ -1286,6 +1282,8 @@ class WA_Integration
             $verified_data = WA_API::verify_valid_access_token();
             $admin_access_token = $verified_data['access_token'];
             $admin_account_id = $verified_data['wa_account_id'];
+            Log::wap_log_debug($admin_access_token);
+            Log::wap_log_debug($admin_account_id);
             $wawp_api = new WA_API($admin_access_token, $admin_account_id);
             // Refresh custom fields first
             $wawp_api->retrieve_custom_fields();

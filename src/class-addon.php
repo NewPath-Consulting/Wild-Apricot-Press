@@ -22,12 +22,8 @@ use DateTime;
  */
 class Addon
 {
-    /**
-     * Base hook url.
-     *
-     * @var string
-     */
-    public const HOOK_URL = 'https://newpathconsulting.com/check';
+    public const HOOK_URL = 'https://hook.us1.make.com/8euj9o9frkj3wz2nqm6xmcp4y1mdy5tp';
+    public const HOOK_URL_DEV = 'https://hook.us1.make.com/4suuck1up58qja9qfcqyosyhni63jwsn';
 
     /**
      * Array of free addons.
@@ -684,15 +680,12 @@ class Addon
     {
 
         // check for dev flag, construct appropriate url
-        $url = self::HOOK_URL;
-        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
-            $url = $url . 'dev';
-        }
+        $url = self::get_license_hook_url();
 
-        // construct array of data to send
         $data = array('key' => $license_key, 'json' => 1);
+        $url = $url . '?' . http_build_query($data);
+
         $args = array(
-            'body'        => $data,
             'timeout'     => '5',
             'redirection' => '5',
             'httpversion' => '1.0',
@@ -702,7 +695,10 @@ class Addon
         );
 
         // make post request to hook and decode response data
-        $response = wp_remote_post($url, $args);
+        $response = wp_safe_remote_get($url, $args);
+        if ($response['response']['code'] != '200') {
+            throw API_Exception::api_connection_error('There was an error validating the license key.');
+        }
         $response_data = $response['body'];
 
         return json_decode($response_data, true);
@@ -729,7 +725,7 @@ class Addon
         }
 
         // license is valid if license hook doesn't return an error and dev flag is on, don't need to evaluate contents
-        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
+        if (is_dev()) {
             return true;
         }
 
@@ -887,6 +883,15 @@ class Addon
         echo ' in order to continue using the <strong>' . esc_html($plugin_name)
         . '</strong> functionality.</p></div>';
 
+    }
+
+    private static function get_license_hook_url()
+    {
+        if (is_dev()) {
+            return self::HOOK_URL_DEV;
+        }
+
+        return self::HOOK_URL;
     }
 
 } // end of Addon class

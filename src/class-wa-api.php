@@ -15,11 +15,11 @@ require_once __DIR__ . '/wap-exception.php';
 class WA_API
 {
     // Constants
-    public const ADMIN_API_VERSION = 'v2.2';
-    public const MEMBER_API_VERSION = 'v1';
-    public const WAP_USER_AGENT = 'WildApricotPress/1.0.2';
-    public const API_URL = 'https://api.wildapricot.org/';
-    // const API_URL = 'https://google.com';
+    public const WAP_USER_AGENT = 'WildApricotPress/1.1';
+    public const AUTH_URL = 'https://oauth.wildapricot.org/auth/token';
+    public const API_URL = 'https://api.wildapricot.org/v2.2';
+    public const PUBLIC_API_URL = 'https://api.wildapricot.org/publicview/v1';
+    public const PROXY_URL = 'https://npc-proxy.newpathconsulting.com';
 
     // Class variables
     private $access_token;
@@ -54,12 +54,15 @@ class WA_API
     private static function response_to_data($response)
     {
         if (is_wp_error($response)) {
+            Log::wap_log_debug($response);
             throw new API_Exception(esc_html(API_Exception::api_connection_error()));
         }
 
-        // if user is unauthorized, return empty array
+        // if user is unauthorized, throw error
         if ($response['response']['code'] == '401') {
-            return array();
+            throw new API_Exception(esc_html(API_Exception::api_connection_error()));
+        } elseif ($response['response']['code'] == '200') {
+            API_Exception::remove_error();
         }
 
         // Get body of response
@@ -140,6 +143,8 @@ class WA_API
         // Check if access token is still valid
         $access_token = get_transient(WA_Integration::ADMIN_ACCESS_TOKEN_TRANSIENT);
         $wa_account_id = get_transient(WA_Integration::ADMIN_ACCOUNT_ID_TRANSIENT);
+        Log::wap_log_debug($access_token);
+        Log::wap_log_debug($wa_account_id);
         if (!$access_token || !$wa_account_id) { // access token is expired
 
             $dataEncryption = new Data_Encryption();
@@ -212,8 +217,8 @@ class WA_API
     public function get_account_url_and_id()
     {
         $args = $this->request_data_args();
-        $url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id;
-        $response_api = wp_remote_get($url, $args);
+        $url = self::get_api_url() . '/accounts/' . $this->wa_user_id;
+        $response_api = wp_safe_remote_get($url, $args);
 
         try {
             $details_response = self::response_to_data($response_api);
@@ -246,10 +251,12 @@ class WA_API
     {
         // Make API request for custom fields
         $args = $this->request_data_args();
-        $url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' .
+        $url = self::get_api_url() . '/accounts/' .
             $this->wa_user_id . '/contactfields?showSectionDividers=true';
-        $response_api = wp_remote_get($url, $args);
+        $response_api = wp_safe_remote_get($url, $args);
 
+        Log::wap_log_debug($url);
+        Log::wap_log_debug($args);
         try {
             $custom_field_response = self::response_to_data($response_api);
         } catch (API_Exception $e) {
@@ -463,7 +470,7 @@ class WA_API
             ),
             'body' => 'grant_type=refresh_token&refresh_token=' . $refresh_token
         );
-        $response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+        $response = wp_remote_post(self::get_auth_url(), $args);
 
         try {
             $data = self::response_to_data($response);
@@ -484,7 +491,7 @@ class WA_API
         // Get details of current WA user with API request
         // Get user's contact ID
         $args = $this->request_data_args();
-        $contact_info = wp_remote_get(self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
+        $contact_info = wp_safe_remote_get(self::get_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/me?getExtendedMembershipInfo=true', $args);
 
         try {
             $contact_info = self::response_to_data($contact_info);
@@ -498,9 +505,9 @@ class WA_API
         $user_data_api = null;
         if (isset($is_administrator) && $is_administrator == '1') { // user is administrator
             $contact_id = $contact_info['Id'];
-            $user_data_api = wp_remote_get(self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
+            $user_data_api = wp_safe_remote_get(self::get_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/' . $contact_id . '?getExtendedMembershipInfo=true', $args);
         } else { // not administrator
-            $user_data_api = wp_remote_get('https://api.wildapricot.org/publicview/' . self::MEMBER_API_VERSION . '/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
+            $user_data_api = wp_safe_remote_get(self::get_public_api_url() . '/accounts/' . $this->wa_user_id . '/contacts/me?includeDetails=true', $args);
         }
         // Extract body
 
@@ -523,11 +530,11 @@ class WA_API
     {
         $args = $this->request_data_args();
         // ABSTRACT VARIABLE IN URL
-        $url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/membershiplevels';
+        $url = self::get_api_url() . '/accounts/' . $this->wa_user_id . '/membershiplevels';
         if ($request_groups) {
-            $url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' . $this->wa_user_id . '/membergroups';
+            $url = self::get_api_url() . '/accounts/' . $this->wa_user_id . '/membergroups';
         }
-        $membership_levels_response = wp_remote_get($url, $args);
+        $membership_levels_response = wp_safe_remote_get($url, $args);
 
         // Return membership levels
         try {
@@ -570,7 +577,7 @@ class WA_API
             ),
             'body' => 'grant_type=client_credentials&scope=auto&obtain_refresh_token=true'
         );
-        $response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+        $response = wp_remote_post(self::get_auth_url(), $args);
 
         $data = self::response_to_data($response);
         return $data;
@@ -608,7 +615,7 @@ class WA_API
                 'scope' => 'auto'
             )
         );
-        $response = wp_remote_post('https://oauth.wildapricot.org/auth/token', $args);
+        $response = wp_remote_post(self::get_auth_url(), $args);
 
         try {
             $data = self::response_to_data($response);
@@ -631,7 +638,7 @@ class WA_API
      */
     public function retrieve_contacts_list($query, $block = false, $skip = 0, $top = 200)
     {
-        $base_url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' .
+        $base_url = self::get_api_url() . '/accounts/' .
         $this->wa_user_id . '/contacts?%24async=false&%24' . $query;
 
         // return single block
@@ -676,16 +683,27 @@ class WA_API
     public function get_contacts_count()
     {
 
-        $count = get_option(WA_Integration::WA_CONTACTS_COUNT_KEY);
-        if ($count) {
-            return $count;
-        }
+        // $count = get_option(WA_Integration::WA_CONTACTS_COUNT_KEY);
+        // if ($count) {
+        //     return $count;
+        // }
 
-        $url = self::API_URL . self::ADMIN_API_VERSION . '/accounts/' .
+        $url = self::get_api_url() . '/accounts/' .
             $this->wa_user_id . '/contacts?%24async=false&%24count=true';
 
         $args = $this->request_data_args();
-        $response = wp_remote_get($url, $args);
+
+        Log::wap_log_debug($url);
+        Log::wap_log_debug($args);
+
+        $response = wp_safe_remote_get($url, $args);
+
+        echo '<p>url:<br>'. esc_html($url) . '</p>';
+        echo '<p>args to wp_safe_remote_get:</p>';
+        esc_html(print_r($args));
+        echo '<br>';
+        echo '<p>response:</p>';
+        esc_html(print_r($response));
 
         try {
             $data = self::response_to_data($response);
@@ -697,6 +715,33 @@ class WA_API
         update_option(WA_Integration::WA_CONTACTS_COUNT_KEY, $count);
 
         return $count;
+    }
+
+    private static function get_auth_url()
+    {
+        if (is_playgrounds()) {
+            return self::PROXY_URL . '/auth';
+        }
+
+        return self::AUTH_URL;
+    }
+
+    private static function get_api_url()
+    {
+        if (is_playgrounds()) {
+            return self::PROXY_URL;
+        }
+
+        return self::API_URL;
+    }
+
+    private static function get_public_api_url()
+    {
+        if (is_playgrounds()) {
+            return self::PROXY_URL . '/publicview';
+        }
+
+        return self::PUBLIC_API_URL;
     }
 
     /**
@@ -720,7 +765,7 @@ class WA_API
 
         $args = $this->request_data_args();
 
-        $response = wp_remote_get($url, $args);
+        $response = wp_safe_remote_get($url, $args);
 
         try {
             $data = self::response_to_data($response);

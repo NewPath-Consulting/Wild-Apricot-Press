@@ -55,6 +55,10 @@ class Settings
         // Add actions for cron update
         add_action(self::CRON_HOOK, array($this, 'cron_update_wa_memberships'));
 
+        if (get_option('wap_api_debug')) {
+            add_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
+        }
+
     }
 
     /**
@@ -1510,6 +1514,7 @@ class WA_Auth_Settings
             <!-- WildApricot credentials form -->
             <form method="post" action="options.php">
                 <?php
+                submit_button(__('Test API', 'newpath-wildapricot-press'), 'primary', 'api-test');
         // Nonce for verification
         wp_nonce_field('wawp_credentials_nonce_action', 'wawp_credentials_nonce_name');
         // This prints out all hidden setting fields
@@ -1549,6 +1554,25 @@ class WA_Auth_Settings
 <?php
     }
 
+    public static function api_debug()
+    {
+        if (!WA_Integration::valid_wa_credentials()) {
+            return;
+        }
+        Log::wap_log_debug('testing api');
+        echo '<div class="notice">';
+        // init api
+        $access_and_account = WA_API::verify_valid_access_token();
+        $access_token = $access_and_account['access_token'];
+        $wa_account_id = $access_and_account['wa_account_id'];
+        $wawp_api = new WA_API($access_token, $wa_account_id);
+        // make simple call
+        $count = $wawp_api->get_contacts_count();
+        remove_action('admin_notices', 'WAWP\WA_Auth_Settings::api_debug');
+        update_option('wap_api_debug', false);
+        echo '</div>';
+    }
+
     /**
      * Sanitize each setting field as needed
      *
@@ -1562,6 +1586,12 @@ class WA_Auth_Settings
             add_action('admin_notices', 'WAWP\invalid_nonce_error_message');
             Log::wap_log_error('Your nonce for the WildApricot credentials could not be verified.');
             return empty_string_array($input);
+        }
+
+        if (array_key_exists('api-test', $_POST)) {
+            update_option('wap_api_debug', true);
+
+            return get_option(WA_Integration::WA_CREDENTIALS_KEY);
         }
 
         $valid = array();
@@ -1961,7 +1991,7 @@ class License_Settings
                 // valid key
                 Addon::update_license_check_option($slug, Addon::LICENSE_STATUS_VALID);
                 $valid[$slug] = $license_encrypted;
-
+                do_action('wawp_wal_credentials_obtained');
             }
 
 
@@ -1995,6 +2025,8 @@ class License_Settings
         $license_valid = Addon::instance()::has_valid_license($slug);
         if ($license_valid) {
             $input_value = Addon::instance()::get_license($slug);
+        } elseif (defined('WAP_PLAYGROUNDS_LICENSE') && WAP_PLAYGROUNDS_LICENSE) {
+            $input_value = WAP_PLAYGROUNDS_LICENSE;
         }
 
         echo '<input class="license_key" id="' . esc_attr($slug) . '" name="wawp_license_keys[' . esc_attr($slug) .']" type="text" value="' . esc_attr($input_value) . '"  />' ;
