@@ -566,6 +566,10 @@ class WA_Integration
     public function create_login_page()
     {
         Log::wap_log_debug('create_login_page');
+        if (Addon::is_plugin_disabled()) {
+            update_option(Addon::WAWP_DISABLED_OPTION, false);
+            delete_option(Exception::EXCEPTION_OPTION);
+        }
         // Create event for checking license
         self::setup_license_check_cron();
         // schedule cron update for updating the membership levels and groups
