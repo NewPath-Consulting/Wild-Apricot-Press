@@ -27,7 +27,8 @@ class Addon
      *
      * @var string
      */
-    public const HOOK_URL = 'https://newpathconsulting.com/check';
+    public const HOOK_URL = 'https://hook.us1.make.com/8euj9o9frkj3wz2nqm6xmcp4y1mdy5tp';
+    public const HOOK_URL_DEV = 'https://hook.us1.make.com/4suuck1up58qja9qfcqyosyhni63jwsn';
 
     /**
      * Array of free addons.
@@ -684,10 +685,10 @@ class Addon
     {
 
         // check for dev flag, construct appropriate url
-        $url = self::HOOK_URL;
-        if (defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV) {
-            $url = $url . 'dev';
-        }
+        $url = self::get_license_hook_url();
+
+        $data = array('key' => $license_key, 'json' => 1);
+        $url = $url . '?' . http_build_query($data);
 
         // construct array of data to send
         $data = array('key' => $license_key, 'json' => 1);
@@ -887,6 +888,15 @@ class Addon
         echo ' in order to continue using the <strong>' . esc_html($plugin_name)
         . '</strong> functionality.</p></div>';
 
+    }
+
+    private static function get_license_hook_url()
+    {
+        if (is_dev()) {
+            return self::HOOK_URL_DEV;
+        }
+
+        return self::HOOK_URL;
     }
 
 } // end of Addon class
