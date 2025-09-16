@@ -27,8 +27,8 @@ class Addon
      *
      * @var string
      */
-    public const HOOK_URL = 'https://hook.us1.make.com/8euj9o9frkj3wz2nqm6xmcp4y1mdy5tp';
-    public const HOOK_URL_DEV = 'https://hook.us1.make.com/4suuck1up58qja9qfcqyosyhni63jwsn';
+    public const HOOK_URL = 'https://newpathconsulting.com/check';
+    public const HOOK_URL_DEV = 'https://newpathconsulting.com/checkdev';
 
     /**
      * Array of free addons.
