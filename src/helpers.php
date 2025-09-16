@@ -1,4 +1,5 @@
 <?php
+
 /**
  * helpers.php
  * The purpose of this file is to hold common constants and one-off
@@ -18,6 +19,10 @@ require_once __DIR__ . '/class-wa-api.php';
 const CORE_SLUG = 'wawp';
 const CORE_NAME = 'WildApricot Press (WAP)';
 
+function is_dev()
+{
+    return defined('WAP_LICENSE_CHECK_DEV') && WAP_LICENSE_CHECK_DEV;
+}
 
 /**
  * @return bool true if the current page is the licensing settings page, false if not
